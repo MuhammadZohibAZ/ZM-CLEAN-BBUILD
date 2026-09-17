@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "dev:backend": "cmd /c \"cd /d \"%cd%\\backend\" && call run_backend.bat\"",
+    "dev:api": "cmd /c \"cd /d \"%cd%\\api\" && npm run start\"",
     "dev:frontend": "cmd /c \"cd /d \"%cd%\\app\" && npm run dev\"",
-    "dev": "concurrently -k -n \"BACKEND,FRONTEND\" -c \"magenta,cyan\" \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev": "concurrently -k -n \"TTS,API,FRONTEND\" -c \"magenta,yellow,cyan\" \"npm run dev:backend\" \"npm run dev:api\" \"npm run dev:frontend\"",
     "start": "npm run dev"
   },
   "devDependencies": {

@@ -31,6 +31,19 @@ import {
   getExcelTimeline,
   type TimelineResult,
 } from "./data/realCommodityData";
+import {
+  fetchVerticalCardStats,
+  fetchByProducts,
+  fetchRecords,
+  fetchAllRecords,
+  fetchTrend,
+  fetchTrendAll,
+  type CardStats,
+  type CardSpecialAttr,
+  type ByProductCatalogRow,
+  type MarketRecord,
+  type TrendPoint,
+} from "./lib/api";
 
 import video1 from "./videos/video1.mp4";
 import video2 from "./videos/video2.mp4";
@@ -6872,6 +6885,124 @@ function ByProductNationalCard({
 }
 
 
+// ─── REAL MARKET-API DATA -> EXISTING CARD SHAPE ADAPTERS ──────────────────
+
+const SPECIAL_ATTR_META: Record<CardSpecialAttr["type"], { labelEn: string; labelUr: string; dotColor: string }> = {
+  moisture: { labelEn: "Moisture", labelUr: "نمی", dotColor: "#38BDF8" },
+  newOld: { labelEn: "Type", labelUr: "معیار", dotColor: "#F59E0B" },
+  color: { labelEn: "Color", labelUr: "رنگ", dotColor: "#FBBF24" },
+  variety: { labelEn: "Variety", labelUr: "قسم", dotColor: "#10B981" },
+  spec: { labelEn: "Spec", labelUr: "تفصیل", dotColor: "#10B981" },
+  origin: { labelEn: "Origin", labelUr: "علاقہ", dotColor: "#10B981" },
+};
+
+const SPECIAL_ATTR_COLOR_URDU: Record<string, string> = {
+  Brown: "براؤن",
+  Golden: "سنہرا",
+  White: "سفید",
+  Yellow: "پیلا",
+  Red: "سرخ",
+};
+
+function apiSpecialAttrToUi(attr: CardSpecialAttr | null): SpecialAttrInfo | null {
+  if (!attr) return null;
+  const meta = SPECIAL_ATTR_META[attr.type];
+  let valueUr = attr.value;
+  if (attr.type === "newOld") {
+    valueUr = attr.value.toLowerCase() === "new" ? "نیا" : "پرانا";
+  } else if (attr.type === "color") {
+    valueUr = SPECIAL_ATTR_COLOR_URDU[attr.value] || attr.value;
+  } else if (attr.type === "moisture") {
+    valueUr = toUrduDigits(attr.value);
+  }
+  return {
+    type: attr.type,
+    labelEn: meta.labelEn,
+    labelUr: meta.labelUr,
+    valueEn: attr.value,
+    valueUr,
+    dotColor: meta.dotColor,
+  };
+}
+
+/** Real-data replacement for `calculateByproductSummary`'s return shape. */
+function apiCardStatsToUi(raw: CardStats): ByproductNationalStats {
+  return {
+    hasData: raw.hasData,
+    product: raw.product,
+    byproduct: raw.byproduct,
+    mostOccurringRateType: raw.mostOccurringRateType,
+    otherRateTypesCount: raw.otherRateTypesCount,
+    allRateTypes: raw.allRateTypes,
+    avgMin: raw.avgMin,
+    avgMax: raw.avgMax,
+    totalArrival: raw.totalArrival,
+    markets: raw.markets,
+    specialAttr: apiSpecialAttrToUi(raw.specialAttr),
+  };
+}
+
+/** Reindexes a sparse day-points series onto the fixed 31-day grid and
+ * derives the same fields `getExcelTimeline` used to compute, so the rest
+ * of ProductRatesScreen's chart code (priceSeries/arrivalData/quarter
+ * bucketing) keeps working unchanged on real data. */
+function buildTimelineResultFromApi(points: TrendPoint[], dates: string[]): TimelineResult {
+  const byDate = new Map(points.map((p) => [p.date.slice(0, 10), p]));
+  // Carry the last reported value forward through days with no report,
+  // instead of dropping to 0 -- a day with no quote is "unreported", not
+  // "the price crashed to zero" (policy: "never reuse zero" for an
+  // unavailable state). Arrivals stay honestly 0 on unreported days,
+  // since arrivals are a per-day count, not a carried price level.
+  const mins: number[] = [];
+  const maxs: number[] = [];
+  const arrivals: number[] = [];
+  let lastMin = 0;
+  let lastMax = 0;
+  for (const d of dates) {
+    const p = byDate.get(d);
+    if (p && p.avgMin > 0 && p.avgMax > 0) {
+      lastMin = p.avgMin;
+      lastMax = p.avgMax;
+    }
+    mins.push(lastMin);
+    maxs.push(lastMax);
+    arrivals.push((p as any)?.totalArrival ?? 0);
+  }
+  const prices = dates.map((_, i) => (mins[i] > 0 && maxs[i] > 0 ? Math.round((mins[i] + maxs[i]) / 2) : 0));
+
+  const latestMin = mins[mins.length - 1] ?? 0;
+  const latestMax = maxs[maxs.length - 1] ?? 0;
+  const latestPrice = prices[prices.length - 1] ?? 0;
+  const prevPrice = prices.length >= 2 ? prices[prices.length - 2] : latestPrice;
+
+  let trend: "up" | "down" | "stable" = "stable";
+  let trendPct = 0;
+  if (prevPrice > 0 && latestPrice > 0) {
+    const diff = latestPrice - prevPrice;
+    trendPct = Math.round((Math.abs(diff) / prevPrice) * 1000) / 10;
+    if (diff > 0.01) trend = "up";
+    else if (diff < -0.01) trend = "down";
+  }
+
+  return { dates, prices, mins, maxs, arrivals, latestMin, latestMax, latestPrice, trend, trendPct, matchedCount: points.length };
+}
+
+function emptyByproductStats(division: string, byproduct: string): ByproductNationalStats {
+  return {
+    hasData: false,
+    product: division,
+    byproduct,
+    mostOccurringRateType: "Mandi Rate",
+    otherRateTypesCount: 0,
+    allRateTypes: ["Mandi Rate"],
+    avgMin: 0,
+    avgMax: 0,
+    totalArrival: 0,
+    markets: 0,
+    specialAttr: null,
+  };
+}
+
 // ─── REVAMPED BY-PRODUCT COMBINED SCREEN (4 CARDS VISIBLE IN 2*2 GRID) ─────────────
 
 function ByProductCombinedScreen({
@@ -6911,15 +7042,26 @@ function ByProductCombinedScreen({
   // Whether entry is Vertical Level (multiple products) vs Product Level (single product)
   const isVerticalLevelEntry = products.length > 1;
 
-  const byproducts = activeProduct
-    ? productByproducts(activeProduct.vertical, activeProduct.product)
-    : products
-      .flatMap((p) => productByproducts(p.vertical, p.product))
-      .filter((b, i, a) => a.indexOf(b) === i);
-
   const { voiceEnabled, lang, tc: tcL, tm: tmL } = useLang();
 
   const currentLocScope: LocationScope = locationScope || { kind: 'pakistan', label: 'All Pakistan' };
+
+  // Real catalog + card stats fetched from the Postgres-backed market API
+  // (zarai-mandi/api/), keyed by division (= activeProduct.product). Both
+  // requests are cached client-side, so revisiting a division within the
+  // session doesn't re-fetch.
+  const divisionsNeeded = useMemo(
+    () => (activeProduct ? [activeProduct.product] : Array.from(new Set(products.map((p) => p.product)))),
+    [activeProduct?.product, products]
+  );
+  const [catalogByDivision, setCatalogByDivision] = useState<Record<string, ByProductCatalogRow[]>>({});
+  const [cardStatsByDivision, setCardStatsByDivision] = useState<Record<string, CardStats[]>>({});
+
+  const byproducts = activeProduct
+    ? (catalogByDivision[activeProduct.product] || []).map((c) => c.by_product)
+    : divisionsNeeded
+      .flatMap((d) => (catalogByDivision[d] || []).map((c) => c.by_product))
+      .filter((b, i, a) => a.indexOf(b) === i);
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date(2026, 8, 14));
   const [isDateCalOpen, setIsDateCalOpen] = useState(false);
@@ -6947,21 +7089,54 @@ function ByProductCombinedScreen({
     };
   }, [curDate, lang]);
 
-  // Compute 1 summary card per by-product with 100% REAL calculated data
-  const byproductCardsData = useMemo(() => {
-    return byproducts.map((bp) => {
-      const stats = calculateByproductSummary(
-        activeProduct?.product || '',
-        bp,
-        currentLocScope,
-        curDate
+  // Fetch the real by-product catalog + card stats for the active
+  // division(s) whenever the division, date or location scope changes.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const entries = await Promise.all(
+        divisionsNeeded.map(async (division) => {
+          const [catalog, stats] = await Promise.all([
+            fetchByProducts(division),
+            fetchVerticalCardStats(division, {
+              date: curDateStr,
+              locationKind: currentLocScope.kind,
+              locationLabel: currentLocScope.label,
+            }),
+          ]);
+          return { division, catalog, stats };
+        })
       );
+      if (cancelled) return;
+      setCatalogByDivision((prev) => {
+        const next = { ...prev };
+        for (const e of entries) next[e.division] = e.catalog;
+        return next;
+      });
+      setCardStatsByDivision((prev) => {
+        const next = { ...prev };
+        for (const e of entries) next[e.division] = e.stats;
+        return next;
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [divisionsNeeded.join('|'), curDateStr, currentLocScope.kind, currentLocScope.label]);
+
+  // 1 summary card per by-product, from the real market API.
+  const byproductCardsData = useMemo(() => {
+    const division = activeProduct?.product || divisionsNeeded[0] || '';
+    const statsForDivision = cardStatsByDivision[division] || [];
+    return byproducts.map((bp) => {
+      const raw = statsForDivision.find((s) => s.byproduct === bp);
+      const stats = raw ? apiCardStatsToUi(raw) : emptyByproductStats(division, bp);
       return {
         bp,
         stats,
       };
     });
-  }, [byproducts, activeProduct?.product, currentLocScope, curDate]);
+  }, [byproducts, activeProduct?.product, divisionsNeeded, cardStatsByDivision]);
 
   return (
     <div
@@ -10382,12 +10557,65 @@ function ProductRatesScreen({
   };
   const picked = isPickedBP(pickItem);
 
-  const allRows = useMemo(() => {
-    const pRows = getRowsForProducts([product]);
-    return pRows.filter(
-      (r) => !byproduct || isMatchByproduct(r.byproduct, byproduct),
-    );
+  // Real rows for this by-product from the Postgres-backed market API.
+  // `product` here is the division (e.g. "Wheat"); resolve it + the
+  // by-product name to a catalog id, then fetch every matching row once
+  // and let the rest of this screen's existing filtering/grouping logic
+  // (attribute filters, geoView grouping, comparison table) run on it
+  // exactly as it did on the old mock rows.
+  const [apiRecords, setApiRecords] = useState<MarketRecord[]>([]);
+  const [apiRowsLoading, setApiRowsLoading] = useState(true);
+  const [apiCatalogEntry, setApiCatalogEntry] = useState<ByProductCatalogRow | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setApiRowsLoading(true);
+    (async () => {
+      const catalog = await fetchByProducts(product);
+      if (cancelled) return;
+      const entry = catalog.find((c) => c.by_product === byproduct) || null;
+      setApiCatalogEntry(entry);
+      if (entry && entry.has_data) {
+        const { rows } = await fetchAllRecords(entry.id);
+        if (!cancelled) setApiRecords(rows);
+      } else if (!cancelled) {
+        setApiRecords([]);
+      }
+      if (!cancelled) setApiRowsLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [product, byproduct]);
+
+  const allRows = useMemo(() => {
+    return apiRecords.map((r) => ({
+      product,
+      byproduct: byproduct || product,
+      emoji: "",
+      rateType: r.price_type,
+      arrival:
+        r.arrivals && Number(r.arrivals) > 0
+          ? Number(r.arrivals).toLocaleString("en-US")
+          : "0",
+      min: Number(r.minimum),
+      max: Number(r.maximum),
+      trend: "stable" as const,
+      trendPct: 0,
+      mandiName: `${r.station} Mandi`,
+      mandiCity: r.district,
+      province: r.province,
+      variety: r.variety || undefined,
+      color: r.color || undefined,
+      spec: r.specification || undefined,
+      condition: undefined,
+      newOld: r.new_old || undefined,
+      // extra fields this screen reads even though RichRow doesn't declare them
+      moisture: r.moisture_raw || undefined,
+      quality: r.quality || undefined,
+      date: r.record_date ? r.record_date.slice(0, 10) : undefined,
+    })) as (RichRow & { moisture?: string; quality?: string; date?: string })[];
+  }, [apiRecords, product, byproduct]);
 
   const inLocScope = (r: (typeof allRows)[0]) => {
     switch (locScope.kind) {
@@ -10599,20 +10827,36 @@ function ProductRatesScreen({
     { start: 28, end: 31, labelEn: "W5 14 Sep", labelUr: "ہفتہ ۵ ۱۴ ستمبر", fullEn: "Week 5: 12–14 Sep 2026 (Weekly Avg)", fullUr: "ہفتہ ۵: ۱۲–۱۴ ستمبر ۲۰۲۶ (ہفتہ وار اوسط)" },
   ];
 
+  // Real per-day, per-rate-type series from the market API (one batched
+  // request for every rate type, instead of N calls into the old bundled
+  // timeline index).
+  const [trendAllByRateType, setTrendAllByRateType] = useState<Record<string, TrendPoint[]>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!apiCatalogEntry || !apiCatalogEntry.has_data) {
+        setTrendAllByRateType({});
+        return;
+      }
+      const result = await fetchTrendAll(apiCatalogEntry.id, {
+        locationKind: locScope.kind,
+        locationLabel: locScope.label,
+      });
+      if (!cancelled) setTrendAllByRateType(result.byRateType);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [apiCatalogEntry?.id, locScope.label, locScope.kind]);
+
   const excelTimelineMap = useMemo(() => {
     const map: Record<string, TimelineResult> = {};
     for (const rt of ALL_RATE_TYPES) {
-      map[rt] = getExcelTimeline({
-        product,
-        byproduct,
-        locationLabel: locScope.label,
-        locationKind: locScope.kind,
-        rateType: rt,
-        range: "year",
-      });
+      map[rt] = buildTimelineResultFromApi(trendAllByRateType[rt] || [], REAL_DATES_TIMELINE);
     }
     return map;
-  }, [product, byproduct, locScope.label, locScope.kind]);
+  }, [trendAllByRateType]);
 
   const normInitial = useMemo(() => {
     const raw = (initialRateType || "").trim();
@@ -10694,16 +10938,28 @@ function ProductRatesScreen({
     [excelTimelineMap, isQuarter, isWeek],
   );
 
-  const activeArrivalResult = useMemo(() => {
-    return getExcelTimeline({
-      product,
-      byproduct,
-      locationLabel: locScope.label,
-      locationKind: locScope.kind,
-      rateType: compareMode ? "" : focusedType,
-      range: "year",
-    });
-  }, [product, byproduct, locScope.label, locScope.kind, compareMode, focusedType]);
+  const activeArrivalResult = useMemo((): TimelineResult => {
+    if (!compareMode) {
+      return excelTimelineMap[focusedType] || buildTimelineResultFromApi([], REAL_DATES_TIMELINE);
+    }
+    // Compare mode: sum arrivals across every rate type, per day.
+    const arrivals = REAL_DATES_TIMELINE.map((_, i) =>
+      ALL_RATE_TYPES.reduce((sum, rt) => sum + (excelTimelineMap[rt]?.arrivals[i] || 0), 0)
+    );
+    return {
+      dates: REAL_DATES_TIMELINE,
+      prices: [],
+      mins: [],
+      maxs: [],
+      arrivals,
+      latestMin: 0,
+      latestMax: 0,
+      latestPrice: 0,
+      trend: "stable",
+      trendPct: 0,
+      matchedCount: 1,
+    };
+  }, [excelTimelineMap, compareMode, focusedType]);
 
   const arrivalData = useMemo(() => {
     if (isQuarter) {
@@ -10987,7 +11243,7 @@ function ProductRatesScreen({
       </header>
 
       <div className="flex-1 overflow-y-auto px-3.5 pt-2 pb-6 flex flex-col gap-2">
-        {rows.length === 0 && (
+        {!apiRowsLoading && rows.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 opacity-50">
             {/* <span style={{ fontSize: 48 }}></span> */}
             <p
