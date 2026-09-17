@@ -1,0 +1,10 @@
+{
+  "description": "Automate tasks effortlessly with intuitive controls designed to simplify workflows and boost productivity for users of all skill levels.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

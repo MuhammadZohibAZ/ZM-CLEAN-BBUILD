@@ -1,0 +1,109 @@
+{
+    "mandis": [
+        {
+            "id": "landi_kotal",
+            "name": "Landi Kotal",
+            "province": "Khyber Pakhtunkhwa",
+            "district": "Khyber",
+            "tehsil": "Landi Kotal",
+            "type": "primary",
+            "commodities": [
+                "Grain"
+            ]
+        },
+        {
+            "id": "peshawar",
+            "name": "Peshawar",
+            "province": "Khyber Pakhtunkhwa",
+            "district": "Peshawar",
+            "tehsil": "Peshawar",
+            "type": "hub",
+            "commodities": [
+                "Grain",
+                "Fruit",
+                "Livestock"
+            ]
+        },
+        {
+            "id": "mansehra",
+            "name": "Mansehra",
+            "province": "Khyber Pakhtunkhwa",
+            "district": "Mansehra",
+            "tehsil": "Mansehra",
+            "type": "primary",
+            "commodities": [
+                "Grain"
+            ]
+        },
+        {
+            "id": "dera_ismail_khan",
+            "name": "Dera Ismail Khan",
+            "province": "Khyber Pakhtunkhwa",
+            "district": "Dera Ismail Khan",
+            "tehsil": "Dera Ismail Khan",
+            "type": "primary",
+            "commodities": [
+                "Grain"
+            ]
+        },
+        {
+            "id": "mardan",
+            "name": "Mardan",
+            "province": "Khyber Pakhtunkhwa",
+            "district": "Mardan",
+            "tehsil": "Mardan",
+            "type": "primary",
+            "commodities": [
+                "Grain"
+            ]
+        },
+        {
+            "id": "quetta",
+            "name": "Quetta",
+            "province": "Balochistan",
+            "district": "Quetta",
+            "tehsil": "Quetta",
+            "type": "hub",
+            "commodities": [
+                "Grain"
+            ]
+        },
+        {
+            "id": "karachi",
+            "name": "Karachi",
+            "province": "Sindh",
+            "district": "Karachi",
+            "tehsil": "Karachi",
+            "type": "hub",
+            "commodities": [
+                "Grain",
+                "Livestock"
+            ]
+        },
+        {
+            "id": "hyderabad",
+            "name": "Hyderabad",
+            "province": "Sindh",
+            "district": "Hyderabad",
+            "tehsil": "Hyderabad",
+            "type": "primary",
+            "commodities": [
+                "Grain",
+                "Fruit",
+                "Vegetable"
+            ]
+        },
+        {
+            "id": "sukkur",
+            "name": "Sukkur",
+            "province": "Sindh",
+            "district": "Sukkur",
+            "tehsil": "Sukkur",
+            "type": "hub",
+            "commodities": [
+                "Grain",
+                "Kiryana"
+            ]
+        }
+    ]
+}
