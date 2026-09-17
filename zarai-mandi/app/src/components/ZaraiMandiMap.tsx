@@ -25,6 +25,7 @@ import {
   BarChart3,
   ChevronUp,
 } from "lucide-react";
+import { buildMandiInlineGraphFromRows } from "../lib/mandiGraph";
 
 /* ------------------------------------------------------------------ */
 /*  Data model                                                         */
@@ -388,120 +389,43 @@ interface AppView {
 const GREEN_DARK = "#166534";
 const GREEN_MED = "#16A34A";
 
-// Helpers for realistic graph point calculation in the map bottom sheet
-function getMapGraphData(
-  minVal: number,
-  maxVal: number,
-  trend: "up" | "down" | "flat" | "stable",
-  timeframe: "24h" | "72h" | "7d" | "30d",
-  lang: string
-) {
-  const diff = Math.max(maxVal - minVal, 50);
-  let pattern: number[];
-  if (trend === "up") {
-    // 7 points matching the user screenshot curve: starts low, slight rise, slight dip at 12:00, then climbs steadily
-    pattern = [0.12, 0.42, 0.35, 0.52, 0.76, 0.78, 0.96];
-  } else if (trend === "down") {
-    pattern = [0.94, 0.78, 0.68, 0.52, 0.32, 0.28, 0.08];
-  } else {
-    pattern = [0.45, 0.54, 0.44, 0.56, 0.48, 0.52, 0.50];
-  }
+// Real per-mandi price/arrival chart data, built from actual rows -- see
+// app/src/lib/mandiGraph.ts. No fabricated intraday curves or hardcoded
+// date labels here; see that module's own comments for why 24h isn't offered.
 
-  const tfShift =
-    timeframe === "24h"
-      ? [0, 0, 0, 0, 0, 0, 0]
-      : timeframe === "72h"
-      ? [-0.02, 0.03, -0.01, 0.04, -0.01, 0.02, 0]
-      : timeframe === "7d"
-      ? [0.03, -0.02, 0.04, -0.02, 0.03, -0.01, 0]
-      : [-0.04, 0.02, -0.03, 0.05, -0.02, 0.03, 0];
-
-  const points = pattern.map((p, i) => {
-    const val = minVal + diff * Math.max(0.02, Math.min(0.98, p + tfShift[i]));
-    return Math.round(val);
-  });
-
-  if (trend === "up") {
-    points[0] = Math.round(minVal + diff * 0.1);
-    points[6] = Math.round(maxVal - diff * 0.02);
-  } else if (trend === "down") {
-    points[0] = Math.round(maxVal - diff * 0.04);
-    points[6] = Math.round(minVal + diff * 0.08);
-  }
-
-  let xLabels: string[] = [];
-  if (timeframe === "24h") {
-    xLabels = ["06:00", "09:00", "12:00", "15:00", "18:00", "21:00", lang === "ur" ? "اب" : "Now"];
-  } else if (timeframe === "72h") {
-    xLabels =
-      lang === "ur"
-        ? ["دن 1", "12:00", "دن 2", "12:00", "دن 3", "12:00", "اب"]
-        : ["Day 1", "12:00", "Day 2", "12:00", "Day 3", "12:00", "Now"];
-  } else if (timeframe === "7d") {
-    xLabels =
-      lang === "ur"
-        ? ["پیر", "منگل", "بدھ", "جمعرات", "جمعہ", "ہفتہ", "اتوار"]
-        : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  } else {
-    xLabels =
-      lang === "ur"
-        ? ["یکم", "5ویں", "10ویں", "15ویں", "20ویں", "25ویں", "آج"]
-        : ["1st", "5th", "10th", "15th", "20th", "25th", "Today"];
-  }
-
-  const yMinBound = Math.floor((minVal - diff * 0.1) / 50) * 50;
-  const yMaxBound = Math.ceil((maxVal + diff * 0.1) / 50) * 50;
-  const yMidVal = Math.round((yMinBound + yMaxBound) / 2);
-
-  const fmtK = (v: number) =>
-    v >= 1000 ? (v / 1000).toFixed(1) + "k" : String(Math.round(v));
-
-  const yLabels = [
-    { label: fmtK(yMaxBound), val: yMaxBound },
-    { label: fmtK(yMidVal), val: yMidVal },
-    { label: fmtK(yMinBound), val: yMinBound },
-  ];
-
-  return { points, xLabels, yLabels, yMinBound, yMaxBound };
+// One real row (from the API-backed price_records dataset) for the
+// currently-viewed by-product. This is the ONLY source of truth this map
+// uses for which mandis get a pin, and for every number shown once a pin
+// is tapped -- no per-mandi placeholder numbers, no static commodity list.
+export interface MapByProductRecord {
+  mandiName: string; // "X Mandi"
+  district: string;
+  province: string;
+  rateType: string;
+  min: number;
+  max: number;
+  arrival: string | number;
+  date?: string;
+  newOld?: string;
+  variety?: string;
+  color?: string;
 }
 
-function getMapArrivalGraphData(
-  arrivalStr: string | number | undefined,
-  timeframe: "24h" | "72h" | "7d" | "30d",
-  lang: string
-) {
-  const baseArrival = typeof arrivalStr === "number"
-    ? arrivalStr
-    : parseInt(String(arrivalStr || "5600").replace(/[^0-9]/g, ""), 10) || 5600;
-
-  const minArrival = Math.round(baseArrival * 0.88);
-  const maxArrival = Math.round(baseArrival * 1.12);
-  const diff = maxArrival - minArrival;
-
-  const pattern = [0.18, 0.44, 0.36, 0.58, 0.74, 0.80, 0.96];
-  const points = pattern.map((p) => Math.round(minArrival + diff * p));
-
-  let xLabels = ["06:00", "09:00", "12:00", "15:00", "18:00", "21:00", lang === "ur" ? "اب" : "Now"];
-  if (timeframe === "72h") {
-    xLabels = lang === "ur" ? ["دن 1", "12:00", "دن 2", "12:00", "دن 3", "12:00", "اب"] : ["Day 1", "12:00", "Day 2", "12:00", "Day 3", "12:00", "Now"];
-  } else if (timeframe === "7d") {
-    xLabels = lang === "ur" ? ["پیر", "منگل", "بدھ", "جمعرات", "جمعہ", "ہفتہ", "اتوار"] : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  } else if (timeframe === "30d") {
-    xLabels = lang === "ur" ? ["یکم", "5ویں", "10ویں", "15ویں", "20ویں", "25ویں", "آج"] : ["1st", "5th", "10th", "15th", "20th", "25th", "Today"];
+function mostCommon(values: (string | undefined)[]): string | undefined {
+  const counts = new Map<string, number>();
+  for (const v of values) {
+    if (!v) continue;
+    counts.set(v, (counts.get(v) || 0) + 1);
   }
-
-  const yMinBound = Math.floor(minArrival * 0.95);
-  const yMaxBound = Math.ceil(maxArrival * 1.05);
-  const yMidVal = Math.round((yMinBound + yMaxBound) / 2);
-
-  const fmtK = (v: number) => v >= 1000 ? (v / 1000).toFixed(1) + "k" : String(Math.round(v));
-  const yLabels = [
-    { label: fmtK(yMaxBound), val: yMaxBound },
-    { label: fmtK(yMidVal), val: yMidVal },
-    { label: fmtK(yMinBound), val: yMinBound },
-  ];
-
-  return { points, minArrival, maxArrival, xLabels, yLabels, yMinBound, yMaxBound };
+  let best: string | undefined;
+  let bestN = 0;
+  for (const [v, n] of counts) {
+    if (n > bestN) {
+      best = v;
+      bestN = n;
+    }
+  }
+  return best;
 }
 
 export interface ZaraiMandiMapProps {
@@ -509,31 +433,20 @@ export interface ZaraiMandiMapProps {
   initialMandiName?: string;
   initialProvinceName?: string;
   activeCommodity?: string;
-  rateInfo?: {
-    cropName?: string;
-    mandiName?: string;
-    minPrice?: number;
-    maxPrice?: number;
-    rateType?: string;
-    trend?: "up" | "down" | "flat" | "stable";
-    trendPct?: number;
-    arrival?: string;
-    quality?: string;
-    variety?: string;
-    color?: string;
-    condition?: string;
-    spec?: string;
-  };
+  records?: MapByProductRecord[];
   lang?: "ur" | "en";
   urduFont?: string;
 }
 
 export default function ZaraiMandiMap({
   onClose,
-  initialMandiName = "Pakpattan Mandi",
-  initialProvinceName = "Punjab",
+  // No default mandi/province: without an explicit initialMandiName, the
+  // map should stay at its already-correct all-Pakistan initial `view`
+  // (see useState below) instead of auto-focusing on one hardcoded mandi.
+  initialMandiName,
+  initialProvinceName,
   activeCommodity = "Wheat",
-  rateInfo,
+  records = [],
   lang = "en",
   urduFont,
 }: ZaraiMandiMapProps) {
@@ -546,17 +459,26 @@ export default function ZaraiMandiMap({
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [graphMode, setGraphMode] = useState<"price" | "arrival">("price");
-  const [timeframe, setTimeframe] = useState<"24h" | "72h" | "7d" | "30d">("24h");
+  const [timeframe, setTimeframe] = useState<"72h" | "7d" | "30d">("72h");
   const [showWiki, setShowWiki] = useState(false);
   const svgRef = useRef<SVGSVGElement>(null);
 
-  // Commodity context filtering: only mandis with activeCommodity (e.g. Wheat) are shown
+  const normStation = (s: string) =>
+    (s || "").toLowerCase().replace(/\s*(mandi|منڈی)$/i, "").trim();
+
+  // Real mandis reporting this by-product this month, from the live
+  // API-backed dataset -- not the static per-mandi commodity list. A mandi
+  // only gets a pin if it actually has a valid price row for this
+  // by-product; there is no fallback list.
+  const realStationNames = useMemo(
+    () => new Set(records.map((r) => normStation(r.mandiName))),
+    [records]
+  );
   const visibleCropMandis = useMemo(() => {
-    const crop = activeCommodity.toLowerCase();
-    return MANDI_DATA.filter((m) =>
-      m.commodities.some((c) => c.toLowerCase() === crop || c.toLowerCase().includes(crop))
+    return MANDI_DATA.filter(
+      (m) => realStationNames.has(normStation(m.name)) || realStationNames.has(normStation(m.city))
     );
-  }, [activeCommodity]);
+  }, [realStationNames]);
 
   const selectedMandi = view.mandi;
 
@@ -643,18 +565,34 @@ export default function ZaraiMandiMap({
     [animateToViewBox]
   );
 
+  // Mirror whatever location the screen this map is embedded in currently
+  // has selected: a specific mandi/district zooms straight there, a
+  // province zooms to that province, and neither prop set (the "All
+  // Pakistan" case) leaves the map at its default country-level view.
   useEffect(() => {
     if (initialMandiName) {
       const found = visibleCropMandis.find(
         (m) =>
           m.name.toLowerCase().includes(initialMandiName.toLowerCase()) ||
-          m.city.toLowerCase().includes(initialMandiName.toLowerCase())
+          m.city.toLowerCase().includes(initialMandiName.toLowerCase()) ||
+          initialMandiName.toLowerCase().includes(m.city.toLowerCase())
       );
       if (found) {
         goMandi(found);
+        return;
       }
     }
-  }, [initialMandiName, visibleCropMandis, goMandi]);
+    if (initialProvinceName) {
+      const found = PROVINCES.find(
+        (p) =>
+          p.name.toLowerCase() === initialProvinceName.toLowerCase() ||
+          p.short.toLowerCase() === initialProvinceName.toLowerCase()
+      );
+      if (found) {
+        goProvince(found);
+      }
+    }
+  }, [initialMandiName, initialProvinceName, visibleCropMandis, goMandi, goProvince]);
 
   /* ---------------- gestures ---------------- */
 
@@ -873,8 +811,8 @@ export default function ZaraiMandiMap({
                     key={`${p.name}-${ringIdx}`}
                     points={polygonPoints(ring, viewBox)}
                     fill={isActive ? p.fillActive : p.fill}
-                    stroke="#FFFFFF"
-                    strokeWidth={0.8}
+                    stroke="#5B7A70"
+                    strokeWidth={1.1}
                     onClick={(e) => {
                       e.stopPropagation();
                       if (!movedRef.current && view.level === "country") {
@@ -1066,7 +1004,6 @@ export default function ZaraiMandiMap({
 
       {/* ── Consistent Table Row & Dedicated Interactive Graph Card ── */}
       {selectedMandi && (() => {
-        const isPakpattan = selectedMandi.name.toLowerCase().includes("pakpattan") || selectedMandi.city.toLowerCase().includes("pakpattan");
         const stationName = lang === "ur"
           ? (selectedMandi.city === "Pakpattan" ? "پاکپتن" : selectedMandi.city)
           : (selectedMandi.city || selectedMandi.name.replace(" Mandi", "").replace(" منڈی", ""));
@@ -1074,20 +1011,89 @@ export default function ZaraiMandiMap({
           ? (selectedMandi.name.includes("منڈی") ? selectedMandi.name : `${selectedMandi.name} منڈی`)
           : (selectedMandi.name.includes("Mandi") ? selectedMandi.name : `${selectedMandi.name} Mandi`);
 
-        const minVal = rateInfo?.minPrice || (isPakpattan ? 5503 : (selectedMandi.minRate || 3850));
-        const maxVal = rateInfo?.maxPrice || (isPakpattan ? 5938 : (selectedMandi.maxRate || 4120));
-        const trend = rateInfo?.trend || (isPakpattan ? "up" : (selectedMandi.trend || "up"));
-        const trendPct = rateInfo?.trendPct !== undefined
-          ? rateInfo.trendPct
-          : (isPakpattan ? 0.9 : (selectedMandi.trendPct !== undefined ? selectedMandi.trendPct : 0.9));
-        const rateType = rateInfo?.rateType || "Retail";
-        const quality = rateInfo?.quality || "New";
-        const arrival = rateInfo?.arrival || (isPakpattan ? "5,600" : (selectedMandi.activeListings ? (selectedMandi.activeListings * 70).toLocaleString() : "5,600"));
-        const variety = rateInfo?.variety;
-        const color = rateInfo?.color;
+        const mandiKey = normStation(selectedMandi.name);
+        const mandiCityKey = normStation(selectedMandi.city);
+        const mandiRecords = records.filter(
+          (r) => normStation(r.mandiName) === mandiKey || normStation(r.mandiName) === mandiCityKey
+        );
 
-        const graphData = getMapGraphData(minVal, maxVal, trend as any, timeframe, lang);
-        const arrData = getMapArrivalGraphData(arrival, timeframe, lang);
+        // Should not normally happen -- this pin only exists because
+        // visibleCropMandis found real rows for it -- but if the records
+        // prop changes underneath a still-selected pin, show that honestly
+        // instead of falling back to a placeholder number.
+        if (mandiRecords.length === 0) {
+          return (
+            <div className="relative z-30 bg-white rounded-t-3xl border-t border-emerald-100 shadow-2xl p-6 text-center">
+              <p className="text-sm font-bold text-slate-600">
+                {lang === "ur"
+                  ? `${stationName} کے لیے اس مہینے کوئی ڈیٹا دستیاب نہیں`
+                  : `No data reported for ${stationName} this month`}
+              </p>
+            </div>
+          );
+        }
+
+        const dominantRateType = mostCommon(mandiRecords.map((r) => r.rateType)) || mandiRecords[0].rateType;
+        const rateType = dominantRateType;
+        const quality = mostCommon(mandiRecords.map((r) => r.newOld));
+        const variety = mostCommon(mandiRecords.map((r) => r.variety));
+        const color = mostCommon(mandiRecords.map((r) => r.color));
+
+        const graphRows = mandiRecords.map((r) => ({
+          mandiName: r.mandiName,
+          rateType: r.rateType,
+          min: r.min,
+          max: r.max,
+          arrival: r.arrival,
+          date: r.date,
+        }));
+        const graphData = buildMandiInlineGraphFromRows({
+          allRows: graphRows,
+          mandiName: selectedMandi.name,
+          rateType: dominantRateType,
+          timeframe,
+          lang,
+          view: "price",
+        });
+        const arrData = buildMandiInlineGraphFromRows({
+          allRows: graphRows,
+          mandiName: selectedMandi.name,
+          rateType: dominantRateType,
+          timeframe,
+          lang,
+          view: "arrival",
+        });
+
+        const minVal = graphData.latestMin;
+        const maxVal = graphData.latestMax;
+        const trend = graphData.trend;
+        const trendPct = graphData.trendPct;
+        const arrival = arrData.latestArrival.toLocaleString();
+        const arrPointsValid = arrData.points.filter((p) => p > 0);
+        const arrMinVal = arrPointsValid.length ? Math.min(...arrPointsValid) : 0;
+        const arrMaxVal = arrPointsValid.length ? Math.max(...arrPointsValid) : 0;
+
+        // Data-driven "role in the agri economy" summary: this mandi's real
+        // totals against the real nationwide total for this by-product this
+        // month, both from the same `records` prop -- not authored text.
+        const parseArr = (a: string | number) => {
+          if (typeof a === "number") return a;
+          const m = String(a || "").trim().match(/^([0-9,]+)/);
+          return m ? parseInt(m[1].replace(/,/g, ""), 10) || 0 : 0;
+        };
+        const nationalArrivalTotal = records.reduce((sum, r) => sum + parseArr(r.arrival), 0);
+        const mandiArrivalTotal = mandiRecords.reduce((sum, r) => sum + parseArr(r.arrival), 0);
+        const arrivalSharePct =
+          nationalArrivalTotal > 0 ? Math.round((mandiArrivalTotal / nationalArrivalTotal) * 1000) / 10 : null;
+        const priceTypesAtMandi = Array.from(new Set(mandiRecords.map((r) => r.rateType)));
+        const datesAtMandi = mandiRecords
+          .map((r) => r.date)
+          .filter((d): d is string => Boolean(d))
+          .sort();
+        const firstDate = datesAtMandi[0];
+        const lastDate = datesAtMandi[datesAtMandi.length - 1];
+        const distinctMandiCount = new Set(records.map((r) => normStation(r.mandiName))).size;
+        const historyRows = [...mandiRecords].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 
         const W = 350;
         const H = 115;
@@ -1188,7 +1194,7 @@ export default function ZaraiMandiMap({
 
                   {/* Trend */}
                   <div className="flex-shrink-0 font-extrabold text-[#059669] text-xs flex items-center gap-0.5 whitespace-nowrap min-w-[50px]">
-                    <span>{trend === "down" ? "▼" : "▲"}</span>
+                    <span>{trend === "down" ? "▼" : trend === "up" ? "▲" : "—"}</span>
                     <span>{trendPct}%</span>
                   </div>
 
@@ -1285,14 +1291,65 @@ export default function ZaraiMandiMap({
 
                 {/* Wiki info drawer if toggled */}
                 {showWiki ? (
-                  <div className="p-3.5 rounded-xl bg-[#F0FDF4] border border-emerald-200 text-xs text-emerald-950 space-y-2.5 animate-in fade-in duration-200">
+                  <div className="p-3.5 rounded-xl bg-[#F0FDF4] border border-emerald-200 text-xs text-emerald-950 space-y-2.5 animate-in fade-in duration-200 max-h-[38vh] overflow-y-auto">
                     <div className="flex items-center gap-1.5 font-bold text-emerald-900">
                       <BookOpen size={14} className="text-emerald-700" />
-                      <span>{lang === "ur" ? `زرعی پروفائل (${selectedMandi.city})` : `About ${selectedMandi.city} Agriculture`}</span>
+                      <span>
+                        {lang === "ur"
+                          ? `${stationName} میں ${activeCommodity} کا کردار`
+                          : `${stationName}'s role in ${activeCommodity} trade`}
+                      </span>
                     </div>
-                    <p className="text-[12px] leading-relaxed text-emerald-950/85 font-medium">
-                      {selectedMandi.agriProfile}
+                    <p className="text-[10.5px] leading-relaxed text-emerald-900/60 font-semibold -mt-1">
+                      {lang === "ur"
+                        ? "اس مہینے کے حقیقی ریکارڈز سے خودکار حساب"
+                        : "Computed from this month's real records"}
                     </p>
+
+                    <div className="grid grid-cols-2 gap-2.5 text-[11px]">
+                      <div>
+                        <span className="font-bold text-emerald-800 block">{lang === "ur" ? "کل ریکارڈز" : "Records this month"}</span>
+                        <span className="font-semibold text-slate-800">{mandiRecords.length}</span>
+                      </div>
+                      <div>
+                        <span className="font-bold text-emerald-800 block">{lang === "ur" ? "نرخ کی اقسام" : "Price types reported"}</span>
+                        <span className="font-semibold text-slate-800">{priceTypesAtMandi.join(", ")}</span>
+                      </div>
+                      {arrivalSharePct !== null && (
+                        <div>
+                          <span className="font-bold text-emerald-800 block">
+                            {lang === "ur" ? "قومی آمد میں حصہ" : "Share of national arrivals"}
+                          </span>
+                          <span className="font-semibold text-slate-800">{arrivalSharePct}%</span>
+                        </div>
+                      )}
+                      <div>
+                        <span className="font-bold text-emerald-800 block">
+                          {lang === "ur" ? "دیگر رپورٹ کرنے والی منڈیاں" : "Other reporting mandis nationwide"}
+                        </span>
+                        <span className="font-semibold text-slate-800">{Math.max(0, distinctMandiCount - 1)}</span>
+                      </div>
+                      {firstDate && lastDate && (
+                        <div className="col-span-2">
+                          <span className="font-bold text-emerald-800 block">
+                            {lang === "ur" ? "فعال تاریخیں" : "Active dates"}
+                          </span>
+                          <span className="font-semibold text-slate-800">{firstDate} – {lastDate}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {selectedMandi.agriProfile && (
+                      <div className="pt-2.5 border-t border-emerald-200/80">
+                        <span className="font-bold text-emerald-800 block mb-1">
+                          {lang === "ur" ? "علاقے کا عمومی پس منظر" : "General background on the area"}
+                        </span>
+                        <p className="text-[11px] leading-relaxed text-emerald-950/75 font-medium">
+                          {selectedMandi.agriProfile}
+                        </p>
+                      </div>
+                    )}
+
                     <div className="grid grid-cols-2 gap-2 pt-2 border-t border-emerald-200/80 text-[11px]">
                       <div>
                         <span className="font-bold text-emerald-800 block">{lang === "ur" ? "اوقات کار" : "Trading Hours"}</span>
@@ -1305,14 +1362,49 @@ export default function ZaraiMandiMap({
                         </span>
                       </div>
                     </div>
+
+                    {/* Scrollable real history table for this mandi + by-product */}
+                    <div className="pt-2.5 border-t border-emerald-200/80">
+                      <span className="font-bold text-emerald-800 block mb-1.5">
+                        {lang === "ur" ? "تاریخ کے لحاظ سے ریکارڈز" : "Records by date"}
+                      </span>
+                      <div className="max-h-[26vh] overflow-y-auto rounded-lg border border-emerald-200/70">
+                        <table className="w-full text-[10.5px]">
+                          <thead className="sticky top-0 bg-[#E4F2EC]">
+                            <tr className="text-emerald-900/80 font-bold">
+                              <th className="text-left px-2 py-1">{lang === "ur" ? "تاریخ" : "Date"}</th>
+                              <th className="text-left px-2 py-1">{lang === "ur" ? "قسم" : "Type"}</th>
+                              <th className="text-right px-2 py-1">{lang === "ur" ? "کم" : "Min"}</th>
+                              <th className="text-right px-2 py-1">{lang === "ur" ? "زیادہ" : "Max"}</th>
+                              <th className="text-right px-2 py-1">{lang === "ur" ? "آمد" : "Arrival"}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {historyRows.map((r, i) => (
+                              <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-[#F4FAF7]"}>
+                                <td className="px-2 py-1 font-semibold text-slate-700 whitespace-nowrap">{r.date || "—"}</td>
+                                <td className="px-2 py-1 text-slate-600 whitespace-nowrap">{r.rateType}</td>
+                                <td className="px-2 py-1 text-right font-semibold text-slate-800">{r.min > 0 ? r.min.toLocaleString() : "—"}</td>
+                                <td className="px-2 py-1 text-right font-semibold text-slate-800">{r.max > 0 ? r.max.toLocaleString() : "—"}</td>
+                                <td className="px-2 py-1 text-right text-slate-600">
+                                  {parseArr(r.arrival) > 0 ? parseArr(r.arrival).toLocaleString() : "—"}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <>
-                    {/* Timeframe selector pills: 24H 72H 7D 30D */}
+                    {/* Timeframe selector pills: 72H 7D 30D. No 24H --
+                        the source data is one row per market per day, so
+                        there's no real intraday figure to show. */}
                     <div className="flex items-center justify-between gap-1.5 w-full">
-                      {(["24h", "72h", "7d", "30d"] as const).map((tf) => {
+                      {(["72h", "7d", "30d"] as const).map((tf) => {
                         const isActive = timeframe === tf;
-                        const label = tf === "24h" ? "24H" : tf === "72h" ? "72H" : tf === "7d" ? "7D" : "30D";
+                        const label = tf === "72h" ? "72H" : tf === "7d" ? "7D" : "30D";
                         return (
                           <button
                             key={tf}
@@ -1338,7 +1430,7 @@ export default function ZaraiMandiMap({
                             {graphMode === "price" ? (lang === "ur" ? "کم سے کم ریٹ" : "MIN RATE") : (lang === "ur" ? "کم سے کم آمد" : "MIN ARRIVAL")}
                           </span>
                           <span className="text-xs font-black text-slate-900 block mt-0.5 leading-tight">
-                            {graphMode === "price" ? `Rs.${minVal.toLocaleString()}` : `${arrData.minArrival.toLocaleString()} Bags`}
+                            {graphMode === "price" ? `Rs.${minVal.toLocaleString()}` : `${arrMinVal.toLocaleString()} Bags`}
                           </span>
                         </div>
                         <div className="w-[1px] h-5 bg-[#D5E2DD]" />
@@ -1347,7 +1439,7 @@ export default function ZaraiMandiMap({
                             {graphMode === "price" ? (lang === "ur" ? "زیادہ سے زیادہ ریٹ" : "MAX RATE") : (lang === "ur" ? "زیادہ سے زیادہ آمد" : "MAX ARRIVAL")}
                           </span>
                           <span className={`text-xs font-black block mt-0.5 leading-tight ${chartMaxValColor}`}>
-                            {graphMode === "price" ? `Rs.${maxVal.toLocaleString()}` : `${arrData.maxArrival.toLocaleString()} Bags`}
+                            {graphMode === "price" ? `Rs.${maxVal.toLocaleString()}` : `${arrMaxVal.toLocaleString()} Bags`}
                           </span>
                         </div>
                       </div>
@@ -1355,7 +1447,7 @@ export default function ZaraiMandiMap({
                       <div className={`px-2.5 py-0.5 rounded-md text-[11px] font-black flex items-center gap-1 ${
                         isArrival ? "bg-[#FDF6F0] text-[#8B5A2B]" : "bg-[#E8F8F0] text-[#059669]"
                       }`}>
-                        <span>▲</span>
+                        <span>{trend === "down" ? "▼" : trend === "up" ? "▲" : "—"}</span>
                         <span>{trendPct}%</span>
                       </div>
                     </div>

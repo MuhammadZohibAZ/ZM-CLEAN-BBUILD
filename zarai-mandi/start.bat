@@ -7,7 +7,7 @@ echo   Starting Zarai Mandi App (All-in-One)
 echo   TTS Backend URL:   http://localhost:8000
 echo   Market API URL:    http://localhost:8090
 echo   Frontend URL:      http://localhost:8445
-echo   (Market API needs Postgres running -- see api/README.md)
+echo   (Market API running on embedded SQLite database)
 echo ========================================================
 echo.
 

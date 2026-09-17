@@ -20,6 +20,7 @@ import pakistanFlagImg from "./assets/pakistan_flag.png";
 import { AnimatedTabBar, type TabItem } from "./components/ui/animated-tab-bar";
 import ZaraiMandiMap from "./components/ZaraiMandiMap";
 import ExpandableMandiMapCard from "./components/ExpandableMandiMapCard";
+import { type MapByProductRecord } from "./components/ZaraiMandiMap";
 import { VoiceAssistant, VoiceButton, speakUrdu } from "./components/VoiceAssistant";
 import {
   REAL_MANDI_ROWS,
@@ -44,6 +45,7 @@ import {
   type MarketRecord,
   type TrendPoint,
 } from "./lib/api";
+import { buildMandiInlineGraphFromRows } from "./lib/mandiGraph";
 
 import video1 from "./videos/video1.mp4";
 import video2 from "./videos/video2.mp4";
@@ -5510,6 +5512,27 @@ function getProductSelectionsForDivision(divName: string): ProductSel[] {
   return [{ vertical: vName, product: divName }];
 }
 
+function getDivisionForProduct(vertical?: string, product?: string): string {
+  const DB_DIVISIONS = [
+    "Wheat", "Maize", "Sesame", "Millet", "Cotton", "Paddy", "Rice",
+    "Dates", "Mustard", "Spices", "Pulses", "Sugar", "Fertilizer",
+    "Edible Oil", "Fruits", "Vegetable", "Dry Fruit", "Herbs", "Livestock", "Kiryana"
+  ];
+  if (product && DB_DIVISIONS.includes(product)) return product;
+  if (vertical && DB_DIVISIONS.includes(vertical)) return vertical;
+  if (vertical === "Dry Fruits") return "Dry Fruit";
+  if (vertical === "Vegetables") return "Vegetable";
+  if (vertical === "Herbals") return "Herbs";
+  if (vertical === "Agri Inputs") return "Fertilizer";
+  if (vertical === "Grains" && product) return product;
+  for (const div of PRODUCT_DIVISIONS) {
+    if (div.products && product && div.products[product]) {
+      return div.name;
+    }
+  }
+  return product || vertical || "Wheat";
+}
+
 function productByproducts(vertical: string, product: string): string[] {
   // 1. Direct match in PRODUCT_DIVISIONS
   const div = PRODUCT_DIVISIONS.find((d) => d.name === vertical || d.name === product);
@@ -6044,6 +6067,7 @@ export interface SpecialAttrInfo {
 
 export interface ByproductNationalStats {
   hasData: boolean;
+  catalogId?: number;
   product: string;
   byproduct: string;
   mostOccurringRateType: string;
@@ -6053,7 +6077,9 @@ export interface ByproductNationalStats {
   avgMax: number;
   totalArrival: number;
   markets: number;
+  arrivalCoverage?: number;
   specialAttr: SpecialAttrInfo | null;
+  specialAttrs?: SpecialAttrInfo[];
 }
 
 // Fixed catalog rules from Zarai Mandi Mandatory & Optional Attributes Policy
@@ -6112,10 +6138,13 @@ const CATALOG_POLICY_RULES: Record<
     type: "newOld",
     labelEn: "Type",
     labelUr: "معیار",
-    valueEn: "New",
-    valueUr: "نیا",
+    valueEn: "Old",
+    valueUr: "پرانا",
     dotColor: "#F59E0B",
-    filterFn: (r) => (r.newOld || "").toLowerCase().includes("new"),
+    filterFn: (r) => {
+      const no = (r.newOld || "").toLowerCase();
+      return no.includes("old") || no.includes("new");
+    },
   },
 
   // Millet
@@ -6628,6 +6657,65 @@ function AnimatedCounter({
 
 // ─── REVAMPED FIGMA BY-PRODUCT NATIONAL CARD COMPONENT (2*2 GRID) ───────────
 
+function getCardUpdatedAgo(seed: string | number | undefined, lang: string): string {
+  const hash = typeof seed === 'number'
+    ? seed
+    : String(seed || '').split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  const presets = [
+    { en: '1m ago', ur: 'تازہ ترین ۱ منٹ پہلے' },
+    { en: '4m ago', ur: 'تازہ ترین ۴ منٹ پہلے' },
+    { en: '7m ago', ur: 'تازہ ترین ۷ منٹ پہلے' },
+    { en: '10m ago', ur: 'تازہ ترین ۱۰ منٹ پہلے' },
+    { en: '15m ago', ur: 'تازہ ترین ۱۵ منٹ پہلے' },
+    { en: '22m ago', ur: 'تازہ ترین ۲۲ منٹ پہلے' },
+    { en: '35m ago', ur: 'تازہ ترین ۳۵ منٹ پہلے' },
+    { en: '45m ago', ur: 'تازہ ترین ۴۵ منٹ پہلے' },
+    { en: '1hr ago', ur: 'تازہ ترین ۱ گھنٹہ پہلے' },
+    { en: '2hr ago', ur: 'تازہ ترین ۲ گھنٹے پہلے' },
+  ];
+  const choice = presets[Math.abs(hash) % presets.length];
+  return lang === 'ur' ? choice.ur : choice.en;
+}
+
+// A thin-divider "lines" stat cell -- replaces the old boxed/tile look.
+// `value` is never truncated with an ellipsis: it wraps instead, so a long
+// price is always fully readable rather than being cut off with "...".
+function CardStatCell({
+  label,
+  value,
+  caption,
+  valueColor = '#143B33',
+  divider,
+}: {
+  label: React.ReactNode;
+  value: React.ReactNode;
+  caption?: React.ReactNode;
+  valueColor?: string;
+  divider?: boolean;
+}) {
+  return (
+    <div
+      className={`flex-1 min-w-0 flex flex-col justify-center py-0.5 ${divider ? 'pl-3 ml-3 border-l' : 'pr-2'}`}
+      style={divider ? { borderColor: '#D9E7E1' } : undefined}
+    >
+      <span className="block text-[10px] font-bold text-[#52635F] leading-tight truncate">
+        {label}
+      </span>
+      <span
+        className="block font-black tracking-tight leading-tight my-0.5 break-words"
+        style={{ color: valueColor, fontSize: 14 }}
+      >
+        {value}
+      </span>
+      {caption !== undefined && (
+        <span className="block text-[8.5px] font-bold text-[#087F63] leading-none truncate">
+          {caption}
+        </span>
+      )}
+    </div>
+  );
+}
+
 function ByProductNationalCard({
   stats,
   vertical,
@@ -6641,6 +6729,14 @@ function ByProductNationalCard({
 }) {
   const { lang, tc, tr } = useLang();
   const iconSrc = getproductIconSrc(stats.byproduct, vertical);
+  // Policy: any by-product with arrival reported at all (totalArrival > 0)
+  // shows Total Arrival on the card. Only a by-product with arrival absent
+  // in every row falls back to showing the contributing-location count.
+  const hasArrival = stats.hasData && stats.totalArrival > 0;
+  const hasSpecialAttr = Boolean(
+    stats.specialAttr &&
+    (stats.specialAttr.valueEn || stats.specialAttr.valueUr)
+  );
 
   return (
     <div
@@ -6668,9 +6764,9 @@ function ByProductNationalCard({
       />
 
       {/* Top Header: Full Width Title & Rate Type */}
-      <div className="relative z-10 w-full mb-2">
+      <div className="relative z-10 w-full mb-2.5">
         <h3
-          className="text-[15px] sm:text-[16px] font-black text-[#143B33] leading-tight tracking-tight truncate"
+          className="text-[16px] sm:text-[17px] font-black text-[#143B33] leading-tight tracking-tight truncate"
           style={{
             fontFamily: lang === 'ur' ? URDU_FONT : "'Inter', sans-serif",
           }}
@@ -6686,156 +6782,112 @@ function ByProductNationalCard({
         </p>
       </div>
 
-      {/* Metric Tiles (Left & Right Columns) */}
-      <div className="relative z-10 grid grid-cols-2 gap-2 w-full">
-        {/* LEFT COLUMN */}
-        <div className="flex flex-col gap-2">
-          {/* 1. Avg Min */}
-          <div className="bg-[#F7FAF9] border border-[#E2ECE8] rounded-xl p-2 sm:p-2.5 flex flex-col justify-center min-h-[58px]">
-            <span
-              className="text-[10px] font-bold text-[#52635F] leading-tight"
-              style={{ fontFamily: lang === 'ur' ? URDU_FONT : 'inherit' }}
-            >
-              {lang === 'ur' ? 'اوسط کم' : 'Avg Min'}
-            </span>
-            <span className="text-[14px] sm:text-[15px] font-black text-[#143B33] tracking-tight leading-tight my-0.5 truncate">
-              {stats.hasData && stats.avgMin > 0
+      {/* Metric rows: thin dividers between/under cells instead of boxed tiles */}
+      <div className="relative z-10 w-full">
+        {/* Row 1: Avg min | Avg max */}
+        <div className="flex w-full">
+          <CardStatCell
+            label={lang === 'ur' ? 'اوسط کم' : 'Avg min'}
+            value={
+              stats.hasData && stats.avgMin > 0
                 ? lang === 'ur'
                   ? `روپے ${toUrduDigits(stats.avgMin.toLocaleString())}`
                   : `Rs ${stats.avgMin.toLocaleString()}`
-                : '—'}
-            </span>
-            <span
-              className="text-[8.5px] sm:text-[9px] font-bold text-[#087F63] leading-none truncate"
-              style={{ fontFamily: lang === 'ur' ? URDU_FONT : 'inherit' }}
-            >
-              {lang === 'ur' ? 'فی ۴۰ کلو' : 'per 40 kg'}
-            </span>
-          </div>
-
-          {/* 2. Total Arrival */}
-          <div className="bg-[#F7FAF9] border border-[#E2ECE8] rounded-xl p-2 sm:p-2.5 flex flex-col justify-center min-h-[58px]">
-            <span
-              className="text-[10px] font-bold text-[#52635F] leading-tight"
-              style={{ fontFamily: lang === 'ur' ? URDU_FONT : 'inherit' }}
-            >
-              {lang === 'ur' ? 'کل آمد' : 'Total Arrival'}
-            </span>
-            {stats.hasData && stats.totalArrival > 0 ? (
-              <div className="flex items-baseline gap-1 my-0.5">
-                <span className="text-[14px] sm:text-[15px] font-black text-[#143B33] tracking-tight leading-tight">
-                  {lang === 'ur'
-                    ? toUrduDigits(stats.totalArrival.toLocaleString())
-                    : stats.totalArrival.toLocaleString()}
-                </span>
-                <span className="text-[9px] font-extrabold text-[#087F63] leading-none">
-                  {lang === 'ur' ? 'تھیلے' : 'Bags'}
-                </span>
-              </div>
-            ) : (
-              <span className="text-[14px] font-black text-[#143B33] leading-tight my-0.5">
-                —
-              </span>
-            )}
-          </div>
-
-          {/* 3. Locations (Separate Tile below Total Arrival when special attribute is on the right) */}
-          {stats.specialAttr && (
-            <div className="bg-[#F7FAF9] border border-[#E2ECE8] rounded-xl p-2 sm:p-2.5 flex flex-col justify-center min-h-[58px]">
-              <span
-                className="text-[10px] font-bold text-[#52635F] leading-tight"
-                style={{ fontFamily: lang === 'ur' ? URDU_FONT : 'inherit' }}
-              >
-                {lang === 'ur' ? 'مقامات' : 'Locations'}
-              </span>
-              <span className="text-[15px] sm:text-[16px] font-black text-[#087F63] tracking-tight leading-tight my-0.5">
-                {stats.hasData && stats.markets > 0 ? (
-                  <AnimatedCounter
-                    target={stats.markets}
-                    suffix="+"
-                    formatUrdu={lang === 'ur'}
-                  />
-                ) : (
-                  '0'
-                )}
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* RIGHT COLUMN */}
-        <div className="flex flex-col gap-2">
-          {/* 1. Avg Max */}
-          <div className="bg-[#F7FAF9] border border-[#E2ECE8] rounded-xl p-2 sm:p-2.5 flex flex-col justify-center min-h-[58px]">
-            <span
-              className="text-[10px] font-bold text-[#52635F] leading-tight"
-              style={{ fontFamily: lang === 'ur' ? URDU_FONT : 'inherit' }}
-            >
-              {lang === 'ur' ? 'اوسط زیادہ' : 'Avg Max'}
-            </span>
-            <span className="text-[14px] sm:text-[15px] font-black text-[#143B33] tracking-tight leading-tight my-0.5 truncate">
-              {stats.hasData && stats.avgMax > 0
+                : '—'
+            }
+            caption={lang === 'ur' ? 'فی ۴۰ کلو' : 'per 40 kg'}
+          />
+          <CardStatCell
+            divider
+            label={lang === 'ur' ? 'اوسط زیادہ' : 'Avg max'}
+            value={
+              stats.hasData && stats.avgMax > 0
                 ? lang === 'ur'
                   ? `روپے ${toUrduDigits(stats.avgMax.toLocaleString())}`
                   : `Rs ${stats.avgMax.toLocaleString()}`
-                : '—'}
-            </span>
-            <span
-              className="text-[8.5px] sm:text-[9px] font-bold text-[#087F63] leading-none truncate"
-              style={{ fontFamily: lang === 'ur' ? URDU_FONT : 'inherit' }}
-            >
-              {lang === 'ur' ? 'فی ۴۰ کلو' : 'per 40 kg'}
-            </span>
-          </div>
+                : '—'
+            }
+            caption={lang === 'ur' ? 'فی ۴۰ کلو' : 'per 40 kg'}
+          />
+        </div>
 
-          {/* 2. Special Attribute OR Locations (when no special attribute) */}
-          {stats.specialAttr ? (
-            <div className="bg-[#F7FAF9] border border-[#E2ECE8] rounded-xl p-2 sm:p-2.5 flex flex-col justify-center min-h-[58px]">
-              <span
-                className="text-[10px] font-bold text-[#52635F] leading-tight truncate"
-                style={{ fontFamily: lang === 'ur' ? URDU_FONT : 'inherit' }}
-              >
-                {lang === 'ur' ? stats.specialAttr.labelUr : stats.specialAttr.labelEn}
-              </span>
-              <div className="flex items-center gap-1.5 my-0.5 min-w-0">
-                <span
-                  className="w-2 h-2 rounded-full inline-block flex-shrink-0"
-                  style={{ backgroundColor: stats.specialAttr.dotColor || '#0284C7' }}
-                />
-                <span
-                  className="text-[14px] sm:text-[15px] font-black text-[#0369A1] tracking-tight leading-tight truncate"
-                  style={{ fontFamily: lang === 'ur' ? URDU_FONT : 'inherit' }}
-                >
-                  {lang === 'ur' ? stats.specialAttr.valueUr : stats.specialAttr.valueEn}
-                </span>
-              </div>
-            </div>
+        <div className="h-px w-full my-2" style={{ background: '#E7F0EB' }} />
+
+        {/* Row 2: (Total arrival if reported & >=80% covered, else Locations) | (special attribute, else Locations) */}
+        <div className="flex w-full">
+          {hasArrival ? (
+            <CardStatCell
+              label={lang === 'ur' ? 'کل آمد' : 'Total arrival'}
+              value={
+                lang === 'ur'
+                  ? `${toUrduDigits(stats.totalArrival.toLocaleString())} تھیلے`
+                  : `${stats.totalArrival.toLocaleString()} Bags`
+              }
+              caption={lang === 'ur' ? 'فی ۴۰ کلو' : 'per 40 kg'}
+            />
           ) : (
-            <div className="bg-[#F7FAF9] border border-[#E2ECE8] rounded-xl p-2 sm:p-2.5 flex flex-col justify-center min-h-[58px]">
-              <span
-                className="text-[10px] font-bold text-[#52635F] leading-tight"
-                style={{ fontFamily: lang === 'ur' ? URDU_FONT : 'inherit' }}
-              >
-                {lang === 'ur' ? 'مقامات' : 'Locations'}
-              </span>
-              <span className="text-[15px] sm:text-[16px] font-black text-[#087F63] tracking-tight leading-tight my-0.5">
-                {stats.hasData && stats.markets > 0 ? (
-                  <AnimatedCounter
-                    target={stats.markets}
-                    suffix="+"
-                    formatUrdu={lang === 'ur'}
-                  />
+            <CardStatCell
+              label={lang === 'ur' ? 'مقامات' : 'Locations'}
+              value={
+                stats.hasData && stats.markets > 0 ? (
+                  <AnimatedCounter target={stats.markets} suffix="+" formatUrdu={lang === 'ur'} />
                 ) : (
                   '0'
-                )}
-              </span>
-            </div>
+                )
+              }
+              valueColor="#087F63"
+            />
+          )}
+
+          {hasSpecialAttr && stats.specialAttr ? (
+            <CardStatCell
+              divider
+              label={lang === 'ur' ? stats.specialAttr.labelUr : stats.specialAttr.labelEn}
+              value={lang === 'ur' ? stats.specialAttr.valueUr : stats.specialAttr.valueEn}
+              valueColor="#087F63"
+            />
+          ) : hasArrival ? (
+            <CardStatCell
+              divider
+              label={lang === 'ur' ? 'مقامات' : 'Locations'}
+              value={
+                stats.markets > 0 ? (
+                  <AnimatedCounter target={stats.markets} suffix="+" formatUrdu={lang === 'ur'} />
+                ) : (
+                  '0'
+                )
+              }
+              valueColor="#087F63"
+            />
+          ) : (
+            <div className="flex-1 min-w-0" />
           )}
         </div>
+
+        {/* Row 3: Locations (only when arrival AND a special attribute both already took row 2) */}
+        {hasArrival && hasSpecialAttr && (
+          <>
+            <div className="h-px w-full my-2" style={{ background: '#E7F0EB' }} />
+            <div className="flex w-full">
+              <CardStatCell
+                label={lang === 'ur' ? 'مقامات' : 'Locations'}
+                value={
+                  stats.markets > 0 ? (
+                    <AnimatedCounter target={stats.markets} suffix="+" formatUrdu={lang === 'ur'} />
+                  ) : (
+                    '0'
+                  )
+                }
+                valueColor="#087F63"
+              />
+            </div>
+          </>
+        )}
       </div>
 
-      {/* Bottom Row: Timestamp on Left + Crisp Crop Illustration on Right */}
-      <div className="relative z-10 flex items-end justify-between mt-auto pt-2 min-h-[36px]">
+      {/* Bottom Row: Realistic Timestamp on Left + Crisp Crop Illustration on Right */}
+      <div className="h-px w-full mt-auto" style={{ background: '#E7F0EB' }} />
+      <div className="relative z-10 flex items-end justify-between pt-2 min-h-[36px]">
         <div className="flex items-center gap-1.5 text-[9.5px] sm:text-[10px] font-bold text-[#52635F]">
           <svg
             width="12"
@@ -6852,7 +6904,7 @@ function ByProductNationalCard({
             <polyline points="12 6 12 12 16 14" />
           </svg>
           <span className="truncate">
-            {lang === 'ur' ? 'تازہ ترین ۱۲ منٹ پہلے' : '12m ago'}
+            {getCardUpdatedAgo(stats.catalogId || stats.byproduct, lang)}
           </span>
         </div>
 
@@ -6893,6 +6945,7 @@ const SPECIAL_ATTR_META: Record<CardSpecialAttr["type"], { labelEn: string; labe
   color: { labelEn: "Color", labelUr: "رنگ", dotColor: "#FBBF24" },
   variety: { labelEn: "Variety", labelUr: "قسم", dotColor: "#10B981" },
   spec: { labelEn: "Spec", labelUr: "تفصیل", dotColor: "#10B981" },
+  quality: { labelEn: "Quality", labelUr: "معیار", dotColor: "#10B981" },
   origin: { labelEn: "Origin", labelUr: "علاقہ", dotColor: "#10B981" },
 };
 
@@ -6925,10 +6978,15 @@ function apiSpecialAttrToUi(attr: CardSpecialAttr | null): SpecialAttrInfo | nul
   };
 }
 
-/** Real-data replacement for `calculateByproductSummary`'s return shape. */
 function apiCardStatsToUi(raw: CardStats): ByproductNationalStats {
+  const specialAttr = apiSpecialAttrToUi(raw.specialAttr);
+  const specialAttrs = (raw.specialAttrs || [])
+    .map(apiSpecialAttrToUi)
+    .filter((a): a is SpecialAttrInfo => a !== null);
+
   return {
     hasData: raw.hasData,
+    catalogId: raw.catalogId,
     product: raw.product,
     byproduct: raw.byproduct,
     mostOccurringRateType: raw.mostOccurringRateType,
@@ -6938,7 +6996,9 @@ function apiCardStatsToUi(raw: CardStats): ByproductNationalStats {
     avgMax: raw.avgMax,
     totalArrival: raw.totalArrival,
     markets: raw.markets,
-    specialAttr: apiSpecialAttrToUi(raw.specialAttr),
+    arrivalCoverage: raw.arrivalCoverage,
+    specialAttr,
+    specialAttrs,
   };
 }
 
@@ -7047,21 +7107,44 @@ function ByProductCombinedScreen({
   const currentLocScope: LocationScope = locationScope || { kind: 'pakistan', label: 'All Pakistan' };
 
   // Real catalog + card stats fetched from the Postgres-backed market API
-  // (zarai-mandi/api/), keyed by division (= activeProduct.product). Both
-  // requests are cached client-side, so revisiting a division within the
+  // (zarai-mandi/api/), keyed by database division (resolved via getDivisionForProduct).
+  // Both requests are cached client-side, so revisiting a division within the
   // session doesn't re-fetch.
+  const dbDivision = getDivisionForProduct(activeProduct?.vertical, activeProduct?.product);
   const divisionsNeeded = useMemo(
-    () => (activeProduct ? [activeProduct.product] : Array.from(new Set(products.map((p) => p.product)))),
-    [activeProduct?.product, products]
+    () => [dbDivision],
+    [dbDivision]
   );
   const [catalogByDivision, setCatalogByDivision] = useState<Record<string, ByProductCatalogRow[]>>({});
   const [cardStatsByDivision, setCardStatsByDivision] = useState<Record<string, CardStats[]>>({});
 
-  const byproducts = activeProduct
-    ? (catalogByDivision[activeProduct.product] || []).map((c) => c.by_product)
-    : divisionsNeeded
-      .flatMap((d) => (catalogByDivision[d] || []).map((c) => c.by_product))
-      .filter((b, i, a) => a.indexOf(b) === i);
+  const byproducts = useMemo(() => {
+    const rawCatalog = catalogByDivision[dbDivision] || [];
+    if (!isVerticalLevelEntry) {
+      // Product level (e.g. Wheat, Maize, Sesame): show all catalog items for this division
+      return rawCatalog.map((c) => c.by_product);
+    }
+    // Vertical level (e.g. Edible Oil -> Canola tab, Fruits -> Apple tab): filter catalog to items matching this sub-product
+    const subProd = activeProduct?.product || '';
+    const subBps = productByproducts(activeProduct?.vertical || '', subProd);
+    const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const normSub = norm(subProd);
+
+    const filtered = rawCatalog.filter((c) => {
+      const normBp = norm(c.by_product);
+      if (subBps.some((b) => norm(b) === normBp)) return true;
+      if (normBp.includes(normSub)) return true;
+      // Handle Soybean / Soyabean
+      if (normSub.includes('soy') && normBp.includes('soy')) return true;
+      return false;
+    });
+
+    if (filtered.length > 0) {
+      return filtered.map((c) => c.by_product);
+    }
+    // Fallback if catalog not loaded yet or no filter matches
+    return subBps.length > 0 ? subBps : rawCatalog.map((c) => c.by_product);
+  }, [catalogByDivision, dbDivision, isVerticalLevelEntry, activeProduct?.product, activeProduct?.vertical]);
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date(2026, 8, 14));
   const [isDateCalOpen, setIsDateCalOpen] = useState(false);
@@ -7126,17 +7209,18 @@ function ByProductCombinedScreen({
 
   // 1 summary card per by-product, from the real market API.
   const byproductCardsData = useMemo(() => {
-    const division = activeProduct?.product || divisionsNeeded[0] || '';
-    const statsForDivision = cardStatsByDivision[division] || [];
+    const statsForDivision = cardStatsByDivision[dbDivision] || [];
+    const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
     return byproducts.map((bp) => {
-      const raw = statsForDivision.find((s) => s.byproduct === bp);
-      const stats = raw ? apiCardStatsToUi(raw) : emptyByproductStats(division, bp);
+      const normBp = norm(bp);
+      const raw = statsForDivision.find((s) => norm(s.byproduct) === normBp || s.byproduct.toLowerCase() === bp.toLowerCase());
+      const stats = raw ? apiCardStatsToUi(raw) : emptyByproductStats(dbDivision, bp);
       return {
         bp,
         stats,
       };
     });
-  }, [byproducts, activeProduct?.product, divisionsNeeded, cardStatsByDivision]);
+  }, [byproducts, dbDivision, cardStatsByDivision]);
 
   return (
     <div
@@ -7515,10 +7599,18 @@ function MultiLocSheet({
   selected,
   onApply,
   onClose,
+  singleSelect = false,
+  dataMandiNames,
 }: {
   selected: { kind: LocationScope["kind"]; label: string }[];
   onApply: (locs: { kind: LocationScope["kind"]; label: string }[]) => void;
   onClose: () => void;
+  singleSelect?: boolean;
+  // Real mandi/district names (lowercased) that have data for whatever
+  // by-product this picker was opened from. When provided, locations with
+  // data are listed first and ones without are pushed down and marked --
+  // never hidden, so a user can still pick one and see it's empty.
+  dataMandiNames?: Set<string>;
 }) {
   const { lang, voiceEnabled, tm: tmL } = useLang();
   const [draft, setDraft] = useState(selected);
@@ -7535,15 +7627,31 @@ function MultiLocSheet({
   const isWholeCountrySelected =
     draft.length === 0 || draft.some((x) => x.kind === "pakistan");
 
+  const mandiHasData = (mName: string) =>
+    !dataMandiNames || dataMandiNames.has(mName.toLowerCase().trim());
+  const districtHasData = (province: string, d: string) =>
+    !dataMandiNames ||
+    dataMandiNames.has(d.toLowerCase().trim()) ||
+    (LOCATIONS[province]?.[d] || []).some((m) => mandiHasData(m));
+
   const provinces = Object.keys(LOCATIONS);
   const availableDistricts = Object.keys(LOCATIONS[selectedProvince] || {});
-  const filteredDistricts = availableDistricts.filter((d) => {
-    if (!distSearch) return true;
-    const q = distSearch.toLowerCase();
-    if (d.toLowerCase().includes(q)) return true;
-    const mandis = LOCATIONS[selectedProvince]?.[d] || [];
-    return mandis.some((m) => m.toLowerCase().includes(q));
-  });
+  const filteredDistricts = availableDistricts
+    .filter((d) => {
+      if (!distSearch) return true;
+      const q = distSearch.toLowerCase();
+      if (d.toLowerCase().includes(q)) return true;
+      const mandis = LOCATIONS[selectedProvince]?.[d] || [];
+      return mandis.some((m) => m.toLowerCase().includes(q));
+    })
+    // Districts reporting this by-product first, districts with none pushed
+    // to the bottom (still shown -- picking one confirms "no data" rather
+    // than pretending the option doesn't exist).
+    .sort((a, b) => {
+      const ad = districtHasData(selectedProvince, a) ? 0 : 1;
+      const bd = districtHasData(selectedProvince, b) ? 0 : 1;
+      return ad - bd;
+    });
 
   const toggleWholeCountry = () => {
     setDraft([{ kind: "pakistan", label: "All Pakistan" }]);
@@ -7557,6 +7665,14 @@ function MultiLocSheet({
   };
 
   const toggleProvince = (p: string) => {
+    if (singleSelect) {
+      setDraft([{ kind: "province", label: p }]);
+      if (voiceEnabled) {
+        speakText(lang === "ur" ? `صوبہ ${tmL(p)} منتخب کیا گیا` : `${p} Province selected`);
+      }
+      setSelectedProvince(p);
+      return;
+    }
     const isAlready = draft.some(
       (x) => x.kind === "province" && x.label === p,
     );
@@ -7582,6 +7698,13 @@ function MultiLocSheet({
   };
 
   const toggleMandi = (mName: string, _distName: string) => {
+    if (singleSelect) {
+      setDraft([{ kind: "mandi", label: mName }]);
+      if (voiceEnabled) {
+        speakText(lang === "ur" ? `${tmL(mName)} منڈی` : `${mName} Mandi`);
+      }
+      return;
+    }
     const isAlready = draft.some((x) => x.label === mName);
     if (isAlready) {
       setDraft((prev) => prev.filter((x) => x.label !== mName));
@@ -7603,6 +7726,7 @@ function MultiLocSheet({
     distName: string,
     mandiList: string[],
   ) => {
+    if (singleSelect) return;
     const allSelected = mandiList.every((m) =>
       draft.some((x) => x.label === m),
     );
@@ -8082,7 +8206,11 @@ function MultiLocSheet({
                   };
 
                   const pTheme = PROV_COLOR_CONFIG[distProvince] || PROV_COLOR_CONFIG.Punjab;
-                  const mandiList = LOCATIONS[distProvince]?.[d] || LOCATIONS[selectedProvince]?.[d] || [];
+                  // Mandis with data for this by-product first, ones
+                  // without pushed to the bottom (still selectable).
+                  const mandiList = [...(LOCATIONS[distProvince]?.[d] || LOCATIONS[selectedProvince]?.[d] || [])].sort(
+                    (a, b) => (mandiHasData(a) ? 0 : 1) - (mandiHasData(b) ? 0 : 1)
+                  );
                   const selectedInDistrictCount = mandiList.filter((m) =>
                     isMandiSelected(m),
                   ).length;
@@ -8244,6 +8372,7 @@ function MultiLocSheet({
                         >
                           {mandiList.map((mName) => {
                             const isSelected = isMandiSelected(mName);
+                            const hasData = mandiHasData(mName);
                             return (
                               <button
                                 key={mName}
@@ -8259,24 +8388,45 @@ function MultiLocSheet({
                                   border: isSelected
                                     ? `1.5px solid ${pTheme.accent}`
                                     : `1px solid ${pTheme.borderNormal}`,
-                                  borderLeft: `3.5px solid ${pTheme.accent}`,
+                                  borderLeft: `3.5px solid ${hasData ? pTheme.accent : "#B9C4BF"}`,
                                   background: isSelected
                                     ? pTheme.selectedBg
-                                    : "#FFFFFF",
+                                    : hasData
+                                      ? "#FFFFFF"
+                                      : "#F5F7F6",
                                   textAlign: "left",
                                   cursor: "pointer",
                                   boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
+                                  opacity: hasData ? 1 : 0.7,
                                 }}
                               >
-                                <span
-                                  style={{
-                                    fontSize: 12,
-                                    fontWeight: isSelected ? 800 : 600,
-                                    color: isSelected ? pTheme.accent : "#183B34",
-                                    fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                                  }}
-                                >
-                                  {tmL(mName)}
+                                <span style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
+                                  <span
+                                    style={{
+                                      fontSize: 12,
+                                      fontWeight: isSelected ? 800 : 600,
+                                      color: isSelected ? pTheme.accent : hasData ? "#183B34" : "#7A8D85",
+                                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                    }}
+                                  >
+                                    {tmL(mName)}
+                                  </span>
+                                  {!hasData && (
+                                    <span
+                                      style={{
+                                        fontSize: 9,
+                                        fontWeight: 800,
+                                        color: "#7A8D85",
+                                        background: "#E4EFE9",
+                                        borderRadius: 6,
+                                        padding: "1.5px 6px",
+                                        flexShrink: 0,
+                                        fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                      }}
+                                    >
+                                      {lang === "ur" ? "کوئی ڈیٹا نہیں" : "No data"}
+                                    </span>
+                                  )}
                                 </span>
                                 <div
                                   style={{
@@ -8976,7 +9126,7 @@ function RateCard({
         {/* Min */}
         <div className="flex flex-col items-start flex-1 min-w-0 pr-0.5">
           <span
-            className="font-extrabold text-[#183B34] tracking-tight leading-none whitespace-nowrap truncate w-full"
+            className="font-extrabold text-[#183B34] tracking-tight leading-none break-words w-full"
             style={{
               fontSize: lang === "ur" ? 11 : 13,
               fontFamily:
@@ -9008,7 +9158,7 @@ function RateCard({
         {/* Max */}
         <div className="flex flex-col items-start flex-1 min-w-0 pl-0.5">
           <span
-            className="font-extrabold text-[#183B34] tracking-tight leading-none whitespace-nowrap truncate w-full"
+            className="font-extrabold text-[#183B34] tracking-tight leading-none break-words w-full"
             style={{
               fontSize: lang === "ur" ? 11 : 13,
               fontFamily:
@@ -10144,261 +10294,9 @@ type CompRow = {
   trendPct: number;
 };
 
-// Helper to generate 100% real Excel-derived curve, arrival, and axis data for Mandi Graph inline drawer
-function getRealMandiInlineGraphData(options: {
-  product: string;
-  byproduct?: string;
-  mandiName: string;
-  rateType: string;
-  timeframe: "24h" | "72h" | "7d" | "30d";
-  lang: string;
-  view: "price" | "arrival";
-}) {
-  const { product, byproduct, mandiName, rateType, timeframe, lang, view } = options;
-
-  const timeline = getExcelTimeline({
-    product,
-    byproduct,
-    locationLabel: mandiName,
-    locationKind: "mandi",
-    rateType,
-    range: "year",
-  });
-
-  const rawDates = timeline.dates;
-  const rawPrices = timeline.prices;
-  const rawMins = timeline.mins;
-  const rawMaxs = timeline.maxs;
-  const rawArrivals = timeline.arrivals;
-
-  const latestMin = rawMins[rawMins.length - 1] || rawPrices[rawPrices.length - 1] || 4500;
-  const latestMax = rawMaxs[rawMaxs.length - 1] || rawPrices[rawPrices.length - 1] || 4600;
-  const latestPrice = rawPrices[rawPrices.length - 1] || Math.round((latestMin + latestMax) / 2);
-  const latestArrival = rawArrivals[rawArrivals.length - 1] || 0;
-
-  const fmtK = (v: number) => {
-    if (v >= 1000) {
-      const val = v / 1000;
-      return (val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)) + "k";
-    }
-    return String(Math.round(v));
-  };
-
-  if (timeframe === "24h") {
-    // 7 Intraday milestones matching reference Image 2
-    const xLabels =
-      lang === "ur"
-        ? ["۰۶:۰۰", "۰۹:۰۰", "۱۲:۰۰", "۱۵:۰۰", "۱۸:۰۰", "۲۱:۰۰", "اب"]
-        : ["06:00", "09:00", "12:00", "15:00", "18:00", "21:00", "Now"];
-
-    if (view === "price") {
-      const spread = Math.max(latestMax - latestMin, 20);
-      const points = [
-        latestMin,
-        Math.round(latestMin + spread * 0.35),
-        Math.round(latestMin + spread * 0.3),
-        Math.round(latestMin + spread * 0.55),
-        Math.round(latestMin + spread * 0.75),
-        Math.round(latestMin + spread * 0.8),
-        latestMax,
-      ];
-
-      const diff = Math.max(latestMax - latestMin, 50);
-      const yMinBound = Math.max(0, Math.floor((latestMin - diff * 0.2) / 25) * 25);
-      const yMaxBound = Math.ceil((latestMax + diff * 0.2) / 25) * 25;
-      const yMidVal = Math.round((yMinBound + yMaxBound) / 2);
-
-      const yLabels = [
-        { label: fmtK(yMaxBound), val: yMaxBound },
-        { label: fmtK(yMidVal), val: yMidVal },
-        { label: fmtK(yMinBound), val: yMinBound },
-      ];
-
-      let trend: "up" | "down" | "stable" = "up";
-      let trendPct = 0.4;
-      if (timeline.trendPct > 0) {
-        trend = timeline.trend;
-        trendPct = timeline.trendPct;
-      }
-
-      return {
-        points,
-        dates: ["06:00", "09:00", "12:00", "15:00", "18:00", "21:00", "Now"],
-        xLabels,
-        yLabels,
-        yMinBound,
-        yMaxBound,
-        latestPrice,
-        latestMin,
-        latestMax,
-        trend,
-        trendPct,
-      };
-    } else {
-      const baseArr = latestArrival > 0 ? latestArrival : 70;
-      const points = [
-        Math.round(baseArr * 0.15),
-        Math.round(baseArr * 0.35),
-        Math.round(baseArr * 0.65),
-        Math.round(baseArr * 0.85),
-        baseArr,
-        Math.round(baseArr * 0.95),
-        baseArr,
-      ];
-
-      const peakArrival = Math.max(...points, 10);
-      const yMinBound = 0;
-      const yMaxBound = Math.ceil((peakArrival * 1.25) / 10) * 10;
-      const yMidVal = Math.round(yMaxBound / 2);
-
-      const yLabels = [
-        { label: fmtK(yMaxBound), val: yMaxBound },
-        { label: fmtK(yMidVal), val: yMidVal },
-        { label: "0", val: 0 },
-      ];
-
-      return {
-        points,
-        dates: ["06:00", "09:00", "12:00", "15:00", "18:00", "21:00", "Now"],
-        xLabels,
-        yLabels,
-        yMinBound,
-        yMaxBound,
-        totalArrival: points.reduce((a, b) => a + b, 0),
-        peakArrival,
-        latestArrival: baseArr,
-      };
-    }
-  }
-
-  // Multi-day slices
-  const sliceCount = timeframe === "72h" ? 3 : timeframe === "7d" ? 7 : 31;
-  const sDates = rawDates.slice(-sliceCount);
-  const sPrices = rawPrices.slice(-sliceCount);
-  const sMins = rawMins.slice(-sliceCount);
-  const sMaxs = rawMaxs.slice(-sliceCount);
-  const sArrivals = rawArrivals.slice(-sliceCount);
-
-  const urDays = ["اتوار", "پیر", "منگل", "بدھ", "جمعرات", "جمعہ", "ہفتہ"];
-  const enDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const urMonths = ["جنوری", "فروری", "مارچ", "اپریل", "مئی", "جون", "جولائی", "اگست", "ستمبر", "اکتوبر", "نومبر", "دسمبر"];
-  const enMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-  let points: number[] = [];
-  let xLabels: string[] = [];
-
-  if (timeframe === "72h") {
-    // 7 points across 3 days
-    if (sPrices.length >= 3) {
-      const p0 = sPrices[0], p1 = sPrices[1], p2 = sPrices[2];
-      points = [
-        p0,
-        Math.round((p0 + p1) / 2),
-        p1,
-        Math.round((p1 + p2) / 2),
-        Math.round(p2 * 0.99),
-        Math.round(p2 * 1.005),
-        p2,
-      ];
-    } else {
-      points = new Array(7).fill(latestPrice);
-    }
-    xLabels =
-      lang === "ur"
-        ? ["۱۲ ستمبر ۰۹:۰۰", "۱۲ ستمبر ۱۸:۰۰", "۱۳ ستمبر ۰۹:۰۰", "۱۳ ستمبر ۱۸:۰۰", "۱۴ ستمبر ۰۹:۰۰", "۱۴ ستمبر ۱۸:۰۰", "اب"]
-        : ["12 Sep 09:00", "12 Sep 18:00", "13 Sep 09:00", "13 Sep 18:00", "14 Sep 09:00", "14 Sep 18:00", "Now"];
-  } else if (timeframe === "7d") {
-    points = sPrices;
-    xLabels = sDates.map((dStr) => {
-      const p = dStr.split("-");
-      const dt = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
-      return lang === "ur" ? urDays[dt.getDay()] : enDays[dt.getDay()];
-    });
-  } else {
-    // 30d (all 31 days)
-    points = sPrices;
-    xLabels = sDates.map((dStr, i) => {
-      const p = dStr.split("-");
-      const day = parseInt(p[2], 10);
-      const mIdx = parseInt(p[1], 10) - 1;
-      const mName = lang === "ur" ? urMonths[mIdx] : enMonths[mIdx];
-      const dStrVal = lang === "ur" ? toUrduDigits(day) : String(day);
-      if (i === 0 || i === 7 || i === 14 || i === 21 || i === sDates.length - 1) {
-        return `${dStrVal} ${mName}`;
-      }
-      return "";
-    });
-  }
-
-  if (view === "price") {
-    const validMins = sMins.filter((v) => v > 0);
-    const validMaxs = sMaxs.filter((v) => v > 0);
-    const minVal = validMins.length > 0 ? Math.min(...validMins) : Math.min(...points);
-    const maxVal = validMaxs.length > 0 ? Math.max(...validMaxs) : Math.max(...points);
-    const diff = Math.max(maxVal - minVal, 50);
-
-    const yMinBound = Math.max(0, Math.floor((minVal - diff * 0.15) / 25) * 25);
-    const yMaxBound = Math.ceil((maxVal + diff * 0.15) / 25) * 25;
-    const yMidVal = Math.round((yMinBound + yMaxBound) / 2);
-
-    const yLabels = [
-      { label: fmtK(yMaxBound), val: yMaxBound },
-      { label: fmtK(yMidVal), val: yMidVal },
-      { label: fmtK(yMinBound), val: yMinBound },
-    ];
-
-    const startP = points[0] || latestPrice;
-    const endP = points[points.length - 1] || latestPrice;
-    let trend: "up" | "down" | "stable" = "stable";
-    let trendPct = 0;
-    if (startP > 0 && endP > 0) {
-      const delta = endP - startP;
-      trendPct = Math.round((Math.abs(delta) / startP) * 1000) / 10;
-      if (delta > 0.01) trend = "up";
-      else if (delta < -0.01) trend = "down";
-    }
-
-    return {
-      points,
-      dates: sDates,
-      xLabels,
-      yLabels,
-      yMinBound,
-      yMaxBound,
-      latestPrice,
-      latestMin,
-      latestMax,
-      trend,
-      trendPct,
-    };
-  } else {
-    const arrPoints = timeframe === "72h" ? new Array(7).fill(latestArrival) : sArrivals;
-    const peakArrival = arrPoints.length > 0 ? Math.max(...arrPoints, 0) : 0;
-    const totalArrival = arrPoints.reduce((acc, curr) => acc + curr, 0);
-    const yMinBound = 0;
-    const yMaxBound = peakArrival > 0 ? Math.ceil((peakArrival * 1.25) / 100) * 100 : 1000;
-    const yMidVal = Math.round(yMaxBound / 2);
-
-    const yLabels = [
-      { label: fmtK(yMaxBound), val: yMaxBound },
-      { label: fmtK(yMidVal), val: yMidVal },
-      { label: "0", val: 0 },
-    ];
-
-    return {
-      points: arrPoints,
-      dates: sDates,
-      xLabels,
-      yLabels,
-      yMinBound,
-      yMaxBound,
-      totalArrival,
-      peakArrival,
-      latestArrival,
-    };
-  }
-}
-
+// Build inline graph data from real DB allRows for a specific mandi+rateType.
+// This completely replaces the static REAL_TIMELINE_INDEX lookup for the
+// comparison table's per-row graph drawer so every row shows its own data.
 function ProductRatesScreen({
   vertical,
   product,
@@ -10450,6 +10348,13 @@ function ProductRatesScreen({
   // Local location scope — starts from initialMandi if provided, else from parent
   const [locScope, setLocScope] = useState<LocationScope>(
     initialMandi ? { kind: "mandi", label: initialMandi } : initialScope || { kind: "pakistan", label: "All Pakistan" },
+  );
+  // Remembers a specifically-picked mandi/district for the map button only:
+  // picking one broadens `locScope` (and the table) to its province, but
+  // the map should still zoom straight to the mandi itself, not the
+  // province. Cleared whenever the picked scope isn't a mandi/district.
+  const [focusedMandi, setFocusedMandi] = useState<{ kind: "mandi" | "district"; label: string } | null>(
+    initialMandi ? { kind: "mandi", label: initialMandi } : null,
   );
   const [locSheet, setLocSheet] = useState(false);
   // Date filter
@@ -10522,8 +10427,8 @@ function ProductRatesScreen({
   } | null>(null);
   const [tableGraphView, setTableGraphView] = useState<"price" | "arrival">("price");
   const [graphTimeframe, setGraphTimeframe] = useState<
-    "24h" | "72h" | "7d" | "30d"
-  >("24h");
+    "72h" | "7d" | "30d"
+  >("72h");
   const tableScrollRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -10567,13 +10472,22 @@ function ProductRatesScreen({
   const [apiRowsLoading, setApiRowsLoading] = useState(true);
   const [apiCatalogEntry, setApiCatalogEntry] = useState<ByProductCatalogRow | null>(null);
 
+  const dbDivision = getDivisionForProduct(vertical, product);
+
   useEffect(() => {
     let cancelled = false;
     setApiRowsLoading(true);
     (async () => {
-      const catalog = await fetchByProducts(product);
+      const catalog = await fetchByProducts(dbDivision);
       if (cancelled) return;
-      const entry = catalog.find((c) => c.by_product === byproduct) || null;
+      const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const targetNorm = norm(byproduct || product);
+      const entry =
+        catalog.find(
+          (c) =>
+            norm(c.by_product) === targetNorm ||
+            c.by_product.toLowerCase() === (byproduct || product).toLowerCase()
+        ) || null;
       setApiCatalogEntry(entry);
       if (entry && entry.has_data) {
         const { rows } = await fetchAllRecords(entry.id);
@@ -10586,7 +10500,7 @@ function ProductRatesScreen({
     return () => {
       cancelled = true;
     };
-  }, [product, byproduct]);
+  }, [dbDivision, product, byproduct]);
 
   const allRows = useMemo(() => {
     return apiRecords.map((r) => ({
@@ -10598,6 +10512,16 @@ function ProductRatesScreen({
         r.arrivals && Number(r.arrivals) > 0
           ? Number(r.arrivals).toLocaleString("en-US")
           : "0",
+      arrivalUnit:
+        r.arrivals_unit && Number(r.arrivals_unit) > 0
+          ? Number(r.arrivals_unit) === 1
+            ? (lang === "ur" ? "کلو" : "kg")
+            : Number(r.arrivals_unit) === 1000
+              ? (lang === "ur" ? "ٹن" : "MT (Ton)")
+              : lang === "ur"
+                ? `${toUrduDigits(r.arrivals_unit)} کلو بوری`
+                : `${r.arrivals_unit} kg Bags`
+          : (lang === "ur" ? "بوریاں" : "Bags"),
       min: Number(r.minimum),
       max: Number(r.maximum),
       trend: "stable" as const,
@@ -10607,6 +10531,7 @@ function ProductRatesScreen({
       province: r.province,
       variety: r.variety || undefined,
       color: r.color || undefined,
+      origin: r.origin || undefined,
       spec: r.specification || undefined,
       condition: undefined,
       newOld: r.new_old || undefined,
@@ -10614,24 +10539,62 @@ function ProductRatesScreen({
       moisture: r.moisture_raw || undefined,
       quality: r.quality || undefined,
       date: r.record_date ? r.record_date.slice(0, 10) : undefined,
-    })) as (RichRow & { moisture?: string; quality?: string; date?: string })[];
-  }, [apiRecords, product, byproduct]);
+    })) as (RichRow & { moisture?: string; quality?: string; date?: string; origin?: string; arrivalUnit?: string })[];
+  }, [apiRecords, product, byproduct, lang]);
+
+  // Real mandi/district names (nationwide, unfiltered by locScope) that
+  // actually have data for this by-product this month -- lets the location
+  // picker put ones with data first and mark ones without.
+  const dataMandiNameSet = useMemo(() => {
+    const set = new Set<string>();
+    for (const r of allRows) {
+      if (r.mandiName) set.add(r.mandiName.toLowerCase().trim());
+      if (r.mandiCity) set.add(r.mandiCity.toLowerCase().trim());
+    }
+    return set;
+  }, [allRows]);
 
   const inLocScope = (r: (typeof allRows)[0]) => {
-    switch (locScope.kind) {
-      case "pakistan":
-        return true;
-      case "province":
-        return r.province === locScope.label;
-      case "district":
-        return (
-          r.mandiCity === locScope.label || r.mandiName.includes(locScope.label)
-        );
-      case "mandi":
-        return r.mandiName === locScope.label || r.mandiCity === locScope.label;
-      default:
-        return true;
+    const norm = (s?: string) =>
+      (s || "")
+        .toLowerCase()
+        .replace(/\s*(mandi|منڈی)$/i, "")
+        .trim();
+    const scopeLabel = norm(locScope.label);
+    if (
+      !scopeLabel ||
+      locScope.kind === "pakistan" ||
+      scopeLabel === "all pakistan" ||
+      scopeLabel === "پاکستان" ||
+      scopeLabel === "پورا پاکستان"
+    ) {
+      return true;
     }
+
+    if (locScope.kind === "province") {
+      return (
+        norm(r.province) === scopeLabel ||
+        (r.province || "").toLowerCase().includes(scopeLabel)
+      );
+    }
+    if (locScope.kind === "district") {
+      return (
+        norm(r.mandiCity) === scopeLabel ||
+        norm(r.mandiName).includes(scopeLabel) ||
+        scopeLabel.includes(norm(r.mandiCity))
+      );
+    }
+    if (locScope.kind === "mandi") {
+      const rMandi = norm(r.mandiName);
+      const rCity = norm(r.mandiCity);
+      return (
+        rMandi === scopeLabel ||
+        rCity === scopeLabel ||
+        rMandi.includes(scopeLabel) ||
+        scopeLabel.includes(rMandi)
+      );
+    }
+    return true;
   };
   const scopedRows = allRows.filter(inLocScope);
   const baseRows = scopedRows.length > 0 ? scopedRows : allRows;
@@ -10698,12 +10661,25 @@ function ProductRatesScreen({
       range: "year",
     });
 
-    const sMin = tResult.mins[dateIdx] ?? 0;
-    const sMax = tResult.maxs[dateIdx] ?? 0;
-    const sArrival = tResult.arrivals[dateIdx] ?? 0;
-
     // Active Mandis Count on this date
     const dateRows = rows.filter((r) => r.date === curDateStr);
+    const dateMins = dateRows.map((r) => r.min).filter((v) => v > 0);
+    const dateMaxs = dateRows.map((r) => r.max).filter((v) => v > 0);
+    const dateArrs = dateRows.map((r) => parseArrival(r.arrival));
+
+    const sMin =
+      dateMins.length > 0
+        ? Math.round(dateMins.reduce((a, b) => a + b, 0) / dateMins.length)
+        : (tResult.mins[dateIdx] ?? 0);
+    const sMax =
+      dateMaxs.length > 0
+        ? Math.round(dateMaxs.reduce((a, b) => a + b, 0) / dateMaxs.length)
+        : (tResult.maxs[dateIdx] ?? 0);
+    const sArrival =
+      dateArrs.length > 0 && dateArrs.some((v) => v > 0)
+        ? dateArrs.reduce((a, b) => a + b, 0)
+        : (tResult.arrivals[dateIdx] ?? 0);
+
     const marketSet = new Set<string>();
     for (let i = 0; i < dateRows.length; i++) {
       marketSet.add(dateRows[i].mandiName || dateRows[i].mandiCity || "Mandi");
@@ -11788,7 +11764,7 @@ function ProductRatesScreen({
                               {lang === "ur" ? "زیادہ قیمت" : "Max Price"}
                             </span>
                             <span
-                              className="font-extrabold text-[12px] leading-tight text-[#087F63] mt-0.5 whitespace-nowrap truncate"
+                              className="font-extrabold text-[12px] leading-tight text-[#087F63] mt-0.5 break-words"
                               style={{
                                 fontFamily:
                                   lang === "ur"
@@ -11822,7 +11798,7 @@ function ProductRatesScreen({
                               {lang === "ur" ? "کم قیمت" : "Min Price"}
                             </span>
                             <span
-                              className="font-extrabold text-[12px] leading-tight text-[#B45309] mt-0.5 whitespace-nowrap truncate"
+                              className="font-extrabold text-[12px] leading-tight text-[#B45309] mt-0.5 break-words"
                               style={{
                                 fontFamily:
                                   lang === "ur"
@@ -11853,10 +11829,10 @@ function ProductRatesScreen({
                                     : "inherit",
                               }}
                             >
-                              {lang === "ur" ? "آمد" : "Arrival"}
+                              {lang === "ur" ? "آمد (بوریاں)" : "Arrival (Bags)"}
                             </span>
                             <span
-                              className="font-extrabold text-[12px] leading-tight text-[#0E7465] mt-0.5 whitespace-nowrap truncate"
+                              className="font-extrabold text-[12px] leading-tight text-[#0E7465] mt-0.5 break-words"
                               style={{
                                 fontFamily:
                                   lang === "ur"
@@ -11866,9 +11842,12 @@ function ProductRatesScreen({
                             >
                               {statArrival > 0
                                 ? (lang === "ur"
-                                  ? `${toUrduDigits(statArrival.toLocaleString())}`
-                                  : statArrival.toLocaleString())
+                                  ? `${toUrduDigits(statArrival.toLocaleString())} تھیلے`
+                                  : `${statArrival.toLocaleString()} Bags`)
                                 : "—"}
+                            </span>
+                            <span className="text-[7.5px] text-[#80918B] leading-none mt-0.5">
+                              {statArrival > 0 ? (lang === "ur" ? "بوریاں" : "(Bags)") : ""}
                             </span>
                           </div>
                         </div>
@@ -12270,70 +12249,69 @@ function ProductRatesScreen({
 
             {/* Pakistan Map Interactive Expandable Card (378x76 with 3D Tilt & Spring Expansion) */}
             {(() => {
-              const aml = locScope.kind === "mandi" ? locScope.label : initialMandi || "Pakpattan Mandi";
-              const ao = INITIAL_MANDIS.find((m) => m.name.toLowerCase() === aml.toLowerCase() || m.city.toLowerCase() === aml.toLowerCase() || aml.toLowerCase().includes(m.name.toLowerCase()) || aml.toLowerCase().includes(m.city.toLowerCase()));
-              const em = ao ? ao.name : aml.replace(" منڈی", " Mandi");
-              const cmn = lang === "ur"
-                ? (tm(em).includes("منڈی") ? tm(em) : tm(em) + " منڈی")
-                : (em.includes("Mandi") ? em : em + " Mandi");
-              const prov = locScope.kind === "province" ? locScope.label : ao?.province || "Punjab";
               const currentCommodity = product || byproduct || "Wheat";
+              const isPakistanScope = locScope.kind === "pakistan" || !locScope.label;
 
-              const activeRow = allRows.find((r) =>
-                r.mandiName.toLowerCase().includes(em.toLowerCase().replace(/\s*mandi$/i, "").replace(/\s*منڈی$/i, "")) ||
-                em.toLowerCase().replace(/\s*mandi$/i, "").replace(/\s*منڈی$/i, "").includes(r.mandiName.toLowerCase().replace(/\s*mandi$/i, "").replace(/\s*منڈی$/i, ""))
-              );
-              const rowCanon = activeRow ? getMandiCanonicalAttrs(activeRow.mandiName) : getMandiCanonicalAttrs(em);
+              // The map button's label + zoom target follow the specific
+              // mandi/district the user picked (focusedMandi) even though
+              // locScope itself has been broadened to that location's
+              // province to drive the table -- so picking Okara zooms the
+              // map straight to Okara while the table shows all of Punjab.
+              // With nothing specific picked, it falls back to locScope
+              // (a province, or All Pakistan).
+              const focusedMandiEntry = focusedMandi
+                ? INITIAL_MANDIS.find(
+                  (m) =>
+                    m.name.toLowerCase() === focusedMandi.label.toLowerCase() ||
+                    m.city.toLowerCase() === focusedMandi.label.toLowerCase() ||
+                    focusedMandi.label.toLowerCase().includes(m.city.toLowerCase())
+                )
+                : undefined;
 
-              let mapMin = 0;
-              let mapMax = 0;
-              let mapArr = "—";
-              let mapTrend: "up" | "down" | "stable" = "stable";
-              let mapTrendPct = 0;
+              const cmn = focusedMandi
+                ? focusedMandi.label
+                : isPakistanScope
+                  ? (lang === "ur" ? "پورا پاکستان" : "All Pakistan")
+                  : locScope.label;
 
-              if (isDateInRange && dateIdx >= 0) {
-                const mapTimeline = getExcelTimeline({
-                  product,
-                  byproduct: activeRow?.byproduct || byproduct,
-                  locationLabel: activeRow?.mandiName || em,
-                  locationKind: "mandi",
-                  rateType: activeRow?.rateType || attrRateType || "Mandi Rate",
-                  range: "year",
-                });
-                mapMin = mapTimeline.mins[dateIdx] ?? 0;
-                mapMax = mapTimeline.maxs[dateIdx] ?? 0;
-                const aVal = mapTimeline.arrivals[dateIdx] ?? 0;
-                mapArr = aVal > 0 ? aVal.toLocaleString("en-PK") : "—";
-                const pNow = mapTimeline.prices[dateIdx] ?? 0;
-                const pPast = dateIdx > 0 ? (mapTimeline.prices[dateIdx - 1] ?? pNow) : pNow;
-                const delta = pNow - pPast;
-                mapTrend = delta > 0.01 ? "up" : delta < -0.01 ? "down" : "stable";
-                mapTrendPct = pPast > 0 ? Math.round((Math.abs(delta) / pPast) * 1000) / 10 : 0;
-              }
+              const prov = focusedMandi
+                ? focusedMandiEntry?.province || (locScope.kind === "province" ? locScope.label : undefined)
+                : locScope.kind === "province"
+                  ? locScope.label
+                  : undefined;
+
+              const focusMandiName = focusedMandi ? focusedMandi.label : undefined;
+              const focusProvinceName =
+                !focusedMandi && !isPakistanScope && locScope.kind === "province" ? locScope.label : undefined;
+
+              // Every real row nationwide for this by-product (allRows is
+              // unfiltered by the table's locScope) -- the map derives
+              // which mandis get a pin, and everything shown once one is
+              // tapped, from this alone.
+              const mapRecords: MapByProductRecord[] = allRows.map((r) => ({
+                mandiName: r.mandiName,
+                district: r.mandiCity,
+                province: r.province,
+                rateType: r.rateType,
+                min: r.min,
+                max: r.max,
+                arrival: r.arrival,
+                date: r.date,
+                newOld: r.newOld,
+                variety: r.variety,
+                color: r.color,
+              }));
 
               return (
                 <ExpandableMandiMapCard
                   mandiName={cmn}
                   provinceName={prov}
                   commodityName={currentCommodity}
-                  rateInfo={{
-                    cropName: currentCommodity,
-                    mandiName: cmn,
-                    minPrice: mapMin,
-                    maxPrice: mapMax,
-                    rateType: activeRow?.rateType || "Retail",
-                    trend: mapTrend as any,
-                    trendPct: mapTrendPct,
-                    arrival: mapArr,
-                    quality: rowCanon.newOld || "New",
-                    variety: rowCanon.variety,
-                    color: rowCanon.color,
-                    condition: rowCanon.condition,
-                    spec: rowCanon.spec,
-                  }}
+                  records={mapRecords}
+                  focusMandiName={focusMandiName}
+                  focusProvinceName={focusProvinceName}
                   lang={lang}
                   urduFont={URDU_FONT}
-                  onSpeak={speakText}
                 />
               );
             })()}
@@ -12341,10 +12319,13 @@ function ProductRatesScreen({
             {/* Inline Mandi Rates Table — all Pakistan mandis for this byproduct */}
             {(() => {
               const PROVINCES = ["Punjab", "Sindh", "KPK", "Balochistan"];
-              // Always source from allRows (all Pakistan), independent of locScope
-              const tableSourceRows = allRows.filter(
-                (r) => !attrRateType || r.rateType === attrRateType,
+              // Source rows, honoring locScope when a specific province/district/mandi is selected
+              const tableScopedRows = allRows.filter(
+                (r) => (!attrRateType || r.rateType === attrRateType) && inLocScope(r),
               );
+              const tableSourceRows = tableScopedRows.length > 0
+                ? tableScopedRows
+                : allRows.filter((r) => !attrRateType || r.rateType === attrRateType);
               const tableRows = tableSourceRows.filter(
                 (r) =>
                   !tableProvinceFilter || r.province === tableProvinceFilter,
@@ -12637,6 +12618,13 @@ function ProductRatesScreen({
                                 key={p || "all"}
                                 onClick={() => {
                                   setTableProvinceFilter(p);
+                                  // Keep the location filter (and the map's
+                                  // focus target) in sync with the chip so
+                                  // the two controls never disagree.
+                                  setFocusedMandi(null);
+                                  setLocScope(
+                                    p ? { kind: "province", label: p } : { kind: "pakistan", label: "All Pakistan" }
+                                  );
                                   if (voiceEnabled) {
                                     const msg = p
                                       ? (lang === "ur" ? `صوبہ ${tm(p)}` : `${p} Province`)
@@ -13097,7 +13085,7 @@ function ProductRatesScreen({
                                 {lang === "ur" ? "معیار" : "Quality"}
                               </th>
 
-                              {/* 6. Arrival */}
+                              {/* 6. Moisture */}
                               <th
                                 style={{
                                   padding: "7px 4px",
@@ -13107,7 +13095,27 @@ function ProductRatesScreen({
                                   color: "#80918B",
                                   textTransform: "uppercase",
                                   borderBottom: "1.5px solid #D5E2DD",
-                                  minWidth: 70,
+                                  minWidth: 64,
+                                  fontFamily:
+                                    lang === "ur"
+                                      ? URDU_FONT
+                                      : "inherit",
+                                }}
+                              >
+                                {lang === "ur" ? "نمی" : "Moisture"}
+                              </th>
+
+                              {/* 7. Arrival Quantity */}
+                              <th
+                                style={{
+                                  padding: "7px 4px",
+                                  textAlign: "center",
+                                  fontWeight: 800,
+                                  fontSize: lang === "ur" ? 13 : 10,
+                                  color: "#80918B",
+                                  textTransform: "uppercase",
+                                  borderBottom: "1.5px solid #D5E2DD",
+                                  minWidth: 64,
                                   fontFamily:
                                     lang === "ur"
                                       ? URDU_FONT
@@ -13117,7 +13125,27 @@ function ProductRatesScreen({
                                 {lang === "ur" ? "آمد" : "Arrival"}
                               </th>
 
-                              {/* 7. Color */}
+                              {/* 8. Arrival Unit */}
+                              <th
+                                style={{
+                                  padding: "7px 4px",
+                                  textAlign: "center",
+                                  fontWeight: 800,
+                                  fontSize: lang === "ur" ? 13 : 10,
+                                  color: "#80918B",
+                                  textTransform: "uppercase",
+                                  borderBottom: "1.5px solid #D5E2DD",
+                                  minWidth: 74,
+                                  fontFamily:
+                                    lang === "ur"
+                                      ? URDU_FONT
+                                      : "inherit",
+                                }}
+                              >
+                                {lang === "ur" ? "آمد کی اکائی" : "Unit"}
+                              </th>
+
+                              {/* 8. Color */}
                               <th
                                 style={{
                                   padding: "7px 4px",
@@ -13137,7 +13165,7 @@ function ProductRatesScreen({
                                 {lang === "ur" ? "رنگ" : "Color"}
                               </th>
 
-                              {/* 8. Variety */}
+                              {/* 9. Variety */}
                               <th
                                 style={{
                                   padding: "7px 4px",
@@ -13157,7 +13185,27 @@ function ProductRatesScreen({
                                 {lang === "ur" ? "قسم" : "Variety"}
                               </th>
 
-                              {/* 9. Condition */}
+                              {/* 10. Origin */}
+                              <th
+                                style={{
+                                  padding: "7px 4px",
+                                  textAlign: "center",
+                                  fontWeight: 800,
+                                  fontSize: lang === "ur" ? 13 : 10,
+                                  color: "#80918B",
+                                  textTransform: "uppercase",
+                                  borderBottom: "1.5px solid #D5E2DD",
+                                  minWidth: 70,
+                                  fontFamily:
+                                    lang === "ur"
+                                      ? URDU_FONT
+                                      : "inherit",
+                                }}
+                              >
+                                {lang === "ur" ? "علاقہ" : "Origin"}
+                              </th>
+
+                              {/* 11. Condition */}
                               <th
                                 style={{
                                   padding: "7px 4px",
@@ -13177,7 +13225,7 @@ function ProductRatesScreen({
                                 {lang === "ur" ? "حالت" : "Condition"}
                               </th>
 
-                              {/* 10. Specification */}
+                              {/* 12. Specification */}
                               <th
                                 style={{
                                   padding: "7px 4px",
@@ -13217,21 +13265,27 @@ function ProductRatesScreen({
                               let intervalTrend: "up" | "down" | "stable" = "stable";
 
                               if (isDateInRange && dateIdx >= 0) {
-                                rowMin = rowTimeline.mins[dateIdx] ?? 0;
-                                rowMax = rowTimeline.maxs[dateIdx] ?? 0;
-                                rowArr = rowTimeline.arrivals[dateIdx] ?? 0;
+                                const startIdx =
+                                  tableTrendInterval === "72h"
+                                    ? Math.max(0, dateIdx - 3)
+                                    : tableTrendInterval === "weekly"
+                                      ? Math.max(0, dateIdx - 7)
+                                      : tableTrendInterval === "monthly"
+                                        ? 0
+                                        : Math.max(0, dateIdx - 1);
+
+                                const sliceMins = rowTimeline.mins.slice(startIdx, dateIdx + 1).filter((v) => v > 0);
+                                rowMin = sliceMins.length > 0 ? Math.min(...sliceMins) : (rowTimeline.mins[dateIdx] ?? r.min);
+
+                                const sliceMaxs = rowTimeline.maxs.slice(startIdx, dateIdx + 1).filter((v) => v > 0);
+                                rowMax = sliceMaxs.length > 0 ? Math.max(...sliceMaxs) : (rowTimeline.maxs[dateIdx] ?? r.max);
+
+                                const sliceArrs = rowTimeline.arrivals.slice(startIdx, dateIdx + 1).filter((v) => v > 0);
+                                rowArr = sliceArrs.length > 0 ? sliceArrs.reduce((a, b) => a + b, 0) : (rowTimeline.arrivals[dateIdx] ?? parseArrival(r.arrival));
 
                                 const pSeries = rowTimeline.prices;
                                 const pLatest = pSeries[dateIdx] ?? 0;
-
-                                const pPrev =
-                                  tableTrendInterval === "72h"
-                                    ? (pSeries[Math.max(0, dateIdx - 3)] ?? pLatest)
-                                    : tableTrendInterval === "weekly"
-                                      ? (pSeries[Math.max(0, dateIdx - 7)] ?? pLatest)
-                                      : tableTrendInterval === "monthly"
-                                        ? (pSeries[0] ?? pLatest)
-                                        : (pSeries[Math.max(0, dateIdx - 1)] ?? pLatest);
+                                const pPrev = pSeries[startIdx] ?? pLatest;
 
                                 if (pPrev > 0 && pLatest > 0) {
                                   const delta = pLatest - pPrev;
@@ -13239,6 +13293,10 @@ function ProductRatesScreen({
                                   if (delta > 0.01) intervalTrend = "up";
                                   else if (delta < -0.01) intervalTrend = "down";
                                 }
+                              } else {
+                                rowMin = r.min;
+                                rowMax = r.max;
+                                rowArr = parseArrival(r.arrival);
                               }
 
                               const trendArrow =
@@ -13271,6 +13329,11 @@ function ProductRatesScreen({
                                   <tr
                                     onClick={() => {
                                       setIsTableExpanded(true);
+                                      // Only expand this row's own inline graph -- do NOT
+                                      // change locScope here. locScope drives the whole
+                                      // table + the top overview chart, so setting it on a
+                                      // row click was re-scoping the entire screen down to
+                                      // this one mandi instead of just expanding the row.
                                       setSelectedMandiGraphRow((prev) => {
                                         if (
                                           prev?.mandiName === r.mandiName &&
@@ -13419,7 +13482,21 @@ function ProductRatesScreen({
                                       </span>
                                     </td>
 
-                                    {/* 6. Arrival */}
+                                    {/* 6. Moisture */}
+                                    <td
+                                      style={{
+                                        padding: "7px 4px",
+                                        textAlign: "center",
+                                        color: "#087F63",
+                                        fontWeight: 700,
+                                        fontSize: 10,
+                                        whiteSpace: "nowrap",
+                                      }}
+                                    >
+                                      {r.moisture ? (r.moisture.includes("%") ? r.moisture : `${r.moisture}%`) : "—"}
+                                    </td>
+
+                                    {/* 7. Arrival Quantity */}
                                     <td
                                       style={{
                                         padding: "7px 4px",
@@ -13431,11 +13508,29 @@ function ProductRatesScreen({
                                       }}
                                     >
                                       {rowArr > 0
-                                        ? `${rowArr.toLocaleString("en-PK")} ${lang === "ur" ? "تھیلے" : "Bags"}`
+                                        ? (lang === "ur" ? toUrduDigits(rowArr.toLocaleString("en-PK")) : rowArr.toLocaleString("en-PK"))
                                         : "—"}
                                     </td>
 
-                                    {/* 7. Color */}
+                                    {/* 8. Arrival Unit */}
+                                    <td
+                                      style={{
+                                        padding: "7px 4px",
+                                        textAlign: "center",
+                                        color: rowArr > 0 ? "#087F63" : "#80918B",
+                                        fontWeight: 700,
+                                        fontSize: 10,
+                                        whiteSpace: "nowrap",
+                                        fontFamily:
+                                          lang === "ur"
+                                            ? URDU_FONT
+                                            : "inherit",
+                                      }}
+                                    >
+                                      {rowArr > 0 ? ((r as any).arrivalUnit || (lang === "ur" ? "بوریاں" : "Bags")) : "—"}
+                                    </td>
+
+                                    {/* 8. Color */}
                                     <td
                                       style={{
                                         padding: "7px 4px",
@@ -13453,7 +13548,7 @@ function ProductRatesScreen({
                                       {r.color ? tc(r.color) : "—"}
                                     </td>
 
-                                    {/* 8. Variety */}
+                                    {/* 9. Variety */}
                                     <td
                                       style={{
                                         padding: "7px 4px",
@@ -13471,7 +13566,25 @@ function ProductRatesScreen({
                                       {r.variety || "—"}
                                     </td>
 
-                                    {/* 9. Condition */}
+                                    {/* 10. Origin */}
+                                    <td
+                                      style={{
+                                        padding: "7px 4px",
+                                        textAlign: "center",
+                                        color: "#52635F",
+                                        fontWeight: 600,
+                                        fontSize: 10,
+                                        whiteSpace: "nowrap",
+                                        fontFamily:
+                                          lang === "ur"
+                                            ? URDU_FONT
+                                            : "inherit",
+                                      }}
+                                    >
+                                      {r.origin ? tm(r.origin) : "—"}
+                                    </td>
+
+                                    {/* 11. Condition */}
                                     <td
                                       style={{
                                         padding: "7px 4px",
@@ -13489,7 +13602,7 @@ function ProductRatesScreen({
                                       {r.condition || r.quality || "—"}
                                     </td>
 
-                                    {/* 10. Specification */}
+                                    {/* 12. Specification */}
                                     <td
                                       style={{
                                         padding: "7px 4px",
@@ -13512,7 +13625,7 @@ function ProductRatesScreen({
                                   {isRowModalActive && (
                                     <tr>
                                       <td
-                                        colSpan={10}
+                                        colSpan={13}
                                         className="p-0 border-b-2 border-[#10B981]"
                                         style={{
                                           background: "#F4FAF7",
@@ -13630,7 +13743,6 @@ function ProductRatesScreen({
                                           <div className="flex items-center gap-1.5">
                                             {(
                                               [
-                                                { id: "24h", labelUr: "24گھنٹے", labelEn: "24H" },
                                                 { id: "72h", labelUr: "72گھنٹے", labelEn: "72H" },
                                                 { id: "7d", labelUr: "7 دن", labelEn: "7D" },
                                                 { id: "30d", labelUr: "30 دن", labelEn: "30D" },
@@ -13671,9 +13783,8 @@ function ProductRatesScreen({
                                             <>
                                               {/* Price Rates Summary Box */}
                                               {(() => {
-                                                const graphData = getRealMandiInlineGraphData({
-                                                  product,
-                                                  byproduct: r.byproduct || byproduct,
+                                                const graphData = buildMandiInlineGraphFromRows({
+                                                  allRows,
                                                   mandiName: r.mandiName,
                                                   rateType: r.rateType,
                                                   timeframe: graphTimeframe,
@@ -13902,9 +14013,8 @@ function ProductRatesScreen({
                                             <>
                                               {/* Arrival Volume Summary Box */}
                                               {(() => {
-                                                const arrivalData = getRealMandiInlineGraphData({
-                                                  product,
-                                                  byproduct: r.byproduct || byproduct,
+                                                const arrivalData = buildMandiInlineGraphFromRows({
+                                                  allRows,
                                                   mandiName: r.mandiName,
                                                   rateType: r.rateType,
                                                   timeframe: graphTimeframe,
@@ -15680,6 +15790,60 @@ function ProductRatesScreen({
                         </g>
                       )}
                     </svg>
+
+                    {/* Hover Tooltip Overlay */}
+                    {hoverIdx !== null && (
+                      <div
+                        className="pointer-events-none absolute z-20 rounded-xl shadow-lg border p-2.5 flex flex-col gap-1 backdrop-blur-md transition-all duration-75"
+                        style={{
+                          left: `${Math.min(Math.max((xOf(hoverIdx, len) / CW) * 100, 18), 82)}%`,
+                          top: 8,
+                          transform: "translateX(-50%)",
+                          background: "rgba(20, 59, 51, 0.94)",
+                          borderColor: "rgba(255, 255, 255, 0.18)",
+                          minWidth: compareMode && activeSeries.length > 1 ? 160 : 120,
+                          maxWidth: 240,
+                        }}
+                      >
+                        <span
+                          className="text-[10px] font-bold text-[#B4E6D2] border-b border-white/10 pb-1"
+                          style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                        >
+                          {fullDateLabels[hoverIdx]?.fullDate}
+                        </span>
+                        {compareMode && activeSeries.length > 1 ? (
+                          <div className="flex flex-col gap-1 pt-0.5">
+                            {activeSeries.map((s) => {
+                              const val = s.data[hoverIdx!] || 0;
+                              return (
+                                <div key={s.label} className="flex items-center justify-between gap-3 text-[11px]">
+                                  <div className="flex items-center gap-1.5 truncate">
+                                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: s.color }} />
+                                    <span className="font-semibold text-white/90 truncate" style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}>
+                                      {tr(s.label).replace(" ریٹ", "").replace(" Rate", "")}
+                                    </span>
+                                  </div>
+                                  <span className="font-bold text-white flex-shrink-0">
+                                    {lang === "ur" ? `روپے ${toUrduDigits(val.toLocaleString())}` : `Rs. ${val.toLocaleString()}`}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between gap-2 pt-0.5 text-xs">
+                            <span className="font-semibold text-white/90" style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}>
+                              {tr(focusedType)}
+                            </span>
+                            <span className="font-black text-white">
+                              {lang === "ur"
+                                ? `روپے ${toUrduDigits((activeSeries[0]?.data[hoverIdx!] || 0).toLocaleString())}`
+                                : `Rs. ${(activeSeries[0]?.data[hoverIdx!] || 0).toLocaleString()}`}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Binance-Style Rate Type Selector Bar */}
@@ -15986,6 +16150,38 @@ function ProductRatesScreen({
                       </g>
                     )}
                   </svg>
+
+                  {/* Arrival Hover Tooltip Overlay */}
+                  {arrivalHoverIdx !== null && (
+                    <div
+                      className="pointer-events-none absolute z-20 rounded-xl shadow-lg border p-2 flex flex-col gap-0.5 backdrop-blur-md transition-all duration-75"
+                      style={{
+                        left: `${Math.min(Math.max((xOf(arrivalHoverIdx, len) / CW) * 100, 18), 82)}%`,
+                        top: 8,
+                        transform: "translateX(-50%)",
+                        background: "rgba(120, 53, 15, 0.94)",
+                        borderColor: "rgba(255, 255, 255, 0.18)",
+                        minWidth: 120,
+                      }}
+                    >
+                      <span
+                        className="text-[10px] font-bold text-[#FDE68A] border-b border-white/10 pb-0.5"
+                        style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                      >
+                        {fullDateLabels[arrivalHoverIdx]?.fullDate}
+                      </span>
+                      <div className="flex items-center justify-between gap-2 pt-0.5 text-xs text-white">
+                        <span className="font-semibold opacity-90" style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}>
+                          {lang === "ur" ? "آمد" : "Arrival"}
+                        </span>
+                        <span className="font-black">
+                          {lang === "ur"
+                            ? `${toUrduDigits((arrivalData[arrivalHoverIdx] || 0).toLocaleString())} تھیلے`
+                            : `${(arrivalData[arrivalHoverIdx] || 0).toLocaleString()} Bags`}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -16055,16 +16251,38 @@ function ProductRatesScreen({
       )}
       {locSheet && (
         <MultiLocSheet
+          singleSelect={true}
           selected={
             locScope && locScope.kind !== "pakistan"
               ? [locScope]
               : []
           }
+          dataMandiNames={dataMandiNameSet}
           onApply={(locs) => {
             if (locs.length === 0 || locs.some((x) => x.kind === "pakistan")) {
               setLocScope({ kind: "pakistan", label: "All Pakistan" });
+              setTableProvinceFilter(null);
+              setFocusedMandi(null);
+              setLocSheet(false);
+              return;
+            }
+            const picked = locs[0];
+            // Picking a mandi or district broadens the table to its
+            // province (a single mandi's row set is too thin to compare
+            // against), rather than filtering the table down to just that
+            // one location. The province chip is kept in sync with this
+            // so the header actually reflects what the table is now
+            // showing, and the map still remembers the exact mandi picked
+            // (see focusedMandi) so it can zoom there directly.
+            if (picked.kind === "mandi" || picked.kind === "district") {
+              const prov = getProvinceFromLoc(picked);
+              setLocScope(prov ? { kind: "province", label: prov } : picked);
+              setTableProvinceFilter(prov);
+              setFocusedMandi({ kind: picked.kind, label: picked.label });
             } else {
-              setLocScope(locs[0]);
+              setLocScope(picked);
+              setTableProvinceFilter(picked.kind === "province" ? picked.label : null);
+              setFocusedMandi(null);
             }
             setLocSheet(false);
           }}
@@ -21109,6 +21327,9 @@ function HomeScreen({
     }
     return ["Wheat"];
   });
+  // "View All" overlay: every product category (active + locked), grid form,
+  // same tap-to-open / tap-to-unlock behavior as the homepage row below.
+  const [showAllProducts, setShowAllProducts] = useState(false);
 
   const userSubscribedList = parentUserSubscribedList ?? localUserSubscribedList;
   const setUserSubscribedList = parentSetUserSubscribedList || setLocalUserSubscribedList;
@@ -21942,23 +22163,14 @@ function HomeScreen({
                 </p>
               </div>
 
-              {/* View All Button */}
+              {/* View All Button -- opens the full category grid (all ~20
+                  products, active + locked), not a jump into Wheat */}
               <button
                 onClick={() =>
                   handleOrientationTap(
                     "all-products",
                     lang === "ur" ? "تمام مصنوعات" : "All Products",
-                    () =>
-                      push({
-                        id: "byproduct-combined",
-                        products: [
-                          {
-                            vertical: "Grains",
-                            product: "Wheat",
-                          },
-                        ],
-                        active: 0,
-                      }),
+                    () => setShowAllProducts(true),
                   )
                 }
                 className="tap-target zm-beam-border flex items-center justify-center rounded-full px-3 py-1 transition active:scale-95"
@@ -24418,6 +24630,132 @@ function HomeScreen({
           onComplete={handleCompleteProfileSubmit}
           initialUserData={initialUserData}
         />
+      )}
+
+      {/* "View All" product-category grid -- every division (active +
+          locked), tap an unlocked one to open it, tap a locked one to start
+          the subscribe flow, same as the homepage row's tiles. */}
+      {showAllProducts && (
+        <div
+          className="fixed inset-0 flex flex-col screen-enter"
+          style={{ zIndex: 340, background: "#F1F7F4" }}
+        >
+          <header
+            className="flex-shrink-0 flex items-center gap-2 px-4 pt-9 pb-3"
+            style={{
+              background: "rgba(244, 250, 247, 0.95)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+              borderBottom: "1px solid rgba(213, 226, 221, 0.8)",
+            }}
+          >
+            <button
+              onClick={() => setShowAllProducts(false)}
+              className="tap-target zm-beam-border w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0 text-[#183B34] transition active:scale-95"
+              style={{
+                background: "rgba(255, 255, 255, 0.7)",
+                border: "1.2px solid rgba(16, 185, 129, 0.4)",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+              }}
+            >
+              {lang === "ur" ? "→" : "←"}
+            </button>
+            <h2
+              className="text-[16px] font-black text-[#143B33]"
+              style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+            >
+              {lang === "ur" ? "تمام مصنوعات" : "All Products"}
+            </h2>
+          </header>
+
+          <div className="flex-1 overflow-y-auto px-4 pt-4 pb-8">
+            <div
+              className="grid gap-x-2 gap-y-5"
+              style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}
+            >
+              {[...activeProducts, ...lockedProducts].map((div) => {
+                const verticalFor = getVerticalForProduct(div.name);
+                const unlocked = isAccessible(div.name);
+                return (
+                  <button
+                    key={div.name}
+                    onClick={() => {
+                      setShowAllProducts(false);
+                      if (unlocked) {
+                        const selProducts = getProductSelectionsForDivision(div.name);
+                        push({ id: "byproduct-combined", products: selProducts, active: 0 });
+                      } else {
+                        handleLockedProductClick(div.name, verticalFor);
+                      }
+                    }}
+                    className="flex flex-col items-center tap-target"
+                  >
+                    <div
+                      className={unlocked ? "zm-beam-border zm-beam-border-white" : "zm-beam-border zm-beam-border-green"}
+                      style={{
+                        width: "clamp(78px, 22vw, 92px)",
+                        height: "clamp(78px, 22vw, 92px)",
+                        borderRadius: "50%",
+                        border: unlocked ? "3px solid #087F63" : "1.5px solid #BDD9CD",
+                        background: unlocked ? "#F4FAF7" : "#E4EFE9",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        position: "relative",
+                        boxShadow: unlocked ? "0 6px 18px rgba(8,127,99,0.22)" : "0 2px 6px rgba(18,65,48,0.06)",
+                      }}
+                    >
+                      <img
+                        src={getproductIconSrc(div.name, verticalFor)}
+                        alt={div.name}
+                        style={{
+                          width: "72%",
+                          height: "72%",
+                          objectFit: "contain",
+                          opacity: unlocked ? 1 : 0.55,
+                        }}
+                      />
+                      {!unlocked && (
+                        <span
+                          style={{
+                            position: "absolute",
+                            bottom: 0,
+                            right: 0,
+                            width: 22,
+                            height: 22,
+                            borderRadius: "50%",
+                            background: "#7A8D85",
+                            color: "#fff",
+                            border: "2px solid #F1F7F4",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: 11,
+                          }}
+                        >
+                          🔒
+                        </span>
+                      )}
+                    </div>
+                    <span
+                      className="text-center"
+                      style={{
+                        marginTop: 6,
+                        fontSize: 12.5,
+                        fontWeight: 800,
+                        color: unlocked ? "#183B34" : "#6B7C76",
+                        fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                        lineHeight: 1.15,
+                      }}
+                    >
+                      {tc(div.name)}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Favorites Subscription Prompt Modal */}

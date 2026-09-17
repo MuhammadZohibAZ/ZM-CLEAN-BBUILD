@@ -6,7 +6,7 @@ Write-Host "  Starting Zarai Mandi (TTS Backend + Market API + Frontend)" -Foreg
 Write-Host "  TTS Backend API: http://localhost:8000" -ForegroundColor Cyan
 Write-Host "  Market API:      http://localhost:8090" -ForegroundColor Cyan
 Write-Host "  Frontend Web UI: http://localhost:8445" -ForegroundColor Cyan
-Write-Host "  (Market API needs Postgres running -- see api/README.md)" -ForegroundColor Yellow
+Write-Host "  (Market API running on embedded SQLite database)" -ForegroundColor Green
 Write-Host "========================================================" -ForegroundColor Green
 
 if (Test-Path "$WorkspaceRoot\node_modules\.bin\concurrently.cmd") {

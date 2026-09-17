@@ -24,7 +24,7 @@ DB_DSN = os.environ.get(
 CSV_PATH = sys.argv[1] if len(sys.argv) > 1 else os.path.join(
     os.path.dirname(__file__), "..", "..", "data", "commodity_prices.csv"
 )
-CATALOG_PATH = os.path.join(os.path.dirname(__file__), "catalog_468.csv")
+CATALOG_PATH = os.path.join(os.path.dirname(__file__), "catalog_459.csv")
 ALIASES_PATH = os.path.join(os.path.dirname(__file__), "catalog_aliases.csv")
 
 MOISTURE_RANGE_RE = re.compile(r"^\s*(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)\s*$")
@@ -35,13 +35,15 @@ MOISTURE_SINGLE_RE = re.compile(r"^\s*(\d+(?:\.\d+)?)\s*$")
 # Applies regardless of completeness; out-of-band values are excluded from
 # the verified-grade moisture slide, never relabelled.
 MAIZE_MOISTURE_BANDS = {
-    "Maize Grade A": "11-14",
-    "Maize Grade B": "14-16",
-    "Maize Grade C": "16-18",
+    # Keys must match catalog_459.csv's by_product spelling exactly (the
+    # Excel spelling, since Excel wins on any name mismatch).
+    "Maize - Grade A": "11-14",
+    "Maize - Grade B": "14-16",
+    "Maize - Grade C": "16-18",
     "Maize Grade D": "18-20",
-    "Feed Maize Grade A": "11-14",
-    "Feed Maize Grade B": "14-16",
-    "Feed Maize Grade C": "16-18",
+    "Feed / Maize Grade A": "11-14",
+    "Feed / Maize Grade B": "14-16",
+    "Feed / Maize Grade C": "16-18",
 }
 
 

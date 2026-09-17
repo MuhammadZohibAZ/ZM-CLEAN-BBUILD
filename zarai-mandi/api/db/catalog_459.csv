@@ -1,0 +1,460 @@
+id,division,by_product
+1,Wheat,Barley
+2,Wheat,Wheat Bran
+3,Wheat,Flour
+4,Wheat,Flour Special
+5,Wheat,Oat
+6,Wheat,Refined Flour
+7,Wheat,Sooji
+8,Wheat,Sorghum
+9,Wheat,Straw
+10,Wheat,Wheat
+11,Maize,Corn Silage
+12,Maize,Corn Starch
+13,Maize,Maize - Grade A
+14,Maize,Maize - Grade B
+15,Maize,Maize - Grade C
+16,Maize,Maize Grade D
+17,Maize,Popcorn
+18,Sesame,Sesame - Grade A
+19,Sesame,Sesame - Grade B
+20,Sesame,Sesame - Grade C
+21,Sesame,Sesame Oil (Til ka Tail)
+22,Millet,Millet - Grade A
+23,Millet,Millet - Grade B
+24,Millet,Millet Grade C
+25,Cotton,Cottonseed
+26,Cotton,Cottonseed Cake
+27,Cotton,Cottonseed Oil
+28,Cotton,Lint Cotton
+29,Cotton,Seed Cotton - Grade A
+30,Cotton,Seed Cotton - Grade B
+31,Cotton,Seed Cotton - Grade C
+32,Paddy,Paddy
+33,Paddy,Paddy 1509
+34,Paddy,Paddy 1692
+35,Paddy,Paddy 1718
+36,Paddy,Paddy 1847
+37,Paddy,Paddy 386
+38,Paddy,Paddy 86
+39,Paddy,Paddy C-9
+40,Paddy,Paddy Diamond
+41,Paddy,Paddy Irri
+42,Paddy,Paddy Irri 6
+43,Paddy,Paddy Irri 9
+44,Paddy,Paddy Irri-Fine
+45,Paddy,Paddy Kainat-1121
+46,Paddy,Paddy Lp-18
+47,Paddy,Paddy PP-7
+48,Paddy,Paddy Super
+49,Paddy,Paddy Super 515
+50,Paddy,Paddy Supri
+51,Rice,Rice
+52,Fertilizer,Ammonium Sulphate
+53,Fertilizer,Amonium Nitrate
+54,Fertilizer,CAN
+55,Fertilizer,Chlorphenapyr 36% SC
+56,Fertilizer,Clothianidin 20% EC
+57,Fertilizer,DAP
+58,Fertilizer,Enrich
+59,Fertilizer,Green Phosphate
+60,Fertilizer,Mesotrione + Atrazine 50% WP
+61,Fertilizer,Mesotrione + Atrazine 55% WP
+62,Fertilizer,MOP
+63,Fertilizer,NP
+64,Fertilizer,NPK
+65,Fertilizer,Pak Arab CAN
+66,Fertilizer,Pak Arab Guara
+67,Fertilizer,S-metolachlor 960EC 800ML
+68,Fertilizer,SOP-G
+69,Fertilizer,SSP
+70,Fertilizer,TSP
+71,Fertilizer,UREA
+72,Fertilizer,Zabardast Urea
+73,Fertilizer,Zarkhez
+74,Fertilizer,Zinc
+75,Fertilizer,Zinc Sulphate
+76,Dates,Ajwa Dates
+77,Dates,Amber Dates
+78,Dates,Aseel Chuara
+79,Dates,Aseel Dates
+80,Dates,Begum Jangi Dates
+81,Dates,Black Aseel Chuara
+82,Dates,Dhaki Dry Dates
+83,Dates,Jamsor Dates
+84,Dates,Karbala Dates
+85,Dates,Kupra Dates
+86,Dates,Mazafati Dates
+87,Dates,Nar Chuara
+88,Dates,Rabbi Dates
+89,Dates,Rangkat Aseel Chuara
+90,Dates,Rangkat Black Aseel Dry Dates
+91,Dates,Rangkat Dhaki Dry Dates
+92,Dates,Rangkat Nar Chuara
+93,Dates,Sharifa Dates
+94,Dates,Zahidi Dates
+95,Mustard,Mustard Cake
+96,Mustard,Mustard Oil
+97,Mustard,Mustard Seed
+98,Spices,Black Pepper
+99,Spices,Black Pepper Powder
+100,Spices,Cinnamon
+101,Spices,Clove
+102,Spices,Coriander Seed Powder
+103,Spices,Coriander Seed
+104,Spices,Cumin Black
+105,Spices,Cumin White
+106,Spices,Fennel
+107,Spices,Jaifal
+108,Spices,Large Black Cardamom
+109,Spices,Red Chilli Powder
+110,Spices,Red Chilli Whole
+111,Spices,Red Hybird Chilli
+112,Spices,Red Longi Chilli
+113,Spices,Red Rich Star Chilli
+114,Spices,Red Shingri Chilli
+115,Spices,Red Summer Queen Chilli
+116,Spices,Small Cardamom
+117,Spices,Turmeric
+118,Pulses,Gram Black-Thick
+119,Pulses,Gram Black-Thin
+120,Pulses,Gram Black Thin As
+121,Pulses,Gram Pulse-Thick As
+122,Pulses,Gram Pulse-Thin As
+123,Pulses,Gram White 7Mm
+124,Pulses,Gram White 9Mm
+125,Pulses,Mash Sabut-2
+126,Pulses,Mash Shell Thick
+127,Pulses,Mash Shell Thin
+128,Pulses,Mash Washed-1
+129,Pulses,Mash Washed-2
+130,Pulses,Mash Washed-Thick
+131,Pulses,Mash Washed-Thin
+132,Pulses,Masoor Pulse Red
+133,Pulses,Masoor Sabut-1
+134,Pulses,Masoor Sabut-2
+135,Pulses,Moong Sabut-1
+136,Pulses,Moong Sabut-2
+137,Pulses,Moong Shell-1
+138,Pulses,Moong Washed-1
+139,Pulses,Moong Washed-2
+140,Pulses,Pigeon Pea-Thick
+141,Pulses,Pigeon Pea-Thin
+142,Pulses,Red Lubya-1
+143,Pulses,Red Lubya-2
+144,Pulses,White Lubya-Thick
+145,Pulses,White Lubya-Thin
+146,Pulses,Yellow Peas
+147,Sugarcane/Sugar,Akbari Mandi - Sugar (Cheeni)
+148,Sugarcane/Sugar,Jaggery
+149,Sugarcane/Sugar,Refined Sugar
+150,Sugarcane/Sugar,Shakkar
+151,Sugarcane/Sugar,Sugar Cane
+152,Sugarcane/Sugar,sugar(mill)
+153,Sugarcane/Sugar,sugar(retail)
+154,Sugarcane/Sugar,sugar(wholesale)
+155,Edible Oil,Taara Meera-Oil
+156,Edible Oil,Taara Meera
+157,Edible Oil,Canola Meal
+158,Edible Oil,Canola Oil
+159,Edible Oil,Canola Seed
+160,Edible Oil,Castor Bean
+161,Edible Oil,Soybean Meal
+162,Edible Oil,Soybean Oil
+163,Edible Oil,Soybean Oil - Washed
+164,Edible Oil,Soyabean/Soyabean Seed
+165,Edible Oil,Sunflower Meal
+166,Edible Oil,Sunflower Oil
+167,Edible Oil,Sunflower Seed
+168,Livestock,Buffalo / 100-150 kg
+169,Livestock,Buffalo / 150-200 kg
+170,Livestock,Buffalo / 200-250 kg
+171,Livestock,Buffalo / 250-300 kg
+172,Livestock,Buffalo / 300-350 kg
+173,Livestock,Buffalo / 350-400 kg
+174,Livestock,Buffalo / above 400 kg
+175,Livestock,Buffalo / Below 100 Kg
+176,Livestock,Camel / 100-150 kg
+177,Livestock,Camel / 150-200 kg
+178,Livestock,Camel / 200-250 kg
+179,Livestock,Camel / 250-300 kg
+180,Livestock,Camel / 300-350 kg
+181,Livestock,Camel / 350-400 kg
+182,Livestock,Camel / 400-450 kg
+183,Livestock,Camel / 450-500 kg
+184,Livestock,Camel / above 500 kg
+185,Livestock,Cow / 100-150 kg
+186,Livestock,Cow / 150-200 kg
+187,Livestock,Cow / 200-250 kg
+188,Livestock,Cow / 250-300 kg
+189,Livestock,Cow / 300-350 kg
+190,Livestock,Cow / 350-400 kg
+191,Livestock,Cow / above 400 kg
+192,Livestock,Cow / Below 100 Kg
+193,Livestock,Dairy / Buffalo - Milk With Cream (Doodh Malai k Sath)
+194,Livestock,Dairy / Buffalo - Milk Without Cream (Doodh Malai k Baghair)
+195,Livestock,Dairy / Cow - Milk With Cream (Doodh Malai k Sath)
+196,Livestock,Dairy / Cow - Milk Without Cream (Doodh Malai k Baghair)
+197,Livestock,Alfalfa
+198,Livestock,Feed / Black Dry Dates Cutter (Kala Chohara Cutter)
+199,Livestock,Feed / Canola Meal
+200,Livestock,Feed / Channa Atti
+201,Livestock,Feed / Corn Silage
+202,Livestock,Feed / Cotton Seed Cake
+203,Livestock,Feed / Dry Dates Skintone Cutter (Chohara Rang Kat Cutter)
+204,Livestock,Feed / Elephant Grass (Hathi Ghas)
+205,Livestock,Feed / Fodder - Green Grass (Green Chara)
+206,Livestock,Feed / Jantar
+207,Livestock,Feed / Limestone (Choona)
+208,Livestock,Feed / Lucerne Fodder (Lucerne Chara)
+209,Livestock,Feed / Maize Fodder (Makai Chara)
+210,Livestock,Feed / Maize Grade A
+211,Livestock,Feed / Maize Grade B
+212,Livestock,Feed / Maize Grade C
+213,Livestock,Feed / Masha Katta
+214,Livestock,Feed / Masoor Katta
+215,Livestock,Feed / Moong Katta
+216,Livestock,Feed / Mustard Seed Cake
+217,Livestock,Feed / Mustard Seed Cake Cutter (Sarson Khal Cutter)
+218,Livestock,Rhode Grass
+219,Livestock,Feed / Rice Polish (Chawal Polish)
+220,Livestock,Feed / Sorghum
+221,Livestock,Sorghum (Jowar) - Feed
+222,Livestock,Feed / Soyabean Meal
+223,Livestock,Feed / Wanda (40-50% Maize)
+224,Livestock,Feed / Wanda Concentration
+225,Livestock,Feed / Wheat Bran
+226,Livestock,Feed / Wheat Husk (Gandum Chhilka)
+227,Livestock,Feed / Wheat Poridge (Gandum Daliya)
+228,Livestock,Feed / Wheat Straw
+229,Livestock,Fisheries / Fish
+230,Livestock,Goat / 10-15 kg
+231,Livestock,Goat / 15-20 kg
+232,Livestock,Goat / 20-25 kg
+233,Livestock,Goat / 25-30 kg
+234,Livestock,Goat / 30-35 kg
+235,Livestock,Goat / 35-40 kg
+236,Livestock,Goat / 40-45 kg
+237,Livestock,Goat / 45-50 kg
+238,Livestock,Goat / 50-55 kg
+239,Livestock,Goat / 55-60 kg
+240,Livestock,Goat / 60-65 kg
+241,Livestock,Goat / 65-70 kg
+242,Livestock,Goat / 70-75 kg
+243,Livestock,Goat / 75-80 kg
+244,Livestock,Goat / 80-85 kg
+245,Livestock,Goat / 85-90 kg
+246,Livestock,Goat / 90-95 kg
+247,Livestock,Goat / 95-100 kg
+248,Livestock,Lamb / 10-15 kg
+249,Livestock,Lamb / 15-20 kg
+250,Livestock,Lamb / 20-25 kg
+251,Livestock,Lamb / 25-30 kg
+252,Livestock,Lamb / 30-35 kg
+253,Livestock,Lamb / 35-40 kg
+254,Livestock,Lamb / 40-45 kg
+255,Livestock,Lamb / 45-50 kg
+256,Livestock,Lamb / 50-55 kg
+257,Livestock,Lamb / 55-60 kg
+258,Livestock,Lamb / 60-65 kg
+259,Livestock,Lamb / 65-70 kg
+260,Livestock,Lamb / 70-75 kg
+261,Livestock,Lamb / 75-80 kg
+262,Livestock,Lamb / 80-85 kg
+263,Livestock,Lamb / 85-90 kg
+264,Livestock,Lamb / 90-95 kg
+265,Livestock,Lamb / 95-100 kg
+266,Livestock,Poultry / Broiler
+267,Livestock,Sheep / 10-15 kg
+268,Livestock,Sheep / 15-20 kg
+269,Livestock,Sheep / 20-25 kg
+270,Livestock,Sheep / 25-30 kg
+271,Livestock,Sheep / 30-35 kg
+272,Livestock,Sheep / 35-40 kg
+273,Livestock,Sheep / 40-45 kg
+274,Livestock,Sheep / 45-50 kg
+275,Livestock,Sheep / 50-55 kg
+276,Livestock,Sheep / 55-60 kg
+277,Livestock,Sheep / 60-65 kg
+278,Livestock,Sheep / 65-70 kg
+279,Livestock,Sheep / 70-75 kg
+280,Livestock,Sheep / 75-80 kg
+281,Livestock,Sheep / 80-85 kg
+282,Livestock,Sheep / 85-90 kg
+283,Livestock,Sheep / 90-95 kg
+284,Livestock,Sheep / 95-100 kg
+285,Livestock,Slaughter House / 100-200 kg
+286,Livestock,Slaughter House / 200-300 kg
+287,Livestock,Slaughter House / 300-400 kg
+288,Livestock,Slaughter House / 400-500 kg
+289,Livestock,Slaughter House / 500-600 kg
+290,Livestock,Slaughter House / 600-700 kg
+291,Livestock,Slaughter House / 700-800 kg
+292,Livestock,Slaughter House / above 800 kg
+293,Livestock,Slaughter House / Below 100 Kg
+294,Kiryana,Asia ghee
+295,Kiryana,Dalda ghee
+296,Kiryana,Kashmir ghee
+297,Kiryana,Khyber ghee
+298,Kiryana,Sufi Ghee
+299,Fruits,Apple
+300,Fruits,Apricot
+301,Fruits,Banana
+302,Fruits,Cheeku
+303,Fruits,Cherry
+304,Fruits,Falsa
+305,Fruits,Fruiter
+306,Fruits,Grapefruit
+307,Fruits,Grapes
+308,Fruits,Guava
+309,Fruits,Kharbooza
+310,Fruits,Mandrin Orange
+311,Fruits,Mango Almas
+312,Fruits,Mango Anwer Ratul
+313,Fruits,Mango Black Chunsa
+314,Fruits,Mango Dasheri
+315,Fruits,Mango Fajri
+316,Fruits,Mango Langra
+317,Fruits,Mango Saroli
+318,Fruits,Mango Sindhri
+319,Fruits,Mango Surmai
+320,Fruits,Mango White Chunsa
+321,Fruits,Mausambi
+322,Fruits,Nashpati
+323,Fruits,Oranges
+324,Fruits,Papaya
+325,Fruits,Peach
+326,Fruits,Pineapple
+327,Fruits,Plum
+328,Fruits,Pomegranate
+329,Fruits,Sweet Lime
+330,Fruits,Watermelon
+331,Vegetable,Bitter Gourd
+332,Vegetable,Bottle Gourd
+333,Vegetable,Broccoli
+334,Vegetable,Cabbage
+335,Vegetable,Capsicum
+336,Vegetable,Carrot
+337,Vegetable,Cauliflower
+338,Vegetable,Green Chilli - Large
+339,Vegetable,Green Chilli - Medium
+340,Vegetable,Green Chilli - Small
+341,Vegetable,Red Desi Chilli
+342,Vegetable,Chinese Carrot
+343,Vegetable,Cucumber
+344,Vegetable,Garlic Desi
+345,Vegetable,Lemon Desi
+346,Vegetable,Galic Harni
+347,Vegetable,Garlic China
+348,Vegetable,Garlic G1
+349,Vegetable,Ginger
+350,Vegetable,Brinjal Gol
+351,Vegetable,Guar
+352,Vegetable,Lemon China
+353,Vegetable,Brinjal Lamba
+354,Vegetable,Okra
+355,Vegetable,Onion - Grade A
+356,Vegetable,Onion - Grade B
+357,Vegetable,Onion - Grade C
+358,Vegetable,Pea
+359,Vegetable,Potato Astras Grade A
+360,Vegetable,Potato Astras Grade B
+361,Vegetable,Potato Astras Grade C
+362,Vegetable,Potato Beej Grade A
+363,Vegetable,Potato Beej Grade B
+364,Vegetable,Potato Beej Grade C
+365,Vegetable,Potato Curda Grade A
+366,Vegetable,Potato Curda Grade B
+367,Vegetable,Potato Curda Grade C
+368,Vegetable,Potato (Goli)
+369,Vegetable,Potato Ismi Grade A
+370,Vegetable,Potato Ismi Grade B
+371,Vegetable,Potato Ismi Grade C
+372,Vegetable,Potato (Laal)
+373,Vegetable,Potato (Lr)
+374,Vegetable,Potato (Mozika)
+375,Vegetable,Potato Raveera Grade A
+376,Vegetable,Potato Raveera Grade B
+377,Vegetable,Potato Raveera Grade C
+378,Vegetable,Potato (Santa)
+379,Vegetable,Potato Stone Grade A
+380,Vegetable,Potato Stone Grade B
+381,Vegetable,Potato Stone Grade C
+382,Vegetable,Potato (Sufaid)
+383,Vegetable,Ridge Gourd
+384,Vegetable,Round Gourd
+385,Vegetable,Salad Leaves
+386,Vegetable,Spinach
+387,Vegetable,Shakar Qandi
+388,Vegetable,Sweet Potato
+389,Vegetable,Tomato (Grade A)
+390,Vegetable,Tomato (Grade B)
+391,Vegetable,Tomato Grade C
+392,Vegetable,Turnip
+393,Dry Fruit,Almond (American)
+394,Dry Fruit,Almond (Australian)
+395,Dry Fruit,Almond (Desi)
+396,Dry Fruit,Cashew
+397,Dry Fruit,Coconut Powder (Pisa Khopra)
+398,Dry Fruit,Coconut Whole (Sabut Khopra)
+399,Dry Fruit,Fig
+400,Dry Fruit,Pistachio
+401,Dry Fruit,Large Raisins
+402,Dry Fruit,Walnut
+403,Herbs,Ajwain
+404,Herbs,Chia Seed
+405,Herbs,Dry Lemon
+406,Herbs,Hing
+407,Herbs,Honey
+408,Herbs,Ispaghol
+409,Herbs,Ispaghol Husk
+410,Herbs,Kalonji
+411,Herbs,Kalonji Oil
+412,Herbs,Salab Misri
+413,Herbs,Saleb Panja
+414,Herbs,Saunf
+415,Herbs,Tukh Malanga
+416,Herbs,Zafran
+417,Fruits,Kala Kullu Apple
+418,Rice,1121 Basmati-1
+419,Rice,1121 Basmati-2
+420,Rice,1121 Kacha
+421,Rice,1121 Steam
+422,Rice,1121 White
+423,Rice,1509 Kacha
+424,Rice,1509 Sella
+425,Rice,1509 Steam
+426,Rice,1509 Steam Basmati
+427,Rice,1509 White
+428,Rice,386 Basmati-New
+429,Rice,386 Basmati-Old
+430,Rice,C-9 Sila
+431,Rice,C-9 Steam
+432,Rice,C-9 White
+433,Rice,Irri 6
+434,Rice,Irri 6 Sabut-1
+435,Rice,Irri 9
+436,Rice,Irri Tota
+437,Rice,Kainat Double Steam
+438,Rice,Lal 386 New
+439,Rice,Lal 386 Old
+440,Rice,Punia 1121-1
+441,Rice,Punia 1121-2
+442,Rice,Punia Basmati-1
+443,Rice,Rice Husk
+444,Rice,Sella 1121-1
+445,Rice,Sella 386
+446,Rice,Sella Punjab
+447,Rice,Short Grain (Tota)
+448,Rice,Silky
+449,Rice,Silky & Sortex
+450,Rice,Super Basmati Sindh
+451,Rice,Super Kernel
+452,Rice,Supri New
+453,Rice,Supri Sila
+454,Rice,Tota Basmati
+455,Livestock,Barseem
+456,Edible Oil,Camelina
+457,Pulses,Moongi
+458,Classification pending,Egg Tray
+459,Classification pending,Quinoa

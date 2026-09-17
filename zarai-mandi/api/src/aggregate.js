@@ -17,6 +17,23 @@
 
 import { pool } from "./db.js";
 
+// Card field qualification (the ">=80% filled -> show it" rule) and the
+// dominant price type are computed live from by_product_attribute_stats /
+// price_records on every request, not transcribed from a point-in-time PDF
+// brief. That table is rebuilt by api/db/etl_sqlite.py from the current
+// month's xlsx, so this stays correct for every catalog entry (not just a
+// hand-curated subset) and never drifts when the catalog's IDs change.
+const ATTR_DB_TO_TYPE = {
+  moisture: "moisture",
+  new_old: "newOld",
+  color: "color",
+  variety: "variety",
+  specification: "spec",
+  origin: "origin",
+  quality: "quality",
+};
+
+
 const ATTRIBUTE_COLUMNS = {
   color: "color",
   newOld: "new_old",
@@ -187,10 +204,13 @@ export async function getArrivalSummary(byProductId, filters = {}) {
         ${attrSql}
     ),
     market_day as (
-      select distinct on (province, district, station, record_date)
-        province, district, station, record_date, arrival_weight_kg
-      from eligible
-      order by province, district, station, record_date, row_num desc
+      select province, district, station, record_date, arrival_weight_kg
+      from (
+        select province, district, station, record_date, arrival_weight_kg,
+               row_number() over (partition by province, district, station, record_date order by row_num desc) as rn
+        from eligible
+      )
+      where rn = 1
     ),
     market_total as (
       select province, district, station, sum(arrival_weight_kg) as market_kg
@@ -488,23 +508,26 @@ export async function getTrend(byProductId, filters = {}) {
 
 function buildLocationFilter(locationKind, locationLabel, params) {
   if (!locationKind || locationKind === "pakistan" || !locationLabel) return "";
-  const label = locationLabel.replace(/\s*mandi$/i, "").trim();
+  const label = locationLabel.replace(/\s*(mandi|منڈی)$/i, "").trim();
   if (!label) return "";
   params.push(label);
   const idx = params.length;
-  if (locationKind === "province") return `and lower(province) = lower($${idx})`;
-  if (locationKind === "district") return `and lower(district) = lower($${idx})`;
-  if (locationKind === "mandi") return `and lower(station) = lower($${idx})`;
+  if (locationKind === "province") return `and (lower(province) = lower($${idx}) or lower(province) like lower($${idx} || '%'))`;
+  if (locationKind === "district") return `and (lower(district) = lower($${idx}) or lower(station) = lower($${idx}) or lower(district) like lower($${idx} || '%'))`;
+  if (locationKind === "mandi") return `and (lower(station) = lower($${idx}) or lower(station) = lower($${idx} || ' mandi') or lower(station) like lower($${idx} || '%'))`;
   params.pop();
   return "";
 }
 
+// Moisture is handled separately above (computeCardStats): it's a
+// continuous measurement, not a category, so "most common raw string"
+// was never the right summary for it -- a computed average is.
 const SPECIAL_ATTR_PRIORITY = [
-  ["moisture", "moisture_raw"],
   ["newOld", "new_old"],
   ["color", "color"],
   ["variety", "variety"],
   ["spec", "specification"],
+  ["quality", "quality"],
   ["origin", "origin"],
 ];
 
@@ -529,7 +552,9 @@ async function computeCardStats(row, targetDate, locationKind, locationLabel) {
     avgMax: 0,
     totalArrival: 0,
     markets: 0,
+    arrivalCoverage: 0,
     specialAttr: null,
+    specialAttrs: [],
   };
   if (!row.has_data || !row.matched_by_product) return base;
 
@@ -544,8 +569,10 @@ async function computeCardStats(row, targetDate, locationKind, locationLabel) {
   );
   if (rtRows.length === 0) return base;
 
-  const mostOccurringRateType = rtRows[0].rt;
   const allRateTypes = rtRows.map((r) => r.rt);
+  // rtRows is already ordered by record count desc, so its head is the
+  // live-computed dominant (most-occurring) price type for this by-product.
+  const mostOccurringRateType = rtRows[0].rt;
   const otherRateTypesCount = Math.max(0, allRateTypes.length - 1);
 
   const priceParams = [row.product, row.matched_by_product, mostOccurringRateType];
@@ -572,8 +599,38 @@ async function computeCardStats(row, targetDate, locationKind, locationLabel) {
      from market`,
     priceParams
   );
-  const avgMin = Number(priceRows[0].avg_min);
-  const avgMax = Number(priceRows[0].avg_max);
+  let avgMin = Number(priceRows[0].avg_min);
+  let avgMax = Number(priceRows[0].avg_max);
+
+  if (targetDate && avgMin === 0 && avgMax === 0) {
+    const fbParams = [row.product, row.matched_by_product, mostOccurringRateType];
+    const fbLoc = buildLocationFilter(locationKind, locationLabel, fbParams);
+    const { rows: fbRows } = await pool.query(
+      `with latest_date as (
+         select max(record_date) as md from price_records
+         where product = $1 and by_product = $2 and price_valid and price_type = $3 ${fbLoc}
+       ),
+       eligible as (
+         select * from price_records
+         where product = $1 and by_product = $2 and price_valid and price_type = $3
+           and record_date = (select md from latest_date)
+           and province is not null and district is not null and station is not null
+           ${fbLoc}
+       ),
+       market as (
+         select province, district, station, avg(minimum) mn, avg(maximum) mx
+         from eligible group by province, district, station
+       )
+       select coalesce(round(avg(mn)::numeric, 2), 0) as avg_min,
+              coalesce(round(avg(mx)::numeric, 2), 0) as avg_max
+       from market`,
+      fbParams
+    );
+    if (fbRows[0] && Number(fbRows[0].avg_min) > 0) {
+      avgMin = Number(fbRows[0].avg_min);
+      avgMax = Number(fbRows[0].avg_max);
+    }
+  }
 
   const arrParams = [row.product, row.matched_by_product];
   const arrLocClause = buildLocationFilter(locationKind, locationLabel, arrParams);
@@ -585,39 +642,99 @@ async function computeCardStats(row, targetDate, locationKind, locationLabel) {
 
   const { rows: arrRows } = await pool.query(
     `select coalesce(sum(arrivals) filter (where arrivals > 0), 0) as total_arrival,
-            count(distinct station) as markets
+            count(distinct station) as markets,
+            count(*) as total_rows,
+            count(*) filter (where arrival_weight_known and arrivals > 0) as valid_arrival_rows
      from price_records
      where product = $1 and by_product = $2 ${arrDateSql} ${arrLocClause}`,
     arrParams
   );
   const totalArrival = Number(arrRows[0].total_arrival);
-  const markets = Number(arrRows[0].markets);
+  let markets = Number(arrRows[0].markets);
+  if (markets === 0 && avgMin > 0) {
+    const mktParams = [row.product, row.matched_by_product, mostOccurringRateType];
+    const mktLoc = buildLocationFilter(locationKind, locationLabel, mktParams);
+    const { rows: mktRows } = await pool.query(
+      `select count(distinct station) as m
+       from price_records
+       where product = $1 and by_product = $2 and price_type = $3 ${mktLoc}`,
+      mktParams
+    );
+    markets = Number(mktRows[0]?.m || 1);
+  }
+  const totalRows = Number(arrRows[0].total_rows || 0);
+  const validArrivalRows = Number(arrRows[0].valid_arrival_rows || 0);
+  const arrivalCoverage = totalRows > 0 ? validArrivalRows / totalRows : 0;
 
   let specialAttr = null;
+  const specialAttrs = [];
   if (row.moisture_rule_band) {
     // business-declared (D) rule wins over any observed value, per policy section 6
     specialAttr = { type: "moisture", value: `${row.moisture_rule_band}%`, isDeclaredRule: true };
+    specialAttrs.push(specialAttr);
   } else {
-    const attrParams2 = [row.product, row.matched_by_product, mostOccurringRateType];
-    const attrLocClause2 = buildLocationFilter(locationKind, locationLabel, attrParams2);
-    const { rows: modeRows } = await pool.query(
+    // No declared grade band: moisture is still worth surfacing from a
+    // partial sample (it's a physical quality trait, not just a
+    // categorical attribute), so it gets a lower bar than the general
+    // >=80% "core/strong" rule below -- >=30% filled is enough. The value
+    // shown is the mean of each record's parsed (min+max)/2 midpoint,
+    // never a silent average of the raw text ranges themselves.
+    const { rows: moistRows } = await pool.query(
       `select
-         mode() within group (order by moisture_raw) filter (where moisture_raw is not null) as moisture_raw,
-         mode() within group (order by new_old) filter (where new_old is not null) as new_old,
-         mode() within group (order by color) filter (where color is not null) as color,
-         mode() within group (order by variety) filter (where variety is not null) as variety,
-         mode() within group (order by specification) filter (where specification is not null) as specification,
-         mode() within group (order by origin) filter (where origin is not null) as origin
+         count(*) as total,
+         count(*) filter (where moisture_min is not null and moisture_max is not null) as filled,
+         avg((moisture_min + moisture_max) / 2.0) filter (where moisture_min is not null and moisture_max is not null) as avg_mid
        from price_records
-       where product = $1 and by_product = $2 and price_type = $3 ${attrLocClause2}`,
-      attrParams2
+       where product = $1 and by_product = $2`,
+      [row.product, row.matched_by_product]
     );
-    const modes = modeRows[0] || {};
-    for (const [type, col] of SPECIAL_ATTR_PRIORITY) {
-      const value = modes[col];
-      if (value) {
-        specialAttr = { type, value };
-        break;
+    const mTotal = Number(moistRows[0]?.total || 0);
+    const mFilled = Number(moistRows[0]?.filled || 0);
+    const mAvg = moistRows[0]?.avg_mid !== null && moistRows[0]?.avg_mid !== undefined ? Number(moistRows[0].avg_mid) : null;
+    if (mTotal > 0 && mFilled / mTotal >= 0.3 && mAvg !== null) {
+      const obj = { type: "moisture", value: `${Math.round(mAvg * 10) / 10}%`, isDeclaredRule: false };
+      specialAttr = obj;
+      specialAttrs.push(obj);
+    }
+  }
+
+  // The ">=80% filled -> show it" rule, computed live by
+  // api/db/etl_sqlite.py into by_product_attribute_stats from this month's
+  // actual data (classification 'core' = 100%, 'strong' = 80-99.9%).
+  const { rows: statRows } = await pool.query(
+    `select attribute_name from by_product_attribute_stats
+     where by_product_id = $1 and classification in ('core', 'strong')`,
+    [row.id]
+  );
+  const qualifiedSet = new Set(
+    statRows.map((r) => ATTR_DB_TO_TYPE[r.attribute_name]).filter(Boolean)
+  );
+
+  const attrParams2 = [row.product, row.matched_by_product, mostOccurringRateType];
+  const attrLocClause2 = buildLocationFilter(locationKind, locationLabel, attrParams2);
+  const { rows: modeRows } = await pool.query(
+    `select
+       (select new_old from price_records where product = $1 and by_product = $2 and price_type = $3 ${attrLocClause2} and new_old is not null group by new_old order by count(*) desc limit 1) as new_old,
+       (select color from price_records where product = $1 and by_product = $2 and price_type = $3 ${attrLocClause2} and color is not null group by color order by count(*) desc limit 1) as color,
+       (select variety from price_records where product = $1 and by_product = $2 and price_type = $3 ${attrLocClause2} and variety is not null group by variety order by count(*) desc limit 1) as variety,
+       (select specification from price_records where product = $1 and by_product = $2 and price_type = $3 ${attrLocClause2} and specification is not null group by specification order by count(*) desc limit 1) as specification,
+       (select quality from price_records where product = $1 and by_product = $2 and price_type = $3 ${attrLocClause2} and quality is not null group by quality order by count(*) desc limit 1) as quality,
+       (select origin from price_records where product = $1 and by_product = $2 and price_type = $3 ${attrLocClause2} and origin is not null group by origin order by count(*) desc limit 1) as origin`,
+    attrParams2
+  );
+  const modes = modeRows[0] || {};
+  for (const [type, col] of SPECIAL_ATTR_PRIORITY) {
+    if (!qualifiedSet.has(type)) {
+      continue;
+    }
+    const value = modes[col];
+    if (value) {
+      const obj = { type, value };
+      if (!specialAttr) {
+        specialAttr = obj;
+      }
+      if (!specialAttrs.some((a) => a.type === type)) {
+        specialAttrs.push(obj);
       }
     }
   }
@@ -634,7 +751,9 @@ async function computeCardStats(row, targetDate, locationKind, locationLabel) {
     avgMax,
     totalArrival,
     markets,
+    arrivalCoverage,
     specialAttr,
+    specialAttrs,
   };
 }
 

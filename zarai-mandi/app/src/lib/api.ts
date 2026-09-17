@@ -5,7 +5,7 @@
 const API_BASE = (import.meta.env.VITE_MARKET_API_URL as string | undefined)?.replace(/\/$/, "") || "http://localhost:8090";
 
 export interface CardSpecialAttr {
-  type: "moisture" | "newOld" | "color" | "variety" | "spec" | "origin";
+  type: "moisture" | "newOld" | "color" | "variety" | "spec" | "quality" | "origin";
   value: string;
   isDeclaredRule?: boolean;
 }
@@ -22,7 +22,9 @@ export interface CardStats {
   avgMax: number;
   totalArrival: number;
   markets: number;
+  arrivalCoverage?: number;
   specialAttr: CardSpecialAttr | null;
+  specialAttrs?: CardSpecialAttr[];
 }
 
 export interface ByProductCatalogRow {

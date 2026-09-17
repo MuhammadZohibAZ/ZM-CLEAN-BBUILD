@@ -68,16 +68,19 @@ create index if not exists idx_price_records_market on price_records (province, 
 create index if not exists idx_price_records_attrs on price_records (product, by_product, color, new_old, origin, variety, specification, quality);
 
 -- ---------------------------------------------------------------------
--- The 468-entry customer-facing catalog, transcribed from
--- docs/Zarai_Mandi_Leadership_Card_Evidence_5_Pages.pdf (catalog IDs are
--- the same ones the PDF uses; "matching Excel row is ID + 4"). This is
--- the authoritative division/by-product list -- independent of whether
--- this month's export has any matching records for an entry, so
--- "no data this month" entries still appear (see policy PDF: "no-data
--- entries are unassessed, not inapplicable").
+-- The 459-entry customer-facing catalog (api/db/catalog_459.csv),
+-- reconciled from docs/Zarai_Mandi_Leadership_Card_Evidence_5_Pages.pdf:
+-- 230 by-products matched to this month's xlsx (pages 2-4 of the brief,
+-- by_product spelled exactly as the xlsx has it -- Excel spelling wins on
+-- any name mismatch) + 229 catalog-only entries with no matching xlsx item
+-- this month (page 5). Catalog IDs are the PDF's own IDs. This is the
+-- authoritative division/by-product list -- independent of whether this
+-- month's export has any matching records for an entry, so "no data this
+-- month" entries still appear (see policy PDF: "no-data entries are
+-- unassessed, not inapplicable").
 -- ---------------------------------------------------------------------
 create table if not exists catalog_entries (
-  id                integer primary key,   -- catalog ID from the leadership brief (1-468)
+  id                integer primary key,   -- catalog ID from the leadership brief (1-459)
   division          text not null,         -- customer-facing division, e.g. "Wheat", "Vegetable"
   by_product        text not null,         -- catalog's English by-product label
   normalized_key    text not null
@@ -88,9 +91,11 @@ create index if not exists idx_catalog_entries_normalized_key on catalog_entries
 
 -- ---------------------------------------------------------------------
 -- Manual aliases for source rows whose raw Product/By_Product spelling
--- doesn't normalize to match its catalog entry (typos, abbreviations,
--- "Cottonseed" vs "Cotton Seed", "Sooji" vs "Semolina", etc). Rows with
--- no catalog match at all (ungraded Potato, Quinoa, Egg Tray, ...) are
+-- doesn't normalize to match its catalog entry. Empty as of the 459-entry
+-- catalog: every matched by_product in catalog_459.csv is transcribed
+-- exactly as the xlsx spells it, so normalized_key matching alone is
+-- sufficient. Kept as an escape hatch for a future month's export whose
+-- spelling drifts from the catalog. Rows with no catalog match at all are
 -- deliberately left unmatched -- see policy PDF section 9 ("Identity
 -- exceptions"): "not silently assigned to a catalog entry."
 -- ---------------------------------------------------------------------

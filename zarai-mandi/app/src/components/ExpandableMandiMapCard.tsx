@@ -3,31 +3,21 @@
 import React, { useState, useRef } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from "framer-motion";
 import { X, Sparkles } from "lucide-react";
-import ZaraiMandiMap from "./ZaraiMandiMap";
+import ZaraiMandiMap, { type MapByProductRecord } from "./ZaraiMandiMap";
 import pakistanMapBg from "../assets/pakistan_map_btn_bg.png";
 
 export interface ExpandableMandiMapCardProps {
   mandiName: string;
   provinceName?: string;
   commodityName?: string;
-  rateInfo?: {
-    cropName?: string;
-    mandiName?: string;
-    minPrice?: number;
-    maxPrice?: number;
-    rateType?: string;
-    trend?: "up" | "down" | "flat" | "stable";
-    trendPct?: number;
-    arrival?: string;
-    quality?: string;
-    variety?: string;
-    color?: string;
-    condition?: string;
-    spec?: string;
-  };
+  records?: MapByProductRecord[];
+  // Where the expanded map should auto-zoom to on open, mirroring the
+  // screen's own current location filter -- undefined for both means "All
+  // Pakistan", the map's default view.
+  focusMandiName?: string;
+  focusProvinceName?: string;
   lang?: "ur" | "en";
   urduFont?: string;
-  onSpeak?: (text: string) => void;
   className?: string;
 }
 
@@ -35,10 +25,11 @@ export const ExpandableMandiMapCard: React.FC<ExpandableMandiMapCardProps> = ({
   mandiName,
   provinceName = "Punjab",
   commodityName = "Wheat",
-  rateInfo,
+  records,
+  focusMandiName,
+  focusProvinceName,
   lang = "en",
   urduFont,
-  onSpeak,
   className = "",
 }) => {
   const [isHovered, setIsHovered] = useState<boolean>(false);
@@ -71,13 +62,6 @@ export const ExpandableMandiMapCard: React.FC<ExpandableMandiMapCardProps> = ({
 
   const handleCardClick = () => {
     setIsExpanded(true);
-    if (onSpeak) {
-      onSpeak(
-        lang === "ur"
-          ? `${mandiName} میں ${commodityName} کا نقشہ کھل گیا`
-          : `Opened ${commodityName} map for ${mandiName}`
-      );
-    }
   };
 
   const handleClose = (e?: React.MouseEvent) => {
@@ -224,12 +208,15 @@ export const ExpandableMandiMapCard: React.FC<ExpandableMandiMapCardProps> = ({
               }}
               onClick={(e) => e.stopPropagation()}
             >
+              {/* Mirrors the screen's own current location filter: both
+                  focus props undefined means All Pakistan, the map's
+                  default view -- it never falls back to a hardcoded mandi. */}
               <ZaraiMandiMap
                 onClose={() => handleClose()}
-                initialMandiName={mandiName}
-                initialProvinceName={provinceName}
                 activeCommodity={commodityName}
-                rateInfo={rateInfo}
+                records={records}
+                initialMandiName={focusMandiName}
+                initialProvinceName={focusProvinceName}
                 lang={lang}
                 urduFont={urduFont}
               />
