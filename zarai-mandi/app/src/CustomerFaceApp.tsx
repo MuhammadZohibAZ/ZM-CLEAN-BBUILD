@@ -11295,13 +11295,13 @@ function ProductRatesScreen({
   }, [trendAllByRateType]);
 
   const normInitial = useMemo(() => {
-    const raw = (initialRateType || "").trim();
+    const raw = (attrRateType || initialRateType || "").trim();
     if (!raw) return "Mandi Rate";
     const match = ALL_RATE_TYPES.find(
       (t) => t.toLowerCase() === raw.toLowerCase() || t.toLowerCase().startsWith(raw.toLowerCase())
     );
     return match || "Mandi Rate";
-  }, [initialRateType]);
+  }, [attrRateType, initialRateType]);
 
   const orderedRateTypes = useMemo(() => {
     return [normInitial, ...ALL_RATE_TYPES.filter((t) => t !== normInitial)];
@@ -15983,7 +15983,7 @@ function ProductRatesScreen({
 
         {tab === "trends" && rows.length > 0 && (
           <>
-            {/* Top Bar: Title on left, Location pill + Timeframe dropdown on right */}
+            {/* Top Bar: Title on left, Location selector pill on right */}
             <div className="flex items-center justify-between gap-2">
               <p
                 className="text-xs font-bold uppercase tracking-wide"
@@ -16030,38 +16030,6 @@ function ProductRatesScreen({
                   </span>
                   <span className="text-[9px] opacity-70">▾</span>
                 </button>
-
-                {/* Timeframe Dropdown (Week / Month / Quarter) */}
-                <div className="relative">
-                  <select
-                    value={range}
-                    onChange={(e) => setRange(e.target.value as "week" | "month" | "quarter")}
-                    className="appearance-none font-extrabold rounded-xl px-2.5 py-1.5 pr-5 text-xs outline-none cursor-pointer shadow-sm transition active:scale-95"
-                    style={{
-                      background: "#087F63",
-                      color: "#FFFFFF",
-                      border: "none",
-                      fontSize: lang === "ur" ? 13 : 11,
-                      fontFamily:
-                        lang === "ur"
-                          ? URDU_FONT
-                          : "inherit",
-                    }}
-                  >
-                    <option value="week" className="text-[#183B34] bg-white">
-                      {lang === "ur" ? "ہفتہ (Week)" : "Week"}
-                    </option>
-                    <option value="month" className="text-[#183B34] bg-white">
-                      {lang === "ur" ? "مہینہ (Month)" : "Month"}
-                    </option>
-                    <option value="quarter" className="text-[#183B34] bg-white">
-                      {lang === "ur" ? "تین ماہ (Quarter)" : "Quarter"}
-                    </option>
-                  </select>
-                  <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-white text-[9px] font-bold">
-                    ▾
-                  </span>
-                </div>
               </div>
             </div>
 
@@ -16152,8 +16120,9 @@ function ProductRatesScreen({
                     const displayPrice = mainSeries?.data[currentIdx] || 0;
                     const startPrice = mainSeries?.data[0] || displayPrice || 1;
                     const changeAmt = displayPrice - startPrice;
-                    const changePct = ((changeAmt / startPrice) * 100).toFixed(2);
-                    const isPositive = changeAmt >= 0;
+                    const absPct = Math.abs((changeAmt / (startPrice || 1)) * 100).toFixed(2);
+                    const isPositive = changeAmt > 0;
+                    const isFlat = changeAmt === 0;
                     const seriesMax = mainSeries ? Math.max(...mainSeries.data) : displayPrice;
                     const seriesMin = mainSeries ? Math.min(...mainSeries.data) : displayPrice;
                     const seriesAvg = mainSeries ? Math.round(mainSeries.data.reduce((a, b) => a + b, 0) / mainSeries.data.length) : displayPrice;
@@ -16185,16 +16154,15 @@ function ProductRatesScreen({
                               {lang === "ur" ? `روپے ${toUrduDigits(displayPrice.toLocaleString())}` : `Rs. ${displayPrice.toLocaleString()}`}
                             </span>
                             <span
-                              className="text-xs font-bold px-2 py-0.5 rounded-md flex items-center gap-1"
+                              className="text-xs font-bold px-2.5 py-0.5 rounded-md flex items-center gap-1"
                               style={{
-                                background: isPositive ? "#DCFCE7" : "#FEE2E2",
-                                color: isPositive ? "#15803D" : "#B91C1C",
-                                border: `1px solid ${isPositive ? "#86EFAC" : "#FCA5A5"}`,
+                                background: isFlat ? "#F3F4F6" : isPositive ? "#DCFCE7" : "#FEE2E2",
+                                color: isFlat ? "#4B5563" : isPositive ? "#15803D" : "#B91C1C",
+                                border: `1px solid ${isFlat ? "#E5E7EB" : isPositive ? "#86EFAC" : "#FCA5A5"}`,
                               }}
                             >
-                              <span>{isPositive ? "▲" : "▼"}</span>
-                              <span>{isPositive ? `+${changeAmt}` : changeAmt}</span>
-                              <span>({isPositive ? `+${changePct}%` : `${changePct}%`})</span>
+                              <span>{isFlat ? "—" : isPositive ? "▲" : "▼"}</span>
+                              <span>{absPct}%</span>
                             </span>
                           </div>
 
@@ -16546,14 +16514,14 @@ function ProductRatesScreen({
                   {/* Direct Stock App Timeframe Selector Grid along Bottom */}
                   {(() => {
                     const timeframesList: { id: "1D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "5Y" | "MAX"; label: string; delta: string; isUp: boolean }[] = [
-                      { id: "1D", label: "1 Day", delta: "+0.07%", isUp: true },
-                      { id: "1W", label: "1 Week", delta: "+1.49%", isUp: true },
-                      { id: "1M", label: "1 Month", delta: "+0.51%", isUp: true },
-                      { id: "3M", label: "3 Months", delta: "-0.55%", isUp: false },
-                      { id: "6M", label: "6 Months", delta: "+0.19%", isUp: true },
-                      { id: "1Y", label: "1 Year", delta: "+3.19%", isUp: true },
-                      { id: "5Y", label: "5 years", delta: "+7.39%", isUp: true },
-                      { id: "MAX", label: "Max", delta: "-21.74%", isUp: false },
+                      { id: "1D", label: "1 Day", delta: "0.07%", isUp: true },
+                      { id: "1W", label: "1 Week", delta: "1.49%", isUp: true },
+                      { id: "1M", label: "1 Month", delta: "0.51%", isUp: true },
+                      { id: "3M", label: "3 Months", delta: "0.55%", isUp: false },
+                      { id: "6M", label: "6 Months", delta: "0.19%", isUp: true },
+                      { id: "1Y", label: "1 Year", delta: "3.19%", isUp: true },
+                      { id: "5Y", label: "5 years", delta: "7.39%", isUp: true },
+                      { id: "MAX", label: "Max", delta: "21.74%", isUp: false },
                     ];
 
                     return (
