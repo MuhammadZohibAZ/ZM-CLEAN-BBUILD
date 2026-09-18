@@ -6806,13 +6806,13 @@ function ByProductNationalCard({
     >
       {/* Subtle Concentric Rings Motif in bottom-right corner */}
       <div
-        className="absolute -bottom-12 -right-12 pointer-events-none rounded-full"
+        className="absolute -bottom-8 -right-8 pointer-events-none rounded-full"
         style={{
-          width: 170,
-          height: 170,
-          border: '1.5px solid rgba(16, 185, 129, 0.12)',
+          width: 140,
+          height: 140,
+          border: '1.5px solid rgba(16, 185, 129, 0.14)',
           boxShadow:
-            'inset 0 0 0 20px rgba(16, 185, 129, 0.04), inset 0 0 0 44px rgba(16, 185, 129, 0.02)',
+            'inset 0 0 0 16px rgba(16, 185, 129, 0.045), inset 0 0 0 34px rgba(16, 185, 129, 0.02)',
           zIndex: 0,
         }}
       />
@@ -6941,8 +6941,8 @@ function ByProductNationalCard({
 
       {/* Bottom Row: Realistic Timestamp on Left + Crisp Crop Illustration on Right */}
       <div className="h-px w-full mt-auto" style={{ background: '#E7F0EB' }} />
-      <div className="relative z-10 flex items-end justify-between pt-2 min-h-[36px]">
-        <div className="flex items-center gap-1.5 text-[9.5px] sm:text-[10px] font-bold text-[#52635F]">
+      <div className="relative z-10 flex items-end justify-between pt-1.5 min-h-[46px]">
+        <div className="flex items-center gap-1.5 text-[9.5px] sm:text-[10px] font-bold text-[#52635F] pb-1">
           <svg
             width="12"
             height="12"
@@ -6963,11 +6963,11 @@ function ByProductNationalCard({
         </div>
 
         {/* Large Crisp Crop Illustration */}
-        <div className="relative -mb-1 -mr-1 pointer-events-none flex-shrink-0">
+        <div className="relative -mb-2 -mr-2 pointer-events-none flex-shrink-0">
           <img
             src={iconSrc}
             alt={stats.byproduct}
-            className="w-[50px] h-[50px] sm:w-[56px] sm:h-[56px] object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.14)] transition-transform duration-200"
+            className="w-[74px] h-[74px] sm:w-[84px] sm:h-[84px] object-contain drop-shadow-[0_6px_14px_rgba(0,0,0,0.16)] transition-transform duration-200"
             loading="lazy"
           />
         </div>
