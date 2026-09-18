@@ -7771,23 +7771,24 @@ function MultiLocSheet({
   };
 
   const toggleMandi = (mName: string, _distName: string) => {
+    const formattedName = mName.toLowerCase().includes("mandi") ? mName : `${mName} Mandi`;
     if (singleSelect) {
-      setDraft([{ kind: "mandi", label: mName }]);
+      setDraft([{ kind: "mandi", label: formattedName }]);
       if (voiceEnabled) {
         speakText(lang === "ur" ? `${tmL(mName)} منڈی` : `${mName} Mandi`);
       }
       return;
     }
-    const isAlready = draft.some((x) => x.label === mName);
+    const isAlready = draft.some((x) => x.label === mName || x.label === formattedName);
     if (isAlready) {
-      setDraft((prev) => prev.filter((x) => x.label !== mName));
+      setDraft((prev) => prev.filter((x) => x.label !== mName && x.label !== formattedName));
       if (voiceEnabled) {
         speakText(lang === "ur" ? `${tmL(mName)} منڈی ہٹا دی گئی` : `${mName} Mandi unselected`);
       }
     } else {
       setDraft((prev) => [
         ...prev.filter((x) => x.kind !== "pakistan"),
-        { kind: "mandi", label: mName },
+        { kind: "mandi", label: formattedName },
       ]);
       if (voiceEnabled) {
         speakText(lang === "ur" ? `${tmL(mName)} منڈی` : `${mName} Mandi`);
@@ -7801,17 +7802,17 @@ function MultiLocSheet({
   ) => {
     if (singleSelect) return;
     const allSelected = mandiList.every((m) =>
-      draft.some((x) => x.label === m),
+      draft.some((x) => x.label === m || x.label === `${m} Mandi`),
     );
     if (allSelected) {
-      setDraft((prev) => prev.filter((x) => !mandiList.includes(x.label)));
+      setDraft((prev) => prev.filter((x) => !mandiList.includes(x.label) && !mandiList.some((m) => x.label === `${m} Mandi`)));
       if (voiceEnabled) {
         speakText(lang === "ur" ? `ضلع ${tmL(distName)} کی منڈیاں غیر منتخب` : `Mandis in ${distName} unselected`);
       }
     } else {
       const toAdd = mandiList
-        .filter((m) => !draft.some((x) => x.label === m))
-        .map((m) => ({ kind: "mandi" as const, label: m }));
+        .filter((m) => !draft.some((x) => x.label === m || x.label === `${m} Mandi`))
+        .map((m) => ({ kind: "mandi" as const, label: `${m} Mandi` }));
       setDraft((prev) => [
         ...prev.filter((x) => x.kind !== "pakistan"),
         ...toAdd,
@@ -7822,10 +7823,16 @@ function MultiLocSheet({
     }
   };
 
-  const isMandiSelected = (mName: string) =>
-    draft.some((x) => x.label === mName);
+  const isMandiSelected = (mName: string) => {
+    const cleanTarget = mName.toLowerCase().replace(/\s*(mandi|منڈی)$/i, "").trim();
+    return draft.some((x) => {
+      if (x.kind !== "mandi") return false;
+      const cleanX = x.label.toLowerCase().replace(/\s*(mandi|منڈی)$/i, "").trim();
+      return cleanX === cleanTarget || cleanX === mName.toLowerCase().trim();
+    });
+  };
   const isProvSelected = (p: string) =>
-    draft.some((x) => x.kind === "province" && x.label === p);
+    draft.some((x) => x.kind === "province" && x.label.toLowerCase().trim() === p.toLowerCase().trim());
 
   return (
     <div
@@ -8191,9 +8198,11 @@ function MultiLocSheet({
                     fontFamily: lang === "ur" ? URDU_FONT : "inherit",
                   }}
                 >
-                  {lang === "ur"
-                    ? `${draft.length} فلٹرز فعال`
-                    : `${draft.length} filter${draft.length !== 1 ? "s" : ""} active`}
+                  {isWholeCountrySelected
+                    ? (lang === "ur" ? "پورا پاکستان فعال" : "All Pakistan active")
+                    : (lang === "ur"
+                      ? `${draft.length} فلٹر فعال`
+                      : `${draft.length} filter${draft.length !== 1 ? "s" : ""} active`)}
                 </span>
               </div>
 
@@ -8386,7 +8395,7 @@ function MultiLocSheet({
                           }}
                         >
                           {/* Select All in District Button */}
-                          {mandiList.length > 1 && (
+                          {!singleSelect && mandiList.length > 1 && (
                             <button
                               type="button"
                               onClick={(e) => {
@@ -8588,13 +8597,13 @@ function MultiLocSheet({
               ? lang === "ur"
                 ? "پورا پاکستان لاگو کریں"
                 : "Apply All Pakistan"
-              : draft.length > 0
+              : draft.length === 1
                 ? lang === "ur"
-                  ? `${draft.length} مقامات لاگو کریں`
-                  : `Apply ${draft.length} Selected Location${draft.length > 1 ? "s" : ""}`
+                  ? `${tmL(draft[0].label)} لاگو کریں`
+                  : `Apply ${draft[0].label}`
                 : lang === "ur"
-                  ? "پورا پاکستان لاگو کریں"
-                  : "Apply All Pakistan"}
+                  ? `${draft.length} مقامات لاگو کریں`
+                  : `Apply ${draft.length} Selected Locations`}
           </button>
         </div>
       </div>
@@ -10418,9 +10427,9 @@ function ProductRatesScreen({
   const [trendMode, setTrendMode] = useState<"price" | "arrival">("price");
   const [range, setRange] = useState<"week" | "month" | "quarter">("week");
   const [histOpen, setHistOpen] = useState(false);
-  // Local location scope — starts from initialMandi if provided, else from parent
+  // Local location scope — starts from initialMandi if provided, otherwise defaults to All Pakistan
   const [locScope, setLocScope] = useState<LocationScope>(
-    initialMandi ? { kind: "mandi", label: initialMandi } : initialScope || { kind: "pakistan", label: "All Pakistan" },
+    initialMandi ? { kind: "mandi", label: initialMandi } : { kind: "pakistan", label: "All Pakistan" },
   );
   // Remembers a specifically-picked mandi/district for the map button only:
   // picking one broadens `locScope` (and the table) to its province, but
@@ -11369,24 +11378,65 @@ function ProductRatesScreen({
             {/* 4-Sided Continuous Racetrack Border Card (Rounded Corners & Compact) */}
             {/* 4-Sided Continuous Racetrack Border Card (Rounded Corners & Compact) */}
             {(() => {
-              const activeMandiLabel =
-                locScope.kind === "mandi"
-                  ? locScope.label
-                  : initialMandi || "Pakpattan Mandi";
-              const activeMandiObj = INITIAL_MANDIS.find(
-                (m) =>
-                  m.name.toLowerCase() === activeMandiLabel.toLowerCase() ||
-                  m.city.toLowerCase() === activeMandiLabel.toLowerCase() ||
-                  activeMandiLabel.toLowerCase().includes(m.name.toLowerCase()) ||
-                  activeMandiLabel.toLowerCase().includes(m.city.toLowerCase()),
-              );
-              const englishMandi = activeMandiObj
-                ? activeMandiObj.name
-                : activeMandiLabel.replace(" منڈی", " Mandi");
-              const cleanMandiName =
-                lang === "ur"
-                  ? (tm(englishMandi).includes("منڈی") ? tm(englishMandi) : tm(englishMandi) + " منڈی")
-                  : (englishMandi.includes("Mandi") ? englishMandi : englishMandi + " Mandi");
+              // Resolve active mandi, district and province from real data (allRows) or LOCATIONS
+              let cleanMandiName = "Pakpattan Mandi";
+              let mandiDist = "Pakpattan";
+              let mandiProvince = "Punjab";
+
+              if (locScope.kind === "mandi") {
+                const targetClean = locScope.label
+                  .toLowerCase()
+                  .replace(/\s*(mandi|منڈی)$/i, "")
+                  .trim();
+
+                // 1. Try finding in real rows
+                const matchedRow = allRows.find((r) => {
+                  const rName = r.mandiName
+                    .toLowerCase()
+                    .replace(/\s*(mandi|منڈی)$/i, "")
+                    .trim();
+                  const rCity = (r.mandiCity || "")
+                    .toLowerCase()
+                    .replace(/\s*(mandi|منڈی)$/i, "")
+                    .trim();
+                  return rName === targetClean || rCity === targetClean || rName.includes(targetClean) || targetClean.includes(rName);
+                });
+
+                if (matchedRow) {
+                  const mPure = matchedRow.mandiName.replace(/\s*(mandi|منڈی)$/i, "").trim();
+                  cleanMandiName = lang === "ur"
+                    ? (tm(mPure).includes("منڈی") ? tm(mPure) : `${tm(mPure)} منڈی`)
+                    : `${mPure} Mandi`;
+                  mandiDist = matchedRow.mandiCity || mPure;
+                  mandiProvince = matchedRow.province || "Punjab";
+                } else {
+                  // 2. Try finding in LOCATIONS hierarchy
+                  let found = false;
+                  for (const [p, distMap] of Object.entries(LOCATIONS)) {
+                    for (const [d, mandisArray] of Object.entries(distMap)) {
+                      if (mandisArray.some((m) => m.toLowerCase().replace(/\s*(mandi|منڈی)$/i, "").trim() === targetClean || m.toLowerCase().includes(targetClean))) {
+                        const mPure = locScope.label.replace(/\s*(mandi|منڈی)$/i, "").trim();
+                        cleanMandiName = lang === "ur"
+                          ? (tm(mPure).includes("منڈی") ? tm(mPure) : `${tm(mPure)} منڈی`)
+                          : `${mPure} Mandi`;
+                        mandiDist = d;
+                        mandiProvince = p;
+                        found = true;
+                        break;
+                      }
+                    }
+                    if (found) break;
+                  }
+                  if (!found) {
+                    const mPure = locScope.label.replace(/\s*(mandi|منڈی)$/i, "").trim();
+                    cleanMandiName = lang === "ur"
+                      ? (tm(mPure).includes("منڈی") ? tm(mPure) : `${tm(mPure)} منڈی`)
+                      : `${mPure} Mandi`;
+                    mandiDist = mPure;
+                    mandiProvince = "Punjab";
+                  }
+                }
+              }
 
               const locationButtonLabel =
                 locScope.kind === "pakistan"
@@ -11396,11 +11446,6 @@ function ProductRatesScreen({
                     : locScope.kind === "district"
                       ? (lang === "ur" ? "ضلع " + tm(locScope.label) : locScope.label + " District")
                       : cleanMandiName;
-
-              const mandiProvince =
-                locScope.kind === "province"
-                  ? locScope.label
-                  : activeMandiObj?.province || "Punjab";
 
               // Province-specific cultural styling and traditional gradient themes
               const PROVINCE_THEMES: Record<string, {
@@ -11455,15 +11500,13 @@ function ProductRatesScreen({
                     : PROVINCE_THEMES[mandiProvince] || PROVINCE_THEMES.Punjab;
 
               // Format Mandi triad: Mandi Name, District Name, Province Name
-              const formatMandiTriad = (name: string, dist?: string, prov?: string) => {
-                const cleanM = name.replace(/\s*mandi$/i, "").replace(/\s*منڈی$/i, "").trim();
-                const mLabel =
-                  lang === "ur"
-                    ? (tm(cleanM).includes("منڈی") ? tm(cleanM) : tm(cleanM) + " منڈی")
-                    : (cleanM.includes("Mandi") ? cleanM : cleanM + " Mandi");
-                const dLabel = dist ? tm(dist) : tm(cleanM);
-                const pLabel = prov ? tm(prov) : (lang === "ur" ? "پنجاب" : "Punjab");
-                return lang === "ur" ? `${mLabel}، ${dLabel}، ${pLabel}` : `${mLabel}, ${dLabel}, ${pLabel}`;
+              const formatMandiTriad = (mPure: string, dist: string, prov: string) => {
+                const mLabel = mPure;
+                const dLabel = tm(dist);
+                const pLabel = tm(prov);
+                return lang === "ur"
+                  ? `${mLabel}، ${dLabel}، ${pLabel}`
+                  : `${mLabel}, ${dLabel}, ${pLabel}`;
               };
 
               // Build revolving racetrack strip items based on active location scope
@@ -11478,11 +11521,7 @@ function ProductRatesScreen({
                 const distLabel = lang === "ur" ? "ضلع " + tm(locScope.label) : locScope.label + " District";
                 baseItems = [distLabel, distLabel, distLabel, distLabel, distLabel, distLabel, distLabel, distLabel];
               } else if (locScope.kind === "mandi") {
-                const item = formatMandiTriad(
-                  activeMandiObj ? activeMandiObj.name : locScope.label,
-                  activeMandiObj?.city,
-                  activeMandiObj?.province || mandiProvince,
-                );
+                const item = formatMandiTriad(cleanMandiName, mandiDist, mandiProvince);
                 baseItems = [item, item, item, item, item, item];
               } else {
                 const pakLabel = lang === "ur" ? "پاکستان" : "Pakistan";
@@ -16333,21 +16372,16 @@ function ProductRatesScreen({
               return;
             }
             const picked = locs[0];
-            // Picking a mandi or district broadens the table to its
-            // province (a single mandi's row set is too thin to compare
-            // against), rather than filtering the table down to just that
-            // one location. The province chip is kept in sync with this
-            // so the header actually reflects what the table is now
-            // showing, and the map still remembers the exact mandi picked
-            // (see focusedMandi) so it can zoom there directly.
-            if (picked.kind === "mandi" || picked.kind === "district") {
+            setLocScope(picked);
+            if (picked.kind === "province") {
+              setTableProvinceFilter(picked.label);
+              setFocusedMandi(null);
+            } else if (picked.kind === "district" || picked.kind === "mandi") {
               const prov = getProvinceFromLoc(picked);
-              setLocScope(prov ? { kind: "province", label: prov } : picked);
-              setTableProvinceFilter(prov);
+              setTableProvinceFilter(prov || null);
               setFocusedMandi({ kind: picked.kind, label: picked.label });
             } else {
-              setLocScope(picked);
-              setTableProvinceFilter(picked.kind === "province" ? picked.label : null);
+              setTableProvinceFilter(null);
               setFocusedMandi(null);
             }
             setLocSheet(false);
