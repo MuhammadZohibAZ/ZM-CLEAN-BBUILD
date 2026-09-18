@@ -683,7 +683,7 @@ const AUTO_URDU_DICT: Record<string, string> = {
   "Unit = Rs. · Unit = (40 kg)": "اکائی = روپے · وزن = (۴۰ کلو)",
   Days: "دن",
   "Price (Rs/40kg)": "قیمت (روپے / ۴۰ کلو)",
-  "Arrivals (Bags)": "آمد (تھیلے)",
+  "Arrivals": "آمد)",
   Jan: "جنوری",
   Feb: "فروری",
   Mar: "مارچ",
@@ -1481,14 +1481,16 @@ const VERTICALS: Record<
     icon: "herbals",
     urdu: "جڑی بوٹیاں",
     products: {
+      "Black Seed": ["Kalonji", "Kalonji Oil", "Black Seed", "Black Seed Oil"],
+      Psyllium: ["Ispaghol Husk", "Ispaghol", "Psyllium Seed", "Psyllium Husk"],
+      Asafoetida: ["Hing", "Asafoetida"],
       Honey: ["Honey"],
-      Psyllium: ["Psyllium Seed", "Psyllium Husk"],
-      "Black Seed": ["Black Seed", "Black Seed Oil"],
-      "Carom Seed": ["Carom Seed"],
-      "Basil Seed": ["Basil Seed"],
+      "Carom Seed": ["Ajwain", "Carom Seed"],
+      "Basil Seed": ["Tukh Malanga", "Basil Seed"],
       "Chia Seed": ["Chia Seed"],
-      Saffron: ["Saffron"],
-      Asafoetida: ["Asafoetida"],
+      Saffron: ["Zafran", "Saffron"],
+      Fennel: ["Saunf", "Fennel"],
+      "Dry Lemon": ["Dry Lemon"],
     },
   },
   Kiryana: {
@@ -2452,14 +2454,28 @@ const ICON_PATHS: Record<string, string> = {
 
   //  By-product icons – Wheat
   Bran: `${BYPRODUCTS_PATH}/wheat/Bran.png`,
+  "Wheat-Bran": `${BYPRODUCTS_PATH}/wheat/Bran.png`,
+  "Wheat Bran": `${BYPRODUCTS_PATH}/wheat/Bran.png`,
   "Fine-Flour": `${BYPRODUCTS_PATH}/wheat/Fine-Flour.png`,
+  "Refined-Flour": `${BYPRODUCTS_PATH}/wheat/Fine-Flour.png`,
+  "Fine Flour": `${BYPRODUCTS_PATH}/wheat/Fine-Flour.png`,
+  "Refined Flour": `${BYPRODUCTS_PATH}/wheat/Fine-Flour.png`,
+  Maida: `${BYPRODUCTS_PATH}/wheat/Fine-Flour.png`,
   Flour: `${BYPRODUCTS_PATH}/wheat/Flour.png`,
+  Atta: `${BYPRODUCTS_PATH}/wheat/Flour.png`,
   Semolina: `${BYPRODUCTS_PATH}/wheat/Semolina.png`,
+  Sooji: `${BYPRODUCTS_PATH}/wheat/Semolina.png`,
+  Suji: `${BYPRODUCTS_PATH}/wheat/Semolina.png`,
   Straw: `${BYPRODUCTS_PATH}/wheat/Straw.png`,
+  "Wheat-Straw": `${BYPRODUCTS_PATH}/wheat/Straw.png`,
+  "Wheat Straw": `${BYPRODUCTS_PATH}/wheat/Straw.png`,
   Sorghum: `${BYPRODUCTS_PATH}/wheat/Sorghum.png`,
   Barley: `${BYPRODUCTS_PATH}/wheat/Barley.png`,
   Oat: `${BYPRODUCTS_PATH}/wheat/Oat.png`,
   "Special-Flour": `${BYPRODUCTS_PATH}/wheat/Special-Flour.png`,
+  "Flour-Special": `${BYPRODUCTS_PATH}/wheat/Special-Flour.png`,
+  "Special Flour": `${BYPRODUCTS_PATH}/wheat/Special-Flour.png`,
+  "Flour Special": `${BYPRODUCTS_PATH}/wheat/Special-Flour.png`,
   Wheat: `${BYPRODUCTS_PATH}/wheat/Wheat.png`,
 
   //  By-product icons – Maize
@@ -2690,15 +2706,26 @@ const product_SPRITE_KEY: Record<string, string> = {
   kiryana: "kiryana",
   // Wheat & byproducts
   Wheat: "wheat",
+  "Wheat Bran": "Bran",
   Bran: "Bran",
   "Fine Flour": "Fine-Flour",
+  "Refined Flour": "Fine-Flour",
+  "Fine-Flour": "Fine-Flour",
+  "Refined-Flour": "Fine-Flour",
   Flour: "Flour",
+  "Special Flour": "Special-Flour",
+  "Flour Special": "Special-Flour",
+  "Special-Flour": "Special-Flour",
+  "Flour-Special": "Special-Flour",
+  Maida: "Fine-Flour",
   Semolina: "Semolina",
+  Sooji: "Semolina",
+  Suji: "Semolina",
   Straw: "Straw",
+  "Wheat Straw": "Straw",
   Sorghum: "Sorghum",
   Barley: "Barley",
   Oat: "Oat",
-  "Special Flour": "Special-Flour",
   // Rice / Paddy / Maize
   Rice: "rice",
   Paddy: "paddy",
@@ -3018,7 +3045,27 @@ function getproductIconSrc(
   });
   if (foundKey && ICON_PATHS[foundKey]) return ICON_PATHS[foundKey];
 
-  // 6. Vertical fallback
+  // 6. By-product specific pattern matching
+  if (lowerClean.includes("specialflour") || (lower.includes("flour") && lower.includes("special"))) {
+    return ICON_PATHS["Special-Flour"] || `${BYPRODUCTS_PATH}/wheat/Special-Flour.png`;
+  }
+  if (lowerClean.includes("refinedflour") || lowerClean.includes("fineflour") || lower.includes("maida")) {
+    return ICON_PATHS["Fine-Flour"] || `${BYPRODUCTS_PATH}/wheat/Fine-Flour.png`;
+  }
+  if (lowerClean === "flour" || lowerClean.includes("atta")) {
+    return ICON_PATHS["Flour"] || `${BYPRODUCTS_PATH}/wheat/Flour.png`;
+  }
+  if (lower.includes("sooji") || lower.includes("semolina") || lower.includes("suji")) {
+    return ICON_PATHS["Semolina"] || `${BYPRODUCTS_PATH}/wheat/Semolina.png`;
+  }
+  if (lower.includes("bran")) {
+    return ICON_PATHS["Bran"] || `${BYPRODUCTS_PATH}/wheat/Bran.png`;
+  }
+  if (lower.includes("straw")) {
+    return ICON_PATHS["Straw"] || `${BYPRODUCTS_PATH}/wheat/Straw.png`;
+  }
+
+  // 7. Vertical fallback
   if (vertical) {
     const vTrim = vertical.trim();
     const vLower = vTrim.toLowerCase();
@@ -6657,29 +6704,35 @@ function AnimatedCounter({
 
 // ─── REVAMPED FIGMA BY-PRODUCT NATIONAL CARD COMPONENT (2*2 GRID) ───────────
 
-function getCardUpdatedAgo(seed: string | number | undefined, lang: string): string {
+const CARD_UPDATED_PRESETS = [
+  { mins: 1, en: '1m ago', ur: 'تازہ ترین ۱ منٹ پہلے' },
+  { mins: 4, en: '4m ago', ur: 'تازہ ترین ۴ منٹ پہلے' },
+  { mins: 7, en: '7m ago', ur: 'تازہ ترین ۷ منٹ پہلے' },
+  { mins: 10, en: '10m ago', ur: 'تازہ ترین ۱۰ منٹ پہلے' },
+  { mins: 15, en: '15m ago', ur: 'تازہ ترین ۱۵ منٹ پہلے' },
+  { mins: 22, en: '22m ago', ur: 'تازہ ترین ۲۲ منٹ پہلے' },
+  { mins: 35, en: '35m ago', ur: 'تازہ ترین ۳۵ منٹ پہلے' },
+  { mins: 45, en: '45m ago', ur: 'تازہ ترین ۴۵ منٹ پہلے' },
+  { mins: 60, en: '1hr ago', ur: 'تازہ ترین ۱ گھنٹہ پہلے' },
+  { mins: 120, en: '2hr ago', ur: 'تازہ ترین ۲ گھنٹے پہلے' },
+];
+
+function getCardUpdatedPreset(seed: string | number | undefined) {
   const hash = typeof seed === 'number'
     ? seed
     : String(seed || '').split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-  const presets = [
-    { en: '1m ago', ur: 'تازہ ترین ۱ منٹ پہلے' },
-    { en: '4m ago', ur: 'تازہ ترین ۴ منٹ پہلے' },
-    { en: '7m ago', ur: 'تازہ ترین ۷ منٹ پہلے' },
-    { en: '10m ago', ur: 'تازہ ترین ۱۰ منٹ پہلے' },
-    { en: '15m ago', ur: 'تازہ ترین ۱۵ منٹ پہلے' },
-    { en: '22m ago', ur: 'تازہ ترین ۲۲ منٹ پہلے' },
-    { en: '35m ago', ur: 'تازہ ترین ۳۵ منٹ پہلے' },
-    { en: '45m ago', ur: 'تازہ ترین ۴۵ منٹ پہلے' },
-    { en: '1hr ago', ur: 'تازہ ترین ۱ گھنٹہ پہلے' },
-    { en: '2hr ago', ur: 'تازہ ترین ۲ گھنٹے پہلے' },
-  ];
-  const choice = presets[Math.abs(hash) % presets.length];
-  return lang === 'ur' ? choice.ur : choice.en;
+  return CARD_UPDATED_PRESETS[Math.abs(hash) % CARD_UPDATED_PRESETS.length];
 }
 
-// A thin-divider "lines" stat cell -- replaces the old boxed/tile look.
-// `value` is never truncated with an ellipsis: it wraps instead, so a long
-// price is always fully readable rather than being cut off with "...".
+function getCardUpdatedMinutes(seed: string | number | undefined): number {
+  return getCardUpdatedPreset(seed).mins;
+}
+
+function getCardUpdatedAgo(seed: string | number | undefined, lang: string): string {
+  const preset = getCardUpdatedPreset(seed);
+  return lang === 'ur' ? preset.ur : preset.en;
+}
+
 function CardStatCell({
   label,
   value,
@@ -6695,15 +6748,16 @@ function CardStatCell({
 }) {
   return (
     <div
-      className={`flex-1 min-w-0 flex flex-col justify-center py-0.5 ${divider ? 'pl-3 ml-3 border-l' : 'pr-2'}`}
+      className={`flex-1 min-w-0 flex flex-col justify-center py-0.5 ${divider ? 'pl-2 ml-1 border-l' : 'pr-1'}`}
       style={divider ? { borderColor: '#D9E7E1' } : undefined}
     >
       <span className="block text-[10px] font-bold text-[#52635F] leading-tight truncate">
         {label}
       </span>
       <span
-        className="block font-black tracking-tight leading-tight my-0.5 break-words"
-        style={{ color: valueColor, fontSize: 14 }}
+        className="block font-black tracking-tight leading-tight my-0.5 whitespace-nowrap"
+        style={{ color: valueColor, fontSize: 'clamp(11px, 3.2vw, 13px)' }}
+        title={typeof value === 'string' ? value : undefined}
       >
         {value}
       </span>
@@ -6744,7 +6798,7 @@ function ByProductNationalCard({
       tabIndex={0}
       onClick={onClick}
       onKeyDown={(e) => e.key === 'Enter' && onClick()}
-      className="relative w-full rounded-[22px] overflow-hidden transition-all duration-200 active:scale-[0.98] cursor-pointer shadow-[0_5px_18px_rgba(6,77,64,0.08)] hover:shadow-[0_8px_24px_rgba(6,77,64,0.13)] select-none flex flex-col p-3 sm:p-3.5"
+      className="relative w-full rounded-[22px] overflow-hidden transition-all duration-200 active:scale-[0.98] cursor-pointer shadow-[0_5px_18px_rgba(6,77,64,0.08)] hover:shadow-[0_8px_24px_rgba(6,77,64,0.13)] select-none flex flex-col p-2.5 sm:p-3"
       style={{
         background: '#FFFFFF',
         border: '1.5px solid #D1E5DC',
@@ -6764,9 +6818,9 @@ function ByProductNationalCard({
       />
 
       {/* Top Header: Full Width Title & Rate Type */}
-      <div className="relative z-10 w-full mb-2.5">
+      <div className="relative z-10 w-full mb-2">
         <h3
-          className="text-[16px] sm:text-[17px] font-black text-[#143B33] leading-tight tracking-tight truncate"
+          className="text-[15.5px] sm:text-[17px] font-black text-[#143B33] leading-tight tracking-tight truncate"
           style={{
             fontFamily: lang === 'ur' ? URDU_FONT : "'Inter', sans-serif",
           }}
@@ -6791,8 +6845,8 @@ function ByProductNationalCard({
             value={
               stats.hasData && stats.avgMin > 0
                 ? lang === 'ur'
-                  ? `روپے ${toUrduDigits(stats.avgMin.toLocaleString())}`
-                  : `Rs ${stats.avgMin.toLocaleString()}`
+                  ? `روپے\u00A0${toUrduDigits(Math.round(stats.avgMin).toLocaleString())}`
+                  : `Rs\u00A0${Math.round(stats.avgMin).toLocaleString()}`
                 : '—'
             }
             caption={lang === 'ur' ? 'فی ۴۰ کلو' : 'per 40 kg'}
@@ -6803,8 +6857,8 @@ function ByProductNationalCard({
             value={
               stats.hasData && stats.avgMax > 0
                 ? lang === 'ur'
-                  ? `روپے ${toUrduDigits(stats.avgMax.toLocaleString())}`
-                  : `Rs ${stats.avgMax.toLocaleString()}`
+                  ? `روپے\u00A0${toUrduDigits(Math.round(stats.avgMax).toLocaleString())}`
+                  : `Rs\u00A0${Math.round(stats.avgMax).toLocaleString()}`
                 : '—'
             }
             caption={lang === 'ur' ? 'فی ۴۰ کلو' : 'per 40 kg'}
@@ -6820,8 +6874,8 @@ function ByProductNationalCard({
               label={lang === 'ur' ? 'کل آمد' : 'Total arrival'}
               value={
                 lang === 'ur'
-                  ? `${toUrduDigits(stats.totalArrival.toLocaleString())} تھیلے`
-                  : `${stats.totalArrival.toLocaleString()} Bags`
+                  ? `${toUrduDigits(stats.totalArrival.toLocaleString())}\u00A0تھیلے`
+                  : `${stats.totalArrival.toLocaleString()}\u00A0Bags`
               }
               caption={lang === 'ur' ? 'فی ۴۰ کلو' : 'per 40 kg'}
             />
@@ -7132,8 +7186,16 @@ function ByProductCombinedScreen({
 
     const filtered = rawCatalog.filter((c) => {
       const normBp = norm(c.by_product);
-      if (subBps.some((b) => norm(b) === normBp)) return true;
+      if (subBps.some((b) => norm(b) === normBp || norm(b).includes(normBp) || normBp.includes(norm(b)))) return true;
       if (normBp.includes(normSub)) return true;
+      // Handle Herbs / Herbals aliases
+      if (normSub.includes('blackseed') && (normBp.includes('kalonji') || normBp.includes('blackseed'))) return true;
+      if (normSub.includes('psyllium') && (normBp.includes('ispaghol') || normBp.includes('psyllium'))) return true;
+      if (normSub.includes('asafoetida') && (normBp.includes('hing') || normBp.includes('asafoetida'))) return true;
+      if (normSub.includes('carom') && (normBp.includes('ajwain') || normBp.includes('carom'))) return true;
+      if (normSub.includes('basil') && (normBp.includes('tukhmalanga') || normBp.includes('basil'))) return true;
+      if (normSub.includes('saffron') && (normBp.includes('zafran') || normBp.includes('saffron'))) return true;
+      if (normSub.includes('fennel') && (normBp.includes('saunf') || normBp.includes('fennel'))) return true;
       // Handle Soybean / Soyabean
       if (normSub.includes('soy') && normBp.includes('soy')) return true;
       return false;
@@ -7207,11 +7269,11 @@ function ByProductCombinedScreen({
     };
   }, [divisionsNeeded.join('|'), curDateStr, currentLocScope.kind, currentLocScope.label]);
 
-  // 1 summary card per by-product, from the real market API.
+  // 1 summary card per by-product, from the real market API, sorted by updated time (freshest first).
   const byproductCardsData = useMemo(() => {
     const statsForDivision = cardStatsByDivision[dbDivision] || [];
     const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
-    return byproducts.map((bp) => {
+    const list = byproducts.map((bp) => {
       const normBp = norm(bp);
       const raw = statsForDivision.find((s) => norm(s.byproduct) === normBp || s.byproduct.toLowerCase() === bp.toLowerCase());
       const stats = raw ? apiCardStatsToUi(raw) : emptyByproductStats(dbDivision, bp);
@@ -7219,6 +7281,17 @@ function ByProductCombinedScreen({
         bp,
         stats,
       };
+    });
+
+    // Sort by updated time: 1m ago (most recent) first, followed by 4m, 7m, 10m, etc.
+    return list.sort((a, b) => {
+      // Prioritize cards with data first
+      if (a.stats.hasData !== b.stats.hasData) {
+        return a.stats.hasData ? -1 : 1;
+      }
+      const minsA = getCardUpdatedMinutes(a.stats.catalogId || a.stats.byproduct);
+      const minsB = getCardUpdatedMinutes(b.stats.catalogId || b.stats.byproduct);
+      return minsA - minsB;
     });
   }, [byproducts, dbDivision, cardStatsByDivision]);
 
@@ -10515,13 +10588,13 @@ function ProductRatesScreen({
       arrivalUnit:
         r.arrivals_unit && Number(r.arrivals_unit) > 0
           ? Number(r.arrivals_unit) === 1
-            ? (lang === "ur" ? "کلو" : "kg")
+            ? (lang === "ur" ? "۱ کلو" : "1 kg")
             : Number(r.arrivals_unit) === 1000
-              ? (lang === "ur" ? "ٹن" : "MT (Ton)")
+              ? (lang === "ur" ? "۱ ٹن" : "1 MT")
               : lang === "ur"
-                ? `${toUrduDigits(r.arrivals_unit)} کلو بوری`
-                : `${r.arrivals_unit} kg Bags`
-          : (lang === "ur" ? "بوریاں" : "Bags"),
+                ? `${toUrduDigits(r.arrivals_unit)} کلو`
+                : `${r.arrivals_unit} kg`
+          : (lang === "ur" ? "۴۰ کلو" : "40 kg"),
       min: Number(r.minimum),
       max: Number(r.maximum),
       trend: "stable" as const,
@@ -10646,45 +10719,41 @@ function ProductRatesScreen({
   const isDateInRange = curDateStr >= "2026-08-15" && curDateStr <= "2026-09-14";
   const dateIdx = isDateInRange ? REAL_DATES_TIMELINE.indexOf(curDateStr) : -1;
 
-  // Real Excel data-driven date & attribute-specific overview statistics
+  // Real data-driven date & attribute-specific overview statistics
   const { statMin, statMax, statArrival, statMandis } = useMemo(() => {
     if (!isDateInRange || dateIdx === -1) {
       return { statMin: 0, statMax: 0, statArrival: 0, statMandis: 0 };
     }
 
-    const tResult = getExcelTimeline({
-      product,
-      byproduct,
-      locationLabel: locScope.label,
-      locationKind: locScope.kind,
-      rateType: attrRateType,
-      range: "year",
-    });
+    // All records for this by-product on this date (scoped by active location)
+    const dateAllRecords = baseRows.filter((r) => r.date === curDateStr);
+    const dateFilteredRows = rows.filter((r) => r.date === curDateStr);
 
-    // Active Mandis Count on this date
-    const dateRows = rows.filter((r) => r.date === curDateStr);
-    const dateMins = dateRows.map((r) => r.min).filter((v) => v > 0);
-    const dateMaxs = dateRows.map((r) => r.max).filter((v) => v > 0);
-    const dateArrs = dateRows.map((r) => parseArrival(r.arrival));
+    const activeDateRows = dateFilteredRows.length > 0 ? dateFilteredRows : dateAllRecords;
+
+    const dateMins = activeDateRows.map((r) => r.min).filter((v) => v > 0);
+    const dateMaxs = activeDateRows.map((r) => r.max).filter((v) => v > 0);
 
     const sMin =
       dateMins.length > 0
         ? Math.round(dateMins.reduce((a, b) => a + b, 0) / dateMins.length)
-        : (tResult.mins[dateIdx] ?? 0);
+        : 0;
     const sMax =
       dateMaxs.length > 0
         ? Math.round(dateMaxs.reduce((a, b) => a + b, 0) / dateMaxs.length)
-        : (tResult.maxs[dateIdx] ?? 0);
-    const sArrival =
-      dateArrs.length > 0 && dateArrs.some((v) => v > 0)
-        ? dateArrs.reduce((a, b) => a + b, 0)
-        : (tResult.arrivals[dateIdx] ?? 0);
+        : 0;
+
+    // Total arrival volume on this date for this by-product across scoped mandis (matching Screen 2)
+    const dateArrs = dateAllRecords.map((r) => parseArrival(r.arrival));
+    const sArrival = dateArrs.reduce((a, b) => a + b, 0);
 
     const marketSet = new Set<string>();
-    for (let i = 0; i < dateRows.length; i++) {
-      marketSet.add(dateRows[i].mandiName || dateRows[i].mandiCity || "Mandi");
+    for (let i = 0; i < dateAllRecords.length; i++) {
+      if (dateAllRecords[i].mandiName || dateAllRecords[i].mandiCity) {
+        marketSet.add(dateAllRecords[i].mandiName || dateAllRecords[i].mandiCity || "Mandi");
+      }
     }
-    const sMandis = marketSet.size > 0 ? marketSet.size : (sMin > 0 ? 30 : 0);
+    const sMandis = marketSet.size;
 
     return {
       statMin: sMin,
@@ -10692,7 +10761,7 @@ function ProductRatesScreen({
       statArrival: sArrival,
       statMandis: sMandis,
     };
-  }, [rows, isDateInRange, dateIdx, product, byproduct, attrRateType, locScope.label, locScope.kind, curDateStr]);
+  }, [baseRows, rows, isDateInRange, dateIdx, curDateStr]);
 
   // Build comparison rows by geoView
   const compRows = useMemo((): CompRow[] => {
@@ -10915,10 +10984,7 @@ function ProductRatesScreen({
   );
 
   const activeArrivalResult = useMemo((): TimelineResult => {
-    if (!compareMode) {
-      return excelTimelineMap[focusedType] || buildTimelineResultFromApi([], REAL_DATES_TIMELINE);
-    }
-    // Compare mode: sum arrivals across every rate type, per day.
+    // Total arrival volume across all rate types per day, matching real data and Screen 2
     const arrivals = REAL_DATES_TIMELINE.map((_, i) =>
       ALL_RATE_TYPES.reduce((sum, rt) => sum + (excelTimelineMap[rt]?.arrivals[i] || 0), 0)
     );
@@ -10935,7 +11001,7 @@ function ProductRatesScreen({
       trendPct: 0,
       matchedCount: 1,
     };
-  }, [excelTimelineMap, compareMode, focusedType]);
+  }, [excelTimelineMap]);
 
   const arrivalData = useMemo(() => {
     if (isQuarter) {
@@ -11829,7 +11895,7 @@ function ProductRatesScreen({
                                     : "inherit",
                               }}
                             >
-                              {lang === "ur" ? "آمد (بوریاں)" : "Arrival (Bags)"}
+                              {lang === "ur" ? "آمد" : "Arrival"}
                             </span>
                             <span
                               className="font-extrabold text-[12px] leading-tight text-[#0E7465] mt-0.5 break-words"
@@ -11847,7 +11913,7 @@ function ProductRatesScreen({
                                 : "—"}
                             </span>
                             <span className="text-[7.5px] text-[#80918B] leading-none mt-0.5">
-                              {statArrival > 0 ? (lang === "ur" ? "بوریاں" : "(Bags)") : ""}
+                              {statArrival > 0 ? (lang === "ur" ? "فی ۴۰ کلو" : "(40 KG)") : ""}
                             </span>
                           </div>
                         </div>
@@ -13508,7 +13574,7 @@ function ProductRatesScreen({
                                       }}
                                     >
                                       {rowArr > 0
-                                        ? (lang === "ur" ? toUrduDigits(rowArr.toLocaleString("en-PK")) : rowArr.toLocaleString("en-PK"))
+                                        ? (lang === "ur" ? `${toUrduDigits(rowArr.toLocaleString("en-PK"))} بوریاں` : `${rowArr.toLocaleString("en-PK")} Bags`)
                                         : "—"}
                                     </td>
 
@@ -13527,7 +13593,7 @@ function ProductRatesScreen({
                                             : "inherit",
                                       }}
                                     >
-                                      {rowArr > 0 ? ((r as any).arrivalUnit || (lang === "ur" ? "بوریاں" : "Bags")) : "—"}
+                                      {rowArr > 0 ? ((r as any).arrivalUnit || (lang === "ur" ? "۴۰ کلو" : "40 kg")) : "—"}
                                     </td>
 
                                     {/* 8. Color */}

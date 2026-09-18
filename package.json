@@ -1,0 +1,12 @@
+{
+  "name": "zm-clean-bbuild",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix zarai-mandi run dev",
+    "start": "npm --prefix zarai-mandi start",
+    "dev:backend": "npm --prefix zarai-mandi run dev:backend",
+    "dev:api": "npm --prefix zarai-mandi run dev:api",
+    "dev:frontend": "npm --prefix zarai-mandi run dev:frontend"
+  }
+}
