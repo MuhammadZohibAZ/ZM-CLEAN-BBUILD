@@ -7053,16 +7053,16 @@ function AnimatedCounter({
 // ─── REVAMPED FIGMA BY-PRODUCT NATIONAL CARD COMPONENT (2*2 GRID) ───────────
 
 const CARD_UPDATED_PRESETS = [
-  { mins: 1, en: '1m ago', ur: 'تازہ ترین ۱ منٹ پہلے' },
-  { mins: 4, en: '4m ago', ur: 'تازہ ترین ۴ منٹ پہلے' },
-  { mins: 7, en: '7m ago', ur: 'تازہ ترین ۷ منٹ پہلے' },
-  { mins: 10, en: '10m ago', ur: 'تازہ ترین ۱۰ منٹ پہلے' },
-  { mins: 15, en: '15m ago', ur: 'تازہ ترین ۱۵ منٹ پہلے' },
-  { mins: 22, en: '22m ago', ur: 'تازہ ترین ۲۲ منٹ پہلے' },
-  { mins: 35, en: '35m ago', ur: 'تازہ ترین ۳۵ منٹ پہلے' },
-  { mins: 45, en: '45m ago', ur: 'تازہ ترین ۴۵ منٹ پہلے' },
-  { mins: 60, en: '1hr ago', ur: 'تازہ ترین ۱ گھنٹہ پہلے' },
-  { mins: 120, en: '2hr ago', ur: 'تازہ ترین ۲ گھنٹے پہلے' },
+  { mins: 1, en: '1m ago - 14 Sep', ur: '۱ منٹ پہلے - ۱۴ ستمبر' },
+  { mins: 4, en: '4m ago - 14 Sep', ur: '۴ منٹ پہلے - ۱۴ ستمبر' },
+  { mins: 7, en: '7m ago - 14 Sep', ur: '۷ منٹ پہلے - ۱۴ ستمبر' },
+  { mins: 10, en: '10m ago - 14 Sep', ur: '۱۰ منٹ پہلے - ۱۴ ستمبر' },
+  { mins: 15, en: '15m ago - 14 Sep', ur: '۱۵ منٹ پہلے - ۱۴ ستمبر' },
+  { mins: 22, en: '22m ago - 14 Sep', ur: '۲۲ منٹ پہلے - ۱۴ ستمبر' },
+  { mins: 35, en: '35m ago - 14 Sep', ur: '۳۵ منٹ پہلے - ۱۴ ستمبر' },
+  { mins: 45, en: '45m ago - 14 Sep', ur: '۴۵ منٹ پہلے - ۱۴ ستمبر' },
+  { mins: 60, en: '1hr ago - 14 Sep', ur: '۱ گھنٹہ پہلے - ۱۴ ستمبر' },
+  { mins: 120, en: '2hr ago - 14 Sep', ur: '۲ گھنٹے پہلے - ۱۴ ستمبر' },
 ];
 
 function getCardUpdatedPreset(seed: string | number | undefined) {
@@ -7248,7 +7248,7 @@ function ByProductNationalCard({
               divider
               label={lang === 'ur' ? stats.specialAttr.labelUr : stats.specialAttr.labelEn}
               value={lang === 'ur' ? stats.specialAttr.valueUr : stats.specialAttr.valueEn}
-              valueColor="#087F63"
+              valueColor="#ff7b00ff"
             />
           ) : hasArrival ? (
             <CardStatCell
@@ -10776,6 +10776,9 @@ function ProductRatesScreen({
     initialRateType ? [initialRateType] : ["Mandi Rate"],
   );
   const [trendMode, setTrendMode] = useState<"price" | "arrival">("price");
+  const [stockTimeframe, setStockTimeframe] = useState<"1D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "5Y" | "MAX">("1M");
+  const [stockGranularity, setStockGranularity] = useState<string>("1D");
+  const [stockChartType, setStockChartType] = useState<"line" | "candle">("line");
   const [range, setRange] = useState<"week" | "month" | "quarter">("week");
   const [histOpen, setHistOpen] = useState(false);
   // Local location scope — starts from initialMandi if provided, otherwise defaults to All Pakistan
@@ -11065,6 +11068,34 @@ function ProductRatesScreen({
     }
     return res.length > 0 ? res : baseRows;
   }, [baseRows, attrRateType, attrMoisture, attrColor, attrVariety, attrNewOld, attrSpec, attrCondition]);
+
+  const primarySpecialAttr = useMemo(() => {
+    const prodLower = (product || '').toLowerCase();
+    const byprodLower = (byproduct || '').toLowerCase();
+    
+    if (prodLower.includes('maize') || byprodLower.includes('maize') || byprodLower.includes('corn') || prodLower.includes('مکئی') || byprodLower.includes('مکئی')) {
+      return 'moisture';
+    }
+    if (prodLower.includes('cotton') || byprodLower.includes('cotton') || byprodLower.includes('phutti') || byprodLower.includes('کپاس') || byprodLower.includes('پھٹی') || prodLower.includes('sesame') || byprodLower.includes('sesame') || byprodLower.includes('تل')) {
+      return 'color';
+    }
+    if (prodLower.includes('rice') || byprodLower.includes('rice') || prodLower.includes('چاول') || byprodLower.includes('چاول') || byprodLower.includes('paddy')) {
+      return 'variety';
+    }
+    if (prodLower.includes('wheat') || byprodLower.includes('wheat') || byprodLower.includes('gandum') || prodLower.includes('گندم') || byprodLower.includes('گندم') || prodLower.includes('gram') || byprodLower.includes('gram') || prodLower.includes('چنا')) {
+      return 'quality';
+    }
+    // Check available data in allRows
+    const hasMoisture = allRows.some(r => r.moisture && r.moisture.trim());
+    const hasQuality = allRows.some(r => (r.newOld && r.newOld.trim()) || (r.quality && r.quality.trim()));
+    const hasColor = allRows.some(r => r.color && r.color.trim());
+    const hasVariety = allRows.some(r => r.variety && r.variety.trim());
+
+    if (hasMoisture && !hasQuality) return 'moisture';
+    if (hasColor && !hasQuality) return 'color';
+    if (hasVariety && !hasQuality) return 'variety';
+    return 'quality';
+  }, [product, byproduct, allRows]);
 
   const parseArrival = (a: any) => {
     if (typeof a === "number") return a;
@@ -13521,47 +13552,77 @@ function ProductRatesScreen({
                                 </div>
                               </th>
 
-                              {/* 5. Quality (New or Old) */}
-                              <th
-                                style={{
-                                  padding: "7px 4px",
-                                  textAlign: "center",
-                                  fontWeight: 800,
-                                  fontSize: lang === "ur" ? 13 : 10,
-                                  color: "#80918B",
-                                  textTransform: "uppercase",
-                                  borderBottom: "1.5px solid #D5E2DD",
-                                  minWidth: 64,
-                                  fontFamily:
-                                    lang === "ur"
-                                      ? URDU_FONT
-                                      : "inherit",
-                                }}
-                              >
-                                {lang === "ur" ? "معیار" : "Quality"}
-                              </th>
+                              {/* 5. Primary Special Attribute First (Moisture for Maize, Color for Cotton/Sesame, Variety for Rice, Quality for Wheat/Gram/others) */}
+                              {primarySpecialAttr === "moisture" && (
+                                <th
+                                  style={{
+                                    padding: "7px 4px",
+                                    textAlign: "center",
+                                    fontWeight: 800,
+                                    fontSize: lang === "ur" ? 13 : 10,
+                                    color: "#80918B",
+                                    textTransform: "uppercase",
+                                    borderBottom: "1.5px solid #D5E2DD",
+                                    minWidth: 64,
+                                    fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                  }}
+                                >
+                                  {lang === "ur" ? "نمی" : "Moisture"}
+                                </th>
+                              )}
+                              {primarySpecialAttr === "color" && (
+                                <th
+                                  style={{
+                                    padding: "7px 4px",
+                                    textAlign: "center",
+                                    fontWeight: 800,
+                                    fontSize: lang === "ur" ? 13 : 10,
+                                    color: "#80918B",
+                                    textTransform: "uppercase",
+                                    borderBottom: "1.5px solid #D5E2DD",
+                                    minWidth: 64,
+                                    fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                  }}
+                                >
+                                  {lang === "ur" ? "رنگ" : "Color"}
+                                </th>
+                              )}
+                              {primarySpecialAttr === "variety" && (
+                                <th
+                                  style={{
+                                    padding: "7px 4px",
+                                    textAlign: "center",
+                                    fontWeight: 800,
+                                    fontSize: lang === "ur" ? 13 : 10,
+                                    color: "#80918B",
+                                    textTransform: "uppercase",
+                                    borderBottom: "1.5px solid #D5E2DD",
+                                    minWidth: 74,
+                                    fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                  }}
+                                >
+                                  {lang === "ur" ? "قسم" : "Variety"}
+                                </th>
+                              )}
+                              {primarySpecialAttr === "quality" && (
+                                <th
+                                  style={{
+                                    padding: "7px 4px",
+                                    textAlign: "center",
+                                    fontWeight: 800,
+                                    fontSize: lang === "ur" ? 13 : 10,
+                                    color: "#80918B",
+                                    textTransform: "uppercase",
+                                    borderBottom: "1.5px solid #D5E2DD",
+                                    minWidth: 64,
+                                    fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                  }}
+                                >
+                                  {lang === "ur" ? "معیار" : "Quality"}
+                                </th>
+                              )}
 
-                              {/* 6. Moisture */}
-                              <th
-                                style={{
-                                  padding: "7px 4px",
-                                  textAlign: "center",
-                                  fontWeight: 800,
-                                  fontSize: lang === "ur" ? 13 : 10,
-                                  color: "#80918B",
-                                  textTransform: "uppercase",
-                                  borderBottom: "1.5px solid #D5E2DD",
-                                  minWidth: 64,
-                                  fontFamily:
-                                    lang === "ur"
-                                      ? URDU_FONT
-                                      : "inherit",
-                                }}
-                              >
-                                {lang === "ur" ? "نمی" : "Moisture"}
-                              </th>
-
-                              {/* 7. Arrival Quantity */}
+                              {/* 6. Arrival Quantity */}
                               <th
                                 style={{
                                   padding: "7px 4px",
@@ -13581,7 +13642,7 @@ function ProductRatesScreen({
                                 {lang === "ur" ? "آمد" : "Arrival"}
                               </th>
 
-                              {/* 8. Arrival Unit */}
+                              {/* 7. Arrival Unit */}
                               <th
                                 style={{
                                   padding: "7px 4px",
@@ -13601,45 +13662,78 @@ function ProductRatesScreen({
                                 {lang === "ur" ? "آمد کی اکائی" : "Unit"}
                               </th>
 
-                              {/* 8. Color */}
-                              <th
-                                style={{
-                                  padding: "7px 4px",
-                                  textAlign: "center",
-                                  fontWeight: 800,
-                                  fontSize: lang === "ur" ? 13 : 10,
-                                  color: "#80918B",
-                                  textTransform: "uppercase",
-                                  borderBottom: "1.5px solid #D5E2DD",
-                                  minWidth: 64,
-                                  fontFamily:
-                                    lang === "ur"
-                                      ? URDU_FONT
-                                      : "inherit",
-                                }}
-                              >
-                                {lang === "ur" ? "رنگ" : "Color"}
-                              </th>
+                              {/* Remaining Spec Columns */}
+                              {primarySpecialAttr !== "quality" && (
+                                <th
+                                  style={{
+                                    padding: "7px 4px",
+                                    textAlign: "center",
+                                    fontWeight: 800,
+                                    fontSize: lang === "ur" ? 13 : 10,
+                                    color: "#80918B",
+                                    textTransform: "uppercase",
+                                    borderBottom: "1.5px solid #D5E2DD",
+                                    minWidth: 64,
+                                    fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                  }}
+                                >
+                                  {lang === "ur" ? "معیار" : "Quality"}
+                                </th>
+                              )}
 
-                              {/* 9. Variety */}
-                              <th
-                                style={{
-                                  padding: "7px 4px",
-                                  textAlign: "center",
-                                  fontWeight: 800,
-                                  fontSize: lang === "ur" ? 13 : 10,
-                                  color: "#80918B",
-                                  textTransform: "uppercase",
-                                  borderBottom: "1.5px solid #D5E2DD",
-                                  minWidth: 74,
-                                  fontFamily:
-                                    lang === "ur"
-                                      ? URDU_FONT
-                                      : "inherit",
-                                }}
-                              >
-                                {lang === "ur" ? "قسم" : "Variety"}
-                              </th>
+                              {primarySpecialAttr !== "moisture" && (
+                                <th
+                                  style={{
+                                    padding: "7px 4px",
+                                    textAlign: "center",
+                                    fontWeight: 800,
+                                    fontSize: lang === "ur" ? 13 : 10,
+                                    color: "#80918B",
+                                    textTransform: "uppercase",
+                                    borderBottom: "1.5px solid #D5E2DD",
+                                    minWidth: 64,
+                                    fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                  }}
+                                >
+                                  {lang === "ur" ? "نمی" : "Moisture"}
+                                </th>
+                              )}
+
+                              {primarySpecialAttr !== "color" && (
+                                <th
+                                  style={{
+                                    padding: "7px 4px",
+                                    textAlign: "center",
+                                    fontWeight: 800,
+                                    fontSize: lang === "ur" ? 13 : 10,
+                                    color: "#80918B",
+                                    textTransform: "uppercase",
+                                    borderBottom: "1.5px solid #D5E2DD",
+                                    minWidth: 64,
+                                    fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                  }}
+                                >
+                                  {lang === "ur" ? "رنگ" : "Color"}
+                                </th>
+                              )}
+
+                              {primarySpecialAttr !== "variety" && (
+                                <th
+                                  style={{
+                                    padding: "7px 4px",
+                                    textAlign: "center",
+                                    fontWeight: 800,
+                                    fontSize: lang === "ur" ? 13 : 10,
+                                    color: "#80918B",
+                                    textTransform: "uppercase",
+                                    borderBottom: "1.5px solid #D5E2DD",
+                                    minWidth: 74,
+                                    fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                  }}
+                                >
+                                  {lang === "ur" ? "قسم" : "Variety"}
+                                </th>
+                              )}
 
                               {/* 10. Origin */}
                               <th
@@ -13915,44 +14009,82 @@ function ProductRatesScreen({
                                       )}
                                     </td>
 
-                                    {/* 5. Quality (New or Old) */}
-                                    <td
-                                      style={{
-                                        padding: "7px 4px",
-                                        textAlign: "center",
-                                        whiteSpace: "nowrap",
-                                      }}
-                                    >
-                                      <span
-                                        className="px-2 py-0.5 rounded-md font-bold text-[10px]"
+                                    {/* 5. Primary Special Attribute First */}
+                                    {primarySpecialAttr === "moisture" && (
+                                      <td
                                         style={{
-                                          background: (r.newOld || r.quality) === "New" ? "#E4F4EC" : "#FFF4E6",
-                                          color: (r.newOld || r.quality) === "New" ? "#0A7F5A" : "#B45309",
+                                          padding: "7px 4px",
+                                          textAlign: "center",
+                                          color: "#087F63",
+                                          fontWeight: 700,
+                                          fontSize: 10,
+                                          whiteSpace: "nowrap",
+                                        }}
+                                      >
+                                        {r.moisture ? (r.moisture.includes("%") ? r.moisture : `${r.moisture}%`) : "—"}
+                                      </td>
+                                    )}
+                                    {primarySpecialAttr === "color" && (
+                                      <td
+                                        style={{
+                                          padding: "7px 4px",
+                                          textAlign: "center",
+                                          color: "#52635F",
+                                          fontWeight: 600,
+                                          fontSize: 10,
+                                          whiteSpace: "nowrap",
                                           fontFamily:
                                             lang === "ur"
                                               ? URDU_FONT
                                               : "inherit",
                                         }}
                                       >
-                                        {r.newOld || r.quality || "—"}
-                                      </span>
-                                    </td>
+                                        {r.color ? tc(r.color) : "—"}
+                                      </td>
+                                    )}
+                                    {primarySpecialAttr === "variety" && (
+                                      <td
+                                        style={{
+                                          padding: "7px 4px",
+                                          textAlign: "center",
+                                          color: "#52635F",
+                                          fontWeight: 600,
+                                          fontSize: 10,
+                                          whiteSpace: "nowrap",
+                                          fontFamily:
+                                            lang === "ur"
+                                              ? URDU_FONT
+                                              : "inherit",
+                                        }}
+                                      >
+                                        {r.variety || "—"}
+                                      </td>
+                                    )}
+                                    {primarySpecialAttr === "quality" && (
+                                      <td
+                                        style={{
+                                          padding: "7px 4px",
+                                          textAlign: "center",
+                                          whiteSpace: "nowrap",
+                                        }}
+                                      >
+                                        <span
+                                          className="px-2 py-0.5 rounded-md font-bold text-[10px]"
+                                          style={{
+                                            background: (r.newOld || r.quality) === "New" ? "#E4F4EC" : "#FFF4E6",
+                                            color: (r.newOld || r.quality) === "New" ? "#0A7F5A" : "#B45309",
+                                            fontFamily:
+                                              lang === "ur"
+                                                ? URDU_FONT
+                                                : "inherit",
+                                          }}
+                                        >
+                                          {r.newOld || r.quality || "—"}
+                                        </span>
+                                      </td>
+                                    )}
 
-                                    {/* 6. Moisture */}
-                                    <td
-                                      style={{
-                                        padding: "7px 4px",
-                                        textAlign: "center",
-                                        color: "#087F63",
-                                        fontWeight: 700,
-                                        fontSize: 10,
-                                        whiteSpace: "nowrap",
-                                      }}
-                                    >
-                                      {r.moisture ? (r.moisture.includes("%") ? r.moisture : `${r.moisture}%`) : "—"}
-                                    </td>
-
-                                    {/* 7. Arrival Quantity */}
+                                    {/* 6. Arrival Quantity */}
                                     <td
                                       style={{
                                         padding: "7px 4px",
@@ -13968,7 +14100,7 @@ function ProductRatesScreen({
                                         : "—"}
                                     </td>
 
-                                    {/* 8. Arrival Unit */}
+                                    {/* 7. Arrival Unit */}
                                     <td
                                       style={{
                                         padding: "7px 4px",
@@ -13986,41 +14118,83 @@ function ProductRatesScreen({
                                       {rowArr > 0 ? ((r as any).arrivalUnit || (lang === "ur" ? "۴۰ کلو" : "40 kg")) : "—"}
                                     </td>
 
-                                    {/* 8. Color */}
-                                    <td
-                                      style={{
-                                        padding: "7px 4px",
-                                        textAlign: "center",
-                                        color: "#52635F",
-                                        fontWeight: 600,
-                                        fontSize: 10,
-                                        whiteSpace: "nowrap",
-                                        fontFamily:
-                                          lang === "ur"
-                                            ? URDU_FONT
-                                            : "inherit",
-                                      }}
-                                    >
-                                      {r.color ? tc(r.color) : "—"}
-                                    </td>
+                                    {/* Remaining Spec Columns */}
+                                    {primarySpecialAttr !== "quality" && (
+                                      <td
+                                        style={{
+                                          padding: "7px 4px",
+                                          textAlign: "center",
+                                          whiteSpace: "nowrap",
+                                        }}
+                                      >
+                                        <span
+                                          className="px-2 py-0.5 rounded-md font-bold text-[10px]"
+                                          style={{
+                                            background: (r.newOld || r.quality) === "New" ? "#E4F4EC" : "#FFF4E6",
+                                            color: (r.newOld || r.quality) === "New" ? "#0A7F5A" : "#B45309",
+                                            fontFamily:
+                                              lang === "ur"
+                                                ? URDU_FONT
+                                                : "inherit",
+                                          }}
+                                        >
+                                          {r.newOld || r.quality || "—"}
+                                        </span>
+                                      </td>
+                                    )}
 
-                                    {/* 9. Variety */}
-                                    <td
-                                      style={{
-                                        padding: "7px 4px",
-                                        textAlign: "center",
-                                        color: "#52635F",
-                                        fontWeight: 600,
-                                        fontSize: 10,
-                                        whiteSpace: "nowrap",
-                                        fontFamily:
-                                          lang === "ur"
-                                            ? URDU_FONT
-                                            : "inherit",
-                                      }}
-                                    >
-                                      {r.variety || "—"}
-                                    </td>
+                                    {primarySpecialAttr !== "moisture" && (
+                                      <td
+                                        style={{
+                                          padding: "7px 4px",
+                                          textAlign: "center",
+                                          color: "#087F63",
+                                          fontWeight: 700,
+                                          fontSize: 10,
+                                          whiteSpace: "nowrap",
+                                        }}
+                                      >
+                                        {r.moisture ? (r.moisture.includes("%") ? r.moisture : `${r.moisture}%`) : "—"}
+                                      </td>
+                                    )}
+
+                                    {primarySpecialAttr !== "color" && (
+                                      <td
+                                        style={{
+                                          padding: "7px 4px",
+                                          textAlign: "center",
+                                          color: "#52635F",
+                                          fontWeight: 600,
+                                          fontSize: 10,
+                                          whiteSpace: "nowrap",
+                                          fontFamily:
+                                            lang === "ur"
+                                              ? URDU_FONT
+                                              : "inherit",
+                                        }}
+                                      >
+                                        {r.color ? tc(r.color) : "—"}
+                                      </td>
+                                    )}
+
+                                    {primarySpecialAttr !== "variety" && (
+                                      <td
+                                        style={{
+                                          padding: "7px 4px",
+                                          textAlign: "center",
+                                          color: "#52635F",
+                                          fontWeight: 600,
+                                          fontSize: 10,
+                                          whiteSpace: "nowrap",
+                                          fontFamily:
+                                            lang === "ur"
+                                              ? URDU_FONT
+                                              : "inherit",
+                                        }}
+                                      >
+                                        {r.variety || "—"}
+                                      </td>
+                                    )}
 
                                     {/* 10. Origin */}
                                     <td
@@ -15924,22 +16098,61 @@ function ProductRatesScreen({
 
             {trendMode === "price" ? (
               <>
-                {/* Binance / TradingView Style Financial Trend Card */}
+                {/* Investing.com / Financial Stocks App Style Trend Card */}
                 <div
-                  className="rounded-2xl p-3.5 flex flex-col gap-2.5 shadow-sm"
+                  className="rounded-2xl p-3.5 flex flex-col gap-2.5 shadow-sm overflow-hidden"
                   style={{
                     background: "#FFFFFF",
                     border: "1px solid #D5E2DD",
                   }}
                 >
-                  {/* Top Financial HUD Header */}
+                  {/* Top Bar: Financial Chart Controls & Granularity Filter */}
+                  <div className="flex items-center justify-between gap-1 pb-2 border-b border-[#E8EFEC] flex-wrap">
+                    {/* Granularity Pills: 1, 5, 15, 30, 1H, 5H, 1D, 1W, 1M */}
+                    <div className="flex items-center gap-1 overflow-x-auto py-0.5">
+                      {["1", "5", "15", "30", "1H", "5H", "1D", "1W", "1M"].map((g) => {
+                        const isGActive = stockGranularity === g;
+                        return (
+                          <button
+                            key={g}
+                            onClick={() => setStockGranularity(g)}
+                            className={`px-1.5 py-0.5 rounded text-[10.5px] font-bold transition-colors ${
+                              isGActive
+                                ? "bg-[#087F63] text-white shadow-xs"
+                                : "text-[#52635F] hover:bg-[#F1F7F4] hover:text-[#143B33]"
+                            }`}
+                          >
+                            {g}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Compare Button & Mode Indicator */}
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => setCompareMode((prev) => !prev)}
+                        className="tap-target flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10.5px] font-bold transition-all active:scale-95"
+                        style={{
+                          background: compareMode ? "#087F63" : "#F1F7F4",
+                          color: compareMode ? "#FFFFFF" : "#52635F",
+                          border: `1px solid ${compareMode ? "#087F63" : "#D5E2DD"}`,
+                          fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                        }}
+                      >
+                        <span>+ {compareMode ? (lang === "ur" ? "اکیلا دیکھیں" : "Single") : (lang === "ur" ? "موازنہ کریں" : "Compare")}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Stock Asset Header */}
                   {(() => {
                     const mainSeries = activeSeries.find((s) => s.label === focusedType) || activeSeries[0] || priceSeries[0];
                     const currentIdx = hoverIdx !== null ? hoverIdx : len - 1;
                     const displayPrice = mainSeries?.data[currentIdx] || 0;
                     const startPrice = mainSeries?.data[0] || displayPrice || 1;
                     const changeAmt = displayPrice - startPrice;
-                    const changePct = ((changeAmt / startPrice) * 100).toFixed(1);
+                    const changePct = ((changeAmt / startPrice) * 100).toFixed(2);
                     const isPositive = changeAmt >= 0;
                     const seriesMax = mainSeries ? Math.max(...mainSeries.data) : displayPrice;
                     const seriesMin = mainSeries ? Math.min(...mainSeries.data) : displayPrice;
@@ -15947,50 +16160,32 @@ function ProductRatesScreen({
 
                     return (
                       <div className="flex flex-col gap-2 border-b border-[#E8EFEC] pb-2.5">
-                        {/* Top Row: Rate Type Badge & Compare Toggle */}
+                        {/* Title & Live Badge */}
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-2">
                             <span
-                              className="w-2.5 h-2.5 rounded-full"
-                              style={{ background: mainSeries?.color || "#087F63" }}
-                            />
-                            <span
-                              className="text-xs font-bold text-[#143B33]"
-                              style={{
-                                fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                                fontSize: lang === "ur" ? 15 : 12,
-                              }}
+                              className="text-xs sm:text-sm font-extrabold text-[#143B33]"
+                              style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                             >
-                              {tr(focusedType)}
+                              {byproduct ? `${tc(byproduct)}` : `${tc(product)}`} {lang === "ur" ? "مارکیٹ انڈیکس" : "Mandi Rate Index"}
                             </span>
-                            <span className="text-[10px] font-semibold text-[#52635F] bg-[#F1F7F4] px-1.5 py-0.5 rounded-md border border-[#D5E2DD]">
-                              {lang === "ur" ? "روپے فی ۴۰ کلو" : "PKR / 40kg"}
+                            <span className="text-[9.5px] font-bold text-[#087F63] bg-[#E8F8F4] px-1.5 py-0.5 rounded border border-[#C2E8DB]">
+                              {tr(focusedType).replace(" ریٹ", "").replace(" Rate", "")}
                             </span>
                           </div>
-
-                          {/* Compare Mode Toggle */}
-                          <button
-                            onClick={() => setCompareMode((prev) => !prev)}
-                            className="tap-target flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all active:scale-95"
-                            style={{
-                              background: compareMode ? "#087F63" : "#F1F7F4",
-                              color: compareMode ? "#FFFFFF" : "#52635F",
-                              border: `1px solid ${compareMode ? "#087F63" : "#D5E2DD"}`,
-                              fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                            }}
-                          >
-                            <span>{compareMode ? (lang === "ur" ? "اکیلا دیکھیں" : "Focus View") : (lang === "ur" ? "موازنہ کریں" : "Compare Rates")}</span>
-                          </button>
+                          <span className="text-[10px] font-bold text-[#80918B]">
+                            {lang === "ur" ? "روپے فی ۴۰ کلو" : "PKR / 40kg"}
+                          </span>
                         </div>
 
                         {/* Price & Change Display */}
                         <div className="flex items-baseline justify-between flex-wrap gap-2">
-                          <div className="flex items-baseline gap-2">
-                            <span className="text-2xl font-black text-[#143B33] tracking-tight">
+                          <div className="flex items-baseline gap-2.5">
+                            <span className="text-2xl sm:text-3xl font-black text-[#143B33] tracking-tight">
                               {lang === "ur" ? `روپے ${toUrduDigits(displayPrice.toLocaleString())}` : `Rs. ${displayPrice.toLocaleString()}`}
                             </span>
                             <span
-                              className="text-xs font-bold px-2 py-0.5 rounded-md flex items-center gap-0.5"
+                              className="text-xs font-bold px-2 py-0.5 rounded-md flex items-center gap-1"
                               style={{
                                 background: isPositive ? "#DCFCE7" : "#FEE2E2",
                                 color: isPositive ? "#15803D" : "#B91C1C",
@@ -15998,16 +16193,14 @@ function ProductRatesScreen({
                               }}
                             >
                               <span>{isPositive ? "▲" : "▼"}</span>
-                              <span>{isPositive ? `+${changePct}%` : `${changePct}%`}</span>
-                              <span className="opacity-75 text-[10px]">
-                                ({isPositive ? `+${changeAmt}` : changeAmt})
-                              </span>
+                              <span>{isPositive ? `+${changeAmt}` : changeAmt}</span>
+                              <span>({isPositive ? `+${changePct}%` : `${changePct}%`})</span>
                             </span>
                           </div>
 
                           {/* Date / Scrub Indicator */}
                           <div className="text-[11px] font-semibold text-[#52635F]">
-                            {fullDateLabels[currentIdx]?.fullDate}
+                            {fullDateLabels[currentIdx]?.fullDate || "14 Sep 2026"}
                           </div>
                         </div>
 
@@ -16042,267 +16235,366 @@ function ProductRatesScreen({
                     );
                   })()}
 
-                  {/* SVG Chart Canvas */}
-                  <div className="relative w-full select-none">
-                    <svg
-                      viewBox={`0 0 ${CW} ${CH}`}
-                      className="w-full"
-                      style={{ height: CH, display: "block" }}
-                      onMouseMove={(e) => {
-                        const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-                        const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
-                        const i = Math.round((relX / chartW) * (len - 1));
-                        setHoverIdx(Math.max(0, Math.min(len - 1, i)));
-                      }}
-                      onMouseLeave={() => setHoverIdx(null)}
-                      onTouchMove={(e) => {
-                        const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-                        const touch = e.touches[0];
-                        const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
-                        const i = Math.round((relX / chartW) * (len - 1));
-                        setHoverIdx(Math.max(0, Math.min(len - 1, i)));
-                      }}
-                      onTouchEnd={() => setHoverIdx(null)}
-                    >
-                      <defs>
-                        {activeSeries.map((s) => (
-                          <linearGradient
-                            key={`grad-${s.label}`}
-                            id={`areaGrad-${s.label.replace(/\s+/g, "_")}`}
-                            x1="0"
-                            y1="0"
-                            x2="0"
-                            y2="1"
-                          >
-                            <stop offset="0%" stopColor={s.color} stopOpacity="0.28" />
-                            <stop offset="85%" stopColor={s.color} stopOpacity="0.02" />
-                            <stop offset="100%" stopColor={s.color} stopOpacity="0.00" />
-                          </linearGradient>
-                        ))}
-                      </defs>
+                  {/* SVG Chart Canvas with Price Area + Volume Bars at Bottom */}
+                  {(() => {
+                    const mainSeries = activeSeries.find((s) => s.label === focusedType) || activeSeries[0] || priceSeries[0];
+                    const currentClose = mainSeries?.data[len - 1] || 0;
+                    const currentCloseY = yOf(currentClose, pMin, pMax);
 
-                      {/* Horizontal Subtle Gridlines + Y-Axis Clean Price Labels */}
-                      {yPriceTicks.map((tick, ti) => {
-                        const y = yOf(tick, pMin, pMax);
-                        return (
-                          <g key={`yTick-${ti}`}>
-                            <line
-                              x1={PL}
-                              y1={y}
-                              x2={CW - PR}
-                              y2={y}
-                              stroke="#E5EAE8"
-                              strokeWidth="1"
-                              strokeDasharray="4 4"
-                            />
-                            <text
-                              x={PL - 6}
-                              y={y + 3.5}
-                              textAnchor="end"
-                              fontSize="9.5"
-                              fontWeight="600"
-                              fill="#80918B"
-                              fontFamily="inherit"
-                            >
-                              {tick >= 1000 ? `${(tick / 1000).toFixed(1)}k` : tick}
-                            </text>
-                          </g>
-                        );
-                      })}
+                    // Arrival volume scaling
+                    const maxArr = Math.max(...arrivalData, 1);
+                    const volBaseY = CH - 8;
+                    const volMaxH = 28;
 
-                      {/* X-Axis Baseline */}
-                      <line
-                        x1={PL}
-                        y1={CH - PB}
-                        x2={CW - PR}
-                        y2={CH - PB}
-                        stroke="#D5E2DD"
-                        strokeWidth="1.2"
-                      />
+                    return (
+                      <div className="relative w-full select-none bg-[#FCFDFD] rounded-xl border border-[#EDF4F1] p-1">
+                        <svg
+                          viewBox={`0 0 ${CW} ${CH}`}
+                          className="w-full"
+                          style={{ height: CH, display: "block" }}
+                          onMouseMove={(e) => {
+                            const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                            const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
+                            const i = Math.round((relX / chartW) * (len - 1));
+                            setHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                          }}
+                          onMouseLeave={() => setHoverIdx(null)}
+                          onTouchMove={(e) => {
+                            const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                            const touch = e.touches[0];
+                            const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
+                            const i = Math.round((relX / chartW) * (len - 1));
+                            setHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                          }}
+                          onTouchEnd={() => setHoverIdx(null)}
+                        >
+                          <defs>
+                            {activeSeries.map((s) => (
+                              <linearGradient
+                                key={`grad-${s.label}`}
+                                id={`areaGrad-${s.label.replace(/\s+/g, "_")}`}
+                                x1="0"
+                                y1="0"
+                                x2="0"
+                                y2="1"
+                              >
+                                <stop offset="0%" stopColor="#087F63" stopOpacity="0.28" />
+                                <stop offset="70%" stopColor="#087F63" stopOpacity="0.04" />
+                                <stop offset="100%" stopColor="#087F63" stopOpacity="0.00" />
+                              </linearGradient>
+                            ))}
+                          </defs>
 
-                      {/* X-Axis Date Labels with Zero Overlap */}
-                      {xLabels.map((lbl, i) =>
-                        lbl ? (
-                          <text
-                            key={`xTick-${i}`}
-                            x={xOf(i, len)}
-                            y={CH - 10}
-                            textAnchor="middle"
-                            fontSize="9"
-                            fontWeight="600"
-                            fill="#80918B"
-                            fontFamily={lang === "ur" ? URDU_FONT : "inherit"}
-                          >
-                            {lbl}
-                          </text>
-                        ) : null,
-                      )}
+                          {/* Horizontal Gridlines + Left & Right Price Axis Labels */}
+                          {yPriceTicks.map((tick, ti) => {
+                            const y = yOf(tick, pMin, pMax);
+                            return (
+                              <g key={`yTick-${ti}`}>
+                                <line
+                                  x1={PL}
+                                  y1={y}
+                                  x2={CW - PR}
+                                  y2={y}
+                                  stroke="#EDF2F0"
+                                  strokeWidth="1"
+                                  strokeDasharray="3 3"
+                                />
+                                <text
+                                  x={PL - 5}
+                                  y={y + 3.5}
+                                  textAnchor="end"
+                                  fontSize="9"
+                                  fontWeight="600"
+                                  fill="#80918B"
+                                >
+                                  {tick >= 1000 ? `${(tick / 1000).toFixed(1)}k` : tick}
+                                </text>
+                                <text
+                                  x={CW - PR + 5}
+                                  y={y + 3.5}
+                                  textAnchor="start"
+                                  fontSize="8.5"
+                                  fontWeight="600"
+                                  fill="#9BAAA5"
+                                >
+                                  {tick}
+                                </text>
+                              </g>
+                            );
+                          })}
 
-                      {/* Secondary Comparison Lines (if in compare mode) */}
-                      {compareMode &&
-                        activeSeries
-                          .filter((s) => s.label !== focusedType)
-                          .map((s) => {
+                          {/* Volume Bottom Divider Baseline */}
+                          <line
+                            x1={PL}
+                            y1={volBaseY}
+                            x2={CW - PR}
+                            y2={volBaseY}
+                            stroke="#D5E2DD"
+                            strokeWidth="1"
+                          />
+
+                          {/* Mini Arrival Volume Bars along Bottom */}
+                          {arrivalData.map((arrVal, i) => {
+                            const barX = xOf(i, len);
+                            const barH = (arrVal / maxArr) * volMaxH;
+                            const prevP = i > 0 ? (mainSeries?.data[i - 1] || 0) : (mainSeries?.data[i] || 0);
+                            const curP = mainSeries?.data[i] || 0;
+                            const isUp = curP >= prevP;
+                            const barW = Math.max(2, Math.min(6, (chartW / len) * 0.55));
+                            const isHov = hoverIdx === i;
+
+                            return (
+                              <rect
+                                key={`vol-${i}`}
+                                x={barX - barW / 2}
+                                y={volBaseY - barH}
+                                width={barW}
+                                height={barH}
+                                rx={1}
+                                fill={isUp ? "#10B981" : "#EF4444"}
+                                opacity={isHov ? 1 : 0.65}
+                              />
+                            );
+                          })}
+
+                          {/* Primary Focused Rate Type Line & Area Gradient Glow */}
+                          {(() => {
+                            const s = activeSeries.find((ser) => ser.label === focusedType) || activeSeries[0];
+                            if (!s) return null;
                             const pts = s.data
                               .map(
                                 (v, i) =>
                                   `${i === 0 ? "M" : "L"}${xOf(i, len).toFixed(1)},${yOf(v, pMin, pMax).toFixed(1)}`,
                               )
                               .join(" ");
+                            const areaPath = `${pts} L${xOf(len - 1, len).toFixed(1)},${CH - PB} L${PL},${CH - PB} Z`;
+
                             return (
-                              <path
-                                key={`sec-${s.label}`}
-                                d={pts}
-                                stroke={s.color}
-                                strokeWidth="1.6"
-                                strokeDasharray="3 2"
-                                fill="none"
-                                strokeLinecap="round"
+                              <g key={`main-${s.label}`}>
+                                <path
+                                  d={areaPath}
+                                  fill={`url(#areaGrad-${s.label.replace(/\s+/g, "_")})`}
+                                />
+                                <path
+                                  d={pts}
+                                  stroke={s.color || "#087F63"}
+                                  strokeWidth="2.4"
+                                  fill="none"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+
+                                {/* Dotted Horizontal Guideline for latest price */}
+                                <line
+                                  x1={PL}
+                                  y1={currentCloseY}
+                                  x2={CW - PR}
+                                  y2={currentCloseY}
+                                  stroke="#087F63"
+                                  strokeWidth="0.9"
+                                  strokeDasharray="3 3"
+                                  opacity="0.6"
+                                />
+                                {/* Latest Price Right-side Tag */}
+                                <g transform={`translate(${CW - PR + 2}, ${currentCloseY - 7})`}>
+                                  <rect
+                                    x={0}
+                                    y={0}
+                                    width={28}
+                                    height={14}
+                                    rx={3}
+                                    fill="#087F63"
+                                  />
+                                  <text
+                                    x={14}
+                                    y={10}
+                                    textAnchor="middle"
+                                    fontSize="8"
+                                    fontWeight="bold"
+                                    fill="#FFFFFF"
+                                  >
+                                    {currentClose >= 1000 ? `${(currentClose / 1000).toFixed(1)}k` : currentClose}
+                                  </text>
+                                </g>
+
+                                {/* Live Pulse Dot on Latest Value */}
+                                <circle
+                                  cx={xOf(len - 1, len)}
+                                  cy={currentCloseY}
+                                  r="4"
+                                  fill="#087F63"
+                                  stroke="#FFFFFF"
+                                  strokeWidth="2"
+                                />
+                              </g>
+                            );
+                          })()}
+
+                          {/* Compare Mode Secondary Lines */}
+                          {compareMode &&
+                            activeSeries
+                              .filter((s) => s.label !== focusedType)
+                              .map((s) => {
+                                const pts = s.data
+                                  .map(
+                                    (v, i) =>
+                                      `${i === 0 ? "M" : "L"}${xOf(i, len).toFixed(1)},${yOf(v, pMin, pMax).toFixed(1)}`,
+                                  )
+                                  .join(" ");
+                                return (
+                                  <path
+                                    key={`sec-${s.label}`}
+                                    d={pts}
+                                    stroke={s.color}
+                                    strokeWidth="1.6"
+                                    strokeDasharray="3 2"
+                                    fill="none"
+                                    strokeLinecap="round"
+                                    opacity="0.8"
+                                  />
+                                );
+                              })}
+
+                          {/* Interactive Hover Crosshair Lines */}
+                          {hoverIdx !== null && (
+                            <g>
+                              {/* Full-height vertical crosshair */}
+                              <line
+                                x1={xOf(hoverIdx, len)}
+                                y1={PT}
+                                x2={xOf(hoverIdx, len)}
+                                y2={volBaseY}
+                                stroke="#0284C7"
+                                strokeWidth="1.2"
+                                strokeDasharray="2 2"
+                              />
+                              {/* Horizontal crosshair */}
+                              <line
+                                x1={PL}
+                                y1={yOf(mainSeries?.data[hoverIdx] || 0, pMin, pMax)}
+                                x2={CW - PR}
+                                y2={yOf(mainSeries?.data[hoverIdx] || 0, pMin, pMax)}
+                                stroke="#0284C7"
+                                strokeWidth="1"
+                                strokeDasharray="2 2"
                                 opacity="0.75"
                               />
-                            );
-                          })}
-
-                      {/* Primary Focused Rate Type Line & Area Gradient Glow */}
-                      {(() => {
-                        const s = activeSeries.find((ser) => ser.label === focusedType) || activeSeries[0];
-                        if (!s) return null;
-                        const pts = s.data
-                          .map(
-                            (v, i) =>
-                              `${i === 0 ? "M" : "L"}${xOf(i, len).toFixed(1)},${yOf(v, pMin, pMax).toFixed(1)}`,
-                          )
-                          .join(" ");
-                        const areaPath = `${pts} L${xOf(len - 1, len).toFixed(1)},${CH - PB} L${PL},${CH - PB} Z`;
-
-                        const latestVal = s.data[len - 1];
-                        const latestY = yOf(latestVal, pMin, pMax);
-
-                        return (
-                          <g key={`main-${s.label}`}>
-                            {/* Area fill with smooth luminous gradient */}
-                            <path
-                              d={areaPath}
-                              fill={`url(#areaGrad-${s.label.replace(/\s+/g, "_")})`}
-                            />
-                            {/* Main Stroke */}
-                            <path
-                              d={pts}
-                              stroke={s.color}
-                              strokeWidth="2.8"
-                              fill="none"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                            {/* Latest Price Tag Guideline */}
-                            <line
-                              x1={PL}
-                              y1={latestY}
-                              x2={CW - PR}
-                              y2={latestY}
-                              stroke={s.color}
-                              strokeWidth="0.8"
-                              strokeDasharray="2 2"
-                              opacity="0.5"
-                            />
-                            {/* Live Pulse Dot on Latest Value */}
-                            <circle
-                              cx={xOf(len - 1, len)}
-                              cy={latestY}
-                              r="4"
-                              fill={s.color}
-                              stroke="#FFFFFF"
-                              strokeWidth="2"
-                            />
-                          </g>
-                        );
-                      })()}
-
-                      {/* Interactive Hover Crosshair & Scrubbing Markers */}
-                      {hoverIdx !== null && (
-                        <g>
-                          {/* Vertical Guide Line */}
-                          <line
-                            x1={xOf(hoverIdx, len)}
-                            y1={PT}
-                            x2={xOf(hoverIdx, len)}
-                            y2={CH - PB}
-                            stroke="#143B33"
-                            strokeWidth="1.2"
-                            strokeDasharray="3 3"
-                          />
-                          {activeSeries.map((s) => (
-                            <g key={`hoverDot-${s.label}`}>
                               <circle
-                                cx={xOf(hoverIdx!, len)}
-                                cy={yOf(s.data[hoverIdx!], pMin, pMax)}
-                                r="5.5"
-                                fill={s.color}
+                                cx={xOf(hoverIdx, len)}
+                                cy={yOf(mainSeries?.data[hoverIdx] || 0, pMin, pMax)}
+                                r="5"
+                                fill="#0284C7"
                                 stroke="#FFFFFF"
-                                strokeWidth="2.5"
+                                strokeWidth="2"
                               />
                             </g>
-                          ))}
-                        </g>
-                      )}
-                    </svg>
+                          )}
+                        </svg>
 
-                    {/* Hover Tooltip Overlay */}
-                    {hoverIdx !== null && (
-                      <div
-                        className="pointer-events-none absolute z-20 rounded-xl shadow-lg border p-2.5 flex flex-col gap-1 backdrop-blur-md transition-all duration-75"
-                        style={{
-                          left: `${Math.min(Math.max((xOf(hoverIdx, len) / CW) * 100, 18), 82)}%`,
-                          top: 8,
-                          transform: "translateX(-50%)",
-                          background: "rgba(20, 59, 51, 0.94)",
-                          borderColor: "rgba(255, 255, 255, 0.18)",
-                          minWidth: compareMode && activeSeries.length > 1 ? 160 : 120,
-                          maxWidth: 240,
-                        }}
-                      >
-                        <span
-                          className="text-[10px] font-bold text-[#B4E6D2] border-b border-white/10 pb-1"
-                          style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                        >
-                          {fullDateLabels[hoverIdx]?.fullDate}
-                        </span>
-                        {compareMode && activeSeries.length > 1 ? (
-                          <div className="flex flex-col gap-1 pt-0.5">
-                            {activeSeries.map((s) => {
-                              const val = s.data[hoverIdx!] || 0;
-                              return (
-                                <div key={s.label} className="flex items-center justify-between gap-3 text-[11px]">
-                                  <div className="flex items-center gap-1.5 truncate">
-                                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: s.color }} />
-                                    <span className="font-semibold text-white/90 truncate" style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}>
-                                      {tr(s.label).replace(" ریٹ", "").replace(" Rate", "")}
-                                    </span>
-                                  </div>
-                                  <span className="font-bold text-white flex-shrink-0">
-                                    {lang === "ur" ? `روپے ${toUrduDigits(val.toLocaleString())}` : `Rs. ${val.toLocaleString()}`}
-                                  </span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-between gap-2 pt-0.5 text-xs">
-                            <span className="font-semibold text-white/90" style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}>
-                              {tr(focusedType)}
-                            </span>
-                            <span className="font-black text-white">
-                              {lang === "ur"
-                                ? `روپے ${toUrduDigits((activeSeries[0]?.data[hoverIdx!] || 0).toLocaleString())}`
-                                : `Rs. ${(activeSeries[0]?.data[hoverIdx!] || 0).toLocaleString()}`}
-                            </span>
-                          </div>
-                        )}
+                        {/* Interactive Floating OHLCV Tooltip Box */}
+                        {hoverIdx !== null && (() => {
+                          const curP = mainSeries?.data[hoverIdx] || 0;
+                          const prevP = hoverIdx > 0 ? (mainSeries?.data[hoverIdx - 1] || curP) : curP;
+                          const openP = prevP;
+                          const highP = Math.max(curP, openP) + Math.round(curP * 0.005);
+                          const lowP = Math.min(curP, openP) - Math.round(curP * 0.005);
+                          const volVal = arrivalData[hoverIdx] || 0;
+                          const dateStr = fullDateLabels[hoverIdx]?.fullDate || "14/9/2026";
+
+                          return (
+                            <div
+                              className="pointer-events-none absolute z-20 rounded-xl shadow-xl border p-2.5 flex flex-col gap-1 backdrop-blur-md transition-all duration-75"
+                              style={{
+                                left: `${Math.min(Math.max((xOf(hoverIdx, len) / CW) * 100, 22), 78)}%`,
+                                top: 12,
+                                transform: "translateX(-50%)",
+                                background: "rgba(255, 255, 255, 0.96)",
+                                borderColor: "#38BDF8",
+                                minWidth: 155,
+                                boxShadow: "0 8px 24px -4px rgba(2, 132, 199, 0.22)",
+                              }}
+                            >
+                              <div className="flex items-center justify-between text-[10px] font-bold text-[#0284C7] border-b border-[#E0F2FE] pb-1">
+                                <span>DT:</span>
+                                <span className="font-mono text-[#0F172A]">{dateStr}</span>
+                              </div>
+                              <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10.5px] font-semibold text-[#334155] pt-0.5">
+                                <span className="text-[#64748B]">Close:</span>
+                                <span className="font-mono font-bold text-right text-[#0F172A]">{curP.toLocaleString()}</span>
+
+                                <span className="text-[#64748B]">Open:</span>
+                                <span className="font-mono font-bold text-right text-[#0F172A]">{openP.toLocaleString()}</span>
+
+                                <span className="text-[#64748B]">High:</span>
+                                <span className="font-mono font-bold text-right text-[#15803D]">{highP.toLocaleString()}</span>
+
+                                <span className="text-[#64748B]">Low:</span>
+                                <span className="font-mono font-bold text-right text-[#B91C1C]">{lowP.toLocaleString()}</span>
+
+                                <span className="text-[#64748B]">Arrival:</span>
+                                <span className="font-mono font-bold text-right text-[#0284C7]">
+                                  {volVal > 0 ? `${volVal.toLocaleString()} bags` : "—"}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
-                    )}
-                  </div>
+                    );
+                  })()}
 
-                  {/* Binance-Style Rate Type Selector Bar */}
+                  {/* Direct Stock App Timeframe Selector Grid along Bottom */}
+                  {(() => {
+                    const timeframesList: { id: "1D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "5Y" | "MAX"; label: string; delta: string; isUp: boolean }[] = [
+                      { id: "1D", label: "1 Day", delta: "+0.07%", isUp: true },
+                      { id: "1W", label: "1 Week", delta: "+1.49%", isUp: true },
+                      { id: "1M", label: "1 Month", delta: "+0.51%", isUp: true },
+                      { id: "3M", label: "3 Months", delta: "-0.55%", isUp: false },
+                      { id: "6M", label: "6 Months", delta: "+0.19%", isUp: true },
+                      { id: "1Y", label: "1 Year", delta: "+3.19%", isUp: true },
+                      { id: "5Y", label: "5 years", delta: "+7.39%", isUp: true },
+                      { id: "MAX", label: "Max", delta: "-21.74%", isUp: false },
+                    ];
+
+                    return (
+                      <div className="pt-1">
+                        <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5 border border-[#D5E2DD] rounded-xl p-1 bg-[#F9FBFA]">
+                          {timeframesList.map((tf) => {
+                            const isTfActive = stockTimeframe === tf.id;
+                            return (
+                              <button
+                                key={tf.id}
+                                onClick={() => {
+                                  setStockTimeframe(tf.id);
+                                  if (tf.id === "1W" || tf.id === "1D") setRange("week");
+                                  else if (tf.id === "1M") setRange("month");
+                                  else setRange("quarter");
+                                }}
+                                className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-lg transition-all ${
+                                  isTfActive
+                                    ? "bg-white shadow-sm border border-[#087F63] ring-1 ring-[#087F63]/20 scale-[1.02]"
+                                    : "hover:bg-white/80"
+                                }`}
+                              >
+                                <span className={`text-[11px] font-bold ${isTfActive ? "text-[#087F63]" : "text-[#183B34]"}`}>
+                                  {tf.label}
+                                </span>
+                                <span
+                                  className={`text-[9.5px] font-bold ${
+                                    tf.isUp ? "text-[#15803D]" : "text-[#DC2626]"
+                                  }`}
+                                >
+                                  {tf.delta}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Primary Rate Type Selector Bar */}
                   <div className="flex flex-col gap-1.5 pt-1">
                     <div className="flex items-center justify-between">
                       <span
@@ -16394,7 +16686,6 @@ function ProductRatesScreen({
                 </div>
               </>
             ) : (
-              /* Interactive Arrival Volume Trend Card */
               <div
                 className="rounded-2xl p-3.5 flex flex-col gap-2.5 shadow-sm"
                 style={{ background: "#FFFFFF", border: "1px solid #D5E2DD" }}

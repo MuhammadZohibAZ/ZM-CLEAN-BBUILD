@@ -12,6 +12,7 @@ import {
   Minus,
   SlidersHorizontal,
   ChevronRight,
+  ChevronLeft,
   X,
   Clock,
   Wheat,
@@ -480,6 +481,50 @@ export default function ZaraiMandiMap({
     );
   }, [realStationNames]);
 
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarFilter, setSidebarFilter] = useState("");
+
+  const activeMandiList = useMemo(() => {
+    return visibleCropMandis
+      .map((m) => {
+        const mandiKey = normStation(m.name);
+        const mandiCityKey = normStation(m.city);
+        const mRecs = records.filter(
+          (r) => normStation(r.mandiName) === mandiKey || normStation(r.mandiName) === mandiCityKey
+        );
+        let minRate = 0;
+        let maxRate = 0;
+        let arrBags = 0;
+        if (mRecs.length > 0) {
+          const mins = mRecs.map((r) => r.min).filter((v) => typeof v === "number" && v > 0);
+          const maxs = mRecs.map((r) => r.max).filter((v) => typeof v === "number" && v > 0);
+          if (mins.length) minRate = Math.min(...mins);
+          if (maxs.length) maxRate = Math.max(...maxs);
+          arrBags = mRecs.reduce((sum, r) => {
+            if (typeof r.arrival === "number") return sum + r.arrival;
+            const match = String(r.arrival || "").match(/^([0-9,]+)/);
+            return sum + (match ? parseInt(match[1].replace(/,/g, ""), 10) || 0 : 0);
+          }, 0);
+        }
+        return {
+          mandi: m,
+          minRate,
+          maxRate,
+          arrBags,
+          recsCount: mRecs.length,
+        };
+      })
+      .filter((item) => {
+        if (!sidebarFilter.trim()) return true;
+        const q = sidebarFilter.toLowerCase();
+        return (
+          item.mandi.name.toLowerCase().includes(q) ||
+          item.mandi.city.toLowerCase().includes(q) ||
+          item.mandi.province.toLowerCase().includes(q)
+        );
+      });
+  }, [visibleCropMandis, records, sidebarFilter]);
+
   const selectedMandi = view.mandi;
 
   const visibleMandis = useMemo(() => {
@@ -785,6 +830,121 @@ export default function ZaraiMandiMap({
 
       {/* ── Vector Map Area ── */}
       <div className="relative flex-1 min-h-0 bg-[#E8F5EE]/40 overflow-hidden">
+        {/* Floating Active Mandis Sidebar on the Left Area */}
+        <div
+          className={`absolute left-2.5 top-2.5 bottom-2.5 z-20 flex flex-col transition-all duration-300 pointer-events-auto ${
+            sidebarOpen ? "w-[170px] sm:w-[215px]" : "w-9"
+          }`}
+        >
+          {sidebarOpen ? (
+            <div className="w-full h-full bg-white/95 backdrop-blur-md rounded-2xl border border-emerald-200/90 shadow-xl flex flex-col overflow-hidden">
+              {/* Header */}
+              <div className="p-2.5 pb-2 border-b border-emerald-100 flex items-center justify-between bg-[#F0FAF5] flex-shrink-0">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <div className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse flex-shrink-0" />
+                  <p
+                    className="text-[11px] sm:text-xs font-black text-emerald-950 truncate"
+                    style={{ fontFamily: lang === "ur" ? urduFont : "inherit" }}
+                  >
+                    {lang === "ur" ? "فعال منڈیاں" : "Active Mandis"}
+                  </p>
+                  <span className="text-[9.5px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-700 text-white flex-shrink-0">
+                    {visibleCropMandis.length}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setSidebarOpen(false)}
+                  className="w-5 h-5 rounded-md hover:bg-emerald-100 flex items-center justify-center text-emerald-800 transition"
+                  title="Minimize"
+                >
+                  <ChevronLeft size={13} />
+                </button>
+              </div>
+
+              {/* Mini Quick Filter */}
+              {visibleCropMandis.length > 4 && (
+                <div className="px-2 py-1.5 border-b border-emerald-50 bg-white flex-shrink-0">
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[#F4FAF7] border border-emerald-100">
+                    <Search size={11} className="text-emerald-700 flex-shrink-0" />
+                    <input
+                      value={sidebarFilter}
+                      onChange={(e) => setSidebarFilter(e.target.value)}
+                      placeholder={lang === "ur" ? "تلاش کریں..." : "Filter mandis..."}
+                      className="w-full bg-transparent text-[10.5px] text-emerald-950 outline-none placeholder:text-emerald-700/50"
+                    />
+                    {sidebarFilter && (
+                      <button onClick={() => setSidebarFilter("")} className="text-emerald-700">
+                        <X size={10} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Scrollable Mandi List */}
+              <div
+                className="flex-1 overflow-y-auto p-1.5 space-y-1.5 zm-table-scroll-container"
+                style={{ scrollbarWidth: "thin", scrollbarColor: "#087F63 #E4F2EC" }}
+              >
+                {activeMandiList.length === 0 ? (
+                  <p
+                    className="text-[10.5px] text-slate-400 text-center py-4"
+                    style={{ fontFamily: lang === "ur" ? urduFont : "inherit" }}
+                  >
+                    {lang === "ur" ? "کوئی منڈی نہیں ملی" : "No mandis found"}
+                  </p>
+                ) : (
+                  activeMandiList.map((item) => {
+                    const isSelected = selectedMandi?.id === item.mandi.id;
+                    return (
+                      <button
+                        key={item.mandi.id}
+                        onClick={() => goMandi(item.mandi)}
+                        className={`w-full text-left p-2 rounded-xl transition-all border ${
+                          isSelected
+                            ? "bg-emerald-700 text-white border-emerald-700 shadow-md scale-[1.01]"
+                            : "bg-[#FAFCFB] hover:bg-emerald-50 text-slate-800 border-emerald-100/80 shadow-sm"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-1">
+                          <p className={`text-[11px] sm:text-[11.5px] font-black leading-tight truncate ${isSelected ? "text-white" : "text-emerald-950"}`}>
+                            {item.mandi.name}
+                          </p>
+                          <span className={`text-[8.5px] font-bold px-1 rounded flex-shrink-0 ${isSelected ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-800"}`}>
+                            {item.mandi.province.slice(0, 3)}
+                          </span>
+                        </div>
+
+                        {/* Rate and arrival tags */}
+                        <div className="mt-1 flex items-center justify-between text-[9.5px]">
+                          <span className={`font-bold ${isSelected ? "text-emerald-100" : "text-emerald-700"}`}>
+                            {item.minRate > 0
+                              ? `Rs ${item.minRate.toLocaleString()}${item.maxRate > item.minRate ? ` - ${item.maxRate.toLocaleString()}` : ""}`
+                              : "—"}
+                          </span>
+                          {item.arrBags > 0 && (
+                            <span className={`text-[8.5px] font-semibold opacity-90 ${isSelected ? "text-white" : "text-slate-500"}`}>
+                              {item.arrBags.toLocaleString()} bags
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="w-9 h-9 rounded-2xl bg-white/95 backdrop-blur-md border border-emerald-200 shadow-lg flex items-center justify-center text-emerald-800 hover:bg-emerald-50 transition"
+              title={lang === "ur" ? "منڈیاں دکھائیں" : "Show active mandis list"}
+            >
+              <ChevronRight size={16} />
+            </button>
+          )}
+        </div>
+
         <svg
           ref={svgRef}
           viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}

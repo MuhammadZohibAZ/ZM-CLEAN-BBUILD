@@ -184,7 +184,7 @@ export const ExpandableMandiMapCard: React.FC<ExpandableMandiMapCardProps> = ({
             onClick={() => handleClose()}
           >
             {/* Cross Button OUTSIDE the parameter of the map card */}
-            <div className="w-full max-w-[428px] flex justify-end px-1 pb-2 pt-1 pointer-events-auto">
+            <div className="w-full max-w-[440px] md:max-w-[760px] lg:max-w-[880px] flex justify-end px-1 pb-2 pt-1 pointer-events-auto">
               <button
                 onClick={(e) => handleClose(e)}
                 className="tap-target flex items-center justify-center w-9 h-9 rounded-full bg-white text-emerald-950 shadow-2xl border border-emerald-100 hover:bg-emerald-50 active:scale-95 transition-all"
@@ -197,7 +197,7 @@ export const ExpandableMandiMapCard: React.FC<ExpandableMandiMapCardProps> = ({
 
             {/* Expanded Modal Box - Floating Rounded Rectangular Box */}
             <motion.div
-              className="w-full max-w-[428px] h-[88vh] max-h-[760px] rounded-[26px] overflow-hidden bg-white shadow-2xl relative flex flex-col pointer-events-auto border-2 border-emerald-200/90 ring-1 ring-black/5"
+              className="w-full max-w-[440px] md:max-w-[760px] lg:max-w-[880px] h-[88vh] max-h-[780px] rounded-[26px] overflow-hidden bg-white shadow-2xl relative flex flex-col pointer-events-auto border-2 border-emerald-200/90 ring-1 ring-black/5"
               initial={{ scale: 0.92, y: 20, opacity: 0 }}
               animate={{ scale: 1, y: 0, opacity: 1 }}
               exit={{ scale: 0.92, y: 20, opacity: 0 }}
