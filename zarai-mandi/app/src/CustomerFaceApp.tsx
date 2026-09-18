@@ -2452,6 +2452,13 @@ const ICON_PATHS: Record<string, string> = {
   "Cotton-Seed-Cake": `${BYPRODUCTS_PATH}/cotton/Cotton-Seed-Cake.png`,
   "Lint-Cotton": `${BYPRODUCTS_PATH}/cotton/Lint-Cotton.png`,
 
+  //  By-product icons – Sesame
+  "Sesame-A": `${BYPRODUCTS_PATH}/sesame/Sesame-A.png`,
+  "Sesame-B": `${BYPRODUCTS_PATH}/sesame/Sesame-B.png`,
+  "Sesame-C": `${BYPRODUCTS_PATH}/sesame/Sesame-C.png`,
+  "Sesame-Oil": `${BYPRODUCTS_PATH}/sesame/Sesame-Oil.png`,
+  "Sesame": `${BYPRODUCTS_PATH}/sesame/Sesame.png`,
+
   //  By-product icons – Wheat
   Bran: `${BYPRODUCTS_PATH}/wheat/Bran.png`,
   "Wheat-Bran": `${BYPRODUCTS_PATH}/wheat/Bran.png`,
@@ -2608,6 +2615,7 @@ const ICON_PATHS: Record<string, string> = {
   "Garlic-Chinese": `${BYPRODUCTS_PATH}/vegetables/Garlic-Chinese.png`,
   Ginger: `${BYPRODUCTS_PATH}/vegetables/Ginger.png`,
   Spinach: `${BYPRODUCTS_PATH}/vegetables/Spinach.png`,
+  "Green-Chilli": `${BYPRODUCTS_PATH}/vegetables/Green-Chilli.png`,
   // Potato variants
   "Potato-Goli": `${BYPRODUCTS_PATH}/vegetables/Potato-Goli.png`,
   "Potato-Santa": `${BYPRODUCTS_PATH}/vegetables/Potato-Santa.png`,
@@ -2735,6 +2743,7 @@ const product_SPRITE_KEY: Record<string, string> = {
   "Maize Grade A": "Maize-A",
   "Maize Grade B": "Maize-B",
   "Maize Grade C": "Maize-C",
+  "Maize Grade D": "Maize-D",
   // Cotton
   Cotton: "cotton",
   "Cotton Grade A": "Cotton-A",
@@ -2773,9 +2782,9 @@ const product_SPRITE_KEY: Record<string, string> = {
   "Millet Grade B": "millet",
   "Millet Grade C": "millet",
   Sesame: "sesame",
-  "Sesame Grade A": "sesame",
-  "Sesame Grade B": "sesame",
-  "Sesame Grade C": "sesame",
+  "Sesame Grade A": "Sesame-A",
+  "Sesame Grade B": "Sesame-B",
+  "Sesame Grade C": "Sesame-C",
   // Pulses
   Pulses: "pulses",
   "Red Lentil": "Red-Lentils",
@@ -3001,95 +3010,434 @@ function getproductIconSrc(
     return ICON_PATHS.wheat || `${PRODUCTS_PATH}/wheat200.png`;
 
   const n = (name || "").trim();
-
-  // 1. Direct lookup in ICON_PATHS
-  if (ICON_PATHS[n]) return ICON_PATHS[n];
-
-  // 2. Hyphenated lookup (e.g. "Cotton A" -> "Cotton-A", "Fine Flour" -> "Fine-Flour")
-  const hyphenated = n.replace(/\s+/g, "-");
-  if (ICON_PATHS[hyphenated]) return ICON_PATHS[hyphenated];
-
-  // 3. Normalized lowercase & no-hyphen lookups
   const lower = n.toLowerCase();
+  const clean = lower.replace(/[^a-z0-9]+/g, "");
+
+  // 1. COTTON SPECIALIZED MATCHING
+  if (
+    lower.includes("cotton") ||
+    lower.includes("phutti") ||
+    lower.includes("binola") ||
+    (vertical && vertical.toLowerCase() === "cotton")
+  ) {
+    if (lower.includes("cake") || lower.includes("khal"))
+      return ICON_PATHS["Cotton-Seed-Cake"];
+    if (lower.includes("oil") || lower.includes("tail"))
+      return ICON_PATHS["Cotton-Seed-Oil"];
+    if (lower.includes("lint") || lower.includes("rui"))
+      return ICON_PATHS["Lint-Cotton"];
+    if (
+      clean === "cottonseed" ||
+      (lower.includes("seed") &&
+        !lower.includes("seed cotton") &&
+        !lower.includes("seedcotton"))
+    ) {
+      return ICON_PATHS["Cotton-Seed"];
+    }
+    if (
+      lower.includes("grade a") ||
+      lower.includes("grade-a") ||
+      lower.endsWith(" a") ||
+      lower.includes("- a")
+    )
+      return ICON_PATHS["Cotton-A"];
+    if (
+      lower.includes("grade b") ||
+      lower.includes("grade-b") ||
+      lower.endsWith(" b") ||
+      lower.includes("- b")
+    )
+      return ICON_PATHS["Cotton-B"];
+    if (
+      lower.includes("grade c") ||
+      lower.includes("grade-c") ||
+      lower.endsWith(" c") ||
+      lower.includes("- c")
+    )
+      return ICON_PATHS["Cotton-C"];
+    return `${PRODUCTS_PATH}/cotton200.png`;
+  }
+
+  // 2. SESAME SPECIALIZED MATCHING
+  if (
+    lower.includes("sesame") ||
+    lower.includes("til") ||
+    (vertical && vertical.toLowerCase() === "sesame")
+  ) {
+    if (lower.includes("oil") || lower.includes("tail"))
+      return ICON_PATHS["Sesame-Oil"];
+    if (
+      lower.includes("grade a") ||
+      lower.includes("grade-a") ||
+      lower.endsWith(" a") ||
+      lower.includes("- a") ||
+      lower.includes("white") ||
+      lower.includes("safaid")
+    )
+      return ICON_PATHS["Sesame-A"];
+    if (
+      lower.includes("grade b") ||
+      lower.includes("grade-b") ||
+      lower.endsWith(" b") ||
+      lower.includes("- b") ||
+      lower.includes("golden") ||
+      lower.includes("bhura")
+    )
+      return ICON_PATHS["Sesame-B"];
+    if (
+      lower.includes("grade c") ||
+      lower.includes("grade-c") ||
+      lower.endsWith(" c") ||
+      lower.includes("- c") ||
+      lower.includes("black") ||
+      lower.includes("kala")
+    )
+      return ICON_PATHS["Sesame-C"];
+    return ICON_PATHS["Sesame"] || `${PRODUCTS_PATH}/sesame200.png`;
+  }
+
+  // 3. MAIZE SPECIALIZED MATCHING
+  if (
+    lower.includes("maize") ||
+    lower.includes("corn") ||
+    lower.includes("makai") ||
+    (vertical && vertical.toLowerCase() === "maize")
+  ) {
+    if (lower.includes("silage")) return ICON_PATHS["Corn-Silage"];
+    if (lower.includes("starch")) return ICON_PATHS["Corn-Starch"];
+    if (lower.includes("popcorn")) return ICON_PATHS["Popcorn"];
+    if (
+      lower.includes("grade a") ||
+      lower.includes("grade-a") ||
+      lower.endsWith(" a") ||
+      lower.includes("- a")
+    )
+      return ICON_PATHS["Maize-A"];
+    if (
+      lower.includes("grade b") ||
+      lower.includes("grade-b") ||
+      lower.endsWith(" b") ||
+      lower.includes("- b")
+    )
+      return ICON_PATHS["Maize-B"];
+    if (
+      lower.includes("grade c") ||
+      lower.includes("grade-c") ||
+      lower.endsWith(" c") ||
+      lower.includes("- c")
+    )
+      return ICON_PATHS["Maize-C"];
+    if (
+      lower.includes("grade d") ||
+      lower.includes("grade-d") ||
+      lower.endsWith(" d") ||
+      lower.includes("- d")
+    )
+      return ICON_PATHS["Maize-D"];
+    return `${PRODUCTS_PATH}/maize200.png`;
+  }
+
+  // 4. MUSTARD SPECIALIZED MATCHING
+  if (
+    lower.includes("mustard") ||
+    lower.includes("sarson") ||
+    (vertical && vertical.toLowerCase() === "mustard")
+  ) {
+    if (lower.includes("cake") || lower.includes("khal"))
+      return ICON_PATHS["Mustard-Cake"];
+    if (lower.includes("oil") || lower.includes("tail"))
+      return ICON_PATHS["Mustard-Oil"];
+    return ICON_PATHS["Mustard-Seed"];
+  }
+
+  // 5. SUGAR SPECIALIZED MATCHING
+  if (
+    lower.includes("sugar") ||
+    lower.includes("jaggery") ||
+    lower.includes("gur") ||
+    lower.includes("shakkar") ||
+    lower.includes("cheeni") ||
+    (vertical && vertical.toLowerCase().includes("sugar"))
+  ) {
+    if (lower.includes("cane") || lower.includes("ganna"))
+      return ICON_PATHS["Sugarcane"];
+    if (lower.includes("jaggery") || lower.includes("gur"))
+      return ICON_PATHS["Jaggery"];
+    if (lower.includes("shakkar") || lower.includes("brown"))
+      return ICON_PATHS["Brown-Sugar"];
+    return ICON_PATHS["Sugar"];
+  }
+
+  // 6. WHEAT SPECIALIZED MATCHING
+  if (
+    lower.includes("wheat") ||
+    (vertical && vertical.toLowerCase() === "wheat")
+  ) {
+    if (
+      clean.includes("specialflour") ||
+      (lower.includes("flour") && lower.includes("special"))
+    )
+      return ICON_PATHS["Special-Flour"];
+    if (
+      clean.includes("refinedflour") ||
+      clean.includes("fineflour") ||
+      lower.includes("maida")
+    )
+      return ICON_PATHS["Fine-Flour"];
+    if (clean === "flour" || lower.includes("atta")) return ICON_PATHS["Flour"];
+    if (
+      lower.includes("sooji") ||
+      lower.includes("semolina") ||
+      lower.includes("suji")
+    )
+      return ICON_PATHS["Semolina"];
+    if (lower.includes("bran") || lower.includes("choker"))
+      return ICON_PATHS["Bran"];
+    if (
+      lower.includes("straw") ||
+      lower.includes("toori") ||
+      lower.includes("bhusa")
+    )
+      return ICON_PATHS["Straw"];
+    if (lower.includes("sorghum") || lower.includes("jowar"))
+      return ICON_PATHS["Sorghum"];
+    if (lower.includes("barley") || lower.includes("jau"))
+      return ICON_PATHS["Barley"];
+    if (lower.includes("oat") || lower.includes("jawi"))
+      return ICON_PATHS["Oat"];
+    return ICON_PATHS["Wheat"];
+  }
+
+  // 7. DATES SPECIALIZED MATCHING
+  if (
+    lower.includes("date") ||
+    lower.includes("khajoor") ||
+    lower.includes("chuara") ||
+    (vertical && vertical.toLowerCase() === "dates")
+  ) {
+    if (lower.includes("ajwa")) return ICON_PATHS["Ajwa"];
+    if (lower.includes("amber")) return ICON_PATHS["Amber"];
+    if (lower.includes("black aseel") || lower.includes("black-aseel"))
+      return ICON_PATHS["Black-Aseel-Dried"];
+    if (lower.includes("rangkat") && lower.includes("aseel"))
+      return ICON_PATHS["Rangkat-Aseel-Dried"];
+    if (lower.includes("rangkat") && lower.includes("dhaki"))
+      return ICON_PATHS["Rangkat-Dhaki-Dried"];
+    if (
+      lower.includes("aseel") &&
+      (lower.includes("chuara") ||
+        lower.includes("dry") ||
+        lower.includes("dried"))
+    )
+      return ICON_PATHS["Aseel-Dried"];
+    if (lower.includes("aseel")) return ICON_PATHS["Aseel"];
+    if (lower.includes("begum") || lower.includes("jangi"))
+      return ICON_PATHS["Begum-Jangi"];
+    if (lower.includes("dhaki")) return ICON_PATHS["Dhaki-Dried"];
+    if (lower.includes("jamsor")) return ICON_PATHS["Jamsor"];
+    if (lower.includes("karbala")) return ICON_PATHS["Karbala"];
+    if (lower.includes("kupra")) return ICON_PATHS["Kupra"];
+    if (lower.includes("mazafati")) return ICON_PATHS["Mazafati"];
+    if (lower.includes("nar")) return ICON_PATHS["Nar-Dried"];
+    if (lower.includes("rabbi")) return ICON_PATHS["Rabbi-Dates"];
+    if (lower.includes("sharifa")) return ICON_PATHS["Sharifa-Dates"];
+    if (lower.includes("zahidi")) return ICON_PATHS["Zahidi-Dates"];
+    return `${PRODUCTS_PATH}/dates200.png`;
+  }
+
+  // 8. DRY FRUITS SPECIALIZED MATCHING
+  if (lower.includes("almond") || lower.includes("badam")) {
+    if (lower.includes("american")) return ICON_PATHS["Almond-American"];
+    if (lower.includes("australian")) return ICON_PATHS["Almond-Australian"];
+    return ICON_PATHS["Almond-Desi"];
+  }
+  if (lower.includes("cashew") || lower.includes("kaju"))
+    return ICON_PATHS["Cashew"];
+  if (lower.includes("walnut") || lower.includes("akhrot"))
+    return ICON_PATHS["Walnut"];
+  if (lower.includes("fig") || lower.includes("anjeer"))
+    return ICON_PATHS["Fig"];
+  if (lower.includes("pistachio") || lower.includes("pista"))
+    return ICON_PATHS["Pistachio"];
+  if (lower.includes("raisin") || lower.includes("kishmish"))
+    return ICON_PATHS["Dried-Raisins"];
+
+  // 9. EDIBLE OILS SPECIALIZED MATCHING
+  if (lower.includes("canola")) {
+    if (lower.includes("meal")) return ICON_PATHS["Canola-Meal"];
+    if (lower.includes("oil")) return ICON_PATHS["Canola-Oil"];
+    return ICON_PATHS["Canola-Seed"];
+  }
+  if (lower.includes("sunflower") || lower.includes("surajmukhi")) {
+    if (lower.includes("meal")) return ICON_PATHS["Sunflower-Meal"];
+    if (lower.includes("oil")) return ICON_PATHS["Sunflower-Oil"];
+    return ICON_PATHS["Sunflower-Seed"];
+  }
+  if (
+    lower.includes("taara") ||
+    lower.includes("meera") ||
+    lower.includes("arugula") ||
+    lower.includes("taramira")
+  ) {
+    return ICON_PATHS["Arugula"];
+  }
+  if (lower.includes("castor") || lower.includes("arand"))
+    return ICON_PATHS["Castor"];
+  if (lower.includes("soy") || lower.includes("soya"))
+    return ICON_PATHS["Soybean"];
+  if (lower.includes("camelina")) return ICON_PATHS["Canola-Seed"];
+
+  // 10. FERTILIZERS SPECIALIZED MATCHING
+  if (lower.includes("urea")) {
+    if (lower.includes("zabardast")) return ICON_PATHS["Zabardast-Urea"];
+    return ICON_PATHS["Urea"];
+  }
+  if (lower.includes("dap")) return ICON_PATHS["DAP"];
+  if (lower.includes("npk")) return ICON_PATHS["NPK"];
+  if (lower.includes("np")) return ICON_PATHS["NP"];
+  if (lower.includes("ssp")) return ICON_PATHS["SSP"];
+  if (lower.includes("mop")) return ICON_PATHS["MOP"];
+  if (lower.includes("tsp")) return ICON_PATHS["TSP"];
+  if (lower.includes("can")) return ICON_PATHS["CAN"];
+  if (lower.includes("sop")) return ICON_PATHS["SOP-G"];
+  if (
+    lower.includes("ammonium sulphate") ||
+    lower.includes("ammonium-sulphate")
+  )
+    return ICON_PATHS["Ammonium-Sulphate"];
+  if (lower.includes("nitrate")) return ICON_PATHS["Ammonium-Nitrate"];
+  if (lower.includes("guara")) return ICON_PATHS["Pak-Arab-Guara"];
+  if (lower.includes("enrich")) return ICON_PATHS["Enrich"];
+
+  // 11. VEGETABLES SPECIALIZED MATCHING
+  if (lower.includes("potato") || lower.includes("aloo")) {
+    if (lower.includes("goli")) return ICON_PATHS["Potato-Goli"];
+    if (lower.includes("santa")) return ICON_PATHS["Potato-Santa"];
+    if (lower.includes("red") || lower.includes("laal"))
+      return ICON_PATHS["Potato-Red"];
+    if (lower.includes("white") || lower.includes("sufaid"))
+      return ICON_PATHS["Potato-White"];
+    if (lower.includes("mozika")) return ICON_PATHS["Potato-Mozika"];
+    if (lower.includes("lr")) return ICON_PATHS["Potato-LR"];
+    if (lower.includes("raveera")) return ICON_PATHS["Potato-Raveera"];
+    if (lower.includes("seed") || lower.includes("beej"))
+      return ICON_PATHS["Potato-Seed"];
+    if (
+      lower.includes("stone") ||
+      lower.includes("astras") ||
+      lower.includes("curda") ||
+      lower.includes("ismi")
+    )
+      return ICON_PATHS["Potato-Stone"];
+    return `${PRODUCTS_PATH}/vegetables200.png`;
+  }
+  if (lower.includes("onion") || lower.includes("pyaz"))
+    return ICON_PATHS["Onion"];
+  if (lower.includes("tomato") || lower.includes("tamatar"))
+    return ICON_PATHS["Tomato"];
+  if (lower.includes("garlic") || lower.includes("lehsan")) {
+    if (
+      lower.includes("china") ||
+      lower.includes("chinese") ||
+      lower.includes("g1")
+    )
+      return ICON_PATHS["Garlic-Chinese"];
+    return ICON_PATHS["Garlic-Desi"];
+  }
+  if (lower.includes("ginger") || lower.includes("adrak"))
+    return ICON_PATHS["Ginger"];
+  if (lower.includes("chilli") || lower.includes("mirch"))
+    return (
+      ICON_PATHS["Green-Chilli"] || `${PRODUCTS_PATH}/chillies200.png`
+    );
+  if (lower.includes("bottle gourd") || lower.includes("kaddu"))
+    return ICON_PATHS["Bottle-Gourd"];
+  if (lower.includes("ridge gourd") || lower.includes("tori"))
+    return ICON_PATHS["Ridge-Gourd"];
+  if (lower.includes("round gourd") || lower.includes("tinda"))
+    return ICON_PATHS["Round-Gourd"];
+  if (lower.includes("brinjal") || lower.includes("baingan")) {
+    if (lower.includes("long") || lower.includes("lamba"))
+      return ICON_PATHS["Brinjal-Long"];
+    return ICON_PATHS["Brinjal-Round"];
+  }
+  if (lower.includes("capsicum") || lower.includes("shimla"))
+    return ICON_PATHS["Capsicum"];
+  if (lower.includes("cauliflower") || lower.includes("phool gobhi"))
+    return ICON_PATHS["Cauliflower"];
+  if (lower.includes("cabbage") || lower.includes("band gobhi"))
+    return ICON_PATHS["cabbage"];
+  if (lower.includes("carrot") || lower.includes("gajar"))
+    return ICON_PATHS["carrot"];
+  if (lower.includes("spinach") || lower.includes("palak"))
+    return ICON_PATHS["spinach"];
+  if (lower.includes("pea") || lower.includes("matar"))
+    return ICON_PATHS["peas"];
+  if (lower.includes("okra") || lower.includes("bhindi"))
+    return ICON_PATHS["okra"];
+  if (lower.includes("cucumber") || lower.includes("kheera"))
+    return ICON_PATHS["cucumber"];
+  if (lower.includes("turnip") || lower.includes("shalgam"))
+    return ICON_PATHS["turnip"];
+  if (lower.includes("broccoli")) return ICON_PATHS["Broccoli"];
+
+  // 12. PADDY & RICE
+  if (
+    lower.includes("paddy") ||
+    lower.includes("dhan") ||
+    (vertical && vertical.toLowerCase() === "paddy")
+  ) {
+    return `${PRODUCTS_PATH}/paddy200.png`;
+  }
+  if (
+    lower.includes("rice") ||
+    lower.includes("chawal") ||
+    (vertical && vertical.toLowerCase() === "rice")
+  ) {
+    return `${PRODUCTS_PATH}/rice200.png`;
+  }
+
+  // 13. Direct / Cleaned Lookups
+  if (ICON_PATHS[n]) return ICON_PATHS[n];
   if (ICON_PATHS[lower]) return ICON_PATHS[lower];
 
-  const lowerHyphen = lower.replace(/\s+/g, "-");
-  if (ICON_PATHS[lowerHyphen]) return ICON_PATHS[lowerHyphen];
-
-  const lowerClean = lower.replace(/[-_\s]+/g, "");
-  if (ICON_PATHS[lowerClean]) return ICON_PATHS[lowerClean];
-
-  // 4. product_SPRITE_KEY mapping
-  const spriteKey =
-    product_SPRITE_KEY[n] ||
-    product_SPRITE_KEY[hyphenated] ||
-    product_SPRITE_KEY[lower] ||
-    product_SPRITE_KEY[lowerHyphen] ||
-    product_SPRITE_KEY[lowerClean];
-
-  if (spriteKey) {
-    if (ICON_PATHS[spriteKey]) return ICON_PATHS[spriteKey];
-    const spriteHyphen = spriteKey.replace(/\s+/g, "-");
-    if (ICON_PATHS[spriteHyphen]) return ICON_PATHS[spriteHyphen];
-    const spriteLower = spriteKey.toLowerCase();
-    if (ICON_PATHS[spriteLower]) return ICON_PATHS[spriteLower];
-    const spriteClean = spriteLower.replace(/[-_\s]+/g, "");
-    if (ICON_PATHS[spriteClean]) return ICON_PATHS[spriteClean];
-  }
-
-  // 5. Case-insensitive key match in ICON_PATHS
-  const foundKey = Object.keys(ICON_PATHS).find((k) => {
-    const kl = k.toLowerCase();
-    const klClean = kl.replace(/[-_\s]+/g, "");
-    return kl === lower || kl === lowerHyphen || klClean === lowerClean;
-  });
-  if (foundKey && ICON_PATHS[foundKey]) return ICON_PATHS[foundKey];
-
-  // 6. By-product specific pattern matching
-  if (lowerClean.includes("specialflour") || (lower.includes("flour") && lower.includes("special"))) {
-    return ICON_PATHS["Special-Flour"] || `${BYPRODUCTS_PATH}/wheat/Special-Flour.png`;
-  }
-  if (lowerClean.includes("refinedflour") || lowerClean.includes("fineflour") || lower.includes("maida")) {
-    return ICON_PATHS["Fine-Flour"] || `${BYPRODUCTS_PATH}/wheat/Fine-Flour.png`;
-  }
-  if (lowerClean === "flour" || lowerClean.includes("atta")) {
-    return ICON_PATHS["Flour"] || `${BYPRODUCTS_PATH}/wheat/Flour.png`;
-  }
-  if (lower.includes("sooji") || lower.includes("semolina") || lower.includes("suji")) {
-    return ICON_PATHS["Semolina"] || `${BYPRODUCTS_PATH}/wheat/Semolina.png`;
-  }
-  if (lower.includes("bran")) {
-    return ICON_PATHS["Bran"] || `${BYPRODUCTS_PATH}/wheat/Bran.png`;
-  }
-  if (lower.includes("straw")) {
-    return ICON_PATHS["Straw"] || `${BYPRODUCTS_PATH}/wheat/Straw.png`;
-  }
-
-  // 7. Vertical fallback
+  // 14. Vertical Fallback
   if (vertical) {
-    const vTrim = vertical.trim();
-    const vLower = vTrim.toLowerCase();
-    const vLowerHyphen = vLower.replace(/\s+/g, "-");
-    const vClean = vLower.replace(/[-_\s]+/g, "");
-    const vSprite =
-      product_SPRITE_KEY[vTrim] ||
-      product_SPRITE_KEY[vLower] ||
-      product_SPRITE_KEY[vLowerHyphen] ||
-      product_SPRITE_KEY[vClean];
-    if (vSprite && ICON_PATHS[vSprite]) return ICON_PATHS[vSprite];
-    if (ICON_PATHS[vTrim]) return ICON_PATHS[vTrim];
+    const vLower = vertical.trim().toLowerCase();
     if (ICON_PATHS[vLower]) return ICON_PATHS[vLower];
-    if (ICON_PATHS[vLowerHyphen]) return ICON_PATHS[vLowerHyphen];
-    if (ICON_PATHS[vClean]) return ICON_PATHS[vClean];
-    const foundVKey = Object.keys(ICON_PATHS).find((k) => {
-      const kl = k.toLowerCase();
-      const klClean = kl.replace(/[-_\s]+/g, "");
-      return kl === vLower || klClean === vClean;
-    });
-    if (foundVKey && ICON_PATHS[foundVKey]) return ICON_PATHS[foundVKey];
+    if (vLower === "grains") return `${PRODUCTS_PATH}/wheat200.png`;
+    if (
+      vLower === "fruits" ||
+      vLower === "fruit"
+    )
+      return `${PRODUCTS_PATH}/fruits200.png`;
+    if (
+      vLower === "vegetable" ||
+      vLower === "vegetables"
+    )
+      return `${PRODUCTS_PATH}/vegetables200.png`;
+    if (
+      vLower === "dry fruit" ||
+      vLower === "dry fruits" ||
+      vLower === "dryfruit" ||
+      vLower === "dryfruits"
+    )
+      return `${PRODUCTS_PATH}/dryfruits200.png`;
+    if (
+      vLower === "herbs" ||
+      vLower === "herbals" ||
+      vLower === "herbal" ||
+      vLower === "herb"
+    )
+      return `${PRODUCTS_PATH}/herbals200.png`;
+    if (vLower === "livestock") return `${PRODUCTS_PATH}/livestock200.png`;
+    if (vLower === "kiryana") return `${PRODUCTS_PATH}/kiryana200.png`;
+    if (vLower === "spices") return `${PRODUCTS_PATH}/spices200.png`;
+    if (vLower === "pulses") return `${PRODUCTS_PATH}/pulses200.png`;
+    if (vLower === "fertilizer" || vLower === "fertilizers")
+      return `${PRODUCTS_PATH}/fertilizers.png`;
   }
 
-  // 7. Default
   return ICON_PATHS.wheat || `${PRODUCTS_PATH}/wheat200.png`;
 }
 
@@ -6772,17 +7120,19 @@ function CardStatCell({
 
 function ByProductNationalCard({
   stats,
+  product,
   vertical,
   onClick,
   onMorePriceTypesClick,
 }: {
   stats: ByproductNationalStats;
+  product?: string;
   vertical?: string;
   onClick: () => void;
   onMorePriceTypesClick?: () => void;
 }) {
   const { lang, tc, tr } = useLang();
-  const iconSrc = getproductIconSrc(stats.byproduct, vertical);
+  const iconSrc = getproductIconSrc(stats.byproduct, product || vertical);
   // Policy: any by-product with arrival reported at all (totalArrival > 0)
   // shows Total Arrival on the card. Only a by-product with arrival absent
   // in every row falls back to showing the contributing-location count.
@@ -6806,13 +7156,13 @@ function ByProductNationalCard({
     >
       {/* Subtle Concentric Rings Motif in bottom-right corner */}
       <div
-        className="absolute -bottom-8 -right-8 pointer-events-none rounded-full"
+        className="absolute -bottom-7 -right-7 pointer-events-none rounded-full"
         style={{
-          width: 140,
-          height: 140,
+          width: 148,
+          height: 148,
           border: '1.5px solid rgba(16, 185, 129, 0.14)',
           boxShadow:
-            'inset 0 0 0 16px rgba(16, 185, 129, 0.045), inset 0 0 0 34px rgba(16, 185, 129, 0.02)',
+            'inset 0 0 0 16px rgba(16, 185, 129, 0.045), inset 0 0 0 36px rgba(16, 185, 129, 0.02)',
           zIndex: 0,
         }}
       />
@@ -6941,8 +7291,8 @@ function ByProductNationalCard({
 
       {/* Bottom Row: Realistic Timestamp on Left + Crisp Crop Illustration on Right */}
       <div className="h-px w-full mt-auto" style={{ background: '#E7F0EB' }} />
-      <div className="relative z-10 flex items-end justify-between pt-1.5 min-h-[46px]">
-        <div className="flex items-center gap-1.5 text-[9.5px] sm:text-[10px] font-bold text-[#52635F] pb-1">
+      <div className="relative z-10 flex items-end justify-between pt-1.5 min-h-[50px]">
+        <div className="flex items-center gap-1.5 text-[9.5px] sm:text-[10px] font-bold text-[#52635F] pb-1.5">
           <svg
             width="12"
             height="12"
@@ -6963,11 +7313,11 @@ function ByProductNationalCard({
         </div>
 
         {/* Large Crisp Crop Illustration */}
-        <div className="relative -mb-2 -mr-2 pointer-events-none flex-shrink-0">
+        <div className="relative -mb-2.5 -mr-2.5 pointer-events-none flex-shrink-0 flex items-center justify-center">
           <img
             src={iconSrc}
             alt={stats.byproduct}
-            className="w-[74px] h-[74px] sm:w-[84px] sm:h-[84px] object-contain drop-shadow-[0_6px_14px_rgba(0,0,0,0.16)] transition-transform duration-200"
+            className="w-[82px] h-[82px] sm:w-[94px] sm:h-[94px] max-w-[94px] max-h-[94px] object-contain drop-shadow-[0_6px_14px_rgba(0,0,0,0.16)] transition-transform duration-200"
             loading="lazy"
           />
         </div>
@@ -7654,6 +8004,7 @@ function ByProductCombinedScreen({
                 <ByProductNationalCard
                   key={`${activeProduct?.product}-${bp}`}
                   stats={stats}
+                  product={activeProduct?.product}
                   vertical={activeProduct?.vertical}
                   onClick={navigateToDetail}
                   onMorePriceTypesClick={navigateToDetail}
