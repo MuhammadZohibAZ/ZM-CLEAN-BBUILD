@@ -7389,23 +7389,33 @@ function ByProductNationalCard({
         }}
       />
 
-      {/* Top Header: Full Width Title & Rate Type */}
-      <div className="relative z-10 w-full mb-2">
-        <h3
-          className="text-[15.5px] sm:text-[17px] font-black text-[#143B33] leading-tight tracking-tight truncate"
-          style={{
-            fontFamily: lang === 'ur' ? URDU_FONT : "'Inter', sans-serif",
-          }}
-          title={tc(stats.byproduct)}
+      {/* Top Header: Title & Rate Type on Left + Date on Right */}
+      <div className="relative z-10 w-full mb-2 flex items-start justify-between gap-1.5">
+        <div className="flex-1 min-w-0">
+          <h3
+            className="text-[15px] sm:text-[16.5px] font-black text-[#143B33] leading-tight tracking-tight truncate"
+            style={{
+              fontFamily: lang === 'ur' ? URDU_FONT : "'Inter', sans-serif",
+            }}
+            title={tc(stats.byproduct)}
+          >
+            {tc(stats.byproduct)}
+          </h3>
+          <p
+            className="text-[11px] sm:text-[11.5px] font-bold text-[#087F63] mt-0.5 leading-none truncate"
+            style={{ fontFamily: lang === 'ur' ? URDU_FONT : 'inherit' }}
+          >
+            {tr(stats.mostOccurringRateType)}
+          </p>
+        </div>
+
+        {/* Date on Top Right */}
+        <span
+          className="text-[10px] sm:text-[10.5px] font-extrabold text-[#52635F] whitespace-nowrap pt-0.5 flex-shrink-0"
+          style={{ fontFamily: lang === 'ur' ? URDU_FONT : "'Inter', sans-serif" }}
         >
-          {tc(stats.byproduct)}
-        </h3>
-        <p
-          className="text-[11px] sm:text-[11.5px] font-bold text-[#087F63] mt-0.5 leading-none truncate"
-          style={{ fontFamily: lang === 'ur' ? URDU_FONT : 'inherit' }}
-        >
-          {tr(stats.mostOccurringRateType)}
-        </p>
+          {lang === 'ur' ? '۱۴ ستمبر' : '14 September'}
+        </span>
       </div>
 
       {/* Metric rows: exactly 3 rows across every card for 100% uniform height and structure */}
@@ -7466,38 +7476,30 @@ function ByProductNationalCard({
         </div>
       </div>
 
-      {/* Bottom Row: Realistic Timestamp on Left + Crisp Crop Illustration on Right */}
+      {/* Bottom Row: Bigger Prominent Time Pill on Left + Crisp Crop Illustration on Right */}
       <div className="h-px w-full mt-auto" style={{ background: '#E7F0EB' }} />
-      <div className="relative z-10 flex items-end justify-between pt-1.5 min-h-[50px]">
-        <div className="flex flex-col items-start gap-0.5 pb-1 max-w-[62%] min-w-0">
-          <span
-            className="text-[10px] sm:text-[10.5px] font-black text-[#143B33] leading-tight whitespace-nowrap"
-            style={{ fontFamily: lang === "ur" ? URDU_FONT : "'Inter', sans-serif" }}
+      <div className="relative z-10 flex items-end justify-between pt-2 min-h-[52px]">
+        <div
+          className="flex items-center gap-1.5 text-[9.5px] sm:text-[10px] font-bold text-[#065F46] bg-[#E8F8F3] border border-[#BCE8D8] py-1 px-2.5 rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.04)] mb-1 max-w-[62%]"
+          style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+        >
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#087F63"
+            strokeWidth="2.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="flex-shrink-0"
           >
-            {lang === "ur" ? "۱۴ ستمبر" : "14 September"}
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
+          <span className="truncate">
+            {getCardUpdatedAgo(stats.catalogId || stats.byproduct, lang)}
           </span>
-          <div
-            className="flex items-center gap-1 text-[8.5px] sm:text-[9px] font-bold text-[#065F46] bg-[#E8F8F3] border border-[#BCE8D8] py-0.5 px-1.5 rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.03)]"
-            style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-          >
-            <svg
-              width="10"
-              height="10"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#087F63"
-              strokeWidth="2.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="flex-shrink-0"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-            <span className="truncate">
-              {getCardUpdatedAgo(stats.catalogId || stats.byproduct, lang)}
-            </span>
-          </div>
         </div>
 
         {/* Large Crisp Crop Illustration */}
@@ -7716,7 +7718,7 @@ function ByProductCombinedScreen({
     const d = curDate;
     const islamic = getIslamicDate(d, lang);
     const monthsUr = ['جنوری', 'فروری', 'مارچ', 'اپریل', 'مئی', 'جون', 'جولائی', 'اگست', 'ستمبر', 'اکتوبر', 'نومبر', 'دسمبر'];
-    const monthsEn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthsEn = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const day = d.getDate();
     const mIdx = d.getMonth();
     const gregDayMonth = lang === 'ur' ? `${toUrduDigits(day)} ${monthsUr[mIdx]}` : `${day} ${monthsEn[mIdx]}`;
@@ -11881,24 +11883,6 @@ function ProductRatesScreen({
           className="flex-1 min-h-0 overflow-y-auto px-3.5 pt-2 pb-6 flex flex-col gap-2"
           style={{ scrollbarWidth: "thin", WebkitOverflowScrolling: "touch" }}
         >
-          {!apiRowsLoading && rows.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-16 opacity-50">
-              {/* <span style={{ fontSize: 48 }}></span> */}
-              <p
-                className="font-semibold mt-2"
-                style={{
-                  fontSize: lang === "ur" ? 18 : 14,
-                  fontFamily:
-                    lang === "ur"
-                      ? URDU_FONT
-                      : "inherit",
-                }}
-              >
-                {lang === "ur" ? "ڈیٹا دستیاب نہیں ہے۔" : "No data available."}
-              </p>
-            </div>
-          )}
-
           {/* Today-Only Free Preview Notice Banner */}
           {isProductTodayOnly(product) && (
             <div
@@ -11951,7 +11935,7 @@ function ProductRatesScreen({
             </div>
           )}
 
-          {tab === "overview" && rows.length > 0 && (
+          {tab === "overview" && (
             <>
 
               {/* Dismiss stat date calendar on outside click */}
@@ -12389,8 +12373,8 @@ function ProductRatesScreen({
                               {statDateFilter
                                 ? (lang === "ur"
                                   ? ["جنوری", "فروری", "مارچ", "اپریل", "مئی", "جون", "جولائی", "اگست", "ستمبر", "اکتوبر", "نومبر", "دسمبر"][statDateFilter.getMonth()]
-                                  : ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][statDateFilter.getMonth()])
-                                : (lang === "ur" ? "ستمبر" : "Sep")}
+                                  : ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][statDateFilter.getMonth()])
+                                : (lang === "ur" ? "ستمبر" : "September")}
                             </span>
                           </div>
                           <div
@@ -12627,9 +12611,10 @@ function ProductRatesScreen({
                               onClick={() => setAttrSheet(null)}
                             />
                             <div
-                              className="absolute z-50 top-[40px] left-0 w-[58%] min-w-[185px] bg-white rounded-2xl p-3.5 shadow-2xl border border-[#E2E8F0] flex flex-col gap-2 animate-fadeIn"
+                              className="absolute z-50 top-[40px] left-0 w-[58%] min-w-[190px] bg-white rounded-2xl p-3 shadow-2xl border border-[#E2E8F0] flex flex-col animate-fadeIn"
                               style={{
                                 boxShadow: "0 16px 40px rgba(0,0,0,0.22)",
+                                maxHeight: "230px",
                               }}
                               onClick={(e) => e.stopPropagation()}
                             >
@@ -12637,13 +12622,13 @@ function ProductRatesScreen({
                               <div className="absolute -top-1.5 left-6 w-3 h-3 bg-white border-t border-l border-[#E2E8F0] rotate-45" />
 
                               {/* Header Title */}
-                              <div className="font-bold text-[13px] text-[#183B34] pb-1 border-b border-[#F1F5F9]">
+                              <div className="font-bold text-[13px] text-[#183B34] pb-1.5 border-b border-[#F1F5F9] flex-shrink-0">
                                 {lang === "ur" ? "نرخ کی قسم" : "Rate Type"}
                               </div>
 
                               {/* Single-Select Radio Options List */}
                               <div
-                                className="flex flex-col gap-1.5 py-0.5 max-h-[155px] overflow-y-auto pr-1 zm-popover-scrollbar"
+                                className="flex flex-col gap-1 py-1 flex-1 min-h-0 overflow-y-auto pr-1 zm-popover-scrollbar"
                                 style={{
                                   scrollbarWidth: "thin",
                                   scrollbarColor: "#087F63 #F1F5F9",
@@ -12651,13 +12636,13 @@ function ProductRatesScreen({
                                 }}
                               >
                                 {ALL_RATE_TYPES.map((rt) => {
-                                  const isSelected = (attrRateType || "Mandi Rate") === rt;
+                                  const isSelected = attrRateType === rt;
                                   return (
                                     <button
                                       key={rt}
                                       type="button"
                                       onClick={() => {
-                                        setAttrRateType(rt);
+                                        setAttrRateType((prev) => (prev === rt ? null : rt));
                                       }}
                                       className="tap-target flex items-center gap-2.5 py-1 px-1 rounded-lg hover:bg-[#F8FAF9] transition text-left cursor-pointer active:scale-98"
                                     >
@@ -12685,12 +12670,12 @@ function ProductRatesScreen({
                                 })}
                               </div>
 
-                              {/* Done Button */}
-                              <div className="flex justify-end pt-1">
+                              {/* Done Button in Fixed Footer */}
+                              <div className="flex justify-end pt-1.5 border-t border-[#F1F5F9] mt-auto flex-shrink-0">
                                 <button
                                   type="button"
                                   onClick={() => setAttrSheet(null)}
-                                  className="px-3.5 py-1 bg-[#087F63] text-white rounded-lg text-[11.5px] font-bold hover:bg-[#066A52] active:scale-95 transition shadow-sm"
+                                  className="px-4 py-1.5 bg-[#087F63] text-white rounded-lg text-[12px] font-bold hover:bg-[#066A52] active:scale-95 transition shadow-sm"
                                   style={{
                                     fontFamily: lang === "ur" ? URDU_FONT : "inherit",
                                   }}
@@ -12895,12 +12880,12 @@ function ProductRatesScreen({
                                       : null;
 
                         const setSpecVal = (v: string) => {
-                          if (attrSheet === "newold") setAttrNewOld(v);
-                          else if (attrSheet === "moisture") setAttrMoisture(v);
-                          else if (attrSheet === "color") setAttrColor(v);
-                          else if (attrSheet === "spec") setAttrSpec(v);
-                          else if (attrSheet === "variety") setAttrVariety(v);
-                          else if (attrSheet === "condition") setAttrCondition(v);
+                          if (attrSheet === "newold") setAttrNewOld((prev) => (prev === v ? null : v));
+                          else if (attrSheet === "moisture") setAttrMoisture((prev) => (prev === v ? null : v));
+                          else if (attrSheet === "color") setAttrColor((prev) => (prev === v ? null : v));
+                          else if (attrSheet === "spec") setAttrSpec((prev) => (prev === v ? null : v));
+                          else if (attrSheet === "variety") setAttrVariety((prev) => (prev === v ? null : v));
+                          else if (attrSheet === "condition") setAttrCondition((prev) => (prev === v ? null : v));
                         };
 
                         const formatOptLabel = (k: string, opt: string) => {
@@ -13053,13 +13038,15 @@ function ProductRatesScreen({
                             {/* FLOATING DROPDOWN POPOVER CARD */}
                             {(isLeftColActive || isRightColActive) && (
                               <div
-                                className={`absolute z-40 bg-white rounded-2xl p-3.5 shadow-2xl border border-[#E2E8F0] flex flex-col gap-2 animate-fadeIn ${
+                                className={`absolute z-50 bg-white rounded-2xl p-3 shadow-2xl border border-[#E2E8F0] flex flex-col animate-fadeIn ${
                                   isRightColActive
                                     ? "right-0 w-[54%] min-w-[175px]"
                                     : "left-0 w-[54%] min-w-[175px]"
                                 }`}
                                 style={{
                                   top: popoverTop,
+                                  maxHeight: "230px",
+                                  boxShadow: "0 16px 40px rgba(0,0,0,0.22)",
                                 }}
                                 onClick={(e) => e.stopPropagation()}
                               >
@@ -13071,13 +13058,13 @@ function ProductRatesScreen({
                                 />
 
                                 {/* Header Title */}
-                                <div className="font-bold text-[13px] text-[#183B34] pb-1 border-b border-[#F1F5F9]">
+                                <div className="font-bold text-[13px] text-[#183B34] pb-1.5 border-b border-[#F1F5F9] flex-shrink-0">
                                   {activeTitle}
                                 </div>
 
                                 {/* Single-Select Radio Options List */}
                                 <div
-                                  className="flex flex-col gap-1.5 py-0.5 max-h-[140px] overflow-y-auto pr-1 zm-popover-scrollbar"
+                                  className="flex flex-col gap-1 py-1 flex-1 min-h-0 overflow-y-auto pr-1 zm-popover-scrollbar"
                                   style={{
                                     scrollbarWidth: "thin",
                                     scrollbarColor: "#087F63 #F1F5F9",
@@ -13121,12 +13108,12 @@ function ProductRatesScreen({
                                   })}
                                 </div>
 
-                                {/* Done Button */}
-                                <div className="flex justify-end pt-1">
+                                {/* Done Button in Fixed Footer */}
+                                <div className="flex justify-end pt-1.5 border-t border-[#F1F5F9] mt-auto flex-shrink-0">
                                   <button
                                     type="button"
                                     onClick={() => setAttrSheet(null)}
-                                    className="px-3.5 py-1 bg-[#087F63] text-white rounded-lg text-[11.5px] font-bold hover:bg-[#066A52] active:scale-95 transition shadow-sm"
+                                    className="px-4 py-1.5 bg-[#087F63] text-white rounded-lg text-[12px] font-bold hover:bg-[#066A52] active:scale-95 transition shadow-sm"
                                     style={{
                                       fontFamily: lang === "ur" ? URDU_FONT : "inherit",
                                     }}
@@ -14310,7 +14297,31 @@ function ProductRatesScreen({
                               </tr>
                             </thead>
                             <tbody>
-                              {tableRows.map((r, ci) => {
+                              {tableRows.length === 0 ? (
+                                <tr>
+                                  <td
+                                    colSpan={12}
+                                    style={{
+                                      padding: "32px 16px",
+                                      textAlign: "center",
+                                      color: "#80918B",
+                                    }}
+                                  >
+                                    <div className="flex flex-col items-center justify-center gap-1">
+                                      <span className="text-2xl">📋</span>
+                                      <p
+                                        className="font-bold text-[13px] text-[#52635F]"
+                                        style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                                      >
+                                        {lang === "ur"
+                                          ? "اس انتخاب کے لیے کوئی ڈیٹا دستیاب نہیں ہے"
+                                          : "No data available for this selection"}
+                                      </p>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ) : (
+                                tableRows.map((r, ci) => {
                                 // Multi-interval trend calculation derived from real Excel observations
                                 const rowTimeline = getExcelTimeline({
                                   product,
@@ -15502,7 +15513,8 @@ function ProductRatesScreen({
                                     )}
                                   </React.Fragment>
                                 );
-                              })}
+                              })
+                            )}
                             </tbody>
                           </table>
                         )}
@@ -16406,7 +16418,7 @@ function ProductRatesScreen({
       {/* 2. TRENDS SCREEN CONTAINER - 100% Isolated */}
       {tab === "trends" && (
         <div
-          className="flex-1 min-h-0 overflow-y-auto px-3.5 pt-2 pb-52 flex flex-col gap-3"
+          className="flex-1 min-h-0 overflow-y-auto px-3.5 pt-2 pb-6 flex flex-col gap-3"
           style={{
             scrollbarWidth: "thin",
             WebkitOverflowScrolling: "touch",
