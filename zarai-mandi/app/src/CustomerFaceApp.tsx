@@ -7150,6 +7150,73 @@ function CardStatCell({
   );
 }
 
+function LocationStatCell({
+  marketCount,
+  divider,
+  fullWidth,
+  lang,
+}: {
+  marketCount: number;
+  divider?: boolean;
+  fullWidth?: boolean;
+  lang: string;
+}) {
+  const countDisplay = marketCount > 0 ? (
+    <AnimatedCounter target={marketCount} suffix="+" formatUrdu={lang === 'ur'} />
+  ) : (
+    '0'
+  );
+
+  return (
+    <div
+      className={`flex-1 min-w-0 flex flex-col justify-center py-0.5 ${divider ? 'pl-2 ml-1 border-l border-[#D9E7E1]' : 'pr-1'} ${fullWidth ? 'w-full' : ''}`}
+      style={divider ? { borderColor: '#D9E7E1' } : undefined}
+    >
+      <span className="block text-[10px] font-bold text-[#52635F] leading-tight truncate">
+        {lang === 'ur' ? 'فعال منڈیاں' : 'Active Mandis'}
+      </span>
+
+      <div className="inline-flex items-center my-0.5 max-w-full">
+        <span
+          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md transition-all font-black text-[#065F46] leading-none whitespace-nowrap"
+          style={{
+            background: 'linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)',
+            border: '1px solid #A7F3D0',
+            boxShadow: '0 1px 2px rgba(6, 95, 70, 0.06)',
+            fontSize: 'clamp(10.5px, 3.1vw, 12px)',
+          }}
+        >
+          <svg
+            width="10"
+            height="10"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#059669"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="flex-shrink-0"
+          >
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+            <circle cx="12" cy="10" r="3" fill="#059669" />
+          </svg>
+          <span>{countDisplay}</span>
+          <span className="text-[9px] font-bold text-[#059669]">
+            {lang === 'ur' ? 'منڈیاں' : 'Mandis'}
+          </span>
+          <span className="text-[9px] font-black text-[#059669] opacity-70">
+            ›
+          </span>
+        </span>
+      </div>
+
+      <span className="block text-[8.5px] font-extrabold text-[#087F63] leading-none truncate">
+        {lang === 'ur' ? 'تمام ریٹس دیکھیں ›' : 'View all rates ›'}
+      </span>
+    </div>
+  );
+}
+
 function ByProductNationalCard({
   stats,
   product,
@@ -7262,16 +7329,9 @@ function ByProductNationalCard({
               caption={lang === 'ur' ? 'فی ۴۰ کلو' : 'per 40 kg'}
             />
           ) : (
-            <CardStatCell
-              label={lang === 'ur' ? 'مقامات' : 'Locations'}
-              value={
-                stats.hasData && stats.markets > 0 ? (
-                  <AnimatedCounter target={stats.markets} suffix="+" formatUrdu={lang === 'ur'} />
-                ) : (
-                  '0'
-                )
-              }
-              valueColor="#087F63"
+            <LocationStatCell
+              marketCount={stats.markets}
+              lang={lang}
             />
           )}
 
@@ -7283,17 +7343,10 @@ function ByProductNationalCard({
               valueColor="#ff7b00ff"
             />
           ) : hasArrival ? (
-            <CardStatCell
+            <LocationStatCell
               divider
-              label={lang === 'ur' ? 'مقامات' : 'Locations'}
-              value={
-                stats.markets > 0 ? (
-                  <AnimatedCounter target={stats.markets} suffix="+" formatUrdu={lang === 'ur'} />
-                ) : (
-                  '0'
-                )
-              }
-              valueColor="#087F63"
+              marketCount={stats.markets}
+              lang={lang}
             />
           ) : (
             <div className="flex-1 min-w-0" />
@@ -7305,16 +7358,10 @@ function ByProductNationalCard({
           <>
             <div className="h-px w-full my-2" style={{ background: '#E7F0EB' }} />
             <div className="flex w-full">
-              <CardStatCell
-                label={lang === 'ur' ? 'مقامات' : 'Locations'}
-                value={
-                  stats.markets > 0 ? (
-                    <AnimatedCounter target={stats.markets} suffix="+" formatUrdu={lang === 'ur'} />
-                  ) : (
-                    '0'
-                  )
-                }
-                valueColor="#087F63"
+              <LocationStatCell
+                fullWidth
+                marketCount={stats.markets}
+                lang={lang}
               />
             </div>
           </>
