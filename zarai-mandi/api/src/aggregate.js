@@ -522,14 +522,366 @@ function buildLocationFilter(locationKind, locationLabel, params) {
 // Moisture is handled separately above (computeCardStats): it's a
 // continuous measurement, not a category, so "most common raw string"
 // was never the right summary for it -- a computed average is.
-const SPECIAL_ATTR_PRIORITY = [
-  ["newOld", "new_old"],
-  ["color", "color"],
-  ["variety", "variety"],
-  ["spec", "specification"],
-  ["quality", "quality"],
-  ["origin", "origin"],
-];
+// User-designated special attribute mapping per product/byproduct.
+// Maps normalized (lowercase, alphanumeric only) product or byproduct names
+// to one of: 'origin', 'newOld', 'color', 'variety', 'spec', 'quality', 'moisture', or null.
+const SPECIAL_PRODUCT_ATTRIBUTES = {
+  // VEGETABLE
+  "bittergourd": "origin",
+  "bottlegourd": "origin",
+  "brinjalgol": "origin",
+  "brinjallamba": "origin",
+  "broccoli": "origin",
+  "cabbage": "origin",
+  "capsicum": "origin",
+  "carrot": "origin",
+  "cauliflower": "origin",
+  "cucumber": "origin",
+  "garlicchina": "origin",
+  "garlicdesi": "origin",
+  "ginger": "origin",
+  "guar": "origin",
+  "lemonchina": "origin",
+  "lemondesi": "origin",
+  "okra": "origin",
+  "oniongradea": "newOld",
+  "oniongradeb": "newOld",
+  "oniongradec": "newOld",
+  "pea": "origin",
+  "potatobeej": "origin",
+  "potatobeejgradea": "origin",
+  "potatobeejgradeb": "origin",
+  "potatobeejgradec": "origin",
+  "potatogoli": "origin",
+  "potatolr": "origin",
+  "potatolaal": "newOld",
+  "potatomozika": "newOld",
+  "potatoraveera": "origin",
+  "potatoraveeragradea": "origin",
+  "potatoraveeragradeb": "origin",
+  "potatoraveeragradec": "origin",
+  "potatosanta": "origin",
+  "potatostone": "origin",
+  "potatostonegradea": "origin",
+  "potatostonegradeb": "origin",
+  "potatostonegradec": "origin",
+  "potatosufaid": "origin",
+  "ridgegourd": "origin",
+  "roundgourd": "origin",
+  "saladleaves": "origin",
+  "shakarqandi": null,
+  "spinach": "origin",
+  "sweetpotato": "color",
+  "tomatogradea": "origin",
+  "tomatogradeb": "origin",
+  "tomatogradec": "origin",
+  "turnip": "origin",
+
+  // WHEAT
+  "chokar": null,
+  "flour": null,
+  "flourspecial": null,
+  "refinedflour": null,
+  "sooji": null,
+  "sorghum": "color",
+  "straw": null,
+  "wheat": "newOld",
+  "wheatbran": null,
+
+  // EDIBLE OIL
+  "canola": null,
+  "canolameal": null,
+  "canolaoil": null,
+  "canolaseed": "newOld",
+  "mustardcake": null,
+  "mustardoil": null,
+  "mustardseed": "newOld",
+  "sarsokhal": null,
+  "sarsooil": null,
+  "soybean": null,
+  "soybeanmeal": null,
+  "soybeanoil": null,
+  "soybeanoilwashed": null,
+  "sunflower": null,
+  "sunfloweroil": null,
+  "sunflowerseed": null,
+  "taarameera": null,
+  "taarameeraoil": null,
+
+  // PULSES (All None identified)
+  "gramblackthick": null,
+  "gramblackthin": null,
+  "grampulsethick": null,
+  "grampulsethickas": null,
+  "grampulsethin": null,
+  "grampulsethinas": null,
+  "gramwhite7mm": null,
+  "gramwhite9mm": null,
+  "mashsabut2": null,
+  "mashshellthick": null,
+  "mashshellthin": null,
+  "mashwashed1": null,
+  "mashwashed2": null,
+  "masoorpulsered": null,
+  "masoorsabut1": null,
+  "masoorsabut2": null,
+  "moongsabut1": null,
+  "moongsabut2": null,
+  "moongshell1": null,
+  "moongwashed1": null,
+  "moongwashed2": null,
+  "pigeonpeathick": null,
+  "pigeonpeathin": null,
+  "redlubya1": null,
+  "redlubya2": null,
+  "whitelubyathick": null,
+
+  // RICE / PADDY
+  "paddy1509": "newOld",
+  "paddy1692": "newOld",
+  "paddy1718": "newOld",
+  "paddy1847": "newOld",
+  "paddy86": "newOld",
+  "paddyc9": "newOld",
+  "paddyirri6": "newOld",
+  "paddyirri9": "newOld",
+  "paddyirrifine": "newOld",
+  "paddykainat1121": "newOld",
+  "paddylp18": "newOld",
+  "paddypp7": "newOld",
+  "paddysuper": "newOld",
+  "paddysuper515": "newOld",
+  "paddysupri": "newOld",
+
+  // FRUITS
+  "apple": "origin",
+  "apricot": "origin",
+  "banana": "origin",
+  "cherry": "origin",
+  "falsa": "origin",
+  "fruiter": "origin",
+  "grapefruit": "origin",
+  "grapes": "origin",
+  "kalakulluapple": "origin",
+  "kharbooza": "origin",
+  "mangoalmas": "origin",
+  "mangoanwerratul": "origin",
+  "mangoblackchunsa": "origin",
+  "mangodasheri": "origin",
+  "mangofajri": "origin",
+  "mangosaroli": "origin",
+  "mangosindhri": "origin",
+  "mangowhitechunsa": "origin",
+  "mausambi": "origin",
+  "oranges": null,
+  "papaya": "origin",
+  "peach": "origin",
+  "plum": "origin",
+  "pomegranate": "origin",
+  "sweetlime": "origin",
+  "watermelon": "origin",
+
+  // MILLED RICE
+  "1121basmati1": null,
+  "1121basmati2": "origin",
+  "1121kacha": null,
+  "1121steam": null,
+  "1121white": null,
+  "1509kacha": null,
+  "1509sella": "origin",
+  "1509steam": "origin",
+  "1509steambasmati": null,
+  "1509steamsila": null,
+  "1509white": null,
+  "1718kacha": null,
+  "1718steam": null,
+  "1847kacha": null,
+  "1847steam": null,
+  "386basmatinew": "origin",
+  "386basmatiold": "origin",
+  "c9basmati": null,
+  "c9sila": "newOld",
+  "c9steam": "newOld",
+  "c9white": "newOld",
+  "irri6": null,
+  "irri6sabut1": "origin",
+  "irri6white": null,
+  "irri9": "newOld",
+  "irritota": "origin",
+  "kainatdoublesteam": null,
+  "lal386new": "origin",
+  "lal386old": "origin",
+  "punia11211": "origin",
+  "punia11212": "origin",
+  "puniabasmati1": "origin",
+  "ricehusk": null,
+  "sella11211": "origin",
+  "sella386": "newOld",
+  "sellapunjab": "origin",
+  "shortgraintota": null,
+  "silky": "origin",
+  "silkysortex": "origin",
+  "superbasmatisindh": "origin",
+  "superkernel": null,
+  "suprinew": "origin",
+  "supriold": null,
+  "suprisila": "origin",
+  "totabasmati": "origin",
+
+  // MAIZE
+  "cornsilage": null,
+  "cornstarch": null,
+  "maizegradea": "newOld",
+  "maizegradeb": "newOld",
+  "maizegradec": "newOld",
+  "popcorn": "newOld",
+
+  // COTTON
+  "cottonseed": null,
+  "cottonseedcake": null,
+  "cottonseedoil": null,
+  "seedcottongradea": "color",
+  "seedcottongradeb": "color",
+  "seedcottongradec": "color",
+  "banola": null,
+  "banolakhal": null,
+  "banolaoil": null,
+  "phuttia": null,
+  "phuttib": null,
+  "phuttic": null,
+
+  // SPICES
+  "blackpepper": null,
+  "blackpepperpowder": null,
+  "cinnamon": null,
+  "clove": null,
+  "corianderseed": null,
+  "corianderseedpowder": null,
+  "cuminblack": null,
+  "cuminwhite": null,
+  "fennel": null,
+  "jaifal": null,
+  "largeblackcardamom": null,
+  "redchillipowder": null,
+  "redchilliwhole": null,
+  "smallcardamom": null,
+  "turmeric": null,
+
+  // SESAME
+  "sesamegradea": "color",
+  "sesamegradeb": "newOld",
+  "sesamegradec": "newOld",
+
+  // CHILLIES
+  "desichilli": null,
+  "greenchillilarge": "variety",
+  "greenchillimedium": "variety",
+  "greenchillismall": null,
+  "hybirdchilli": "spec",
+  "longichilli": "spec",
+  "reddesichilli": "spec",
+  "redhybirdchilli": "spec",
+  "redlongichilli": "spec",
+  "redrichstarchilli": "spec",
+  "redshingrichilli": "spec",
+  "redsummerqueenchilli": "spec",
+  "richstarchilli": "newOld",
+  "shingrichilli": null,
+
+  // DRY-FRUITS
+  "almondamerican": null,
+  "almondaustralian": null,
+  "almonddesi": null,
+  "cashew": null,
+  "fig": null,
+  "largeraisins": null,
+  "pistachio": null,
+  "walnut": null,
+
+  // OTHER VARIETIES
+  "barley": null,
+  "barseem": null,
+  "camelina": null,
+  "castorbean": null,
+  "eggtray": "spec",
+  "moongi": null,
+  "oat": null,
+  "quinoa": null,
+
+  // DATES
+  "ajwadates": null,
+  "amberdates": null,
+  "aseelchuara": null,
+  "aseeldates": "origin",
+  "begumjangidates": null,
+  "blackaseelchuara": null,
+  "dhakidrydates": null,
+  "jamsordates": null,
+  "karbaladates": null,
+  "kupradates": null,
+  "mazafatidates": null,
+  "narchuara": null,
+  "rabbidates": null,
+  "rangkataseelchuara": null,
+  "rangkatblackaseeldrydates": null,
+  "rangkatdhakidrydates": null,
+  "rangkatnarchuara": null,
+  "zahididates": null,
+
+  // MILLET
+  "milletgradea": "color",
+  "milletgradeb": "color",
+  "milletgradec": "color",
+
+  // SUGAR
+  "jaggery": null,
+  "refinedsugar": null,
+  "shakkar": null,
+  "millgate": null,
+  "sugarmills": null,
+
+  // HERBALS
+  "chiaseed": null,
+  "drylemon": null,
+  "hing": null,
+  "ispaghol": null,
+  "ispagholhusk": null,
+  "kalonji": null,
+  "kalonjioil": null,
+  "salabmisri": null,
+  "salebpanja": null,
+  "tukhmalanga": null,
+  "zafran": null,
+
+  // FODDER
+  "alfalfa": null,
+  "rhodegrass": null,
+
+  // CLARIFIED BUTTER
+  "asiaghee": null,
+  "daldaghee": null,
+  "kashmirghee": null,
+  "khyberghee": null,
+  "sufighee": null,
+};
+
+const ATTR_TYPE_TO_COL = {
+  newOld: "new_old",
+  color: "color",
+  variety: "variety",
+  spec: "specification",
+  quality: "quality",
+  origin: "origin",
+};
+
+export function getProductSpecialAttrType(byproduct, matchedByproduct) {
+  const norm = (s) => (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const k1 = norm(byproduct);
+  const k2 = norm(matchedByproduct);
+  if (k1 in SPECIAL_PRODUCT_ATTRIBUTES) return SPECIAL_PRODUCT_ATTRIBUTES[k1];
+  if (k2 in SPECIAL_PRODUCT_ATTRIBUTES) return SPECIAL_PRODUCT_ATTRIBUTES[k2];
+  return null;
+}
 
 /**
  * One card's worth of stats for a single by-product, matching the
@@ -668,73 +1020,58 @@ async function computeCardStats(row, targetDate, locationKind, locationLabel) {
 
   let specialAttr = null;
   const specialAttrs = [];
-  if (row.moisture_rule_band) {
-    // business-declared (D) rule wins over any observed value, per policy section 6
-    specialAttr = { type: "moisture", value: `${row.moisture_rule_band}%`, isDeclaredRule: true };
-    specialAttrs.push(specialAttr);
-  } else {
-    // No declared grade band: moisture is still worth surfacing from a
-    // partial sample (it's a physical quality trait, not just a
-    // categorical attribute), so it gets a lower bar than the general
-    // >=80% "core/strong" rule below -- >=30% filled is enough. The value
-    // shown is the mean of each record's parsed (min+max)/2 midpoint,
-    // never a silent average of the raw text ranges themselves.
-    const { rows: moistRows } = await pool.query(
-      `select
-         count(*) as total,
-         count(*) filter (where moisture_min is not null and moisture_max is not null) as filled,
-         avg((moisture_min + moisture_max) / 2.0) filter (where moisture_min is not null and moisture_max is not null) as avg_mid
-       from price_records
-       where product = $1 and by_product = $2`,
-      [row.product, row.matched_by_product]
-    );
-    const mTotal = Number(moistRows[0]?.total || 0);
-    const mFilled = Number(moistRows[0]?.filled || 0);
-    const mAvg = moistRows[0]?.avg_mid !== null && moistRows[0]?.avg_mid !== undefined ? Number(moistRows[0].avg_mid) : null;
-    if (mTotal > 0 && mFilled / mTotal >= 0.3 && mAvg !== null) {
-      const obj = { type: "moisture", value: `${Math.round(mAvg * 10) / 10}%`, isDeclaredRule: false };
-      specialAttr = obj;
-      specialAttrs.push(obj);
-    }
-  }
+  const targetAttrType = getProductSpecialAttrType(row.by_product, row.matched_by_product);
 
-  // The ">=80% filled -> show it" rule, computed live by
-  // api/db/etl_sqlite.py into by_product_attribute_stats from this month's
-  // actual data (classification 'core' = 100%, 'strong' = 80-99.9%).
-  const { rows: statRows } = await pool.query(
-    `select attribute_name from by_product_attribute_stats
-     where by_product_id = $1 and classification in ('core', 'strong')`,
-    [row.id]
-  );
-  const qualifiedSet = new Set(
-    statRows.map((r) => ATTR_DB_TO_TYPE[r.attribute_name]).filter(Boolean)
-  );
-
-  const attrParams2 = [row.product, row.matched_by_product, mostOccurringRateType];
-  const attrLocClause2 = buildLocationFilter(locationKind, locationLabel, attrParams2);
-  const { rows: modeRows } = await pool.query(
-    `select
-       (select new_old from price_records where product = $1 and by_product = $2 and price_type = $3 ${attrLocClause2} and new_old is not null group by new_old order by count(*) desc limit 1) as new_old,
-       (select color from price_records where product = $1 and by_product = $2 and price_type = $3 ${attrLocClause2} and color is not null group by color order by count(*) desc limit 1) as color,
-       (select variety from price_records where product = $1 and by_product = $2 and price_type = $3 ${attrLocClause2} and variety is not null group by variety order by count(*) desc limit 1) as variety,
-       (select specification from price_records where product = $1 and by_product = $2 and price_type = $3 ${attrLocClause2} and specification is not null group by specification order by count(*) desc limit 1) as specification,
-       (select quality from price_records where product = $1 and by_product = $2 and price_type = $3 ${attrLocClause2} and quality is not null group by quality order by count(*) desc limit 1) as quality,
-       (select origin from price_records where product = $1 and by_product = $2 and price_type = $3 ${attrLocClause2} and origin is not null group by origin order by count(*) desc limit 1) as origin`,
-    attrParams2
-  );
-  const modes = modeRows[0] || {};
-  for (const [type, col] of SPECIAL_ATTR_PRIORITY) {
-    if (!qualifiedSet.has(type)) {
-      continue;
-    }
-    const value = modes[col];
-    if (value) {
-      const obj = { type, value };
-      if (!specialAttr) {
-        specialAttr = obj;
+  if (targetAttrType === "moisture") {
+    if (row.moisture_rule_band) {
+      specialAttr = { type: "moisture", value: `${row.moisture_rule_band}%`, isDeclaredRule: true };
+      specialAttrs.push(specialAttr);
+    } else {
+      const { rows: moistRows } = await pool.query(
+        `select
+           count(*) as total,
+           count(*) filter (where moisture_min is not null and moisture_max is not null) as filled,
+           avg((moisture_min + moisture_max) / 2.0) filter (where moisture_min is not null and moisture_max is not null) as avg_mid
+         from price_records
+         where product = $1 and by_product = $2`,
+        [row.product, row.matched_by_product]
+      );
+      const mAvg = moistRows[0]?.avg_mid !== null && moistRows[0]?.avg_mid !== undefined ? Number(moistRows[0].avg_mid) : null;
+      if (mAvg !== null) {
+        specialAttr = { type: "moisture", value: `${Math.round(mAvg * 10) / 10}%`, isDeclaredRule: false };
+        specialAttrs.push(specialAttr);
       }
-      if (!specialAttrs.some((a) => a.type === type)) {
-        specialAttrs.push(obj);
+    }
+  } else if (targetAttrType) {
+    const col = ATTR_TYPE_TO_COL[targetAttrType];
+    if (col) {
+      const attrParams2 = [row.product, row.matched_by_product, mostOccurringRateType];
+      const attrLocClause2 = buildLocationFilter(locationKind, locationLabel, attrParams2);
+      let { rows: modeRows } = await pool.query(
+        `select ${col} as val, count(*) as c
+         from price_records
+         where product = $1 and by_product = $2 and price_type = $3 ${attrLocClause2}
+           and ${col} is not null and trim(${col}) != '' and lower(trim(${col})) != 'null'
+         group by ${col} order by count(*) desc limit 1`,
+        attrParams2
+      );
+      if (!modeRows[0]?.val) {
+        const attrParamsFallback = [row.product, row.matched_by_product];
+        const attrLocClauseFallback = buildLocationFilter(locationKind, locationLabel, attrParamsFallback);
+        const { rows: fallbackRows } = await pool.query(
+          `select ${col} as val, count(*) as c
+           from price_records
+           where product = $1 and by_product = $2 ${attrLocClauseFallback}
+             and ${col} is not null and trim(${col}) != '' and lower(trim(${col})) != 'null'
+           group by ${col} order by count(*) desc limit 1`,
+          attrParamsFallback
+        );
+        modeRows = fallbackRows;
+      }
+      const val = modeRows[0]?.val;
+      if (val && val !== "null" && String(val).trim() !== "") {
+        specialAttr = { type: targetAttrType, value: String(val).trim() };
+        specialAttrs.push(specialAttr);
       }
     }
   }

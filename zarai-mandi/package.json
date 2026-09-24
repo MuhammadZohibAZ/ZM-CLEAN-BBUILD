@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev:backend": "cmd /c \"cd backend && call run_backend.bat\"",
-    "dev:api": "npm --prefix api run start",
+    "dev:api": "npm --prefix api run dev",
     "dev:frontend": "npm --prefix app run dev",
     "dev": "concurrently -k -n \"TTS,API,FRONTEND\" -c \"magenta,yellow,cyan\" \"npm run dev:backend\" \"npm run dev:api\" \"npm run dev:frontend\"",
     "start": "npm run dev"

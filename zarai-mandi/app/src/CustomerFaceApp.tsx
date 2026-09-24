@@ -6509,282 +6509,360 @@ export interface ByproductNationalStats {
   specialAttrs?: SpecialAttrInfo[];
 }
 
-// Fixed catalog rules from Zarai Mandi Mandatory & Optional Attributes Policy
-const CATALOG_POLICY_RULES: Record<
-  string,
-  {
-    type: SpecialAttrInfo['type'];
-    labelEn: string;
-    labelUr: string;
-    valueEn: string;
-    valueUr: string;
-    dotColor: string;
-    filterFn: (r: RichRow) => boolean;
-  }
-> = {
-  // Maize
-  "Maize Grade A": {
-    type: "moisture",
-    labelEn: "Moisture",
-    labelUr: "نمی",
-    valueEn: "11-14%",
-    valueUr: "۱۱-۱۴٪",
-    dotColor: "#38BDF8",
-    filterFn: (r) => {
-      const m = (r.moisture || "").toLowerCase();
-      return m.includes("11") || m.includes("12") || m.includes("13") || m.includes("14") || m.includes("11-14");
-    },
-  },
-  "Maize Grade B": {
-    type: "moisture",
-    labelEn: "Moisture",
-    labelUr: "نمی",
-    valueEn: "14-16%",
-    valueUr: "۱۴-۱۶٪",
-    dotColor: "#38BDF8",
-    filterFn: (r) => {
-      const m = (r.moisture || "").toLowerCase();
-      const no = (r.newOld || "").toLowerCase();
-      return (m.includes("14") || m.includes("15") || m.includes("16") || m.includes("14-16")) && (!no || no.includes("new"));
-    },
-  },
-  "Maize Grade C": {
-    type: "moisture",
-    labelEn: "Moisture",
-    labelUr: "نمی",
-    valueEn: "16-18%",
-    valueUr: "۱۶-۱۸٪",
-    dotColor: "#38BDF8",
-    filterFn: (r) => {
-      const m = (r.moisture || "").toLowerCase();
-      const no = (r.newOld || "").toLowerCase();
-      return (m.includes("16") || m.includes("17") || m.includes("18") || m.includes("16-18")) && (!no || no.includes("new"));
-    },
-  },
-  "Popcorn": {
-    type: "newOld",
-    labelEn: "Type",
-    labelUr: "معیار",
-    valueEn: "Old",
-    valueUr: "پرانا",
-    dotColor: "#F59E0B",
-    filterFn: (r) => {
-      const no = (r.newOld || "").toLowerCase();
-      return no.includes("old") || no.includes("new");
-    },
-  },
+// User-designated special attribute mapping per product/byproduct.
+// Maps normalized (lowercase, alphanumeric only) product or byproduct names
+// to one of: 'origin', 'newOld', 'color', 'variety', 'spec', 'quality', 'moisture', or null.
+export const SPECIAL_PRODUCT_ATTRIBUTES: Record<string, SpecialAttrInfo['type'] | null> = {
+  // VEGETABLE
+  "bittergourd": "origin",
+  "bottlegourd": "origin",
+  "brinjalgol": "origin",
+  "brinjallamba": "origin",
+  "broccoli": "origin",
+  "cabbage": "origin",
+  "capsicum": "origin",
+  "carrot": "origin",
+  "cauliflower": "origin",
+  "cucumber": "origin",
+  "garlicchina": "origin",
+  "garlicdesi": "origin",
+  "ginger": "origin",
+  "guar": "origin",
+  "lemonchina": "origin",
+  "lemondesi": "origin",
+  "okra": "origin",
+  "oniongradea": "newOld",
+  "oniongradeb": "newOld",
+  "oniongradec": "newOld",
+  "pea": "origin",
+  "potatobeej": "origin",
+  "potatobeejgradea": "origin",
+  "potatobeejgradeb": "origin",
+  "potatobeejgradec": "origin",
+  "potatogoli": "origin",
+  "potatolr": "origin",
+  "potatolaal": "newOld",
+  "potatomozika": "newOld",
+  "potatoraveera": "origin",
+  "potatoraveeragradea": "origin",
+  "potatoraveeragradeb": "origin",
+  "potatoraveeragradec": "origin",
+  "potatosanta": "origin",
+  "potatostone": "origin",
+  "potatostonegradea": "origin",
+  "potatostonegradeb": "origin",
+  "potatostonegradec": "origin",
+  "potatosufaid": "origin",
+  "ridgegourd": "origin",
+  "roundgourd": "origin",
+  "saladleaves": "origin",
+  "shakarqandi": null,
+  "spinach": "origin",
+  "sweetpotato": "color",
+  "tomatogradea": "origin",
+  "tomatogradeb": "origin",
+  "tomatogradec": "origin",
+  "turnip": "origin",
 
-  // Millet
-  "Millet Grade B": {
-    type: "color",
-    labelEn: "Color",
-    labelUr: "رنگ",
-    valueEn: "Yellow",
-    valueUr: "پیلا",
-    dotColor: "#FBBF24",
-    filterFn: (r) => (r.color || "").toLowerCase().includes("yellow") || (r.color || "").toLowerCase().includes("peela"),
-  },
+  // WHEAT
+  "chokar": null,
+  "flour": null,
+  "flourspecial": null,
+  "refinedflour": null,
+  "sooji": null,
+  "sorghum": "color",
+  "straw": null,
+  "wheat": "newOld",
+  "wheatbran": null,
 
-  // Cotton
-  "Seed Cotton Grade B": {
-    type: "color",
-    labelEn: "Color",
-    labelUr: "رنگ",
-    valueEn: "White",
-    valueUr: "سفید",
-    dotColor: "#E2E8F0",
-    filterFn: (r) => (r.color || "").toLowerCase().includes("white") || (r.color || "").toLowerCase().includes("safaid"),
-  },
-  "Seed Cotton Grade C": {
-    type: "color",
-    labelEn: "Color",
-    labelUr: "رنگ",
-    valueEn: "White",
-    valueUr: "سفید",
-    dotColor: "#E2E8F0",
-    filterFn: (r) => (r.color || "").toLowerCase().includes("white") || (r.color || "").toLowerCase().includes("safaid"),
-  },
+  // EDIBLE OIL
+  "canola": null,
+  "canolameal": null,
+  "canolaoil": null,
+  "canolaseed": "newOld",
+  "mustardcake": null,
+  "mustardoil": null,
+  "mustardseed": "newOld",
+  "sarsokhal": null,
+  "sarsooil": null,
+  "soybean": null,
+  "soybeanmeal": null,
+  "soybeanoil": null,
+  "soybeanoilwashed": null,
+  "sunflower": null,
+  "sunfloweroil": null,
+  "sunflowerseed": null,
+  "taarameera": null,
+  "taarameeraoil": null,
 
-  // Paddy
-  "Paddy 1509": {
-    type: "newOld",
-    labelEn: "Type",
-    labelUr: "معیار",
-    valueEn: "New",
-    valueUr: "نیا",
-    dotColor: "#F59E0B",
-    filterFn: (r) => (r.newOld || "").toLowerCase().includes("new"),
-  },
-  "Paddy 1692": {
-    type: "moisture",
-    labelEn: "Moisture",
-    labelUr: "نمی",
-    valueEn: "11-14%",
-    valueUr: "۱۱-۱۴٪",
-    dotColor: "#38BDF8",
-    filterFn: (r) => (r.newOld || "").toLowerCase().includes("new"),
-  },
-  "Paddy 1718": {
-    type: "newOld",
-    labelEn: "Type",
-    labelUr: "معیار",
-    valueEn: "New",
-    valueUr: "نیا",
-    dotColor: "#F59E0B",
-    filterFn: (r) => (r.newOld || "").toLowerCase().includes("new"),
-  },
-  "Paddy 1847": {
-    type: "newOld",
-    labelEn: "Type",
-    labelUr: "معیار",
-    valueEn: "New",
-    valueUr: "نیا",
-    dotColor: "#F59E0B",
-    filterFn: (r) => (r.newOld || "").toLowerCase().includes("new"),
-  },
-  "Paddy 86": {
-    type: "moisture",
-    labelEn: "Moisture",
-    labelUr: "نمی",
-    valueEn: "11-14%",
-    valueUr: "۱۱-۱۴٪",
-    dotColor: "#38BDF8",
-    filterFn: (r) => (r.newOld || "").toLowerCase().includes("new"),
-  },
-  "Paddy Kainat 1121": {
-    type: "newOld",
-    labelEn: "Type",
-    labelUr: "معیار",
-    valueEn: "New",
-    valueUr: "نیا",
-    dotColor: "#F59E0B",
-    filterFn: (r) => (r.newOld || "").toLowerCase().includes("new"),
-  },
-  "Paddy Super": {
-    type: "moisture",
-    labelEn: "Moisture",
-    labelUr: "نمی",
-    valueEn: "11-14%",
-    valueUr: "۱۱-۱۴٪",
-    dotColor: "#38BDF8",
-    filterFn: (r) => (r.newOld || "").toLowerCase().includes("new"),
-  },
-  "Paddy Supri": {
-    type: "moisture",
-    labelEn: "Moisture",
-    labelUr: "نمی",
-    valueEn: "11-14%",
-    valueUr: "۱۱-۱۴٪",
-    dotColor: "#38BDF8",
-    filterFn: (r) => (r.newOld || "").toLowerCase().includes("new"),
-  },
+  // PULSES (All None identified)
+  "gramblackthick": null,
+  "gramblackthin": null,
+  "grampulsethick": null,
+  "grampulsethickas": null,
+  "grampulsethin": null,
+  "grampulsethinas": null,
+  "gramwhite7mm": null,
+  "gramwhite9mm": null,
+  "mashsabut2": null,
+  "mashshellthick": null,
+  "mashshellthin": null,
+  "mashwashed1": null,
+  "mashwashed2": null,
+  "masoorpulsered": null,
+  "masoorsabut1": null,
+  "masoorsabut2": null,
+  "moongsabut1": null,
+  "moongsabut2": null,
+  "moongshell1": null,
+  "moongwashed1": null,
+  "moongwashed2": null,
+  "pigeonpeathick": null,
+  "pigeonpeathin": null,
+  "redlubya1": null,
+  "redlubya2": null,
+  "whitelubyathick": null,
 
-  // Spices
-  "Red Longi Chilli": {
-    type: "spec",
-    labelEn: "Spec",
-    labelUr: "تفصیل",
-    valueEn: "Dry",
-    valueUr: "خشک",
-    dotColor: "#EF4444",
-    filterFn: (r) => (r.spec || "").toLowerCase().includes("dry") || (r.variety || "").toLowerCase().includes("dry"),
-  },
-  "Red Rich Star Chilli": {
-    type: "spec",
-    labelEn: "Spec",
-    labelUr: "تفصیل",
-    valueEn: "Dry",
-    valueUr: "خشک",
-    dotColor: "#EF4444",
-    filterFn: (r) => (r.spec || "").toLowerCase().includes("dry") || (r.variety || "").toLowerCase().includes("dry"),
-  },
-  "Red Desi Chilli": {
-    type: "spec",
-    labelEn: "Spec",
-    labelUr: "تفصیل",
-    valueEn: "Dry",
-    valueUr: "خشک",
-    dotColor: "#EF4444",
-    filterFn: (r) => (r.spec || "").toLowerCase().includes("dry") || (r.variety || "").toLowerCase().includes("dry"),
-  },
+  // RICE / PADDY
+  "paddy1509": "newOld",
+  "paddy1692": "newOld",
+  "paddy1718": "newOld",
+  "paddy1847": "newOld",
+  "paddy86": "newOld",
+  "paddyc9": "newOld",
+  "paddyirri6": "newOld",
+  "paddyirri9": "newOld",
+  "paddyirrifine": "newOld",
+  "paddykainat1121": "newOld",
+  "paddylp18": "newOld",
+  "paddypp7": "newOld",
+  "paddysuper": "newOld",
+  "paddysuper515": "newOld",
+  "paddysupri": "newOld",
 
-  // Fruits
-  "Kala Kullu Apple": {
-    type: "origin",
-    labelEn: "Origin",
-    labelUr: "علاقہ",
-    valueEn: "Balochistan",
-    valueUr: "بلوچستان",
-    dotColor: "#10B981",
-    filterFn: (r) => (r.province || "").toLowerCase().includes("baloch") || (r.origin || "").toLowerCase().includes("baloch"),
-  },
-  "Mausambi": {
-    type: "origin",
-    labelEn: "Origin",
-    labelUr: "علاقہ",
-    valueEn: "Punjab",
-    valueUr: "پنجاب",
-    dotColor: "#10B981",
-    filterFn: (r) => (r.province || "").toLowerCase().includes("punjab") || (r.origin || "").toLowerCase().includes("punjab"),
-  },
-  "Grape Fruit": {
-    type: "origin",
-    labelEn: "Origin",
-    labelUr: "علاقہ",
-    valueEn: "Punjab",
-    valueUr: "پنجاب",
-    dotColor: "#10B981",
-    filterFn: (r) => (r.province || "").toLowerCase().includes("punjab") || (r.origin || "").toLowerCase().includes("punjab"),
-  },
-  "Fruiter": {
-    type: "origin",
-    labelEn: "Origin",
-    labelUr: "علاقہ",
-    valueEn: "Bhalwal",
-    valueUr: "بھلوال",
-    dotColor: "#10B981",
-    filterFn: (r) => (r.mandiCity || "").toLowerCase().includes("bhalwal") || (r.origin || "").toLowerCase().includes("bhalwal"),
-  },
+  // FRUITS
+  "apple": "origin",
+  "apricot": "origin",
+  "banana": "origin",
+  "cherry": "origin",
+  "falsa": "origin",
+  "fruiter": "origin",
+  "grapefruit": "origin",
+  "grapes": "origin",
+  "kalakulluapple": "origin",
+  "kharbooza": "origin",
+  "mangoalmas": "origin",
+  "mangoanwerratul": "origin",
+  "mangoblackchunsa": "origin",
+  "mangodasheri": "origin",
+  "mangofajri": "origin",
+  "mangosaroli": "origin",
+  "mangosindhri": "origin",
+  "mangowhitechunsa": "origin",
+  "mausambi": "origin",
+  "oranges": null,
+  "papaya": "origin",
+  "peach": "origin",
+  "plum": "origin",
+  "pomegranate": "origin",
+  "sweetlime": "origin",
+  "watermelon": "origin",
 
-  // Vegetables
-  "Turnip": {
-    type: "origin",
-    labelEn: "Origin",
-    labelUr: "علاقہ",
-    valueEn: "Punjab",
-    valueUr: "پنجاب",
-    dotColor: "#10B981",
-    filterFn: (r) => (r.province || "").toLowerCase().includes("punjab"),
-  },
-  "Tomato Grade B": {
-    type: "newOld",
-    labelEn: "Type",
-    labelUr: "معیار",
-    valueEn: "New",
-    valueUr: "نیا",
-    dotColor: "#F59E0B",
-    filterFn: (r) => (r.newOld || "").toLowerCase().includes("new"),
-  },
+  // MILLED RICE
+  "1121basmati1": null,
+  "1121basmati2": "origin",
+  "1121kacha": null,
+  "1121steam": null,
+  "1121white": null,
+  "1509kacha": null,
+  "1509sella": "origin",
+  "1509steam": "origin",
+  "1509steambasmati": null,
+  "1509steamsila": null,
+  "1509white": null,
+  "1718kacha": null,
+  "1718steam": null,
+  "1847kacha": null,
+  "1847steam": null,
+  "386basmatinew": "origin",
+  "386basmatiold": "origin",
+  "c9basmati": null,
+  "c9sila": "newOld",
+  "c9steam": "newOld",
+  "c9white": "newOld",
+  "irri6": null,
+  "irri6sabut1": "origin",
+  "irri6white": null,
+  "irri9": "newOld",
+  "irritota": "origin",
+  "kainatdoublesteam": null,
+  "lal386new": "origin",
+  "lal386old": "origin",
+  "punia11211": "origin",
+  "punia11212": "origin",
+  "puniabasmati1": "origin",
+  "ricehusk": null,
+  "sella11211": "origin",
+  "sella386": "newOld",
+  "sellapunjab": "origin",
+  "shortgraintota": null,
+  "silky": "origin",
+  "silkysortex": "origin",
+  "superbasmatisindh": "origin",
+  "superkernel": null,
+  "suprinew": "origin",
+  "supriold": null,
+  "suprisila": "origin",
+  "totabasmati": "origin",
+
+  // MAIZE
+  "cornsilage": null,
+  "cornstarch": null,
+  "maizegradea": "newOld",
+  "maizegradeb": "newOld",
+  "maizegradec": "newOld",
+  "popcorn": "newOld",
+
+  // COTTON
+  "cottonseed": null,
+  "cottonseedcake": null,
+  "cottonseedoil": null,
+  "seedcottongradea": "color",
+  "seedcottongradeb": "color",
+  "seedcottongradec": "color",
+  "banola": null,
+  "banolakhal": null,
+  "banolaoil": null,
+  "phuttia": null,
+  "phuttib": null,
+  "phuttic": null,
+
+  // SPICES
+  "blackpepper": null,
+  "blackpepperpowder": null,
+  "cinnamon": null,
+  "clove": null,
+  "corianderseed": null,
+  "corianderseedpowder": null,
+  "cuminblack": null,
+  "cuminwhite": null,
+  "fennel": null,
+  "jaifal": null,
+  "largeblackcardamom": null,
+  "redchillipowder": null,
+  "redchilliwhole": null,
+  "smallcardamom": null,
+  "turmeric": null,
+
+  // SESAME
+  "sesamegradea": "color",
+  "sesamegradeb": "newOld",
+  "sesamegradec": "newOld",
+
+  // CHILLIES
+  "desichilli": null,
+  "greenchillilarge": "variety",
+  "greenchillimedium": "variety",
+  "greenchillismall": null,
+  "hybirdchilli": "spec",
+  "longichilli": "spec",
+  "reddesichilli": "spec",
+  "redhybirdchilli": "spec",
+  "redlongichilli": "spec",
+  "redrichstarchilli": "spec",
+  "redshingrichilli": "spec",
+  "redsummerqueenchilli": "spec",
+  "richstarchilli": "newOld",
+  "shingrichilli": null,
+
+  // DRY-FRUITS
+  "almondamerican": null,
+  "almondaustralian": null,
+  "almonddesi": null,
+  "cashew": null,
+  "fig": null,
+  "largeraisins": null,
+  "pistachio": null,
+  "walnut": null,
+
+  // OTHER VARIETIES
+  "barley": null,
+  "barseem": null,
+  "camelina": null,
+  "castorbean": null,
+  "eggtray": "spec",
+  "moongi": null,
+  "oat": null,
+  "quinoa": null,
+
+  // DATES
+  "ajwadates": null,
+  "amberdates": null,
+  "aseelchuara": null,
+  "aseeldates": "origin",
+  "begumjangidates": null,
+  "blackaseelchuara": null,
+  "dhakidrydates": null,
+  "jamsordates": null,
+  "karbaladates": null,
+  "kupradates": null,
+  "mazafatidates": null,
+  "narchuara": null,
+  "rabbidates": null,
+  "rangkataseelchuara": null,
+  "rangkatblackaseeldrydates": null,
+  "rangkatdhakidrydates": null,
+  "rangkatnarchuara": null,
+  "zahididates": null,
+
+  // MILLET
+  "milletgradea": "color",
+  "milletgradeb": "color",
+  "milletgradec": "color",
+
+  // SUGAR
+  "jaggery": null,
+  "refinedsugar": null,
+  "shakkar": null,
+  "millgate": null,
+  "sugarmills": null,
+
+  // HERBALS
+  "chiaseed": null,
+  "drylemon": null,
+  "hing": null,
+  "ispaghol": null,
+  "ispagholhusk": null,
+  "kalonji": null,
+  "kalonjioil": null,
+  "salabmisri": null,
+  "salebpanja": null,
+  "tukhmalanga": null,
+  "zafran": null,
+
+  // FODDER
+  "alfalfa": null,
+  "rhodegrass": null,
+
+  // CLARIFIED BUTTER
+  "asiaghee": null,
+  "daldaghee": null,
+  "kashmirghee": null,
+  "khyberghee": null,
+  "sufighee": null,
 };
 
-// Items registered in the policy PDF as 'None established' / 'None observed as partial'
-const NO_ATTRIBUTE_BYPRODUCTS = new Set([
-  "Barley", "Bran", "Flour", "Flour Special", "Special Flour", "Oat", "Refined Flour", "Fine Flour", "Semolina", "Straw",
-  "Cotton Seed", "Cotton Seed Cake", "Cotton Seed Oil", "Lint Cotton",
-  "Alfalfa", "Black Dry Dates Cutter", "Channa Atti", "Corn Silage", "Elephant Grass", "Fodder - Green Grass",
-  "Jantar", "Limestone", "Lucerne Fodder", "Maize Fodder", "Masha Katta", "Masoor Katta", "Moong Katta",
-  "Mustard Seed Cake", "Rhode Grass", "Rice Polish", "Soyabean Meal", "Wanda", "Wheat Bran", "Wheat Husk", "Wheat Poridge",
-  "Asia Ghee", "Dalda Ghee", "Kashmir Ghee", "Khyber Ghee", "Sufi Ghee",
-  "Ammonium Sulphate", "Amonium Nitrate", "CAN", "Chlorphenapyr", "Clothianidin", "DAP", "Enrich", "Green Phosphate",
-  "MOP", "NP", "NPK", "Pak Arab CAN", "Pak Arab Guara", "S-metolachlor", "SOP-G", "SSP", "TSP", "UREA", "Zabardast Urea",
-  "Zarkhez", "Zinc", "Zinc Sulphate",
-  "Almond", "Cashew", "Coconut Powder", "Coconut Whole", "Fig", "Pistachio", "Raisin", "Walnut",
-  "Ajwain", "Chia Seed", "Dry Lemon", "Hing", "Honey", "Ispaghol", "Ispaghol Husk", "Kalonji", "Kalonji Oil", "Salab Misri", "Saleb Panja", "Saunf", "Tukh Malanga", "Zafran",
-  "Arugula Oil", "Arugula Seed", "Canola Meal", "Canola Oil", "Castor Bean", "Soyabean Oil", "Soyabean Oil Washed", "Camelina", "Sunflower Oil", "Sunflower Seed",
-  "1121 Basmati-2", "1121 Kacha", "1121 Steam", "1121 White", "1509 Kacha", "1509 Sella", "1509 Steam", "1509 Steam Basmati", "1509 White",
-  "386 Basmati-New", "386 Basmati-Old", "Irri 6", "Irri 6 Sabut-1", "Irri Tota", "Kainat Double Steam", "Lal 386 New", "Lal 386 Old",
-  "Punia 1121-1", "Punia 1121-2", "Punia Basmati-1", "Rice Husk", "Sella 1121-1", "Sella Punjab", "Short Grain (Tota)", "Silky", "Silky & Sortex", "Super Basmati Sindh", "Super Kernel", "Supri New", "Supri Sila", "Tota Basmati"
-]);
+export function getProductSpecialAttrType(
+  byproduct?: string | null,
+  product?: string | null
+): SpecialAttrInfo['type'] | null {
+  const norm = (s?: string | null) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const k1 = norm(byproduct);
+  const k2 = norm(product);
+  if (k1 in SPECIAL_PRODUCT_ATTRIBUTES) return SPECIAL_PRODUCT_ATTRIBUTES[k1];
+  if (k2 in SPECIAL_PRODUCT_ATTRIBUTES) return SPECIAL_PRODUCT_ATTRIBUTES[k2];
+  return null;
+}
 
 export function calculateByproductSummary(
   targetProduct: string,
@@ -6869,119 +6947,116 @@ export function calculateByproductSummary(
     (r) => (r.rateType || 'Mandi Rate') === mostOccurringRateType
   );
 
-  // 1. Check fixed policy rule
   let specialAttr: SpecialAttrInfo | null = null;
-  const policyRule = CATALOG_POLICY_RULES[targetByproduct] || CATALOG_POLICY_RULES[`${targetProduct} ${targetByproduct}`];
-  if (policyRule) {
-    specialAttr = {
-      type: policyRule.type,
-      labelEn: policyRule.labelEn,
-      labelUr: policyRule.labelUr,
-      valueEn: policyRule.valueEn,
-      valueUr: policyRule.valueUr,
-      dotColor: policyRule.dotColor,
-      filterFn: policyRule.filterFn,
-    };
-  } else if (!NO_ATTRIBUTE_BYPRODUCTS.has(targetByproduct)) {
-    // 2. Discover dominant observed attribute for items with partial attributes
-    const moistureCounts: Record<string, number> = {};
-    const newOldCounts: Record<string, number> = {};
-    const colorCounts: Record<string, number> = {};
-    const varietyCounts: Record<string, number> = {};
-    const specCounts: Record<string, number> = {};
-    const originCounts: Record<string, number> = {};
+  const targetAttrType = getProductSpecialAttrType(targetByproduct, targetProduct);
 
+  if (targetAttrType) {
+    const valCounts: Record<string, number> = {};
     for (let i = 0; i < rtRows.length; i++) {
       const r = rtRows[i];
-      if (r.moisture && r.moisture.trim()) moistureCounts[r.moisture.trim()] = (moistureCounts[r.moisture.trim()] || 0) + 1;
-      if (r.newOld && r.newOld.trim()) newOldCounts[r.newOld.trim()] = (newOldCounts[r.newOld.trim()] || 0) + 1;
-      if (r.color && r.color.trim()) colorCounts[r.color.trim()] = (colorCounts[r.color.trim()] || 0) + 1;
-      if (r.variety && r.variety.trim()) varietyCounts[r.variety.trim()] = (varietyCounts[r.variety.trim()] || 0) + 1;
-      if (r.spec && r.spec.trim()) specCounts[r.spec.trim()] = (specCounts[r.spec.trim()] || 0) + 1;
-      if (r.origin && r.origin.trim()) originCounts[r.origin.trim()] = (originCounts[r.origin.trim()] || 0) + 1;
+      let val = '';
+      if (targetAttrType === 'moisture') val = r.moisture || '';
+      else if (targetAttrType === 'newOld') val = r.newOld || '';
+      else if (targetAttrType === 'color') val = r.color || '';
+      else if (targetAttrType === 'variety') val = r.variety || '';
+      else if (targetAttrType === 'spec') val = r.spec || '';
+      else if (targetAttrType === 'origin') val = r.origin || r.province || '';
+      else if (targetAttrType === 'quality') val = r.quality || '';
+
+      const cleanVal = (val || '').trim();
+      if (cleanVal && cleanVal.toLowerCase() !== 'null') {
+        valCounts[cleanVal] = (valCounts[cleanVal] || 0) + 1;
+      }
     }
 
-    const sortedM = Object.entries(moistureCounts).sort((a, b) => b[1] - a[1]);
-    const sortedNO = Object.entries(newOldCounts).sort((a, b) => b[1] - a[1]);
-    const sortedC = Object.entries(colorCounts).sort((a, b) => b[1] - a[1]);
-    const sortedV = Object.entries(varietyCounts).sort((a, b) => b[1] - a[1]);
-    const sortedSp = Object.entries(specCounts).sort((a, b) => b[1] - a[1]);
-    const sortedOrg = Object.entries(originCounts).sort((a, b) => b[1] - a[1]);
-
-    if (sortedM.length > 0) {
-      const val = sortedM[0][0];
-      specialAttr = {
-        type: 'moisture',
-        labelEn: 'Moisture',
-        labelUr: 'نمی',
-        valueEn: val.includes('%') ? val : val + '%',
-        valueUr: val.includes('٪') ? toUrduDigits(val) : toUrduDigits(val) + '٪',
-        dotColor: '#38BDF8',
-        filterFn: (r) => (r.moisture || '').trim() === val,
-      };
-    } else if (sortedNO.length > 0) {
-      const val = sortedNO[0][0];
-      const isNew = val.toLowerCase().includes('new');
-      specialAttr = {
-        type: 'newOld',
-        labelEn: 'Type',
-        labelUr: 'معیار',
-        valueEn: isNew ? 'New' : 'Old',
-        valueUr: isNew ? 'نیا' : 'پرانا',
-        dotColor: '#F59E0B',
-        filterFn: (r) => (r.newOld || '').toLowerCase().includes(isNew ? 'new' : 'old'),
-      };
-    } else if (sortedC.length > 0) {
-      const val = sortedC[0][0];
-      const colorUrduMap: Record<string, string> = {
-        Brown: "براؤن",
-        Golden: "سنہرا",
-        White: "سفید",
-        Yellow: "پیلا",
-        Red: "سرخ",
-      };
-      specialAttr = {
-        type: 'color',
-        labelEn: 'Color',
-        labelUr: 'رنگ',
-        valueEn: val,
-        valueUr: colorUrduMap[val] || val,
-        dotColor: '#FBBF24',
-        filterFn: (r) => (r.color || '').trim().toLowerCase() === val.toLowerCase(),
-      };
-    } else if (sortedV.length > 0) {
-      const val = sortedV[0][0];
-      specialAttr = {
-        type: 'variety',
-        labelEn: 'Variety',
-        labelUr: 'قسم',
-        valueEn: val,
-        valueUr: val,
-        dotColor: '#10B981',
-        filterFn: (r) => (r.variety || '').trim() === val,
-      };
-    } else if (sortedSp.length > 0) {
-      const val = sortedSp[0][0];
-      specialAttr = {
-        type: 'spec',
-        labelEn: 'Spec',
-        labelUr: 'تفصیل',
-        valueEn: val,
-        valueUr: val,
-        dotColor: '#10B981',
-        filterFn: (r) => (r.spec || '').trim() === val,
-      };
-    } else if (sortedOrg.length > 0) {
-      const val = sortedOrg[0][0];
-      specialAttr = {
-        type: 'origin',
-        labelEn: 'Origin',
-        labelUr: 'علاقہ',
-        valueEn: val,
-        valueUr: val,
-        dotColor: '#10B981',
-        filterFn: (r) => (r.origin || '').trim() === val,
-      };
+    const sortedVals = Object.entries(valCounts).sort((a, b) => b[1] - a[1]);
+    if (sortedVals.length > 0) {
+      const topVal = sortedVals[0][0];
+      if (targetAttrType === 'moisture') {
+        specialAttr = {
+          type: 'moisture',
+          labelEn: 'Moisture',
+          labelUr: 'نمی',
+          valueEn: topVal.includes('%') ? topVal : topVal + '%',
+          valueUr: topVal.includes('٪') ? toUrduDigits(topVal) : toUrduDigits(topVal) + '٪',
+          dotColor: '#38BDF8',
+          filterFn: (r) => (r.moisture || '').trim() === topVal,
+        };
+      } else if (targetAttrType === 'newOld') {
+        const isNew = topVal.toLowerCase().includes('new');
+        specialAttr = {
+          type: 'newOld',
+          labelEn: 'Type',
+          labelUr: 'معیار',
+          valueEn: isNew ? 'New' : 'Old',
+          valueUr: isNew ? 'نیا' : 'پرانا',
+          dotColor: '#F59E0B',
+          filterFn: (r) => (r.newOld || '').toLowerCase().includes(isNew ? 'new' : 'old'),
+        };
+      } else if (targetAttrType === 'color') {
+        const colorUrduMap: Record<string, string> = {
+          Brown: "براؤن",
+          Golden: "سنہرا",
+          White: "سفید",
+          Yellow: "پیلا",
+          Red: "سرخ",
+          Green: "سبز",
+          Black: "کالا",
+        };
+        specialAttr = {
+          type: 'color',
+          labelEn: 'Color',
+          labelUr: 'رنگ',
+          valueEn: topVal,
+          valueUr: colorUrduMap[topVal] || topVal,
+          dotColor: '#FBBF24',
+          filterFn: (r) => (r.color || '').trim().toLowerCase() === topVal.toLowerCase(),
+        };
+      } else if (targetAttrType === 'variety') {
+        specialAttr = {
+          type: 'variety',
+          labelEn: 'Variety',
+          labelUr: 'قسم',
+          valueEn: topVal,
+          valueUr: topVal,
+          dotColor: '#10B981',
+          filterFn: (r) => (r.variety || '').trim() === topVal,
+        };
+      } else if (targetAttrType === 'spec') {
+        const specUrduMap: Record<string, string> = {
+          Dry: "خشک",
+          Fresh: "تازہ",
+        };
+        specialAttr = {
+          type: 'spec',
+          labelEn: 'Spec',
+          labelUr: 'تفصیل',
+          valueEn: topVal,
+          valueUr: specUrduMap[topVal] || topVal,
+          dotColor: '#EF4444',
+          filterFn: (r) => (r.spec || '').trim() === topVal,
+        };
+      } else if (targetAttrType === 'origin') {
+        specialAttr = {
+          type: 'origin',
+          labelEn: 'Origin',
+          labelUr: 'علاقہ',
+          valueEn: topVal,
+          valueUr: topVal,
+          dotColor: '#10B981',
+          filterFn: (r) => (r.origin || '').trim() === topVal || (r.province || '').trim() === topVal,
+        };
+      } else if (targetAttrType === 'quality') {
+        specialAttr = {
+          type: 'quality',
+          labelEn: 'Quality',
+          labelUr: 'معیار',
+          valueEn: topVal,
+          valueUr: topVal,
+          dotColor: '#10B981',
+          filterFn: (r) => (r.quality || '').trim() === topVal,
+        };
+      }
     }
   }
 
@@ -7426,16 +7501,25 @@ const SPECIAL_ATTR_COLOR_URDU: Record<string, string> = {
   White: "سفید",
   Yellow: "پیلا",
   Red: "سرخ",
+  Green: "سبز",
+  Black: "کالا",
+};
+
+const SPECIAL_ATTR_SPEC_URDU: Record<string, string> = {
+  Dry: "خشک",
+  Fresh: "تازہ",
 };
 
 function apiSpecialAttrToUi(attr: CardSpecialAttr | null): SpecialAttrInfo | null {
   if (!attr) return null;
-  const meta = SPECIAL_ATTR_META[attr.type];
+  const meta = SPECIAL_ATTR_META[attr.type] || { labelEn: attr.type, labelUr: attr.type, dotColor: "#10B981" };
   let valueUr = attr.value;
   if (attr.type === "newOld") {
-    valueUr = attr.value.toLowerCase() === "new" ? "نیا" : "پرانا";
+    valueUr = attr.value.toLowerCase().includes("new") ? "نیا" : "پرانا";
   } else if (attr.type === "color") {
     valueUr = SPECIAL_ATTR_COLOR_URDU[attr.value] || attr.value;
+  } else if (attr.type === "spec") {
+    valueUr = SPECIAL_ATTR_SPEC_URDU[attr.value] || attr.value;
   } else if (attr.type === "moisture") {
     valueUr = toUrduDigits(attr.value);
   }
@@ -11149,63 +11233,43 @@ function ProductRatesScreen({
   const rows = useMemo(() => {
     let res = baseRows;
     if (attrRateType) {
-      const match = res.filter((r) => r.rateType === attrRateType);
-      if (match.length > 0) res = match;
+      res = res.filter((r) => r.rateType === attrRateType);
     }
     if (attrMoisture) {
-      const match = res.filter((r) => (r.moisture || '').includes(attrMoisture));
-      if (match.length > 0) res = match;
+      const cleanM = attrMoisture.replace(/[%٪]/g, "").trim().toLowerCase();
+      res = res.filter((r) => {
+        const rowM = (r.moisture || "").replace(/[%٪]/g, "").trim().toLowerCase();
+        return rowM === cleanM || rowM.includes(cleanM) || cleanM.includes(rowM);
+      });
     }
     if (attrColor) {
-      const match = res.filter((r) => (r.color || '').toLowerCase() === attrColor.toLowerCase());
-      if (match.length > 0) res = match;
+      res = res.filter((r) => (r.color || '').toLowerCase() === attrColor.toLowerCase());
     }
     if (attrVariety) {
-      const match = res.filter((r) => (r.variety || '').toLowerCase() === attrVariety.toLowerCase());
-      if (match.length > 0) res = match;
+      res = res.filter((r) => (r.variety || '').toLowerCase() === attrVariety.toLowerCase());
     }
     if (attrNewOld) {
-      const match = res.filter((r) => (r.newOld || '').toLowerCase().includes(attrNewOld.toLowerCase()));
-      if (match.length > 0) res = match;
+      res = res.filter((r) => (r.newOld || '').toLowerCase().includes(attrNewOld.toLowerCase()));
     }
     if (attrSpec) {
-      const match = res.filter((r) => (r.spec || '').toLowerCase() === attrSpec.toLowerCase());
-      if (match.length > 0) res = match;
+      res = res.filter((r) => (r.spec || '').toLowerCase() === attrSpec.toLowerCase());
     }
     if (attrCondition) {
-      const match = res.filter((r) => (r.condition || '').toLowerCase() === attrCondition.toLowerCase());
-      if (match.length > 0) res = match;
+      res = res.filter((r) => (r.condition || '').toLowerCase() === attrCondition.toLowerCase());
     }
-    return res.length > 0 ? res : baseRows;
+    return res;
   }, [baseRows, attrRateType, attrMoisture, attrColor, attrVariety, attrNewOld, attrSpec, attrCondition]);
 
   const primarySpecialAttr = useMemo(() => {
-    const prodLower = (product || '').toLowerCase();
-    const byprodLower = (byproduct || '').toLowerCase();
-
-    if (prodLower.includes('maize') || byprodLower.includes('maize') || byprodLower.includes('corn') || prodLower.includes('مکئی') || byprodLower.includes('مکئی')) {
-      return 'moisture';
+    const targetType = getProductSpecialAttrType(byproduct, product);
+    if (targetType === 'moisture' || targetType === 'color' || targetType === 'variety') {
+      return targetType;
     }
-    if (prodLower.includes('cotton') || byprodLower.includes('cotton') || byprodLower.includes('phutti') || byprodLower.includes('کپاس') || byprodLower.includes('پھٹی') || prodLower.includes('sesame') || byprodLower.includes('sesame') || byprodLower.includes('تل')) {
-      return 'color';
-    }
-    if (prodLower.includes('rice') || byprodLower.includes('rice') || prodLower.includes('چاول') || byprodLower.includes('چاول') || byprodLower.includes('paddy')) {
-      return 'variety';
-    }
-    if (prodLower.includes('wheat') || byprodLower.includes('wheat') || byprodLower.includes('gandum') || prodLower.includes('گندم') || byprodLower.includes('گندم') || prodLower.includes('gram') || byprodLower.includes('gram') || prodLower.includes('چنا')) {
+    if (targetType === 'newOld' || targetType === 'spec' || targetType === 'quality') {
       return 'quality';
     }
-    // Check available data in allRows
-    const hasMoisture = allRows.some(r => r.moisture && r.moisture.trim());
-    const hasQuality = allRows.some(r => (r.newOld && r.newOld.trim()) || (r.quality && r.quality.trim()));
-    const hasColor = allRows.some(r => r.color && r.color.trim());
-    const hasVariety = allRows.some(r => r.variety && r.variety.trim());
-
-    if (hasMoisture && !hasQuality) return 'moisture';
-    if (hasColor && !hasQuality) return 'color';
-    if (hasVariety && !hasQuality) return 'variety';
-    return 'quality';
-  }, [product, byproduct, allRows]);
+    return targetType || null;
+  }, [product, byproduct]);
 
   const parseArrival = (a: any) => {
     if (typeof a === "number") return a;
@@ -11226,14 +11290,11 @@ function ProductRatesScreen({
       return { statMin: 0, statMax: 0, statArrival: 0, statMandis: 0 };
     }
 
-    // All records for this by-product on this date (scoped by active location)
-    const dateAllRecords = baseRows.filter((r) => r.date === curDateStr);
+    // Records matching active attribute filters on this date
     const dateFilteredRows = rows.filter((r) => r.date === curDateStr);
 
-    const activeDateRows = dateFilteredRows.length > 0 ? dateFilteredRows : dateAllRecords;
-
-    const dateMins = activeDateRows.map((r) => r.min).filter((v) => v > 0);
-    const dateMaxs = activeDateRows.map((r) => r.max).filter((v) => v > 0);
+    const dateMins = dateFilteredRows.map((r) => r.min).filter((v) => v > 0);
+    const dateMaxs = dateFilteredRows.map((r) => r.max).filter((v) => v > 0);
 
     const sMin =
       dateMins.length > 0
@@ -11244,14 +11305,14 @@ function ProductRatesScreen({
         ? Math.round(dateMaxs.reduce((a, b) => a + b, 0) / dateMaxs.length)
         : 0;
 
-    // Total arrival volume on this date for this by-product across scoped mandis (matching Screen 2)
-    const dateArrs = dateAllRecords.map((r) => parseArrival(r.arrival));
+    // Total arrival volume on this date for this by-product across filtered mandis
+    const dateArrs = dateFilteredRows.map((r) => parseArrival(r.arrival));
     const sArrival = dateArrs.reduce((a, b) => a + b, 0);
 
     const marketSet = new Set<string>();
-    for (let i = 0; i < dateAllRecords.length; i++) {
-      if (dateAllRecords[i].mandiName || dateAllRecords[i].mandiCity) {
-        marketSet.add(dateAllRecords[i].mandiName || dateAllRecords[i].mandiCity || "Mandi");
+    for (let i = 0; i < dateFilteredRows.length; i++) {
+      if (dateFilteredRows[i].mandiName || dateFilteredRows[i].mandiCity) {
+        marketSet.add(dateFilteredRows[i].mandiName || dateFilteredRows[i].mandiCity || "Mandi");
       }
     }
     const sMandis = marketSet.size;
@@ -11262,7 +11323,7 @@ function ProductRatesScreen({
       statArrival: sArrival,
       statMandis: sMandis,
     };
-  }, [baseRows, rows, isDateInRange, dateIdx, curDateStr]);
+  }, [rows, isDateInRange, dateIdx, curDateStr]);
 
   // Build comparison rows by geoView
   const compRows = useMemo((): CompRow[] => {
@@ -11273,12 +11334,14 @@ function ProductRatesScreen({
         : rows;
     const agg = (grp: R[]) => {
       const arrSum = grp.reduce((s, r) => s + parseArrival(r.arrival), 0);
+      const validMins = grp.map((r) => r.min).filter((v) => v > 0);
+      const validMaxs = grp.map((r) => r.max).filter((v) => v > 0);
       return {
-        min: Math.min(...grp.map((r) => r.min)),
-        max: Math.max(...grp.map((r) => r.max)),
+        min: validMins.length > 0 ? Math.min(...validMins) : 0,
+        max: validMaxs.length > 0 ? Math.max(...validMaxs) : 0,
         arrival: arrSum > 0 ? arrSum.toLocaleString() : "—",
-        trend: grp[0].trend,
-        trendPct: grp[0].trendPct,
+        trend: grp[0]?.trend || "stable",
+        trendPct: grp[0]?.trendPct || 0,
       };
     };
     const groupBy = (arr: R[], keyFn: (r: R) => string) => {
@@ -12954,12 +13017,9 @@ function ProductRatesScreen({
               {(() => {
                 const PROVINCES = ["Punjab", "Sindh", "KPK", "Balochistan"];
                 // Source rows, honoring locScope when a specific province/district/mandi is selected
-                const tableScopedRows = allRows.filter(
-                  (r) => (!attrRateType || r.rateType === attrRateType) && inLocScope(r),
-                );
-                const tableSourceRows = tableScopedRows.length > 0
-                  ? tableScopedRows
-                  : allRows.filter((r) => !attrRateType || r.rateType === attrRateType);
+                // Source rows, honoring spec filters and locScope when a specific province/district/mandi is selected
+                const tableScopedRows = rows.filter((r) => inLocScope(r));
+                const tableSourceRows = tableScopedRows.length > 0 ? tableScopedRows : rows;
                 const tableRows = tableSourceRows.filter(
                   (r) =>
                     !tableProvinceFilter || r.province === tableProvinceFilter,
@@ -15158,34 +15218,95 @@ function ProductRatesScreen({
               {/*  Attribute picker sheet  */}
               {attrSheet &&
                 (() => {
+                  // Dynamically collect available options from allRows for this commodity
+                  const discoveredVarieties = Array.from(
+                    new Set(
+                      allRows
+                        .map((r) => r.variety)
+                        .filter((v): v is string => Boolean(v && v.trim()))
+                    )
+                  ).sort();
+                  const defaultVarieties = [
+                    "Sona Moti",
+                    "TD-1",
+                    "SurSabz",
+                    "Akbar",
+                    "Anaj",
+                    "Ujala",
+                    "Galaxy",
+                    "Dilkush",
+                    "Arooj",
+                    "Subham",
+                  ];
+
+                  const discoveredColors = Array.from(
+                    new Set(
+                      allRows
+                        .map((r) => r.color)
+                        .filter((v): v is string => Boolean(v && v.trim()))
+                    )
+                  ).sort();
+                  const defaultColors = ["Golden", "White", "Yellow", "Brown", "Black", "Red"];
+
+                  const discoveredSpecs = Array.from(
+                    new Set(
+                      allRows
+                        .map((r) => r.spec)
+                        .filter((v): v is string => Boolean(v && v.trim()))
+                    )
+                  ).sort();
+                  const defaultSpecs = ["Seed Quality", "Retail", "Damage", "Standard"];
+
+                  const discoveredConditions = Array.from(
+                    new Set(
+                      allRows
+                        .map((r) => r.condition)
+                        .filter((v): v is string => Boolean(v && v.trim()))
+                    )
+                  ).sort();
+                  const defaultConditions = ["Wet", "Dry", "Mix"];
+
+                  const discoveredNewOld = Array.from(
+                    new Set(
+                      allRows
+                        .map((r) => r.newOld)
+                        .filter((v): v is string => Boolean(v && v.trim()))
+                    )
+                  ).sort();
+                  const defaultNewOld = ["New", "Old"];
+
+                  const discoveredMoistures = Array.from(
+                    new Set(
+                      allRows
+                        .map((r) => r.moisture)
+                        .filter((v): v is string => Boolean(v && v.trim()))
+                    )
+                  ).sort((a, b) => {
+                    const numA = parseFloat(a.replace(/[^0-9.]/g, "")) || 0;
+                    const numB = parseFloat(b.replace(/[^0-9.]/g, "")) || 0;
+                    return numA - numB;
+                  });
+                  const defaultMoistures = ["10-12%", "11-14%", "12-16%", "14-18%", "15-20%", "18-22%"];
+
                   const opts: Record<string, string[]> = {
-                    variety: [
-                      "Sona Moti",
-                      "TD-1",
-                      "SurSabz",
-                      "Akbar",
-                      "Anaj",
-                      "Ujala",
-                      "Galaxy",
-                      "Dilkush",
-                      "Arooj",
-                      "Subham",
-                    ],
-                    newold: ["New", "Old"],
-                    color: ["Golden", "White", "Yellow"],
-                    spec: ["Seed Quality", "Retail", "Damage"],
-                    condition: ["Wet", "Dry", "Mix"],
+                    variety: discoveredVarieties.length > 0 ? discoveredVarieties : defaultVarieties,
+                    newold: discoveredNewOld.length > 0 ? discoveredNewOld : defaultNewOld,
+                    color: discoveredColors.length > 0 ? discoveredColors : defaultColors,
+                    spec: discoveredSpecs.length > 0 ? discoveredSpecs : defaultSpecs,
+                    condition: discoveredConditions.length > 0 ? discoveredConditions : defaultConditions,
+                    moisture: discoveredMoistures.length > 0 ? discoveredMoistures : defaultMoistures,
                     ratetype: ALL_RATE_TYPES,
                   };
                   const labels: Record<string, string> = {
-                    variety: lang === "ur" ? "قسم منتخب کریں" : "Variety",
+                    variety: lang === "ur" ? "قسم منتخب کریں" : "Select Variety",
                     newold:
-                      lang === "ur" ? "معیار منتخب کریں" : "Quality",
-                    color: lang === "ur" ? "رنگ منتخب کریں" : "Color",
-                    spec: lang === "ur" ? "خصوصیت منتخب کریں" : "Specifications",
-                    condition: lang === "ur" ? "حالت منتخب کریں" : "Condition",
+                      lang === "ur" ? "معیار منتخب کریں" : "Select Quality",
+                    color: lang === "ur" ? "رنگ منتخب کریں" : "Select Color",
+                    spec: lang === "ur" ? "خصوصیت منتخب کریں" : "Select Specifications",
+                    condition: lang === "ur" ? "حالت منتخب کریں" : "Select Condition",
+                    moisture: lang === "ur" ? "نمی منتخب کریں" : "Select Moisture",
                     ratetype:
-                      lang === "ur" ? "نرخ کی قسم منتخب کریں" : "Rate Type",
+                      lang === "ur" ? "نرخ کی قسم منتخب کریں" : "Select Rate Type",
                   };
                   const currVal =
                     attrSheet === "variety"
@@ -15198,16 +15319,20 @@ function ProductRatesScreen({
                             ? attrSpec
                             : attrSheet === "ratetype"
                               ? attrRateType
-                              : attrCondition;
+                              : attrSheet === "moisture"
+                                ? attrMoisture
+                                : attrCondition;
                   const setter = (v: string | null) => {
                     if (attrSheet === "variety") setAttrVariety(v);
                     else if (attrSheet === "newold") setAttrNewOld(v);
                     else if (attrSheet === "color") setAttrColor(v);
                     else if (attrSheet === "spec") setAttrSpec(v);
                     else if (attrSheet === "ratetype") setAttrRateType(v);
+                    else if (attrSheet === "moisture") setAttrMoisture(v);
                     else setAttrCondition(v);
                     setAttrSheet(null);
                   };
+                  const sheetOpts = (attrSheet && opts[attrSheet]) ? opts[attrSheet] : [];
                   return (
                     <div
                       className="zm-sheet-overlay"
@@ -15239,7 +15364,7 @@ function ProductRatesScreen({
                                   : "inherit",
                             }}
                           >
-                            {labels[attrSheet]}
+                            {labels[attrSheet] || ""}
                           </p>
                         </div>
                         <div
@@ -15272,100 +15397,117 @@ function ProductRatesScreen({
                               </span>
                             </button>
                           )}
-                          {opts[attrSheet].map((opt) => {
-                            // Check if this attribute option is available in selected mandi
-                            const mandiAttrs =
-                              locScope.kind === "mandi"
-                                ? MANDI_ATTR_AVAILABLE[locScope.label]
-                                : null;
-                            const attrKey =
-                              attrSheet === "newold"
-                                ? "newold"
-                                : (attrSheet as
-                                  | "color"
-                                  | "variety"
-                                  | "spec"
-                                  | "condition"
-                                  | "newold");
-                            const available =
-                              !mandiAttrs ||
-                              !mandiAttrs[attrKey] ||
-                              mandiAttrs[attrKey].includes(opt);
-                            const optLabel =
-                              attrSheet === "variety"
-                                ? tc(opt)
-                                : attrSheet === "ratetype"
-                                  ? tr(opt)
-                                  : t(opt);
-                            const isSelected = currVal === opt;
-                            return (
-                              <button
-                                key={opt}
-                                onClick={() =>
-                                  available ? setter(opt) : undefined
-                                }
-                                className="tap-target rounded-xl px-4 flex items-center justify-between transition active:scale-[0.98]"
-                                style={{
-                                  background: !available
-                                    ? "#F4FAF7"
-                                    : isSelected
-                                      ? "#E8F5EE"
-                                      : "#FFFFFF",
-                                  border: !available
-                                    ? "1px dashed #D5E2DD"
-                                    : isSelected
-                                      ? "1.5px solid #087F63"
-                                      : "1px solid #E2EBE7",
-                                  minHeight: 44,
-                                  opacity: available ? 1 : 0.45,
-                                  boxShadow: isSelected
-                                    ? "0 2px 8px rgba(8,127,99,0.12)"
-                                    : "0 1px 3px rgba(0,0,0,0.02)",
-                                }}
+                          {sheetOpts.length === 0 ? (
+                            <div className="py-8 text-center text-[#80918B]">
+                              <p
+                                className="font-semibold text-sm"
+                                style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                               >
-                                <span
-                                  className={`${lang === "ur" ? "text-right" : "text-left"} font-bold text-sm`}
+                                {lang === "ur"
+                                  ? "اس کے لیے کوئی ڈیٹا دستیاب نہیں ہے"
+                                  : "No data available for this"}
+                              </p>
+                            </div>
+                          ) : (
+                            sheetOpts.map((opt) => {
+                              // Check if this attribute option is available in selected mandi
+                              const mandiAttrs =
+                                locScope.kind === "mandi"
+                                  ? MANDI_ATTR_AVAILABLE[locScope.label]
+                                  : null;
+                              const attrKey =
+                                attrSheet === "newold"
+                                  ? "newold"
+                                  : (attrSheet as
+                                    | "color"
+                                    | "variety"
+                                    | "spec"
+                                    | "condition"
+                                    | "newold");
+                              const available =
+                                !mandiAttrs ||
+                                !mandiAttrs[attrKey] ||
+                                mandiAttrs[attrKey].includes(opt);
+                              const optLabel =
+                                attrSheet === "variety"
+                                  ? tc(opt)
+                                  : attrSheet === "ratetype"
+                                    ? tr(opt)
+                                    : attrSheet === "moisture"
+                                      ? (lang === "ur"
+                                        ? `${toUrduDigits(opt)}${opt.includes("٪") || opt.includes("%") ? "" : "٪"}`
+                                        : `${opt}${opt.includes("%") ? "" : "%"}`)
+                                      : t(opt);
+                              const isSelected = currVal === opt;
+                              return (
+                                <button
+                                  key={opt}
+                                  onClick={() =>
+                                    available ? setter(opt) : undefined
+                                  }
+                                  className="tap-target rounded-xl px-4 flex items-center justify-between transition active:scale-[0.98]"
                                   style={{
-                                    color: !available
-                                      ? "#80918B"
+                                    background: !available
+                                      ? "#F4FAF7"
                                       : isSelected
-                                        ? "#064D40"
-                                        : "#183B34",
-                                    fontSize: lang === "ur" ? 16 : 13.5,
-                                    fontFamily:
-                                      lang === "ur"
-                                        ? URDU_FONT
-                                        : "inherit",
+                                        ? "#E8F5EE"
+                                        : "#FFFFFF",
+                                    border: !available
+                                      ? "1px dashed #D5E2DD"
+                                      : isSelected
+                                        ? "1.5px solid #087F63"
+                                        : "1px solid #E2EBE7",
+                                    minHeight: 44,
+                                    opacity: available ? 1 : 0.45,
+                                    boxShadow: isSelected
+                                      ? "0 2px 8px rgba(8,127,99,0.12)"
+                                      : "0 1px 3px rgba(0,0,0,0.02)",
                                   }}
                                 >
-                                  {optLabel}
-                                </span>
-                                {!available && (
                                   <span
+                                    className={`${lang === "ur" ? "text-right" : "text-left"} font-bold text-sm`}
                                     style={{
-                                      fontSize: lang === "ur" ? 12 : 10,
-                                      color: "#80918B",
+                                      color: !available
+                                        ? "#80918B"
+                                        : isSelected
+                                          ? "#064D40"
+                                          : "#183B34",
+                                      fontSize: lang === "ur" ? 16 : 13.5,
                                       fontFamily:
                                         lang === "ur"
                                           ? URDU_FONT
                                           : "inherit",
                                     }}
                                   >
-                                    {lang === "ur"
-                                      ? "منڈی میں نہیں"
-                                      : "Not in mandi"}
+                                    {optLabel}
                                   </span>
-                                )}
-                                {available && isSelected && (
-                                  <span
-                                    style={{ color: "#087F63", fontWeight: 900, fontSize: 15 }}
-                                  >
-                                    ✓
-                                  </span>
-                                )}
-                              </button>
-                            );
-                          })}
+                                  {!available && (
+                                    <span
+                                      style={{
+                                        fontSize: lang === "ur" ? 12 : 10,
+                                        color: "#80918B",
+                                        fontFamily:
+                                          lang === "ur"
+                                            ? URDU_FONT
+                                            : "inherit",
+                                      }}
+                                    >
+                                      {lang === "ur"
+                                        ? "منڈی میں نہیں"
+                                        : "Not in mandi"}
+                                    </span>
+                                  )}
+                                  {available && isSelected && (
+                                    <span
+                                      style={{ color: "#087F63", fontWeight: 900, fontSize: 15 }}
+                                    >
+                                      ✓
+                                    </span>
+                                  )}
+                                </button>
+                              );
+                            })
+                          )}
                         </div>
                       </div>
                     </div>
