@@ -46,6 +46,15 @@ import {
   type TrendPoint,
 } from "./lib/api";
 import { buildMandiInlineGraphFromRows } from "./lib/mandiGraph";
+import {
+  getPackagesForMonth,
+  getVarietyIcon,
+  MONTH_KEYS,
+  MONTH_NAMES_EN,
+  MONTH_NAMES_UR,
+  SEASON_PACKAGES,
+  type SeasonPackage,
+} from "./data/seasonProductData";
 
 import video1 from "./videos/video1.mp4";
 import video2 from "./videos/video2.mp4";
@@ -20717,6 +20726,32 @@ function getMonthlyDiscount(months: number): number {
   return 0;
 }
 
+function getSeasonPackageBasePrice(pkgOrProd: string): number {
+  const k = (pkgOrProd || "").toLowerCase().trim();
+  const pkg = SEASON_PACKAGES.find(
+    (p) =>
+      p.id === k ||
+      p.name.toLowerCase() === k ||
+      p.name.toLowerCase().includes(k) ||
+      k.includes(p.name.toLowerCase())
+  );
+  if (pkg) return pkg.pricePerMonth;
+  return 600;
+}
+
+function getSeasonPackageIconSrc(pkgOrProd: string, _fallbackVertical?: string): string {
+  const k = (pkgOrProd || "").toLowerCase().trim();
+  const pkg = SEASON_PACKAGES.find(
+    (p) =>
+      p.id === k ||
+      p.name.toLowerCase() === k ||
+      p.name.toLowerCase().includes(k) ||
+      k.includes(p.name.toLowerCase())
+  );
+  if (pkg) return pkg.icon;
+  return wheatImg;
+}
+
 function CompleteProfileModal({
   data,
   onUpdateData,
@@ -20753,8 +20788,14 @@ function CompleteProfileModal({
   const [isProcessingMpin, setIsProcessingMpin] = useState(false);
   const [mpinSuccess, setMpinSuccess] = useState(false);
 
+  // Demonstration month index (0=Jan ... 8=Sep ... 11=Dec) - default to September (8)
+  const [demoMonthIdx, setDemoMonthIdx] = useState(8);
+  const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
+  const [expandedPkgId, setExpandedPkgId] = useState<string | null>("fruits");
+  const [allVarietiesModalPkg, setAllVarietiesModalPkg] = useState<any | null>(null);
+
   const monthlyTotal = data.selectedProds.reduce(
-    (sum, p) => sum + getproductBasePrice(p),
+    (sum, p) => sum + getSeasonPackageBasePrice(p),
     0,
   );
 
@@ -20987,65 +21028,85 @@ function CompleteProfileModal({
           flexDirection: "column",
           borderRadius: "28px 28px 0 0",
           boxShadow: "0 -10px 40px rgba(6,77,64,0.22)",
+          transition: "all 0.25s ease-out",
         }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div
-          className="px-5 pt-4 pb-3 flex-shrink-0"
+          className="px-5 pt-4 pb-3 flex-shrink-0 bg-white"
           style={{ borderBottom: "1px solid #D5E2DD" }}
         >
           <div
             className="w-10 h-1 rounded-full mx-auto mb-3"
             style={{ background: "#C7D6D0" }}
           />
-          <div className="flex items-center justify-between">
-            <div>
-              <p
-                className="font-extrabold text-lg"
-                style={{ color: "#183B34" }}
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={currentStep > 1 ? handlePrev : onClose}
+                className="tap-target w-8 h-8 rounded-full bg-[#E8EFEC] flex items-center justify-center text-[#183B34] font-bold text-sm hover:bg-[#D8E4E0] active:scale-95 transition"
+                title={currentStep > 1 ? "Back" : "Close"}
               >
-                {lang === "ur"
-                  ? "پروفائل سیٹ اپ مکمل کریں"
-                  : "Complete Your Profile"}
-              </p>
-              <p className="text-xs font-semibold" style={{ color: "#52635F" }}>
-                {lang === "ur"
-                  ? `مرحلہ ${currentStep} از ${totalSteps}: ${activeStepKey === "products"
-                    ? "دلچسپی کی مصنوعات"
-                    : activeStepKey === "plan"
-                      ? "سبسکرپشن پلان"
-                      : "ادائیگی کی تفصیلات"
-                  }`
-                  : `Step ${currentStep} of ${totalSteps}: ${activeStepKey === "products"
-                    ? "Interested Products"
-                    : activeStepKey === "plan"
-                      ? "Subscription Plan"
-                      : "Card & Payment"
-                  }`}
-              </p>
+                ←
+              </button>
+              <div>
+                <p
+                  className="font-black text-base sm:text-lg"
+                  style={{ color: "#143B33", fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                >
+                  {lang === "ur"
+                    ? "پروفائل مکمل کریں"
+                    : "Complete Your Profile"}
+                </p>
+              </div>
             </div>
             <button
+              type="button"
               onClick={onClose}
-              className="tap-target text-sm font-semibold px-3 py-1 rounded-full"
-              style={{ background: "#E8EFEC", color: "#52635F" }}
-              title="Close & Explore"
+              className="tap-target text-sm font-semibold px-2.5 py-1 rounded-full text-[#52635F] hover:bg-[#E8EFEC]"
+              title="Close"
             >
               ✕
             </button>
           </div>
 
-          {/* Stepper Dots */}
-          <div className="flex gap-2 mt-3">
+          {/* Step Subtitle: Step 1 of 3: Interested Products */}
+          <div className="flex items-center justify-between mb-1.5">
+            <span
+              className="text-[12px] font-bold text-[#183B34]"
+              style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+            >
+              {lang === "ur"
+                ? `مرحلہ ${toUrduDigits(currentStep)} از ${toUrduDigits(totalSteps)}: ${
+                    activeStepKey === "products"
+                      ? "دلچسپی کی مصنوعات"
+                      : activeStepKey === "plan"
+                        ? "سبسکرپشن پلان"
+                        : "ادائیگی کی تفصیلات"
+                  }`
+                : `Step ${currentStep} of ${totalSteps}: ${
+                    activeStepKey === "products"
+                      ? "Interested Products"
+                      : activeStepKey === "plan"
+                        ? "Subscription Plan"
+                        : "Card & Payment"
+                  }`}
+            </span>
+          </div>
+
+          {/* Full-width 3-segment Progress Bar */}
+          <div className="flex gap-2 w-full">
             {Array.from({ length: totalSteps }, (_, i) => i + 1).map((s) => (
               <div
                 key={s}
                 style={{
                   flex: 1,
-                  height: 4,
+                  height: 5,
                   borderRadius: 999,
                   background: s <= currentStep ? "#087F63" : "#D5E2DD",
-                  transition: "background 0.3s",
+                  transition: "background 0.3s ease",
                 }}
               />
             ))}
@@ -21054,101 +21115,272 @@ function CompleteProfileModal({
 
         {/* Modal Scrollable Body */}
         <div className="flex-1 overflow-y-auto px-5 py-4">
-          {/* STEP 1: INTERESTED PRODUCTS */}
-          {activeStepKey === "products" && (
-            <div>
-              <div style={{ marginBottom: 14 }}>
-                <h2 style={{ fontSize: 16, fontWeight: 800, color: "#183B34" }}>
-                  {lang === "ur"
-                    ? "اپنی دلچسپی کی مصنوعات منتخب کریں"
-                    : "Select Your Interested Products"}
-                </h2>
-                <p style={{ fontSize: 11.5, color: "#52635F", marginTop: 2 }}>
-                  {lang === "ur"
-                    ? "گندم پہلے سے منتخب ہے، مزید مصنوعات شامل کریں"
-                    : "Wheat is selected by default. Tap to add or remove commodities."}
-                </p>
-              </div>
+          {/* STEP 1: INTERESTED PRODUCTS / PACKAGES */}
+          {activeStepKey === "products" && (() => {
+            const availablePackages = getPackagesForMonth(MONTH_KEYS[demoMonthIdx]);
+            const currentMonthNameEn = MONTH_NAMES_EN[demoMonthIdx];
 
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(3, 1fr)",
-                  gap: "12px 10px",
-                }}
-              >
-                {PRODUCT_DIVISIONS.map((div) => {
-                  const sel = data.selectedProds.includes(div.name);
-                  const iconSrc = getproductIconSrc(
-                    div.name,
-                    getVerticalForModalProduct(div.name),
-                  );
+            // Find expanded vertical package if one is currently expanded
+            const expandedPkg = availablePackages.find(
+              (p) => p.id === expandedPkgId && p.type === "vertical"
+            );
 
-                  return (
-                    <button
-                      key={div.name}
-                      type="button"
-                      onClick={() => toggleProd(div.name)}
-                      className="tap-target flex flex-col items-center p-2 rounded-2xl relative"
-                      style={{
-                        background: sel ? "#E4F2EC" : "#FFFFFF",
-                        border: sel
-                          ? "2px solid #087F63"
-                          : "1.5px solid #D5E2DD",
-                        boxShadow: sel
-                          ? "0 4px 12px rgba(8,127,99,0.14)"
-                          : "none",
-                        transition: "all 0.15s ease",
-                      }}
+            // Filter the rest for the 2-column grid
+            const gridPackages = availablePackages.filter(
+              (p) => !(expandedPkg && p.id === expandedPkg.id)
+            );
+
+            return (
+              <div className="flex flex-col gap-3 pb-2">
+                {/* Title & Subtitle + Subtle Demo Month Switcher on Top Right */}
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h2
+                      className="font-black text-[20px] sm:text-[22px] text-[#143B33] leading-tight"
+                      style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                     >
-                      {sel && (
-                        <span
-                          style={{
-                            position: "absolute",
-                            top: 6,
-                            right: 6,
-                            width: 18,
-                            height: 18,
-                            borderRadius: "50%",
-                            background: "#087F63",
-                            color: "#fff",
-                            fontSize: 10,
-                            fontWeight: 900,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          ✓
-                        </span>
-                      )}
-                      <img
-                        src={iconSrc}
-                        alt={div.name}
-                        style={{
-                          width: 44,
-                          height: 44,
-                          objectFit: "contain",
-                          marginBottom: 6,
-                        }}
-                      />
-                      <span
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 700,
-                          color: sel ? "#087F63" : "#183B34",
-                          textAlign: "center",
-                          lineHeight: 1.2,
-                        }}
-                      >
-                        {tc(div.name)}
+                      {lang === "ur"
+                        ? "اپنی مصنوعات منتخب کریں"
+                        : "Select Your Products"}
+                    </h2>
+                    <p
+                      className="text-[12px] font-medium text-[#52635F] mt-0.5"
+                      style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                    >
+                      {lang === "ur"
+                        ? "اپنی سبسکرپشن مصنوعات منتخب کریں۔"
+                        : "Choose your subscription products."}
+                    </p>
+                  </div>
+
+                  {/* Subtle Demo Month Switcher */}
+                  <div className="relative flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setIsMonthPickerOpen(!isMonthPickerOpen)}
+                      className="tap-target flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white border border-[#D5E2DD] text-[#52635F] hover:border-[#087F63] hover:text-[#087F63] transition-all shadow-2xs"
+                      title="Change demonstration month"
+                    >
+                      <span className="text-[11px] font-bold">
+                        Demo: <span className="text-[#087F63] font-black">{currentMonthNameEn}</span>
                       </span>
+                      <span className="text-[10px] text-[#9CA3AF]">▾</span>
                     </button>
+
+                    {/* Floating Dropdown Month Menu */}
+                    {isMonthPickerOpen && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-40 bg-transparent"
+                          onClick={() => setIsMonthPickerOpen(false)}
+                        />
+                        <div
+                          className="absolute right-0 top-8 z-50 bg-white rounded-2xl p-2 shadow-2xl border border-[#E2E8F0] grid grid-cols-3 gap-1 w-[240px] animate-fadeIn"
+                          style={{ boxShadow: "0 12px 32px rgba(0,0,0,0.18)" }}
+                        >
+                          {MONTH_NAMES_EN.map((mName, mIdx) => {
+                            const isCur = demoMonthIdx === mIdx;
+                            return (
+                              <button
+                                key={mName}
+                                type="button"
+                                onClick={() => {
+                                  setDemoMonthIdx(mIdx);
+                                  setIsMonthPickerOpen(false);
+                                }}
+                                className={`px-2 py-1.5 rounded-lg text-[11px] font-bold transition text-center ${
+                                  isCur
+                                    ? "bg-[#087F63] text-white"
+                                    : "text-[#374151] hover:bg-[#F3F4F6]"
+                                }`}
+                              >
+                                {mName.slice(0, 3)}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* 1. EXPANDED VERTICAL CARD (FULL WIDTH) */}
+                {expandedPkg && (() => {
+                  const isSelected = data.selectedProds.includes(expandedPkg.name) || data.selectedProds.includes(expandedPkg.id);
+                  return (
+                    <div
+                      key={expandedPkg.id}
+                      className="rounded-2xl border border-[#D5E2DD] bg-white p-3 shadow-xs transition-all flex flex-col gap-2.5"
+                    >
+                      {/* Top Row: Icon + Title + Chevron Up + Radio */}
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <img
+                            src={expandedPkg.icon}
+                            alt={expandedPkg.name}
+                            className="w-9 h-9 object-contain flex-shrink-0"
+                          />
+                          <span
+                            className="font-black text-[15px] text-[#143B33] truncate"
+                            style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                          >
+                            {lang === "ur" ? expandedPkg.nameUr : expandedPkg.name}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2.5 flex-shrink-0">
+                          {/* Chevron Up */}
+                          <button
+                            type="button"
+                            onClick={() => setExpandedPkgId(null)}
+                            className="tap-target text-[#6B7280] hover:text-[#087F63] p-1"
+                            title="Collapse"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="18 15 12 9 6 15" />
+                            </svg>
+                          </button>
+
+                          {/* Radio circle */}
+                          <button
+                            type="button"
+                            onClick={() => toggleProd(expandedPkg.name)}
+                            className="tap-target focus:outline-none"
+                          >
+                            <div
+                              className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                                isSelected
+                                  ? "border-[#087F63] bg-[#087F63] text-white"
+                                  : "border-[#9CA3AF] bg-white hover:border-[#087F63]"
+                              }`}
+                            >
+                              {isSelected && <span className="text-[10px] font-black">✓</span>}
+                            </div>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Content Row: 3 Variety preview cards on left + View all link on right */}
+                      <div className="flex items-center justify-between gap-2 pt-1">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          {expandedPkg.activeVarieties.slice(0, 3).map((v) => (
+                            <div
+                              key={v.name}
+                              className="flex-1 bg-[#F8FAF9] border border-[#E5EBE8] rounded-xl p-1.5 flex flex-col items-center justify-center text-center gap-1 min-w-0"
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-white p-0.5 flex items-center justify-center">
+                                <img
+                                  src={getVarietyIcon(expandedPkg.id, v.name)}
+                                  alt={v.name}
+                                  className="w-7 h-7 object-contain rounded-md"
+                                />
+                              </div>
+                              <span
+                                className="text-[10px] font-bold text-[#183B34] truncate w-full"
+                                style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                              >
+                                {lang === "ur" ? (v.nameUr || v.name) : v.name}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* View All button on the right */}
+                        <button
+                          type="button"
+                          onClick={() => setAllVarietiesModalPkg(expandedPkg as any)}
+                          className="tap-target flex items-center gap-1 text-[#087F63] font-bold text-[12px] px-2 py-3 rounded-xl hover:bg-[#E8F8F3] transition flex-shrink-0"
+                          style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                        >
+                          <span>{lang === "ur" ? "تمام دیکھیں" : "View all"}</span>
+                          <span className="text-[14px] leading-none">›</span>
+                        </button>
+                      </div>
+                    </div>
                   );
-                })}
+                })()}
+
+                {/* 2. 2-COLUMN GRID FOR ALL OTHER PACKAGES AND PRODUCTS */}
+                <div className="grid grid-cols-2 gap-2.5">
+                  {gridPackages.map((pkg) => {
+                    const isSelected = data.selectedProds.includes(pkg.name) || data.selectedProds.includes(pkg.id);
+                    const isVertical = pkg.type === "vertical";
+
+                    return (
+                      <div
+                        key={pkg.id}
+                        onClick={() => {
+                          if (!isVertical) {
+                            toggleProd(pkg.name);
+                          }
+                        }}
+                        className={`rounded-2xl p-2.5 flex items-center justify-between gap-1.5 transition-all cursor-pointer ${
+                          isSelected
+                            ? "border-2 border-[#087F63] bg-[#E8F8F3] shadow-xs"
+                            : "border border-[#D5E2DD] bg-white hover:border-[#B5CEC5]"
+                        }`}
+                      >
+                        {/* Icon + Title */}
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <img
+                            src={pkg.icon}
+                            alt={pkg.name}
+                            className="w-8 h-8 object-contain flex-shrink-0"
+                          />
+                          <span
+                            className={`text-[13px] font-bold truncate ${
+                              isSelected ? "text-[#087F63]" : "text-[#183B34]"
+                            }`}
+                            style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                          >
+                            {lang === "ur" ? pkg.nameUr : pkg.name}
+                          </span>
+                        </div>
+
+                        {/* Right side: Chevron for Verticals + Radio for all */}
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          {isVertical && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setExpandedPkgId(pkg.id);
+                              }}
+                              className="tap-target text-[#9CA3AF] hover:text-[#087F63] p-0.5"
+                              title="Expand varieties"
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="6 9 12 15 18 9" />
+                              </svg>
+                            </button>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleProd(pkg.name);
+                            }}
+                            className="tap-target focus:outline-none"
+                          >
+                            <div
+                              className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                                isSelected
+                                  ? "border-[#087F63] bg-[#087F63] text-white"
+                                  : "border-[#9CA3AF] bg-white hover:border-[#087F63]"
+                              }`}
+                            >
+                              {isSelected && <span className="text-[10px] font-black">✓</span>}
+                            </div>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* STEP 2: SUBSCRIPTION PLAN */}
           {activeStepKey === "plan" && (
@@ -21390,11 +21622,8 @@ function CompleteProfileModal({
                 </div>
                 <div style={{ maxHeight: 110, overflowY: "auto" }}>
                   {data.selectedProds.map((pName) => {
-                    const iconSrc = getproductIconSrc(
-                      pName,
-                      getVerticalForModalProduct(pName),
-                    );
-                    const price = getproductBasePrice(pName);
+                    const iconSrc = getSeasonPackageIconSrc(pName);
+                    const price = getSeasonPackageBasePrice(pName);
                     return (
                       <div
                         key={pName}
@@ -22118,59 +22347,162 @@ function CompleteProfileModal({
 
         {/* Footer Actions */}
         <div
-          className="px-5 pt-3 pb-5 flex-shrink-0"
+          className="px-5 pt-3 pb-5 flex-shrink-0 bg-white"
           style={{ borderTop: "1px solid #D5E2DD" }}
         >
-          <div className="flex gap-3">
-            {currentStep > 1 && (
-              <button
-                type="button"
-                onClick={handlePrev}
-                className="tap-target py-3 px-4 rounded-2xl font-bold text-xs"
-                style={{ background: "#E8EFEC", color: "#183B34" }}
+          {activeStepKey === "products" ? (
+            <div className="flex items-center justify-between gap-3">
+              <span
+                className="font-black text-[13.5px] text-[#143B33]"
+                style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
               >
-                ← {lang === "ur" ? "پیچھے" : "Back"}
-              </button>
-            )}
-
-            {currentStep < totalSteps ? (
+                {lang === "ur"
+                  ? `${toUrduDigits(data.selectedProds.length)} مصنوعات منتخب`
+                  : `${data.selectedProds.length} product${data.selectedProds.length === 1 ? "" : "s"} selected`}
+              </span>
               <button
                 type="button"
                 onClick={handleNext}
-                className="tap-target flex-1 py-3 rounded-2xl font-extrabold text-sm text-white"
-                style={{
-                  background: "#087F63",
-                  boxShadow: "0 4px 14px rgba(8,127,99,0.3)",
-                }}
+                disabled={data.selectedProds.length === 0}
+                className={`tap-target px-5 py-3 rounded-2xl font-black text-sm text-white flex items-center gap-1.5 transition-all ${
+                  data.selectedProds.length === 0
+                    ? "bg-[#9CA3AF] opacity-60 cursor-not-allowed"
+                    : "bg-[#087F63] hover:bg-[#066A52] active:scale-95 shadow-md shadow-[#087F63]/25"
+                }`}
+                style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
               >
-                {activeStepKey === "products"
-                  ? lang === "ur"
-                    ? "پلان منتخب کریں →"
-                    : "Choose Plan →"
-                  : lang === "ur"
-                    ? `ادائیگی کی طرف جائیں`
-                    : `Subscribe`}
+                <span>{lang === "ur" ? "پلان منتخب کریں" : "Choose Plan"}</span>
+                <span>›</span>
               </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handlePaymentConfirmClick}
-                className="tap-target flex-1 py-3 rounded-2xl font-extrabold text-sm text-white flex items-center justify-center gap-2"
-                style={{
-                  background: "linear-gradient(135deg, #087F63, #064D40)",
-                  boxShadow: "0 4px 16px rgba(8,127,99,0.4)",
-                }}
-              >
-                <span>
-                  {lang === "ur"
-                    ? `ادائیگی کی تصدیق کریں — PKR ${finalTotal.toLocaleString()}`
-                    : `Confirm Payment — PKR ${finalTotal.toLocaleString()}`}
-                </span>
-              </button>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="flex gap-3">
+              {currentStep > 1 && (
+                <button
+                  type="button"
+                  onClick={handlePrev}
+                  className="tap-target py-3 px-4 rounded-2xl font-bold text-xs"
+                  style={{ background: "#E8EFEC", color: "#183B34" }}
+                >
+                  ← {lang === "ur" ? "پیچھے" : "Back"}
+                </button>
+              )}
+
+              {currentStep < totalSteps ? (
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  className="tap-target flex-1 py-3 rounded-2xl font-extrabold text-sm text-white"
+                  style={{
+                    background: "#087F63",
+                    boxShadow: "0 4px 14px rgba(8,127,99,0.3)",
+                  }}
+                >
+                  {lang === "ur" ? "ادائیگی کی طرف جائیں →" : "Continue to Payment →"}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handlePaymentConfirmClick}
+                  className="tap-target flex-1 py-3 rounded-2xl font-extrabold text-sm text-white flex items-center justify-center gap-2"
+                  style={{
+                    background: "linear-gradient(135deg, #087F63, #064D40)",
+                    boxShadow: "0 4px 16px rgba(8,127,99,0.4)",
+                  }}
+                >
+                  <span>
+                    {lang === "ur"
+                      ? `ادائیگی کی تصدیق کریں — PKR ${finalTotal.toLocaleString()}`
+                      : `Confirm Payment — PKR ${finalTotal.toLocaleString()}`}
+                  </span>
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
+
+      {/* All Varieties Modal Sheet */}
+      {allVarietiesModalPkg && (
+        <div
+          className="fixed inset-0 z-[400] bg-black/50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn"
+          onClick={() => setAllVarietiesModalPkg(null)}
+        >
+          <div
+            className="bg-white rounded-t-3xl sm:rounded-3xl max-h-[80vh] w-full max-w-md flex flex-col overflow-hidden shadow-2xl animate-slideUp"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="p-4 border-b border-[#E5E7EB] flex items-center justify-between bg-[#F8FAF9]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-white border border-[#E2EBE6] p-1 flex items-center justify-center shadow-xs">
+                  <img src={allVarietiesModalPkg.icon} alt="" className="w-8 h-8 object-contain" />
+                </div>
+                <div>
+                  <h3
+                    className="font-black text-base text-[#143B33]"
+                    style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                  >
+                    {lang === "ur" ? allVarietiesModalPkg.nameUr : allVarietiesModalPkg.name}
+                  </h3>
+                  <p
+                    className="text-xs text-[#52635F]"
+                    style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                  >
+                    {lang === "ur"
+                      ? `${MONTH_NAMES_UR[demoMonthIdx]} میں تمام ${toUrduDigits(allVarietiesModalPkg.varietyCount)} اقسام`
+                      : `All ${allVarietiesModalPkg.varietyCount} varieties in ${MONTH_NAMES_EN[demoMonthIdx]}`}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAllVarietiesModalPkg(null)}
+                className="tap-target w-8 h-8 rounded-full bg-[#E5E7EB] flex items-center justify-center text-sm font-bold text-[#374151]"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Varieties List */}
+            <div
+              className="p-4 overflow-y-auto flex-1 flex flex-col gap-2"
+              style={{ scrollbarWidth: "thin" }}
+            >
+              {allVarietiesModalPkg.activeVarieties.map((v: any) => (
+                <div
+                  key={v.name}
+                  className="flex items-center gap-3 p-2.5 rounded-2xl bg-[#F8FAF9] border border-[#E5EBE8] hover:bg-white hover:border-[#BDE7D9] transition-all"
+                >
+                  <img
+                    src={getVarietyIcon(allVarietiesModalPkg.id, v.name)}
+                    alt={v.name}
+                    className="w-8 h-8 object-contain rounded-xl flex-shrink-0"
+                  />
+                  <span
+                    className="font-bold text-[14px] text-[#183B34] truncate"
+                    style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                  >
+                    {lang === "ur" ? (v.nameUr || v.name) : v.name}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Footer */}
+            <div className="p-3 border-t border-[#E5E7EB] bg-[#F8FAF9] flex justify-end">
+              <button
+                type="button"
+                onClick={() => setAllVarietiesModalPkg(null)}
+                className="px-5 py-2 rounded-xl bg-[#087F63] text-white font-bold text-sm shadow-sm hover:bg-[#066A52]"
+                style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+              >
+                {lang === "ur" ? "ٹھیک ہے" : "Done"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MPIN Entry Modal for Mobile Wallet */}
       {mpinModalOpen && (
