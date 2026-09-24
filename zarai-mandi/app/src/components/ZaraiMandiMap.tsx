@@ -460,9 +460,16 @@ export default function ZaraiMandiMap({
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [graphMode, setGraphMode] = useState<"price" | "arrival">("price");
-  const [timeframe, setTimeframe] = useState<"72h" | "7d" | "30d">("72h");
+  const [timeframe, setTimeframe] = useState<"1M" | "3M" | "6M" | "1Y" | "72h" | "7d" | "30d">("1M");
+  const [granularity, setGranularity] = useState<string>("15");
+  const [graphHoverIdx, setGraphHoverIdx] = useState<number | null>(null);
   const [showWiki, setShowWiki] = useState(false);
   const svgRef = useRef<SVGSVGElement>(null);
+
+  const toUrduDigits = (n: number | string): string => {
+    const urduDigits = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
+    return String(n).replace(/[0-9]/g, (w) => urduDigits[+w]);
+  };
 
   const normStation = (s: string) =>
     (s || "").toLowerCase().replace(/\s*(mandi|منڈی)$/i, "").trim();
@@ -955,7 +962,7 @@ export default function ZaraiMandiMap({
           onPointerUp={handlePointerUp}
           onClick={() => {
             if (!movedRef.current) {
-              setSheetExpanded(false);
+              setSidebarOpen(false);
             }
           }}
         >
@@ -1255,33 +1262,45 @@ export default function ZaraiMandiMap({
         const distinctMandiCount = new Set(records.map((r) => normStation(r.mandiName))).size;
         const historyRows = [...mandiRecords].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 
-        const W = 350;
-        const H = 115;
-        const xLeft = 34;
-        const xRight = 334;
-        const yTop = 12;
-        const yBottom = 84;
-
-        const activePoints = graphMode === "price" ? graphData.points : arrData.points;
-        const activeMinBound = graphMode === "price" ? graphData.yMinBound : arrData.yMinBound;
-        const activeMaxBound = graphMode === "price" ? graphData.yMaxBound : arrData.yMaxBound;
-        const activeXLabels = graphMode === "price" ? graphData.xLabels : arrData.xLabels;
-        const activeYLabels = graphMode === "price" ? graphData.yLabels : arrData.yLabels;
-
-        const coords = activePoints.map((p, i, arr) => {
-          const x = xLeft + (i / (arr.length - 1)) * (xRight - xLeft);
-          const y = yBottom - ((p - activeMinBound) / (Math.max(activeMaxBound - activeMinBound, 1))) * (yBottom - yTop);
-          return { x, y, val: p };
-        });
-
-        const linePath = coords.map((c, i) => (i === 0 ? `M ${c.x} ${c.y}` : `L ${c.x} ${c.y}`)).join(" ");
-        const areaPath = `${linePath} L ${coords[coords.length - 1].x} ${yBottom + 8} L ${coords[0].x} ${yBottom + 8} Z`;
-        const yMidY = (yTop + yBottom) / 2;
+        const W = 540;
+        const H = 145;
+        const PL = 42;
+        const PR = 42;
+        const PT = 14;
+        const PB = 24;
+        const chartW = W - PL - PR;
+        const chartH = H - PT - PB;
 
         const isArrival = graphMode === "arrival";
-        const chartStrokeColor = isArrival ? "#8B5A2B" : "#10B981";
-        const chartGradientId = isArrival ? "mandiMapChartGradientBrown" : "mandiMapChartGradientGreen";
-        const chartMaxValColor = isArrival ? "text-[#8B5A2B]" : "text-[#087F63]";
+        const currentData = isArrival ? arrData : graphData;
+        const pts = currentData.points;
+        const len = pts.length;
+        const hoverI = graphHoverIdx !== null && graphHoverIdx < len ? graphHoverIdx : len - 1;
+
+        const displayPrice = graphData.points[hoverI] ?? graphData.latestPrice;
+        const displayArr = arrData.points[hoverI] ?? arrData.latestArrival;
+        const startPrice = graphData.points[0] || displayPrice || 1;
+        const changeAmt = displayPrice - startPrice;
+        const absPct = Math.abs((changeAmt / (startPrice || 1)) * 100).toFixed(2);
+        const isPositive = changeAmt > 0;
+        const isFlat = changeAmt === 0;
+
+        const seriesMax = Math.max(...graphData.points, displayPrice);
+        const seriesMin = Math.min(...graphData.points, displayPrice);
+        const seriesAvg = Math.round(graphData.points.reduce((a, b) => a + b, 0) / (len || 1));
+        const totalArr = arrData.totalArrival;
+        const peakArr = arrData.peakArrival;
+        const avgArr = Math.round(totalArr / (len || 1));
+        const currentDateLabel = currentData.dates[hoverI] || currentData.dates[len - 1] || "14 Sep 2026";
+
+        const pMin = isArrival ? 0 : graphData.yMinBound;
+        const pMax = isArrival ? arrData.yMaxBound : graphData.yMaxBound;
+        const yOf = (v: number) => PT + chartH - ((v - pMin) / (pMax - pMin || 1)) * chartH;
+        const xOf = (i: number) => PL + (i / (len - 1 || 1)) * chartW;
+        const volBaseY = H - PB;
+        const volMaxH = 24;
+        const maxArr = graphData.peakArrival || 1;
+        const currentCloseY = yOf(isArrival ? displayArr : displayPrice);
 
         return (
           <div className="relative z-30 bg-white rounded-t-3xl border-t border-emerald-100 shadow-2xl transition-all duration-300 flex flex-col max-h-[64vh] overflow-y-auto">
@@ -1387,52 +1406,42 @@ export default function ZaraiMandiMap({
             {/* 2. DEDICATED GRAPH BOX CARD (MATCHING USER SCREENSHOT EXACTLY) */}
             <div className="p-3">
               <div className="bg-white rounded-2xl border border-slate-100 shadow-md p-3.5 flex flex-col gap-2.5">
-                {/* Header: Dot + Mandi Title + Toggle (Price / Arrival) + Info/Wiki */}
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span
-                      className={`w-2.5 h-2.5 rounded-full flex-shrink-0 transition-colors ${
-                        isArrival ? "bg-[#8B5A2B]" : "bg-[#10B981]"
-                      }`}
-                    />
-                    <h3 className="font-black text-[15.5px] text-slate-900 truncate">
-                      {mandiTitle}
-                    </h3>
+                {/* 1. Header: Price Trend vs Arrival Trend + Wiki & Close Buttons */}
+                <div className="flex items-center justify-between gap-2 border-b border-[#E8EFEC] pb-2">
+                  <div className="flex items-center bg-[#EAF5F0] p-0.5 rounded-lg border border-[#CDE5DC]">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setGraphMode("price");
+                        setShowWiki(false);
+                      }}
+                      className="tap-target px-3 py-1 rounded-md text-[10.5px] font-extrabold transition"
+                      style={{
+                        background: graphMode === "price" && !showWiki ? "#087F63" : "transparent",
+                        color: graphMode === "price" && !showWiki ? "#FFFFFF" : "#4E665E",
+                        fontFamily: lang === "ur" ? urduFont : "inherit",
+                      }}
+                    >
+                      {lang === "ur" ? "قیمت کا رجحان" : "Price Trend"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setGraphMode("arrival");
+                        setShowWiki(false);
+                      }}
+                      className="tap-target px-3 py-1 rounded-md text-[10.5px] font-extrabold transition"
+                      style={{
+                        background: graphMode === "arrival" && !showWiki ? "#D97706" : "transparent",
+                        color: graphMode === "arrival" && !showWiki ? "#FFFFFF" : "#4E665E",
+                        fontFamily: lang === "ur" ? urduFont : "inherit",
+                      }}
+                    >
+                      {lang === "ur" ? "آمد کا رجحان" : "Arrival Trend"}
+                    </button>
                   </div>
 
-                  <div className="flex items-center gap-1.5 flex-shrink-0">
-                    {/* Price / Arrival Segmented Pill Toggle */}
-                    <div className="flex items-center bg-[#EAF5F0] p-0.5 rounded-full border border-[#CDE5DC]">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setGraphMode("price");
-                          setShowWiki(false);
-                        }}
-                        className={`px-3 py-1 rounded-full text-xs font-black transition active:scale-95 ${
-                          graphMode === "price" && !showWiki
-                            ? "bg-[#087F63] text-white shadow-sm"
-                            : "text-[#2D5A4C] hover:text-[#087F63]"
-                        }`}
-                      >
-                        {lang === "ur" ? "قیمت" : "Price"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setGraphMode("arrival");
-                          setShowWiki(false);
-                        }}
-                        className={`px-3 py-1 rounded-full text-xs font-black transition active:scale-95 ${
-                          graphMode === "arrival" && !showWiki
-                            ? "bg-[#8B5A2B] text-white shadow-sm"
-                            : "text-[#2D5A4C] hover:text-[#8B5A2B]"
-                        }`}
-                      >
-                        {lang === "ur" ? "آمد" : "Arrival"}
-                      </button>
-                    </div>
-
+                  <div className="flex items-center gap-1.5">
                     {/* Wiki Info Drawer Button */}
                     <button
                       type="button"
@@ -1446,10 +1455,47 @@ export default function ZaraiMandiMap({
                     >
                       {showWiki ? <X size={13} strokeWidth={2.5} /> : <Info size={13} strokeWidth={2.5} />}
                     </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setView({ level: "country", province: null, mandi: null });
+                      }}
+                      className="tap-target w-7 h-7 rounded-full bg-[#E5EFEA] hover:bg-[#D5E5DE] text-[#064D40] text-xs font-bold flex items-center justify-center transition active:scale-95"
+                      title={lang === "ur" ? "بند کریں" : "Close"}
+                    >
+                      ✕
+                    </button>
                   </div>
                 </div>
 
-                {/* Wiki info drawer if toggled */}
+                {/* 2. Granularity Filter Bar (1, 5, 15, 30, 1H, 5H, 1D, 1W, 1M) */}
+                <div className="flex items-center gap-1 overflow-x-auto py-1 border-b border-[#E8EFEC]" style={{ scrollbarWidth: "none" }}>
+                  {["1", "5", "15", "30", "1H", "5H", "1D", "1W", "1M"].map((g) => {
+                    const isGActive = granularity === g;
+                    return (
+                      <button
+                        key={g}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setGranularity(g);
+                        }}
+                        className={`px-2 py-0.5 rounded text-[10.5px] font-bold transition-colors flex-shrink-0 ${
+                          isGActive
+                            ? graphMode === "price"
+                              ? "bg-[#087F63] text-white shadow-xs"
+                              : "bg-[#D97706] text-white shadow-xs"
+                            : "text-[#52635F] hover:bg-[#F1F7F4] hover:text-[#143B33]"
+                        }`}
+                      >
+                        {g}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* 3. Main Graph Body or Wiki Drawer */}
                 {showWiki ? (
                   <div className="p-3.5 rounded-xl bg-[#F0FDF4] border border-emerald-200 text-xs text-emerald-950 space-y-2.5 animate-in fade-in duration-200 max-h-[38vh] overflow-y-auto">
                     <div className="flex items-center gap-1.5 font-bold text-emerald-900">
@@ -1509,160 +1555,362 @@ export default function ZaraiMandiMap({
                         </p>
                       </div>
                     )}
-
-                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-emerald-200/80 text-[11px]">
-                      <div>
-                        <span className="font-bold text-emerald-800 block">{lang === "ur" ? "اوقات کار" : "Trading Hours"}</span>
-                        <span className="font-semibold text-slate-800">{selectedMandi.openingTime} – {selectedMandi.closingTime}</span>
-                      </div>
-                      <div>
-                        <span className="font-bold text-emerald-800 block">{lang === "ur" ? "مارکیٹ کا درجہ" : "Market Status"}</span>
-                        <span className="font-bold text-emerald-600">
-                          {selectedMandi.status === "open" ? (lang === "ur" ? "● تجارت کے لیے کھلا" : "● Open for Trade") : (lang === "ur" ? "بند ہے" : "Closed")}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Scrollable real history table for this mandi + by-product */}
-                    <div className="pt-2.5 border-t border-emerald-200/80">
-                      <span className="font-bold text-emerald-800 block mb-1.5">
-                        {lang === "ur" ? "تاریخ کے لحاظ سے ریکارڈز" : "Records by date"}
-                      </span>
-                      <div className="max-h-[26vh] overflow-y-auto rounded-lg border border-emerald-200/70">
-                        <table className="w-full text-[10.5px]">
-                          <thead className="sticky top-0 bg-[#E4F2EC]">
-                            <tr className="text-emerald-900/80 font-bold">
-                              <th className="text-left px-2 py-1">{lang === "ur" ? "تاریخ" : "Date"}</th>
-                              <th className="text-left px-2 py-1">{lang === "ur" ? "قسم" : "Type"}</th>
-                              <th className="text-right px-2 py-1">{lang === "ur" ? "کم" : "Min"}</th>
-                              <th className="text-right px-2 py-1">{lang === "ur" ? "زیادہ" : "Max"}</th>
-                              <th className="text-right px-2 py-1">{lang === "ur" ? "آمد" : "Arrival"}</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {historyRows.map((r, i) => (
-                              <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-[#F4FAF7]"}>
-                                <td className="px-2 py-1 font-semibold text-slate-700 whitespace-nowrap">{r.date || "—"}</td>
-                                <td className="px-2 py-1 text-slate-600 whitespace-nowrap">{r.rateType}</td>
-                                <td className="px-2 py-1 text-right font-semibold text-slate-800">{r.min > 0 ? r.min.toLocaleString() : "—"}</td>
-                                <td className="px-2 py-1 text-right font-semibold text-slate-800">{r.max > 0 ? r.max.toLocaleString() : "—"}</td>
-                                <td className="px-2 py-1 text-right text-slate-600">
-                                  {parseArr(r.arrival) > 0 ? parseArr(r.arrival).toLocaleString() : "—"}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
                   </div>
                 ) : (
                   <>
-                    {/* Timeframe selector pills: 72H 7D 30D. No 24H --
-                        the source data is one row per market per day, so
-                        there's no real intraday figure to show. */}
-                    <div className="flex items-center justify-between gap-1.5 w-full">
-                      {(["72h", "7d", "30d"] as const).map((tf) => {
-                        const isActive = timeframe === tf;
-                        const label = tf === "72h" ? "72H" : tf === "7d" ? "7D" : "30D";
-                        return (
-                          <button
-                            key={tf}
-                            type="button"
-                            onClick={() => setTimeframe(tf)}
-                            className={`flex-1 py-1 rounded-full text-[11.5px] font-extrabold transition text-center active:scale-95 ${
-                              isActive
-                                ? (isArrival ? "bg-[#8B5A2B] text-white border border-[#8B5A2B] shadow-sm" : "bg-[#087F63] text-white border border-[#087F63] shadow-sm")
-                                : "bg-[#F4FAF7] text-slate-700 border border-[#D5E2DD] hover:bg-slate-50"
-                            }`}
+                    {/* Commodity Header HUD */}
+                    <div className="flex flex-col gap-2 border-b border-[#E8EFEC] pb-2.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="text-xs sm:text-sm font-extrabold text-[#143B33]"
+                            style={{ fontFamily: lang === "ur" ? urduFont : "inherit" }}
                           >
-                            {label}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {/* Stats Summary Overview Box */}
-                    <div className="rounded-xl p-2 px-3 bg-[#F4FAF7] border border-[#D5E2DD] flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div>
-                          <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block leading-none">
-                            {graphMode === "price" ? (lang === "ur" ? "کم سے کم ریٹ" : "MIN RATE") : (lang === "ur" ? "کم سے کم آمد" : "MIN ARRIVAL")}
+                            {stationName} — {activeCommodity}
                           </span>
-                          <span className="text-xs font-black text-slate-900 block mt-0.5 leading-tight">
-                            {graphMode === "price" ? `Rs.${minVal.toLocaleString()}` : `${arrMinVal.toLocaleString()} Bags`}
+                          <span className="text-[10px] font-bold text-[#087F63] bg-[#E8F8F4] px-2 py-0.5 rounded-full border border-[#C2E8DB]">
+                            {dominantRateType || (lang === "ur" ? "منڈی" : "Mandi")}
                           </span>
                         </div>
-                        <div className="w-[1px] h-5 bg-[#D5E2DD]" />
-                        <div>
-                          <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block leading-none">
-                            {graphMode === "price" ? (lang === "ur" ? "زیادہ سے زیادہ ریٹ" : "MAX RATE") : (lang === "ur" ? "زیادہ سے زیادہ آمد" : "MAX ARRIVAL")}
+                        <span className="text-[10px] font-bold text-[#80918B]">
+                          {graphMode === "price"
+                            ? (lang === "ur" ? "روپے فی ۴۰ کلو" : "PKR / 40kg")
+                            : (lang === "ur" ? "تھیلے (۴۰ کلو)" : "Bags (40kg)")}
+                        </span>
+                      </div>
+
+                      {/* Value & Change Display */}
+                      <div className="flex items-baseline justify-between flex-wrap gap-2">
+                        <div className="flex items-baseline gap-2.5">
+                          <span className="text-2xl sm:text-3xl font-black text-[#143B33] tracking-tight">
+                            {graphMode === "price"
+                              ? (lang === "ur" ? `روپے ${toUrduDigits(displayPrice.toLocaleString())}` : `Rs. ${displayPrice.toLocaleString()}`)
+                              : (lang === "ur" ? `${toUrduDigits(displayArr.toLocaleString())} تھیلے` : `${displayArr.toLocaleString()} Bags`)}
                           </span>
-                          <span className={`text-xs font-black block mt-0.5 leading-tight ${chartMaxValColor}`}>
-                            {graphMode === "price" ? `Rs.${maxVal.toLocaleString()}` : `${arrMaxVal.toLocaleString()} Bags`}
+                          <span
+                            className="text-xs font-bold px-2.5 py-0.5 rounded-md flex items-center gap-1"
+                            style={{
+                              background: isFlat ? "#F3F4F6" : isPositive ? "#DCFCE7" : "#FEE2E2",
+                              color: isFlat ? "#4B5563" : isPositive ? "#15803D" : "#B91C1C",
+                              border: `1px solid ${isFlat ? "#E5E7EB" : isPositive ? "#86EFAC" : "#FCA5A5"}`,
+                            }}
+                          >
+                            <span>{isFlat ? "—" : isPositive ? "▲" : "▼"}</span>
+                            <span>{absPct}%</span>
                           </span>
+                        </div>
+
+                        {/* Date / Scrub Indicator */}
+                        <div className="text-[11px] font-semibold text-[#52635F]">
+                          {currentDateLabel}
                         </div>
                       </div>
 
-                      <div className={`px-2.5 py-0.5 rounded-md text-[11px] font-black flex items-center gap-1 ${
-                        isArrival ? "bg-[#FDF6F0] text-[#8B5A2B]" : "bg-[#E8F8F0] text-[#059669]"
-                      }`}>
-                        <span>{trend === "down" ? "▼" : trend === "up" ? "▲" : "—"}</span>
-                        <span>{trendPct}%</span>
+                      {/* Stat Summary Bar (High, Low, Avg) */}
+                      <div className="grid grid-cols-3 gap-2 pt-1 text-[10px]">
+                        <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
+                          <span className="text-[#80918B] font-semibold">
+                            {graphMode === "price"
+                              ? (lang === "ur" ? "زیادہ سے زیادہ" : "Period High")
+                              : (lang === "ur" ? "کل آمد" : "Total Period")}
+                          </span>
+                          <span className="font-bold text-[#143B33] text-xs">
+                            {graphMode === "price"
+                              ? (lang === "ur" ? `روپے ${toUrduDigits(seriesMax.toLocaleString())}` : `Rs. ${seriesMax.toLocaleString()}`)
+                              : `${totalArr.toLocaleString()} Bags`}
+                          </span>
+                        </div>
+                        <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
+                          <span className="text-[#80918B] font-semibold">
+                            {graphMode === "price"
+                              ? (lang === "ur" ? "کم سے کم" : "Period Low")
+                              : (lang === "ur" ? "سب سے زیادہ" : "Peak Day")}
+                          </span>
+                          <span className="font-bold text-[#143B33] text-xs">
+                            {graphMode === "price"
+                              ? (lang === "ur" ? `روپے ${toUrduDigits(seriesMin.toLocaleString())}` : `Rs. ${seriesMin.toLocaleString()}`)
+                              : `${peakArr.toLocaleString()} Bags`}
+                          </span>
+                        </div>
+                        <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
+                          <span className="text-[#80918B] font-semibold">
+                            {graphMode === "price"
+                              ? (lang === "ur" ? "اوسط ریٹ" : "Period Avg")
+                              : (lang === "ur" ? "روزانہ اوسط" : "Daily Avg")}
+                          </span>
+                          <span
+                            className="font-bold text-xs"
+                            style={{ color: graphMode === "price" ? "#087F63" : "#D97706" }}
+                          >
+                            {graphMode === "price"
+                              ? (lang === "ur" ? `روپے ${toUrduDigits(seriesAvg.toLocaleString())}` : `Rs. ${seriesAvg.toLocaleString()}`)
+                              : `${avgArr.toLocaleString()} Bags`}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
-                    {/* SVG Line Chart Box */}
-                    <div className="rounded-xl border border-slate-100 p-2 bg-white flex flex-col justify-center">
-                      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" style={{ maxHeight: 115, overflow: "visible" }}>
+                    {/* SVG Interactive Canvas with Hold-to-Scrub */}
+                    <div className="relative w-full select-none bg-[#FCFDFD] rounded-xl border border-[#EDF4F1] p-1">
+                      <svg
+                        viewBox={`0 0 ${W} ${H}`}
+                        className="w-full select-none"
+                        style={{ height: 135, display: "block", touchAction: "none" }}
+                        onMouseDown={(e) => {
+                          const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                          const relX = ((e.clientX - rect.left) / rect.width) * W - PL;
+                          const i = Math.round((relX / chartW) * (len - 1));
+                          setGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                        }}
+                        onMouseMove={(e) => {
+                          if (e.buttons === 1 || graphHoverIdx !== null) {
+                            const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                            const relX = ((e.clientX - rect.left) / rect.width) * W - PL;
+                            const i = Math.round((relX / chartW) * (len - 1));
+                            setGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                          }
+                        }}
+                        onMouseUp={() => setGraphHoverIdx(null)}
+                        onMouseLeave={() => setGraphHoverIdx(null)}
+                        onTouchStart={(e) => {
+                          const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                          const touch = e.touches[0];
+                          if (touch) {
+                            const relX = ((touch.clientX - rect.left) / rect.width) * W - PL;
+                            const i = Math.round((relX / chartW) * (len - 1));
+                            setGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                          }
+                        }}
+                        onTouchMove={(e) => {
+                          const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                          const touch = e.touches[0];
+                          if (touch) {
+                            const relX = ((touch.clientX - rect.left) / rect.width) * W - PL;
+                            const i = Math.round((relX / chartW) * (len - 1));
+                            setGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                          }
+                        }}
+                        onTouchEnd={() => setGraphHoverIdx(null)}
+                        onTouchCancel={() => setGraphHoverIdx(null)}
+                      >
                         <defs>
-                          <linearGradient id="mandiMapChartGradientGreen" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#10B981" stopOpacity="0.25" />
-                            <stop offset="100%" stopColor="#10B981" stopOpacity="0.0" />
+                          <linearGradient
+                            id="mandiMapChartGradPrice"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop offset="0%" stopColor="#087F63" stopOpacity="0.22" />
+                            <stop offset="75%" stopColor="#087F63" stopOpacity="0.03" />
+                            <stop offset="100%" stopColor="#087F63" stopOpacity="0.00" />
                           </linearGradient>
-                          <linearGradient id="mandiMapChartGradientBrown" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#8B5A2B" stopOpacity="0.28" />
-                            <stop offset="100%" stopColor="#8B5A2B" stopOpacity="0.0" />
+                          <linearGradient
+                            id="mandiMapChartGradArr"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop offset="0%" stopColor="#D97706" stopOpacity="0.32" />
+                            <stop offset="85%" stopColor="#D97706" stopOpacity="0.04" />
+                            <stop offset="100%" stopColor="#D97706" stopOpacity="0.00" />
                           </linearGradient>
                         </defs>
 
-                        {/* Dashed Grid Lines & Y-Axis Labels (6.0k, 5.7k, 5.5k) */}
-                        {/* Top Grid */}
-                        <line x1={xLeft} y1={yTop} x2={xRight} y2={yTop} stroke="#E5E7EB" strokeDasharray="3 3" strokeWidth="1" />
-                        <text x={xLeft - 6} y={yTop + 3} textAnchor="end" fill="#9CA3AF" fontSize="7.5" fontWeight="600">
-                          {activeYLabels[0]?.label}
-                        </text>
+                        {/* Horizontal Gridlines + Y Ticks */}
+                        {currentData.yLabels.map((tick, ti) => {
+                          const y = yOf(tick.val);
+                          return (
+                            <g key={`yTick-${ti}`}>
+                              <line
+                                x1={PL}
+                                y1={y}
+                                x2={W - PR}
+                                y2={y}
+                                stroke="#E8EFEF"
+                                strokeWidth="1"
+                                strokeDasharray="3 3"
+                              />
+                              <text
+                                x={PL - 5}
+                                y={y + 3.5}
+                                textAnchor="end"
+                                fontSize="8.5"
+                                fontWeight="600"
+                                fill="#80918B"
+                              >
+                                {tick.label}
+                              </text>
+                              <text
+                                x={W - PR + 5}
+                                y={y + 3.5}
+                                textAnchor="start"
+                                fontSize="8"
+                                fontWeight="600"
+                                fill="#9BAAA5"
+                              >
+                                {tick.val}
+                              </text>
+                            </g>
+                          );
+                        })}
 
-                        {/* Mid Grid */}
-                        <line x1={xLeft} y1={yMidY} x2={xRight} y2={yMidY} stroke="#E5E7EB" strokeDasharray="3 3" strokeWidth="1" />
-                        <text x={xLeft - 6} y={yMidY + 3} textAnchor="end" fill="#9CA3AF" fontSize="7.5" fontWeight="600">
-                          {activeYLabels[1]?.label}
-                        </text>
+                        {/* Volume Baseline */}
+                        <line
+                          x1={PL}
+                          y1={volBaseY}
+                          x2={W - PR}
+                          y2={volBaseY}
+                          stroke="#D5E2DD"
+                          strokeWidth="1.2"
+                        />
 
-                        {/* Bottom Grid */}
-                        <line x1={xLeft} y1={yBottom} x2={xRight} y2={yBottom} stroke="#E5E7EB" strokeDasharray="3 3" strokeWidth="1" />
-                        <text x={xLeft - 6} y={yBottom + 3} textAnchor="end" fill="#9CA3AF" fontSize="7.5" fontWeight="600">
-                          {activeYLabels[2]?.label}
-                        </text>
+                        {/* X-Axis Date Labels */}
+                        {currentData.xLabels.map((lbl, i) =>
+                          lbl ? (
+                            <text
+                              key={`xTick-${i}`}
+                              x={xOf(i)}
+                              y={H - 6}
+                              textAnchor="middle"
+                              fontSize="8.5"
+                              fontWeight="600"
+                              fill="#80918B"
+                              fontFamily={lang === "ur" ? urduFont : "inherit"}
+                            >
+                              {lbl}
+                            </text>
+                          ) : null,
+                        )}
 
-                        {/* Area Fill Under Graph */}
-                        <path d={areaPath} fill={`url(#${chartGradientId})`} />
+                        {/* Mini Volume Bars */}
+                        {graphData.arrivals.map((arrVal, i) => {
+                          const barX = xOf(i);
+                          const barH = (arrVal / maxArr) * volMaxH;
+                          const prevP = i > 0 ? pts[i - 1] : pts[i];
+                          const curP = pts[i];
+                          const isUp = curP >= prevP;
+                          const barW = Math.max(2.5, Math.min(6, (chartW / len) * 0.55));
+                          const isHov = graphHoverIdx === i;
 
-                        {/* Smooth Trend Polyline */}
-                        <path d={linePath} fill="none" stroke={chartStrokeColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                          return (
+                            <rect
+                              key={`vol-${i}`}
+                              x={barX - barW / 2}
+                              y={volBaseY - barH}
+                              width={barW}
+                              height={barH}
+                              rx={1}
+                              fill={graphMode === "price" ? (isUp ? "#10B981" : "#EF4444") : "#D97706"}
+                              opacity={isHov ? 1 : 0.65}
+                            />
+                          );
+                        })}
 
-                        {/* Circular Data Points (White Center with Colored Stroke) */}
-                        {coords.map((c, i) => (
-                          <circle key={i} cx={c.x} cy={c.y} r={3.6} fill="#FFFFFF" stroke={chartStrokeColor} strokeWidth="2" />
-                        ))}
+                        {/* Area & Line */}
+                        {(() => {
+                          const lineCoords = pts.map((v, i) => `${i === 0 ? "M" : "L"}${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`).join(" ");
+                          const areaCoords = `${lineCoords} L${xOf(len - 1).toFixed(1)},${volBaseY} L${PL},${volBaseY} Z`;
+                          const strokeColor = graphMode === "price" ? "#087F63" : "#D97706";
+                          const gradId = graphMode === "price" ? "mandiMapChartGradPrice" : "mandiMapChartGradArr";
 
-                        {/* X-Axis Timestamps (06:00, 09:00, 12:00, 15:00, 18:00, 21:00, Now) */}
-                        {coords.map((c, i) => (
-                          <text key={i} x={c.x} y={102} textAnchor="middle" fill="#9CA3AF" fontSize="7.5" fontWeight="600">
-                            {activeXLabels[i]}
-                          </text>
-                        ))}
+                          return (
+                            <g>
+                              <path d={areaCoords} fill={`url(#${gradId})`} />
+                              <path d={lineCoords} stroke={strokeColor} strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                              {/* Dotted Latest Price Guideline */}
+                              <line x1={PL} y1={currentCloseY} x2={W - PR} y2={currentCloseY} stroke={strokeColor} strokeWidth="0.9" strokeDasharray="3 3" opacity="0.6" />
+                              {/* Latest Price Tag */}
+                              <g transform={`translate(${W - PR + 2}, ${currentCloseY - 7})`}>
+                                <rect x={0} y={0} width={28} height={14} rx={3} fill={strokeColor} />
+                                <text x={14} y={10} textAnchor="middle" fontSize="8" fontWeight="bold" fill="#FFFFFF">
+                                  {graphMode === "price"
+                                    ? (displayPrice >= 1000 ? `${(displayPrice / 1000).toFixed(1)}k` : displayPrice)
+                                    : (displayArr >= 1000 ? `${(displayArr / 1000).toFixed(1)}k` : displayArr)}
+                                </text>
+                              </g>
+                              {/* Live Pulse Dot */}
+                              <circle cx={xOf(len - 1)} cy={currentCloseY} r="4" fill={strokeColor} stroke="#FFFFFF" strokeWidth="2" />
+                            </g>
+                          );
+                        })()}
+
+                        {/* Interactive Hover Crosshairs */}
+                        {graphHoverIdx !== null && (
+                          <g>
+                            <line x1={xOf(graphHoverIdx)} y1={PT} x2={xOf(graphHoverIdx)} y2={volBaseY} stroke="#0284C7" strokeWidth="1.2" strokeDasharray="2 2" />
+                            <line x1={PL} y1={yOf(pts[graphHoverIdx])} x2={W - PR} y2={yOf(pts[graphHoverIdx])} stroke="#0284C7" strokeWidth="1" strokeDasharray="2 2" opacity="0.75" />
+                            <circle cx={xOf(graphHoverIdx)} cy={yOf(pts[graphHoverIdx])} r="5" fill="#0284C7" stroke="#FFFFFF" strokeWidth="2" />
+                          </g>
+                        )}
                       </svg>
+
+                      {/* Interactive Floating Tooltip Card on Hold */}
+                      {graphHoverIdx !== null && (() => {
+                        const curP = graphData.points[graphHoverIdx] || 0;
+                        const minP = graphData.mins?.[graphHoverIdx] || Math.max(0, curP - Math.round(curP * 0.008));
+                        const maxP = graphData.maxs?.[graphHoverIdx] || (curP + Math.round(curP * 0.008));
+                        const volVal = graphData.arrivals?.[graphHoverIdx] || 0;
+                        const dateStr = currentData.dates[graphHoverIdx] || "14 Sep 2026";
+
+                        return (
+                          <div
+                            className="pointer-events-none absolute z-20 rounded-xl shadow-xl border p-2 flex flex-col gap-1 backdrop-blur-md transition-all duration-75"
+                            style={{
+                              left: `${Math.min(Math.max((xOf(graphHoverIdx) / W) * 100, 24), 76)}%`,
+                              top: 8,
+                              transform: "translateX(-50%)",
+                              background: "rgba(255, 255, 255, 0.97)",
+                              borderColor: "#38BDF8",
+                              minWidth: 150,
+                              boxShadow: "0 8px 24px -4px rgba(2, 132, 199, 0.22)",
+                            }}
+                          >
+                            <div className="flex items-center justify-between text-[10px] font-bold text-[#0284C7] border-b border-[#E0F2FE] pb-1">
+                              <span>DT:</span>
+                              <span className="font-mono text-[#0F172A]">{dateStr}</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10px] font-semibold text-[#334155] pt-1">
+                              <span className="text-[#64748B]">{lang === "ur" ? "کم سے کم ریٹ:" : "Min Rate:"}</span>
+                              <span className="font-mono font-bold text-right text-[#B91C1C]">Rs. {minP.toLocaleString()}</span>
+                              <span className="text-[#64748B]">{lang === "ur" ? "زیادہ سے زیادہ:" : "Max Rate:"}</span>
+                              <span className="font-mono font-bold text-right text-[#15803D]">Rs. {maxP.toLocaleString()}</span>
+                              <span className="text-[#64748B]">{lang === "ur" ? "آمد:" : "Arrivals:"}</span>
+                              <span className="font-mono font-bold text-right text-[#0284C7]">{volVal > 0 ? `${volVal.toLocaleString()} bags` : "—"}</span>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+
+                    {/* 4. Bottom Timeframe Buttons (1 Month, 3 Months, 6 Months, 1 Year) */}
+                    <div className="grid grid-cols-4 gap-1.5 pt-1">
+                      {[
+                        { id: "1M", labelEn: "1 Month", labelUr: "۱ ماہ" },
+                        { id: "3M", labelEn: "3 Months", labelUr: "۳ ماہ" },
+                        { id: "6M", labelEn: "6 Months", labelUr: "۶ ماہ" },
+                        { id: "1Y", labelEn: "1 Year", labelUr: "۱ سال" },
+                      ].map((tf) => {
+                        const isTfActive = timeframe === tf.id;
+                        return (
+                          <button
+                            key={tf.id}
+                            type="button"
+                            onClick={() => setTimeframe(tf.id as any)}
+                            className={`py-1.5 rounded-xl text-xs font-bold transition active:scale-95 text-center ${
+                              isTfActive
+                                ? graphMode === "price"
+                                  ? "bg-[#087F63] text-white shadow-sm font-black"
+                                  : "bg-[#D97706] text-white shadow-sm font-black"
+                                : "bg-[#F4FAF7] text-[#2F4A43] border border-[#D5E2DD] hover:bg-[#E8F2ED]"
+                            }`}
+                            style={{ fontFamily: lang === "ur" ? urduFont : "inherit" }}
+                          >
+                            {lang === "ur" ? tf.labelUr : tf.labelEn}
+                          </button>
+                        );
+                      })}
                     </div>
                   </>
                 )}

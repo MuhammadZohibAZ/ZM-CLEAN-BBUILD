@@ -14737,23 +14737,44 @@ function ProductRatesScreen({
                                                         <div className="relative w-full select-none bg-[#FCFDFD] rounded-xl border border-[#EDF4F1] p-1">
                                                           <svg
                                                             viewBox={`0 0 ${CW} ${CH}`}
-                                                            className="w-full"
-                                                            style={{ height: isTableExpanded ? 160 : 135, display: "block" }}
-                                                            onMouseMove={(e) => {
+                                                            className="w-full select-none"
+                                                            style={{ height: isTableExpanded ? 160 : 135, display: "block", touchAction: "none" }}
+                                                            onMouseDown={(e) => {
                                                               const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
                                                               const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
                                                               const i = Math.round((relX / chartW) * (len - 1));
                                                               setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
                                                             }}
+                                                            onMouseMove={(e) => {
+                                                              if (e.buttons === 1 || tableGraphHoverIdx !== null) {
+                                                                const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                                                                const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
+                                                                const i = Math.round((relX / chartW) * (len - 1));
+                                                                setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                                                              }
+                                                            }}
+                                                            onMouseUp={() => setTableGraphHoverIdx(null)}
                                                             onMouseLeave={() => setTableGraphHoverIdx(null)}
+                                                            onTouchStart={(e) => {
+                                                              const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                                                              const touch = e.touches[0];
+                                                              if (touch) {
+                                                                const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
+                                                                const i = Math.round((relX / chartW) * (len - 1));
+                                                                setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                                                              }
+                                                            }}
                                                             onTouchMove={(e) => {
                                                               const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
                                                               const touch = e.touches[0];
-                                                              const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
-                                                              const i = Math.round((relX / chartW) * (len - 1));
-                                                              setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                                                              if (touch) {
+                                                                const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
+                                                                const i = Math.round((relX / chartW) * (len - 1));
+                                                                setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                                                              }
                                                             }}
                                                             onTouchEnd={() => setTableGraphHoverIdx(null)}
+                                                            onTouchCancel={() => setTableGraphHoverIdx(null)}
                                                           >
                                                             <defs>
                                                               <linearGradient
@@ -15024,23 +15045,44 @@ function ProductRatesScreen({
                                                         <div className="relative w-full select-none bg-[#FCFDFD] rounded-xl border border-[#EDF4F1] p-1">
                                                           <svg
                                                             viewBox={`0 0 ${CW} ${CH}`}
-                                                            className="w-full"
-                                                            style={{ height: isTableExpanded ? 160 : 135, display: "block" }}
-                                                            onMouseMove={(e) => {
+                                                            className="w-full select-none"
+                                                            style={{ height: isTableExpanded ? 160 : 135, display: "block", touchAction: "none" }}
+                                                            onMouseDown={(e) => {
                                                               const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
                                                               const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
                                                               const i = Math.round((relX / chartW) * (len - 1));
                                                               setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
                                                             }}
+                                                            onMouseMove={(e) => {
+                                                              if (e.buttons === 1 || tableGraphHoverIdx !== null) {
+                                                                const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                                                                const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
+                                                                const i = Math.round((relX / chartW) * (len - 1));
+                                                                setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                                                              }
+                                                            }}
+                                                            onMouseUp={() => setTableGraphHoverIdx(null)}
                                                             onMouseLeave={() => setTableGraphHoverIdx(null)}
+                                                            onTouchStart={(e) => {
+                                                              const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                                                              const touch = e.touches[0];
+                                                              if (touch) {
+                                                                const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
+                                                                const i = Math.round((relX / chartW) * (len - 1));
+                                                                setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                                                              }
+                                                            }}
                                                             onTouchMove={(e) => {
                                                               const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
                                                               const touch = e.touches[0];
-                                                              const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
-                                                              const i = Math.round((relX / chartW) * (len - 1));
-                                                              setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                                                              if (touch) {
+                                                                const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
+                                                                const i = Math.round((relX / chartW) * (len - 1));
+                                                                setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                                                              }
                                                             }}
                                                             onTouchEnd={() => setTableGraphHoverIdx(null)}
+                                                            onTouchCancel={() => setTableGraphHoverIdx(null)}
                                                           >
                                                             <defs>
                                                               <linearGradient id={`tableInlineArrGrad-${ci}`} x1="0" y1="0" x2="0" y2="1">
@@ -16650,23 +16692,44 @@ function ProductRatesScreen({
                     <div className="relative w-full select-none bg-[#FCFDFD] rounded-xl border border-[#EDF4F1] p-1">
                       <svg
                         viewBox={`0 0 ${CW} ${CH}`}
-                        className="w-full"
-                        style={{ height: CH, display: "block" }}
-                        onMouseMove={(e) => {
+                        className="w-full select-none"
+                        style={{ height: CH, display: "block", touchAction: "none" }}
+                        onMouseDown={(e) => {
                           const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
                           const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
                           const i = Math.round((relX / chartW) * (len - 1));
                           setHoverIdx(Math.max(0, Math.min(len - 1, i)));
                         }}
+                        onMouseMove={(e) => {
+                          if (e.buttons === 1 || hoverIdx !== null) {
+                            const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                            const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
+                            const i = Math.round((relX / chartW) * (len - 1));
+                            setHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                          }
+                        }}
+                        onMouseUp={() => setHoverIdx(null)}
                         onMouseLeave={() => setHoverIdx(null)}
+                        onTouchStart={(e) => {
+                          const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                          const touch = e.touches[0];
+                          if (touch) {
+                            const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
+                            const i = Math.round((relX / chartW) * (len - 1));
+                            setHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                          }
+                        }}
                         onTouchMove={(e) => {
                           const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
                           const touch = e.touches[0];
-                          const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
-                          const i = Math.round((relX / chartW) * (len - 1));
-                          setHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                          if (touch) {
+                            const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
+                            const i = Math.round((relX / chartW) * (len - 1));
+                            setHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                          }
                         }}
                         onTouchEnd={() => setHoverIdx(null)}
+                        onTouchCancel={() => setHoverIdx(null)}
                       >
                         <defs>
                           {activeSeries.map((s) => (
@@ -17195,23 +17258,44 @@ function ProductRatesScreen({
                 <div className="relative w-full select-none">
                   <svg
                     viewBox={`0 0 ${CW} ${CH}`}
-                    className="w-full"
-                    style={{ height: CH, display: "block" }}
-                    onMouseMove={(e) => {
+                    className="w-full select-none"
+                    style={{ height: CH, display: "block", touchAction: "none" }}
+                    onMouseDown={(e) => {
                       const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
                       const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
                       const i = Math.round((relX / chartW) * (len - 1));
                       setArrivalHoverIdx(Math.max(0, Math.min(len - 1, i)));
                     }}
+                    onMouseMove={(e) => {
+                      if (e.buttons === 1 || arrivalHoverIdx !== null) {
+                        const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                        const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
+                        const i = Math.round((relX / chartW) * (len - 1));
+                        setArrivalHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                      }
+                    }}
+                    onMouseUp={() => setArrivalHoverIdx(null)}
                     onMouseLeave={() => setArrivalHoverIdx(null)}
+                    onTouchStart={(e) => {
+                      const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                      const touch = e.touches[0];
+                      if (touch) {
+                        const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
+                        const i = Math.round((relX / chartW) * (len - 1));
+                        setArrivalHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                      }
+                    }}
                     onTouchMove={(e) => {
                       const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
                       const touch = e.touches[0];
-                      const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
-                      const i = Math.round((relX / chartW) * (len - 1));
-                      setArrivalHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                      if (touch) {
+                        const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
+                        const i = Math.round((relX / chartW) * (len - 1));
+                        setArrivalHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                      }
                     }}
                     onTouchEnd={() => setArrivalHoverIdx(null)}
+                    onTouchCancel={() => setArrivalHoverIdx(null)}
                   >
                     <defs>
                       <linearGradient id="arrivalGrad" x1="0" y1="0" x2="0" y2="1">
