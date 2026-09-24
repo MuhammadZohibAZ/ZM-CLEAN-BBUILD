@@ -7173,25 +7173,34 @@ function LocationStatCell({
       style={divider ? { borderColor: '#D9E7E1' } : undefined}
     >
       <span className="block text-[10px] font-bold text-[#52635F] leading-tight truncate">
-        {lang === 'ur' ? 'منڈیاں' : 'Mandis'}
+        {lang === 'ur' ? 'مقامات' : 'Locations'}
       </span>
 
       <div className="flex items-center gap-1.5 my-0.5 whitespace-nowrap">
         <span className="w-2 h-2 rounded-full bg-[#10B981] ring-2 ring-[#10B981]/25 animate-pulse flex-shrink-0" />
         <span
-          className="font-black tracking-tight text-[#087F63] leading-none"
+          className="font-black tracking-tight text-[#087F63] leading-none flex items-center gap-1"
           style={{ fontSize: 'clamp(11.5px, 3.2vw, 13px)' }}
         >
-          {countDisplay}{' '}
+          <span>{countDisplay}</span>
           <span className="text-[10px] font-bold text-[#075E4F]">
             {lang === 'ur' ? 'فعال' : 'Active'}
           </span>
+          <svg
+            width="10"
+            height="10"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#087F63"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={`flex-shrink-0 opacity-80 ${lang === 'ur' ? 'rotate-180' : ''}`}
+          >
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
         </span>
       </div>
-
-      <span className="block text-[8.5px] font-bold text-[#087F63] leading-none truncate">
-        {lang === 'ur' ? 'ملک بھر سے' : 'Nationwide'}
-      </span>
     </div>
   );
 }
@@ -11814,314 +11823,263 @@ function ProductRatesScreen({
           className="flex-1 min-h-0 overflow-y-auto px-3.5 pt-2 pb-6 flex flex-col gap-2"
           style={{ scrollbarWidth: "thin", WebkitOverflowScrolling: "touch" }}
         >
-        {!apiRowsLoading && rows.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-16 opacity-50">
-            {/* <span style={{ fontSize: 48 }}></span> */}
-            <p
-              className="font-semibold mt-2"
+          {!apiRowsLoading && rows.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-16 opacity-50">
+              {/* <span style={{ fontSize: 48 }}></span> */}
+              <p
+                className="font-semibold mt-2"
+                style={{
+                  fontSize: lang === "ur" ? 18 : 14,
+                  fontFamily:
+                    lang === "ur"
+                      ? URDU_FONT
+                      : "inherit",
+                }}
+              >
+                {lang === "ur" ? "ڈیٹا دستیاب نہیں ہے۔" : "No data available."}
+              </p>
+            </div>
+          )}
+
+          {/* Today-Only Free Preview Notice Banner */}
+          {isProductTodayOnly(product) && (
+            <div
               style={{
-                fontSize: lang === "ur" ? 18 : 14,
-                fontFamily:
-                  lang === "ur"
-                    ? URDU_FONT
-                    : "inherit",
+                background: "linear-gradient(135deg, #E6F7F0, #D1EFE4)",
+                border: "1.5px solid #2FAE68",
+                borderRadius: 16,
+                padding: "10px 12px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 8,
+                boxShadow: "0 2px 10px rgba(8,127,99,0.08)",
               }}
             >
-              {lang === "ur" ? "ڈیٹا دستیاب نہیں ہے۔" : "No data available."}
-            </p>
-          </div>
-        )}
-
-        {/* Today-Only Free Preview Notice Banner */}
-        {isProductTodayOnly(product) && (
-          <div
-            style={{
-              background: "linear-gradient(135deg, #E6F7F0, #D1EFE4)",
-              border: "1.5px solid #2FAE68",
-              borderRadius: 16,
-              padding: "10px 12px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 8,
-              boxShadow: "0 2px 10px rgba(8,127,99,0.08)",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 18 }}>⭐</span>
-              <div>
-                <div
-                  style={{ fontSize: 12.5, fontWeight: 800, color: "#064D40" }}
-                >
-                  {lang === "ur"
-                    ? "صرف آج کا ڈیٹا فعال ہے"
-                    : "Today's Free Data Preview"}
-                </div>
-                <div style={{ fontSize: 11, color: "#2E5C4E" }}>
-                  {lang === "ur"
-                    ? "ماضی کا مکمل ڈیٹا دیکھنے کے لیے سبسکرائب کریں۔"
-                    : "Data before today is locked. Subscribe to unlock history."}
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 18 }}>⭐</span>
+                <div>
+                  <div
+                    style={{ fontSize: 12.5, fontWeight: 800, color: "#064D40" }}
+                  >
+                    {lang === "ur"
+                      ? "صرف آج کا ڈیٹا فعال ہے"
+                      : "Today's Free Data Preview"}
+                  </div>
+                  <div style={{ fontSize: 11, color: "#2E5C4E" }}>
+                    {lang === "ur"
+                      ? "ماضی کا مکمل ڈیٹا دیکھنے کے لیے سبسکرائب کریں۔"
+                      : "Data before today is locked. Subscribe to unlock history."}
+                  </div>
                 </div>
               </div>
+              <button
+                onClick={() => push?.({ id: "billing", product, vertical })}
+                style={{
+                  background: "#087F63",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 10,
+                  padding: "5px 10px",
+                  fontSize: 11,
+                  fontWeight: 800,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  boxShadow: "0 2px 8px rgba(8,127,99,0.2)",
+                }}
+              >
+                {lang === "ur" ? "سبسکرائب" : "Subscribe"}
+              </button>
             </div>
-            <button
-              onClick={() => push?.({ id: "billing", product, vertical })}
-              style={{
-                background: "#087F63",
-                color: "#fff",
-                border: "none",
-                borderRadius: 10,
-                padding: "5px 10px",
-                fontSize: 11,
-                fontWeight: 800,
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-                boxShadow: "0 2px 8px rgba(8,127,99,0.2)",
-              }}
-            >
-              {lang === "ur" ? "سبسکرائب" : "Subscribe"}
-            </button>
-          </div>
-        )}
+          )}
 
-        {tab === "overview" && rows.length > 0 && (
-          <>
+          {tab === "overview" && rows.length > 0 && (
+            <>
 
-            {/* Dismiss stat date calendar on outside click */}
-            {statDateCalOpen && (
-              <div
-                className="fixed inset-0 z-[99]"
-                onClick={() => setStatDateCalOpen(false)}
-              />
-            )}
+              {/* Dismiss stat date calendar on outside click */}
+              {statDateCalOpen && (
+                <div
+                  className="fixed inset-0 z-[99]"
+                  onClick={() => setStatDateCalOpen(false)}
+                />
+              )}
 
-            {/* 4-Sided Continuous Racetrack Border Card (Rounded Corners & Compact) */}
-            {/* 4-Sided Continuous Racetrack Border Card (Rounded Corners & Compact) */}
-            {(() => {
-              // Resolve active mandi, district and province from real data (allRows) or LOCATIONS
-              let cleanMandiName = "Pakpattan Mandi";
-              let mandiDist = "Pakpattan";
-              let mandiProvince = "Punjab";
+              {/* 4-Sided Continuous Racetrack Border Card (Rounded Corners & Compact) */}
+              {/* 4-Sided Continuous Racetrack Border Card (Rounded Corners & Compact) */}
+              {(() => {
+                // Resolve active mandi, district and province from real data (allRows) or LOCATIONS
+                let cleanMandiName = "Pakpattan Mandi";
+                let mandiDist = "Pakpattan";
+                let mandiProvince = "Punjab";
 
-              if (locScope.kind === "mandi") {
-                const targetClean = locScope.label
-                  .toLowerCase()
-                  .replace(/\s*(mandi|منڈی)$/i, "")
-                  .trim();
-
-                // 1. Try finding in real rows
-                const matchedRow = allRows.find((r) => {
-                  const rName = r.mandiName
+                if (locScope.kind === "mandi") {
+                  const targetClean = locScope.label
                     .toLowerCase()
                     .replace(/\s*(mandi|منڈی)$/i, "")
                     .trim();
-                  const rCity = (r.mandiCity || "")
-                    .toLowerCase()
-                    .replace(/\s*(mandi|منڈی)$/i, "")
-                    .trim();
-                  return rName === targetClean || rCity === targetClean || rName.includes(targetClean) || targetClean.includes(rName);
-                });
 
-                if (matchedRow) {
-                  const mPure = matchedRow.mandiName.replace(/\s*(mandi|منڈی)$/i, "").trim();
-                  cleanMandiName = lang === "ur"
-                    ? (tm(mPure).includes("منڈی") ? tm(mPure) : `${tm(mPure)} منڈی`)
-                    : `${mPure} Mandi`;
-                  mandiDist = matchedRow.mandiCity || mPure;
-                  mandiProvince = matchedRow.province || "Punjab";
-                } else {
-                  // 2. Try finding in LOCATIONS hierarchy
-                  let found = false;
-                  for (const [p, distMap] of Object.entries(LOCATIONS)) {
-                    for (const [d, mandisArray] of Object.entries(distMap)) {
-                      if (mandisArray.some((m) => m.toLowerCase().replace(/\s*(mandi|منڈی)$/i, "").trim() === targetClean || m.toLowerCase().includes(targetClean))) {
-                        const mPure = locScope.label.replace(/\s*(mandi|منڈی)$/i, "").trim();
-                        cleanMandiName = lang === "ur"
-                          ? (tm(mPure).includes("منڈی") ? tm(mPure) : `${tm(mPure)} منڈی`)
-                          : `${mPure} Mandi`;
-                        mandiDist = d;
-                        mandiProvince = p;
-                        found = true;
-                        break;
-                      }
-                    }
-                    if (found) break;
-                  }
-                  if (!found) {
-                    const mPure = locScope.label.replace(/\s*(mandi|منڈی)$/i, "").trim();
+                  // 1. Try finding in real rows
+                  const matchedRow = allRows.find((r) => {
+                    const rName = r.mandiName
+                      .toLowerCase()
+                      .replace(/\s*(mandi|منڈی)$/i, "")
+                      .trim();
+                    const rCity = (r.mandiCity || "")
+                      .toLowerCase()
+                      .replace(/\s*(mandi|منڈی)$/i, "")
+                      .trim();
+                    return rName === targetClean || rCity === targetClean || rName.includes(targetClean) || targetClean.includes(rName);
+                  });
+
+                  if (matchedRow) {
+                    const mPure = matchedRow.mandiName.replace(/\s*(mandi|منڈی)$/i, "").trim();
                     cleanMandiName = lang === "ur"
                       ? (tm(mPure).includes("منڈی") ? tm(mPure) : `${tm(mPure)} منڈی`)
                       : `${mPure} Mandi`;
-                    mandiDist = mPure;
-                    mandiProvince = "Punjab";
+                    mandiDist = matchedRow.mandiCity || mPure;
+                    mandiProvince = matchedRow.province || "Punjab";
+                  } else {
+                    // 2. Try finding in LOCATIONS hierarchy
+                    let found = false;
+                    for (const [p, distMap] of Object.entries(LOCATIONS)) {
+                      for (const [d, mandisArray] of Object.entries(distMap)) {
+                        if (mandisArray.some((m) => m.toLowerCase().replace(/\s*(mandi|منڈی)$/i, "").trim() === targetClean || m.toLowerCase().includes(targetClean))) {
+                          const mPure = locScope.label.replace(/\s*(mandi|منڈی)$/i, "").trim();
+                          cleanMandiName = lang === "ur"
+                            ? (tm(mPure).includes("منڈی") ? tm(mPure) : `${tm(mPure)} منڈی`)
+                            : `${mPure} Mandi`;
+                          mandiDist = d;
+                          mandiProvince = p;
+                          found = true;
+                          break;
+                        }
+                      }
+                      if (found) break;
+                    }
+                    if (!found) {
+                      const mPure = locScope.label.replace(/\s*(mandi|منڈی)$/i, "").trim();
+                      cleanMandiName = lang === "ur"
+                        ? (tm(mPure).includes("منڈی") ? tm(mPure) : `${tm(mPure)} منڈی`)
+                        : `${mPure} Mandi`;
+                      mandiDist = mPure;
+                      mandiProvince = "Punjab";
+                    }
                   }
                 }
-              }
 
-              const locationButtonLabel =
-                locScope.kind === "pakistan"
-                  ? (lang === "ur" ? "پورا پاکستان" : "All Pakistan")
-                  : locScope.kind === "province"
-                    ? (lang === "ur" ? "صوبہ " + tm(locScope.label) : locScope.label + " Province")
-                    : locScope.kind === "district"
-                      ? (lang === "ur" ? "ضلع " + tm(locScope.label) : locScope.label + " District")
-                      : cleanMandiName;
+                const locationButtonLabel =
+                  locScope.kind === "pakistan"
+                    ? (lang === "ur" ? "پورا پاکستان" : "All Pakistan")
+                    : locScope.kind === "province"
+                      ? (lang === "ur" ? "صوبہ " + tm(locScope.label) : locScope.label + " Province")
+                      : locScope.kind === "district"
+                        ? (lang === "ur" ? "ضلع " + tm(locScope.label) : locScope.label + " District")
+                        : cleanMandiName;
 
-              // Province-specific cultural styling and traditional gradient themes
-              const PROVINCE_THEMES: Record<string, {
-                gradientH: string;
-                gradientV: string;
-                borderColor: string;
-                bulletColor: string;
-                pattern: "phulkari" | "ajrak" | "khyber" | "baloch" | "pakistan";
-              }> = {
-                Punjab: {
-                  gradientH: "linear-gradient(90deg, #033D31 0%, #087F63 50%, #033D31 100%)",
-                  gradientV: "linear-gradient(180deg, #033D31 0%, #087F63 50%, #033D31 100%)",
-                  borderColor: "#087F63",
-                  bulletColor: "#FDE047",
-                  pattern: "phulkari",
-                },
-                Sindh: {
-                  gradientH: "linear-gradient(90deg, #5C0B14 0%, #B91C1C 50%, #5C0B14 100%)",
-                  gradientV: "linear-gradient(180deg, #5C0B14 0%, #B91C1C 50%, #5C0B14 100%)",
-                  borderColor: "#DC2626",
-                  bulletColor: "#FDA4AF",
-                  pattern: "ajrak",
-                },
-                KPK: {
-                  gradientH: "linear-gradient(90deg, #0C4A6E 0%, #0284C7 50%, #0C4A6E 100%)",
-                  gradientV: "linear-gradient(180deg, #0C4A6E 0%, #0284C7 50%, #0C4A6E 100%)",
-                  borderColor: "#0284C7",
-                  bulletColor: "#BAE6FD",
-                  pattern: "khyber",
-                },
-                Balochistan: {
-                  gradientH: "linear-gradient(90deg, #7C2D12 0%, #EA580C 50%, #7C2D12 100%)",
-                  gradientV: "linear-gradient(180deg, #7C2D12 0%, #EA580C 50%, #7C2D12 100%)",
-                  borderColor: "#EA580C",
-                  bulletColor: "#FDBA74",
-                  pattern: "baloch",
-                },
-                Pakistan: {
-                  gradientH: "linear-gradient(90deg, #022c22 0%, #064e3b 50%, #022c22 100%)",
-                  gradientV: "linear-gradient(180deg, #022c22 0%, #064e3b 50%, #022c22 100%)",
-                  borderColor: "#059669",
-                  bulletColor: "#34D399",
-                  pattern: "pakistan",
-                },
-              };
+                // Province-specific cultural styling and traditional gradient themes
+                const PROVINCE_THEMES: Record<string, {
+                  gradientH: string;
+                  gradientV: string;
+                  borderColor: string;
+                  bulletColor: string;
+                  pattern: "phulkari" | "ajrak" | "khyber" | "baloch" | "pakistan";
+                }> = {
+                  Punjab: {
+                    gradientH: "linear-gradient(90deg, #033D31 0%, #087F63 50%, #033D31 100%)",
+                    gradientV: "linear-gradient(180deg, #033D31 0%, #087F63 50%, #033D31 100%)",
+                    borderColor: "#087F63",
+                    bulletColor: "#FDE047",
+                    pattern: "phulkari",
+                  },
+                  Sindh: {
+                    gradientH: "linear-gradient(90deg, #5C0B14 0%, #B91C1C 50%, #5C0B14 100%)",
+                    gradientV: "linear-gradient(180deg, #5C0B14 0%, #B91C1C 50%, #5C0B14 100%)",
+                    borderColor: "#DC2626",
+                    bulletColor: "#FDA4AF",
+                    pattern: "ajrak",
+                  },
+                  KPK: {
+                    gradientH: "linear-gradient(90deg, #0C4A6E 0%, #0284C7 50%, #0C4A6E 100%)",
+                    gradientV: "linear-gradient(180deg, #0C4A6E 0%, #0284C7 50%, #0C4A6E 100%)",
+                    borderColor: "#0284C7",
+                    bulletColor: "#BAE6FD",
+                    pattern: "khyber",
+                  },
+                  Balochistan: {
+                    gradientH: "linear-gradient(90deg, #7C2D12 0%, #EA580C 50%, #7C2D12 100%)",
+                    gradientV: "linear-gradient(180deg, #7C2D12 0%, #EA580C 50%, #7C2D12 100%)",
+                    borderColor: "#EA580C",
+                    bulletColor: "#FDBA74",
+                    pattern: "baloch",
+                  },
+                  Pakistan: {
+                    gradientH: "linear-gradient(90deg, #022c22 0%, #064e3b 50%, #022c22 100%)",
+                    gradientV: "linear-gradient(180deg, #022c22 0%, #064e3b 50%, #022c22 100%)",
+                    borderColor: "#059669",
+                    bulletColor: "#34D399",
+                    pattern: "pakistan",
+                  },
+                };
 
-              const pTheme =
-                locScope.kind === "pakistan"
-                  ? PROVINCE_THEMES.Pakistan
-                  : locScope.kind === "province"
-                    ? PROVINCE_THEMES[locScope.label] || PROVINCE_THEMES.Punjab
-                    : PROVINCE_THEMES[mandiProvince] || PROVINCE_THEMES.Punjab;
+                const pTheme =
+                  locScope.kind === "pakistan"
+                    ? PROVINCE_THEMES.Pakistan
+                    : locScope.kind === "province"
+                      ? PROVINCE_THEMES[locScope.label] || PROVINCE_THEMES.Punjab
+                      : PROVINCE_THEMES[mandiProvince] || PROVINCE_THEMES.Punjab;
 
-              // Format Mandi triad: Mandi Name, District Name, Province Name
-              const formatMandiTriad = (mPure: string, dist: string, prov: string) => {
-                const mLabel = mPure;
-                const dLabel = tm(dist);
-                const pLabel = tm(prov);
-                return lang === "ur"
-                  ? `${mLabel}، ${dLabel}، ${pLabel}`
-                  : `${mLabel}, ${dLabel}, ${pLabel}`;
-              };
+                // Format Mandi triad: Mandi Name, District Name, Province Name
+                const formatMandiTriad = (mPure: string, dist: string, prov: string) => {
+                  const mLabel = mPure;
+                  const dLabel = tm(dist);
+                  const pLabel = tm(prov);
+                  return lang === "ur"
+                    ? `${mLabel}، ${dLabel}، ${pLabel}`
+                    : `${mLabel}, ${dLabel}, ${pLabel}`;
+                };
 
-              // Build revolving racetrack strip items based on active location scope
-              let baseItems: string[] = [];
-              if (locScope.kind === "pakistan") {
-                const pakLabel = lang === "ur" ? "پاکستان" : "Pakistan";
-                baseItems = [pakLabel, pakLabel, pakLabel, pakLabel, pakLabel, pakLabel, pakLabel, pakLabel];
-              } else if (locScope.kind === "province") {
-                const provLabel = lang === "ur" ? "صوبہ " + tm(locScope.label) : locScope.label + " Province";
-                baseItems = [provLabel, provLabel, provLabel, provLabel, provLabel, provLabel, provLabel, provLabel];
-              } else if (locScope.kind === "district") {
-                const distLabel = lang === "ur" ? "ضلع " + tm(locScope.label) : locScope.label + " District";
-                baseItems = [distLabel, distLabel, distLabel, distLabel, distLabel, distLabel, distLabel, distLabel];
-              } else if (locScope.kind === "mandi") {
-                const item = formatMandiTriad(cleanMandiName, mandiDist, mandiProvince);
-                baseItems = [item, item, item, item, item, item];
-              } else {
-                const pakLabel = lang === "ur" ? "پاکستان" : "Pakistan";
-                baseItems = [pakLabel, pakLabel, pakLabel, pakLabel, pakLabel, pakLabel, pakLabel, pakLabel];
-              }
+                // Build revolving racetrack strip items based on active location scope
+                let baseItems: string[] = [];
+                if (locScope.kind === "pakistan") {
+                  const pakLabel = lang === "ur" ? "پاکستان" : "Pakistan";
+                  baseItems = [pakLabel, pakLabel, pakLabel, pakLabel, pakLabel, pakLabel, pakLabel, pakLabel];
+                } else if (locScope.kind === "province") {
+                  const provLabel = lang === "ur" ? "صوبہ " + tm(locScope.label) : locScope.label + " Province";
+                  baseItems = [provLabel, provLabel, provLabel, provLabel, provLabel, provLabel, provLabel, provLabel];
+                } else if (locScope.kind === "district") {
+                  const distLabel = lang === "ur" ? "ضلع " + tm(locScope.label) : locScope.label + " District";
+                  baseItems = [distLabel, distLabel, distLabel, distLabel, distLabel, distLabel, distLabel, distLabel];
+                } else if (locScope.kind === "mandi") {
+                  const item = formatMandiTriad(cleanMandiName, mandiDist, mandiProvince);
+                  baseItems = [item, item, item, item, item, item];
+                } else {
+                  const pakLabel = lang === "ur" ? "پاکستان" : "Pakistan";
+                  baseItems = [pakLabel, pakLabel, pakLabel, pakLabel, pakLabel, pakLabel, pakLabel, pakLabel];
+                }
 
-              return (
-                <div
-                  className="w-full rounded-[28px] overflow-hidden mb-2 relative shadow-md flex-shrink-0"
-                  style={{
-                    background: pTheme.gradientH,
-                    border: `2px solid ${pTheme.borderColor}`,
-                    boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
-                    padding: "15px 13px",
-                  }}
-                >
-                  {/* Traditional Cultural Background Pattern Overlay */}
-                  <div className="absolute inset-0 pointer-events-none z-0">
-                    <ProvincePatternSvg pattern={pTheme.pattern} opacity={0.32} />
-                  </div>
-
-                  {/* 1. TOP BORDER: Moving Left-to-Right */}
+                return (
                   <div
-                    className="absolute top-0 left-0 right-0 overflow-hidden flex items-center z-10 pointer-events-none"
+                    className="w-full rounded-[28px] overflow-hidden mb-2 relative shadow-md flex-shrink-0"
                     style={{
-                      height: 16,
                       background: pTheme.gradientH,
-                      color: "#FFFFFF",
-                      borderBottom: "1px solid rgba(255,255,255,0.2)",
+                      border: `2px solid ${pTheme.borderColor}`,
+                      boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
+                      padding: "15px 13px",
                     }}
                   >
-                    <div
-                      className="racetrack-track-l2r flex items-center font-bold text-[9px] tracking-wide"
-                      style={{
-                        fontFamily:
-                          lang === "ur"
-                            ? URDU_FONT
-                            : "inherit",
-                      }}
-                    >
-                      <div className="flex items-center gap-3.5 flex-shrink-0 pr-3.5">
-                        {baseItems.map((name, i) => (
-                          <span key={i} className="flex items-center gap-1.5 whitespace-nowrap">
-                            <span>{name}</span>
-                            <span style={{ color: pTheme.bulletColor, fontSize: 7 }}>•</span>
-                          </span>
-                        ))}
-                      </div>
-                      <div className="flex items-center gap-3.5 flex-shrink-0 pr-3.5">
-                        {baseItems.map((name, i) => (
-                          <span key={`dup-${i}`} className="flex items-center gap-1.5 whitespace-nowrap">
-                            <span>{name}</span>
-                            <span style={{ color: pTheme.bulletColor, fontSize: 7 }}>•</span>
-                          </span>
-                        ))}
-                      </div>
+                    {/* Traditional Cultural Background Pattern Overlay */}
+                    <div className="absolute inset-0 pointer-events-none z-0">
+                      <ProvincePatternSvg pattern={pTheme.pattern} opacity={0.32} />
                     </div>
-                  </div>
 
-                  {/* 2. RIGHT BORDER: Moving Top-to-Bottom */}
-                  <div
-                    className="absolute top-0 right-0 bottom-0 overflow-hidden z-10 pointer-events-none"
-                    style={{
-                      width: 16,
-                      background: pTheme.gradientV,
-                      color: "#FFFFFF",
-                      borderLeft: "1px solid rgba(255,255,255,0.2)",
-                    }}
-                  >
+                    {/* 1. TOP BORDER: Moving Left-to-Right */}
                     <div
+                      className="absolute top-0 left-0 right-0 overflow-hidden flex items-center z-10 pointer-events-none"
                       style={{
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        width: 1000,
                         height: 16,
-                        transformOrigin: "0 0",
-                        transform: "rotate(90deg) translateY(-100%)",
-                        display: "flex",
-                        alignItems: "center",
+                        background: pTheme.gradientH,
+                        color: "#FFFFFF",
+                        borderBottom: "1px solid rgba(255,255,255,0.2)",
                       }}
                     >
                       <div
@@ -12151,67 +12109,67 @@ function ProductRatesScreen({
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* 3. BOTTOM BORDER: Moving Right-to-Left */}
-                  <div
-                    className="absolute bottom-0 left-0 right-0 overflow-hidden flex items-center z-10 pointer-events-none"
-                    style={{
-                      height: 16,
-                      background: pTheme.gradientH,
-                      color: "#FFFFFF",
-                      borderTop: "1px solid rgba(255,255,255,0.2)",
-                    }}
-                  >
+                    {/* 2. RIGHT BORDER: Moving Top-to-Bottom */}
                     <div
-                      className="racetrack-track-r2l flex items-center font-bold text-[9px] tracking-wide"
+                      className="absolute top-0 right-0 bottom-0 overflow-hidden z-10 pointer-events-none"
                       style={{
-                        fontFamily:
-                          lang === "ur"
-                            ? URDU_FONT
-                            : "inherit",
+                        width: 16,
+                        background: pTheme.gradientV,
+                        color: "#FFFFFF",
+                        borderLeft: "1px solid rgba(255,255,255,0.2)",
                       }}
                     >
-                      <div className="flex items-center gap-3.5 flex-shrink-0 pr-3.5">
-                        {baseItems.map((name, i) => (
-                          <span key={i} className="flex items-center gap-1.5 whitespace-nowrap">
-                            <span>{name}</span>
-                            <span style={{ color: pTheme.bulletColor, fontSize: 7 }}>•</span>
-                          </span>
-                        ))}
-                      </div>
-                      <div className="flex items-center gap-3.5 flex-shrink-0 pr-3.5">
-                        {baseItems.map((name, i) => (
-                          <span key={`dup-${i}`} className="flex items-center gap-1.5 whitespace-nowrap">
-                            <span>{name}</span>
-                            <span style={{ color: pTheme.bulletColor, fontSize: 7 }}>•</span>
-                          </span>
-                        ))}
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          width: 1000,
+                          height: 16,
+                          transformOrigin: "0 0",
+                          transform: "rotate(90deg) translateY(-100%)",
+                          display: "flex",
+                          alignItems: "center",
+                        }}
+                      >
+                        <div
+                          className="racetrack-track-l2r flex items-center font-bold text-[9px] tracking-wide"
+                          style={{
+                            fontFamily:
+                              lang === "ur"
+                                ? URDU_FONT
+                                : "inherit",
+                          }}
+                        >
+                          <div className="flex items-center gap-3.5 flex-shrink-0 pr-3.5">
+                            {baseItems.map((name, i) => (
+                              <span key={i} className="flex items-center gap-1.5 whitespace-nowrap">
+                                <span>{name}</span>
+                                <span style={{ color: pTheme.bulletColor, fontSize: 7 }}>•</span>
+                              </span>
+                            ))}
+                          </div>
+                          <div className="flex items-center gap-3.5 flex-shrink-0 pr-3.5">
+                            {baseItems.map((name, i) => (
+                              <span key={`dup-${i}`} className="flex items-center gap-1.5 whitespace-nowrap">
+                                <span>{name}</span>
+                                <span style={{ color: pTheme.bulletColor, fontSize: 7 }}>•</span>
+                              </span>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* 4. LEFT BORDER: Moving Bottom-to-Top */}
-                  <div
-                    className="absolute top-0 left-0 bottom-0 overflow-hidden z-10 pointer-events-none"
-                    style={{
-                      width: 16,
-                      background: pTheme.gradientV,
-                      color: "#FFFFFF",
-                      borderRight: "1px solid rgba(255,255,255,0.2)",
-                    }}
-                  >
+                    {/* 3. BOTTOM BORDER: Moving Right-to-Left */}
                     <div
+                      className="absolute bottom-0 left-0 right-0 overflow-hidden flex items-center z-10 pointer-events-none"
                       style={{
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        width: 1000,
                         height: 16,
-                        transformOrigin: "0 0",
-                        transform: "rotate(90deg) translateY(-100%)",
-                        display: "flex",
-                        alignItems: "center",
+                        background: pTheme.gradientH,
+                        color: "#FFFFFF",
+                        borderTop: "1px solid rgba(255,255,255,0.2)",
                       }}
                     >
                       <div
@@ -12241,66 +12199,195 @@ function ProductRatesScreen({
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* CENTER CONTENT: Inner White Card */}
-                  <div
-                    className="relative z-10 rounded-[18px] p-2.5 shadow-sm flex flex-col"
-                    style={{
-                      background: "#FFFFFF",
-                    }}
-                  >
-                    {/* TOP SECTION: Left Spotlight & Right Details */}
-                    <div className="flex items-center gap-2.5">
-                      {/* LEFT: Product image in circular spotlight */}
+                    {/* 4. LEFT BORDER: Moving Bottom-to-Top */}
+                    <div
+                      className="absolute top-0 left-0 bottom-0 overflow-hidden z-10 pointer-events-none"
+                      style={{
+                        width: 16,
+                        background: pTheme.gradientV,
+                        color: "#FFFFFF",
+                        borderRight: "1px solid rgba(255,255,255,0.2)",
+                      }}
+                    >
                       <div
-                        className="relative flex items-center justify-center flex-shrink-0"
                         style={{
-                          width: 72,
-                          height: 72,
-                          borderRadius: "50%",
-                          background: "radial-gradient(circle, #E8F5EE 0%, #D6EFE3 100%)",
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          width: 1000,
+                          height: 16,
+                          transformOrigin: "0 0",
+                          transform: "rotate(90deg) translateY(-100%)",
+                          display: "flex",
+                          alignItems: "center",
                         }}
                       >
-                        <img
-                          src={getproductIconSrc(byproduct || product, vertical)}
-                          alt={byproduct || product}
+                        <div
+                          className="racetrack-track-r2l flex items-center font-bold text-[9px] tracking-wide"
                           style={{
-                            width: 52,
-                            height: 52,
-                            objectFit: "contain",
-                            filter: "drop-shadow(0 3px 6px rgba(0,0,0,0.1))",
+                            fontFamily:
+                              lang === "ur"
+                                ? URDU_FONT
+                                : "inherit",
                           }}
-                        />
+                        >
+                          <div className="flex items-center gap-3.5 flex-shrink-0 pr-3.5">
+                            {baseItems.map((name, i) => (
+                              <span key={i} className="flex items-center gap-1.5 whitespace-nowrap">
+                                <span>{name}</span>
+                                <span style={{ color: pTheme.bulletColor, fontSize: 7 }}>•</span>
+                              </span>
+                            ))}
+                          </div>
+                          <div className="flex items-center gap-3.5 flex-shrink-0 pr-3.5">
+                            {baseItems.map((name, i) => (
+                              <span key={`dup-${i}`} className="flex items-center gap-1.5 whitespace-nowrap">
+                                <span>{name}</span>
+                                <span style={{ color: pTheme.bulletColor, fontSize: 7 }}>•</span>
+                              </span>
+                            ))}
+                          </div>
+                        </div>
                       </div>
+                    </div>
 
-                      {/* RIGHT: Location Dropdown + 3 Metrics (Max, Min, Arrival) */}
-                      <div className="flex-1 min-w-0 flex flex-col justify-between py-0">
-                        {/* Location dropdown header + date chip row */}
-                        <div className="flex items-center gap-2 mb-1">
-                          <button
-                            onClick={() => {
-                              setLocSheet(true);
-                              if (voiceEnabled) {
-                                speakText(lang === "ur" ? "مقام کا انتخاب" : "Select location");
-                              }
+                    {/* CENTER CONTENT: Inner White Card */}
+                    <div
+                      className="relative z-10 rounded-[18px] p-2.5 shadow-sm flex flex-col"
+                      style={{
+                        background: "#FFFFFF",
+                      }}
+                    >
+                      {/* TOP SECTION: Left Spotlight & Right Details */}
+                      <div className="flex items-center gap-2.5">
+                        {/* LEFT: Product image in circular spotlight */}
+                        <div
+                          className="relative flex items-center justify-center flex-shrink-0"
+                          style={{
+                            width: 72,
+                            height: 72,
+                            borderRadius: "50%",
+                            background: "radial-gradient(circle, #E8F5EE 0%, #D6EFE3 100%)",
+                          }}
+                        >
+                          <img
+                            src={getproductIconSrc(byproduct || product, vertical)}
+                            alt={byproduct || product}
+                            style={{
+                              width: 52,
+                              height: 52,
+                              objectFit: "contain",
+                              filter: "drop-shadow(0 3px 6px rgba(0,0,0,0.1))",
                             }}
-                            className="tap-target flex items-center gap-1.5 text-left group flex-1 min-w-0"
-                            style={{ background: "none", border: "none", padding: 0 }}
-                          >
-                            <div
-                              className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
-                              style={{ background: "#E8F5EE", color: "#087F63" }}
+                          />
+                        </div>
+
+                        {/* RIGHT: Location Dropdown + 3 Metrics (Max, Min, Arrival) */}
+                        <div className="flex-1 min-w-0 flex flex-col justify-between py-0">
+                          {/* Location dropdown header + date chip row */}
+                          <div className="flex items-center gap-2 mb-1">
+                            <button
+                              onClick={() => {
+                                setLocSheet(true);
+                                if (voiceEnabled) {
+                                  speakText(lang === "ur" ? "مقام کا انتخاب" : "Select location");
+                                }
+                              }}
+                              className="tap-target flex items-center gap-1.5 text-left group flex-1 min-w-0"
+                              style={{ background: "none", border: "none", padding: 0 }}
                             >
-                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M3 21h18" />
-                                <path d="M5 21V7l7-4 7 4v14" />
-                                <path d="M9 10a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v11H9V10z" />
-                              </svg>
-                            </div>
-                            <div className="flex items-center gap-1 min-w-0 flex-1">
+                              <div
+                                className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
+                                style={{ background: "#E8F5EE", color: "#087F63" }}
+                              >
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M3 21h18" />
+                                  <path d="M5 21V7l7-4 7 4v14" />
+                                  <path d="M9 10a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v11H9V10z" />
+                                </svg>
+                              </div>
+                              <div className="flex items-center gap-1 min-w-0 flex-1">
+                                <span
+                                  className="font-extrabold truncate text-[13.5px] leading-tight text-[#183B34] group-hover:text-[#087F63] transition-colors"
+                                  style={{
+                                    fontFamily:
+                                      lang === "ur"
+                                        ? URDU_FONT
+                                        : "inherit",
+                                  }}
+                                >
+                                  {locationButtonLabel}
+                                </span>
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#087F63" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                                  <polyline points="6 9 12 15 18 9" />
+                                </svg>
+                              </div>
+                            </button>
+
+                            {/* Compact date chip — opens calendar (fixed overlay, below) */}
+                            <button
+                              onClick={() => setStatDateCalOpen((o) => !o)}
+                              className="tap-target flex-shrink-0 overflow-hidden"
+                              style={{
+                                display: "flex",
+                                borderRadius: 6,
+                                boxShadow: "0 1px 6px rgba(0,0,0,0.12)",
+                                border: "1px solid #C7E8D8",
+                                padding: 0,
+                              }}
+                            >
+                              <div
+                                style={{
+                                  background: "#087F63",
+                                  padding: "3px 6px",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    color: "#fff",
+                                    fontSize: lang === "ur" ? 9 : 8,
+                                    fontWeight: 800,
+                                    letterSpacing: 0.5,
+                                    fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                  }}
+                                >
+                                  {statDateFilter
+                                    ? (lang === "ur"
+                                      ? ["جنوری", "فروری", "مارچ", "اپریل", "مئی", "جون", "جولائی", "اگست", "ستمبر", "اکتوبر", "نومبر", "دسمبر"][statDateFilter.getMonth()]
+                                      : ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][statDateFilter.getMonth()])
+                                    : (lang === "ur" ? "ستمبر" : "Sep")}
+                                </span>
+                              </div>
+                              <div
+                                style={{
+                                  background: "#F4FAF7",
+                                  padding: "3px 7px",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  borderLeft: "1px solid #D5E2DD",
+                                }}
+                              >
+                                <span style={{ color: "#183B34", fontSize: 13, fontWeight: 900, lineHeight: 1 }}>
+                                  {statDateFilter ? statDateFilter.getDate() : 14}
+                                </span>
+                              </div>
+                            </button>
+                          </div>
+
+
+                          <div
+                            className="grid grid-cols-3 gap-1 pt-1 mt-0.5"
+                            style={{ borderTop: "1px solid #EEF3F0" }}
+                          >
+                            {/* Max */}
+                            <div className="flex flex-col">
                               <span
-                                className="font-extrabold truncate text-[13.5px] leading-tight text-[#183B34] group-hover:text-[#087F63] transition-colors"
+                                className="font-semibold text-[8px] text-[#64748B] uppercase tracking-wide leading-tight"
                                 style={{
                                   fontFamily:
                                     lang === "ur"
@@ -12308,477 +12395,363 @@ function ProductRatesScreen({
                                       : "inherit",
                                 }}
                               >
-                                {locationButtonLabel}
+                                {lang === "ur" ? "زیادہ قیمت" : "Max Price"}
                               </span>
-                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#087F63" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
-                                <polyline points="6 9 12 15 18 9" />
-                              </svg>
-                            </div>
-                          </button>
-
-                          {/* Compact date chip — opens calendar (fixed overlay, below) */}
-                          <button
-                            onClick={() => setStatDateCalOpen((o) => !o)}
-                            className="tap-target flex-shrink-0 overflow-hidden"
-                            style={{
-                              display: "flex",
-                              borderRadius: 6,
-                              boxShadow: "0 1px 6px rgba(0,0,0,0.12)",
-                              border: "1px solid #C7E8D8",
-                              padding: 0,
-                            }}
-                          >
-                            <div
-                              style={{
-                                background: "#087F63",
-                                padding: "3px 6px",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                              }}
-                            >
                               <span
+                                className="font-extrabold text-[12px] leading-tight text-[#087F63] mt-0.5 break-words"
                                 style={{
-                                  color: "#fff",
-                                  fontSize: lang === "ur" ? 9 : 8,
-                                  fontWeight: 800,
-                                  letterSpacing: 0.5,
-                                  fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                  fontFamily:
+                                    lang === "ur"
+                                      ? URDU_FONT
+                                      : "inherit",
                                 }}
                               >
-                                {statDateFilter
-                                  ? (lang === "ur"
-                                    ? ["جنوری", "فروری", "مارچ", "اپریل", "مئی", "جون", "جولائی", "اگست", "ستمبر", "اکتوبر", "نومبر", "دسمبر"][statDateFilter.getMonth()]
-                                    : ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][statDateFilter.getMonth()])
-                                  : (lang === "ur" ? "ستمبر" : "Sep")}
+                                {statMax > 0
+                                  ? (lang === "ur" ? `${toUrduDigits(statMax.toLocaleString("en-PK"))} روپے` : fmt(statMax))
+                                  : "—"}
+                              </span>
+                              <span className="text-[7.5px] text-[#80918B] leading-none mt-0.5">
+                                {statMax > 0 ? (lang === "ur" ? "فی ۴۰ کلو" : "(40 KG)") : ""}
                               </span>
                             </div>
+
+                            {/* Min */}
                             <div
-                              style={{
-                                background: "#F4FAF7",
-                                padding: "3px 7px",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                borderLeft: "1px solid #D5E2DD",
-                              }}
+                              className="flex flex-col pl-1"
+                              style={{ borderLeft: "1px solid #EEF3F0" }}
                             >
-                              <span style={{ color: "#183B34", fontSize: 13, fontWeight: 900, lineHeight: 1 }}>
-                                {statDateFilter ? statDateFilter.getDate() : 14}
+                              <span
+                                className="font-semibold text-[8px] text-[#64748B] uppercase tracking-wide leading-tight"
+                                style={{
+                                  fontFamily:
+                                    lang === "ur"
+                                      ? URDU_FONT
+                                      : "inherit",
+                                }}
+                              >
+                                {lang === "ur" ? "کم قیمت" : "Min Price"}
+                              </span>
+                              <span
+                                className="font-extrabold text-[12px] leading-tight text-[#B45309] mt-0.5 break-words"
+                                style={{
+                                  fontFamily:
+                                    lang === "ur"
+                                      ? URDU_FONT
+                                      : "inherit",
+                                }}
+                              >
+                                {statMin > 0
+                                  ? (lang === "ur" ? `${toUrduDigits(statMin.toLocaleString("en-PK"))} روپے` : fmt(statMin))
+                                  : "—"}
+                              </span>
+                              <span className="text-[7.5px] text-[#80918B] leading-none mt-0.5">
+                                {statMin > 0 ? (lang === "ur" ? "فی ۴۰ کلو" : "(40 KG)") : ""}
                               </span>
                             </div>
-                          </button>
-                        </div>
 
-
-                        <div
-                          className="grid grid-cols-3 gap-1 pt-1 mt-0.5"
-                          style={{ borderTop: "1px solid #EEF3F0" }}
-                        >
-                          {/* Max */}
-                          <div className="flex flex-col">
-                            <span
-                              className="font-semibold text-[8px] text-[#64748B] uppercase tracking-wide leading-tight"
-                              style={{
-                                fontFamily:
-                                  lang === "ur"
-                                    ? URDU_FONT
-                                    : "inherit",
-                              }}
+                            {/* Arrival */}
+                            <div
+                              className="flex flex-col pl-1"
+                              style={{ borderLeft: "1px solid #EEF3F0" }}
                             >
-                              {lang === "ur" ? "زیادہ قیمت" : "Max Price"}
-                            </span>
-                            <span
-                              className="font-extrabold text-[12px] leading-tight text-[#087F63] mt-0.5 break-words"
-                              style={{
-                                fontFamily:
-                                  lang === "ur"
-                                    ? URDU_FONT
-                                    : "inherit",
-                              }}
-                            >
-                              {statMax > 0
-                                ? (lang === "ur" ? `${toUrduDigits(statMax.toLocaleString("en-PK"))} روپے` : fmt(statMax))
-                                : "—"}
-                            </span>
-                            <span className="text-[7.5px] text-[#80918B] leading-none mt-0.5">
-                              {statMax > 0 ? (lang === "ur" ? "فی ۴۰ کلو" : "(40 KG)") : ""}
-                            </span>
-                          </div>
-
-                          {/* Min */}
-                          <div
-                            className="flex flex-col pl-1"
-                            style={{ borderLeft: "1px solid #EEF3F0" }}
-                          >
-                            <span
-                              className="font-semibold text-[8px] text-[#64748B] uppercase tracking-wide leading-tight"
-                              style={{
-                                fontFamily:
-                                  lang === "ur"
-                                    ? URDU_FONT
-                                    : "inherit",
-                              }}
-                            >
-                              {lang === "ur" ? "کم قیمت" : "Min Price"}
-                            </span>
-                            <span
-                              className="font-extrabold text-[12px] leading-tight text-[#B45309] mt-0.5 break-words"
-                              style={{
-                                fontFamily:
-                                  lang === "ur"
-                                    ? URDU_FONT
-                                    : "inherit",
-                              }}
-                            >
-                              {statMin > 0
-                                ? (lang === "ur" ? `${toUrduDigits(statMin.toLocaleString("en-PK"))} روپے` : fmt(statMin))
-                                : "—"}
-                            </span>
-                            <span className="text-[7.5px] text-[#80918B] leading-none mt-0.5">
-                              {statMin > 0 ? (lang === "ur" ? "فی ۴۰ کلو" : "(40 KG)") : ""}
-                            </span>
-                          </div>
-
-                          {/* Arrival */}
-                          <div
-                            className="flex flex-col pl-1"
-                            style={{ borderLeft: "1px solid #EEF3F0" }}
-                          >
-                            <span
-                              className="font-semibold text-[8px] text-[#64748B] uppercase tracking-wide leading-tight"
-                              style={{
-                                fontFamily:
-                                  lang === "ur"
-                                    ? URDU_FONT
-                                    : "inherit",
-                              }}
-                            >
-                              {lang === "ur" ? "آمد" : "Arrival"}
-                            </span>
-                            <span
-                              className="font-extrabold text-[12px] leading-tight text-[#0E7465] mt-0.5 break-words"
-                              style={{
-                                fontFamily:
-                                  lang === "ur"
-                                    ? URDU_FONT
-                                    : "inherit",
-                              }}
-                            >
-                              {statArrival > 0
-                                ? (lang === "ur"
-                                  ? `${toUrduDigits(statArrival.toLocaleString())} تھیلے`
-                                  : `${statArrival.toLocaleString()} Bags`)
-                                : "—"}
-                            </span>
-                            <span className="text-[7.5px] text-[#80918B] leading-none mt-0.5">
-                              {statArrival > 0 ? (lang === "ur" ? "فی ۴۰ کلو" : "(40 KG)") : ""}
-                            </span>
+                              <span
+                                className="font-semibold text-[8px] text-[#64748B] uppercase tracking-wide leading-tight"
+                                style={{
+                                  fontFamily:
+                                    lang === "ur"
+                                      ? URDU_FONT
+                                      : "inherit",
+                                }}
+                              >
+                                {lang === "ur" ? "آمد" : "Arrival"}
+                              </span>
+                              <span
+                                className="font-extrabold text-[12px] leading-tight text-[#0E7465] mt-0.5 break-words"
+                                style={{
+                                  fontFamily:
+                                    lang === "ur"
+                                      ? URDU_FONT
+                                      : "inherit",
+                                }}
+                              >
+                                {statArrival > 0
+                                  ? (lang === "ur"
+                                    ? `${toUrduDigits(statArrival.toLocaleString())} تھیلے`
+                                    : `${statArrival.toLocaleString()} Bags`)
+                                  : "—"}
+                              </span>
+                              <span className="text-[7.5px] text-[#80918B] leading-none mt-0.5">
+                                {statArrival > 0 ? (lang === "ur" ? "فی ۴۰ کلو" : "(40 KG)") : ""}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* HORIZONTAL DIVIDER & COLLAPSIBLE ATTRIBUTES STRIP */}
-                    <div className="w-full my-1.5" style={{ height: 1, background: "#EEF3F0" }} />
+                      {/* HORIZONTAL DIVIDER & COLLAPSIBLE ATTRIBUTES STRIP */}
+                      <div className="w-full my-1.5" style={{ height: 1, background: "#EEF3F0" }} />
 
-                    {/* Attributes Bar: Consistent Rate Type Button + 5 More Attributes Toggle */}
-                    <div className="w-full flex items-center justify-between gap-2 py-0.5 px-0.5">
-                      {/* 1. EXPOSED RATE TYPE (Clean pill with icon, label & value) */}
-                      <button
-                        type="button"
-                        onClick={() => setAttrSheet("ratetype")}
-                        className="tap-target flex items-center gap-1.5 py-1 px-2.5 rounded-xl border transition-all duration-150 active:scale-95 hover:border-[#087F63] min-w-0"
-                        style={{
-                          background: "linear-gradient(135deg, #F0FAF5 0%, #E6F7F0 100%)",
-                          borderColor: "#A7F3D0",
-                          boxShadow: "0 1px 3px rgba(8,127,99,0.06)",
-                        }}
-                        title={lang === "ur" ? "نرخ کی قسم تبدیل کریں" : "Change Rate Type"}
-                      >
-                        <div
-                          className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-                          style={{ background: "#087F63", color: "#FFFFFF" }}
+                      {/* Attributes Bar: Consistent Rate Type Button + 5 More Attributes Toggle */}
+                      <div className="w-full flex items-center justify-between gap-2 py-0.5 px-0.5">
+                        {/* 1. EXPOSED RATE TYPE (Clean pill with icon, label & value) */}
+                        <button
+                          type="button"
+                          onClick={() => setAttrSheet("ratetype")}
+                          className="tap-target flex items-center gap-1.5 py-1 px-2.5 rounded-xl border transition-all duration-150 active:scale-95 hover:border-[#087F63] min-w-0"
+                          style={{
+                            background: "linear-gradient(135deg, #F0FAF5 0%, #E6F7F0 100%)",
+                            borderColor: "#A7F3D0",
+                            boxShadow: "0 1px 3px rgba(8,127,99,0.06)",
+                          }}
+                          title={lang === "ur" ? "نرخ کی قسم تبدیل کریں" : "Change Rate Type"}
                         >
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M4 19h4V9H4v10zm6 0h4V4h-4v15zm6 0h4v-7h-4v7z" />
-                          </svg>
-                        </div>
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <span
-                            className="text-[9px] font-semibold text-[#065F46] whitespace-nowrap"
-                            style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                          <div
+                            className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                            style={{ background: "#087F63", color: "#FFFFFF" }}
                           >
-                            {lang === "ur" ? "نرخ:" : "Rate:"}
-                          </span>
-                          <span
-                            className="text-[11px] font-extrabold text-[#064E3B] truncate"
-                            style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M4 19h4V9H4v10zm6 0h4V4h-4v15zm6 0h4v-7h-4v7z" />
+                            </svg>
+                          </div>
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span
+                              className="text-[9px] font-semibold text-[#065F46] whitespace-nowrap"
+                              style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                            >
+                              {lang === "ur" ? "نرخ:" : "Rate:"}
+                            </span>
+                            <span
+                              className="text-[11px] font-extrabold text-[#064E3B] truncate"
+                              style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                            >
+                              {attrRateType ? tr(attrRateType) : (lang === "ur" ? "منڈی ریٹ" : "Mandi Rate")}
+                            </span>
+                            <svg
+                              width="8"
+                              height="8"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="#087F63"
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="flex-shrink-0"
+                            >
+                              <polyline points="6 9 12 15 18 9" />
+                            </svg>
+                          </div>
+                        </button>
+
+                        {/* 2. EXPAND / COLLAPSE 5 MORE ATTRIBUTES */}
+                        <button
+                          type="button"
+                          onClick={() => setIsAttrPanelOpen(!isAttrPanelOpen)}
+                          className="tap-target flex items-center gap-1.5 py-1 px-2.5 rounded-xl border transition-all duration-150 active:scale-95 flex-shrink-0"
+                          style={{
+                            background: isAttrPanelOpen ? "#F0F8F4" : "#F9FAFB",
+                            borderColor: isAttrPanelOpen ? "#A7F3D0" : "#E5E7EB",
+                            boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                          }}
+                        >
+                          <div
+                            className="w-4 h-4 rounded-md flex items-center justify-center flex-shrink-0"
+                            style={{
+                              background: isAttrPanelOpen ? "#E8F5EE" : "#F3F4F6",
+                              color: isAttrPanelOpen ? "#087F63" : "#4B5563",
+                            }}
                           >
-                            {attrRateType ? tr(attrRateType) : (lang === "ur" ? "منڈی ریٹ" : "Mandi Rate")}
+                            <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z" />
+                            </svg>
+                          </div>
+                          <span
+                            className="text-[9.5px] font-bold"
+                            style={{
+                              color: isAttrPanelOpen ? "#087F63" : "#374151",
+                              fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                            }}
+                          >
+                            {isAttrPanelOpen
+                              ? (lang === "ur" ? "چھپائیں" : "Hide")
+                              : (lang === "ur" ? "+۵ مزید اوصاف" : "+5 More Specs")}
                           </span>
                           <svg
-                            width="8"
-                            height="8"
+                            width="9"
+                            height="9"
                             viewBox="0 0 24 24"
                             fill="none"
-                            stroke="#087F63"
+                            stroke={isAttrPanelOpen ? "#087F63" : "#6B7280"}
                             strokeWidth="2.5"
                             strokeLinecap="round"
                             strokeLinejoin="round"
-                            className="flex-shrink-0"
+                            className={`transition-transform duration-200 ${isAttrPanelOpen ? "rotate-180" : ""}`}
                           >
                             <polyline points="6 9 12 15 18 9" />
                           </svg>
-                        </div>
-                      </button>
+                        </button>
+                      </div>
 
-                      {/* 2. EXPAND / COLLAPSE 5 MORE ATTRIBUTES */}
-                      <button
-                        type="button"
-                        onClick={() => setIsAttrPanelOpen(!isAttrPanelOpen)}
-                        className="tap-target flex items-center gap-1.5 py-1 px-2.5 rounded-xl border transition-all duration-150 active:scale-95 flex-shrink-0"
-                        style={{
-                          background: isAttrPanelOpen ? "#F0F8F4" : "#F9FAFB",
-                          borderColor: isAttrPanelOpen ? "#A7F3D0" : "#E5E7EB",
-                          boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-                        }}
-                      >
-                        <div
-                          className="w-4 h-4 rounded-md flex items-center justify-center flex-shrink-0"
-                          style={{
-                            background: isAttrPanelOpen ? "#E8F5EE" : "#F3F4F6",
-                            color: isAttrPanelOpen ? "#087F63" : "#4B5563",
-                          }}
-                        >
-                          <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z" />
-                          </svg>
-                        </div>
-                        <span
-                          className="text-[9.5px] font-bold"
-                          style={{
-                            color: isAttrPanelOpen ? "#087F63" : "#374151",
-                            fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                          }}
-                        >
-                          {isAttrPanelOpen
-                            ? (lang === "ur" ? "چھپائیں" : "Hide")
-                            : (lang === "ur" ? "+۵ مزید اوصاف" : "+5 More Specs")}
-                        </span>
-                        <svg
-                          width="9"
-                          height="9"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke={isAttrPanelOpen ? "#087F63" : "#6B7280"}
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className={`transition-transform duration-200 ${isAttrPanelOpen ? "rotate-180" : ""}`}
-                        >
-                          <polyline points="6 9 12 15 18 9" />
-                        </svg>
-                      </button>
-                    </div>
-
-                    {/* BOTTOM SECTION: 5 Attributes (Balanced 50/50 column grid with aligned rows & chevrons) */}
-                    {isAttrPanelOpen && (() => {
-                      const hasMoistureData = allRows.some((r) => r.moisture && r.moisture.trim().length > 0) || (attrMoisture !== null);
-                      return (
-                        <div className="grid grid-cols-2 divide-x divide-[#EEF3F0] pt-2 animate-fadeIn">
-                          {/* LEFT COLUMN: Color, Spec, Variety */}
-                          <div className="flex flex-col gap-y-1.5 pr-2.5">
-                            {/* ROW 1: COLOR */}
-                            <button
-                              type="button"
-                              onClick={() => setAttrSheet("color")}
-                              className="tap-target w-full h-[36px] flex items-center justify-between py-1 px-1 rounded-lg transition active:scale-[0.98] hover:bg-[#F8FAF9] group"
-                            >
-                              <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                                <div
-                                  className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                                  style={{ background: "#E6F8F3", color: "#059669" }}
-                                >
-                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M12 3a9 9 0 0 0 0 18c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
-                                  </svg>
-                                </div>
-                                <div className="min-w-0 flex-1 text-left">
-                                  <span
-                                    className="text-[8.5px] text-[#6B7280] font-medium block leading-none truncate"
-                                    style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                                  >
-                                    {lang === "ur" ? "رنگ" : "Color"}
-                                  </span>
-                                  <span
-                                    className="font-bold text-[11.5px] leading-tight truncate block mt-0.5 text-[#059669]"
-                                    style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                                  >
-                                    {attrColor ? t(attrColor) : "—"}
-                                  </span>
-                                </div>
-                              </div>
-                              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 opacity-70 group-hover:opacity-100">
-                                <polyline points="6 9 12 15 18 9" />
-                              </svg>
-                            </button>
-
-                            {/* ROW 2: SPEC */}
-                            <button
-                              type="button"
-                              onClick={() => setAttrSheet("spec")}
-                              className="tap-target w-full h-[36px] flex items-center justify-between py-1 px-1 rounded-lg transition active:scale-[0.98] hover:bg-[#F8FAF9] group"
-                            >
-                              <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                                <div
-                                  className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                                  style={{ background: "#FEF3C7", color: "#D97706" }}
-                                >
-                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
-                                  </svg>
-                                </div>
-                                <div className="min-w-0 flex-1 text-left">
-                                  <span
-                                    className="text-[8.5px] text-[#6B7280] font-medium block leading-none truncate"
-                                    style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                                  >
-                                    {lang === "ur" ? "خصوصیت" : "Spec"}
-                                  </span>
-                                  <span
-                                    className="font-bold text-[11.5px] leading-tight truncate block mt-0.5 text-[#92400E]"
-                                    style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                                  >
-                                    {attrSpec ? t(attrSpec) : "—"}
-                                  </span>
-                                </div>
-                              </div>
-                              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 opacity-70 group-hover:opacity-100">
-                                <polyline points="6 9 12 15 18 9" />
-                              </svg>
-                            </button>
-
-                            {/* ROW 3: VARIETY */}
-                            <button
-                              type="button"
-                              onClick={() => setAttrSheet("variety")}
-                              className="tap-target w-full h-[36px] flex items-center justify-between py-1 px-1 rounded-lg transition active:scale-[0.98] hover:bg-[#F8FAF9] group"
-                            >
-                              <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                                <div
-                                  className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                                  style={{ background: "#F3E8FF", color: "#7C3AED" }}
-                                >
-                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3 8 0 12-7 12-12zm-3.5 6.5C11 15 9 17 8 19c2.5-3 5-4.5 5.5-4.5z" />
-                                  </svg>
-                                </div>
-                                <div className="min-w-0 flex-1 text-left">
-                                  <span
-                                    className="text-[8.5px] text-[#6B7280] font-medium block leading-none truncate"
-                                    style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                                  >
-                                    {lang === "ur" ? "قسم" : "Variety"}
-                                  </span>
-                                  <span
-                                    className="font-bold text-[11.5px] leading-tight truncate block mt-0.5 text-[#6D28D9]"
-                                    style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                                  >
-                                    {attrVariety ? tc(attrVariety) : "—"}
-                                  </span>
-                                </div>
-                              </div>
-                              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 opacity-70 group-hover:opacity-100">
-                                <polyline points="6 9 12 15 18 9" />
-                              </svg>
-                            </button>
-                          </div>
-
-                          {/* RIGHT COLUMN: Quality, Condition, Moisture */}
-                          <div className="flex flex-col gap-y-1.5 pl-2.5">
-                            {/* ROW 1: QUALITY (NEW / OLD) */}
-                            <button
-                              type="button"
-                              onClick={() => setAttrSheet("newold")}
-                              className="tap-target w-full h-[36px] flex items-center justify-between py-1 px-1 rounded-lg transition active:scale-[0.98] hover:bg-[#F8FAF9] group"
-                            >
-                              <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                                <div
-                                  className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                                  style={{ background: "#FFEDD5", color: "#EA580C" }}
-                                >
-                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M12 2l2.4 2.8 3.7-.4 1.4 3.4 3.4 1.5-.5 3.7 2.6 2.6-2.6 2.6.5 3.7-3.4 1.5-1.4 3.4-3.7-.4L12 22l-2.4-2.8-3.7.4-1.4-3.4-3.4-1.5.5-3.7L-1 8.4l2.6-2.6-.5-3.7 3.4-1.5 1.4-3.4 3.7.4L12 2z" transform="scale(0.85) translate(2, 2)" />
-                                    <path d="M9.5 10.5h1.2l1.3 2.5V10.5h1v4h-1.1l-1.4-2.7v2.7h-1v-4z" fill="#fff" />
-                                  </svg>
-                                </div>
-                                <div className="min-w-0 flex-1 text-left">
-                                  <span
-                                    className="text-[8.5px] text-[#6B7280] font-medium block leading-none truncate"
-                                    style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                                  >
-                                    {lang === "ur" ? "معیار" : "Quality"}
-                                  </span>
-                                  <span
-                                    className="font-bold text-[11.5px] leading-tight truncate block mt-0.5 text-[#C2410C]"
-                                    style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                                  >
-                                    {attrNewOld ? t(attrNewOld) : "—"}
-                                  </span>
-                                </div>
-                              </div>
-                              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#EA580C" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 opacity-70 group-hover:opacity-100">
-                                <polyline points="6 9 12 15 18 9" />
-                              </svg>
-                            </button>
-
-                            {/* ROW 2: CONDITION */}
-                            <button
-                              type="button"
-                              onClick={() => setAttrSheet("condition")}
-                              className="tap-target w-full h-[36px] flex items-center justify-between py-1 px-1 rounded-lg transition active:scale-[0.98] hover:bg-[#F8FAF9] group"
-                            >
-                              <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                                <div
-                                  className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                                  style={{ background: "#CCFBF1", color: "#0D9488" }}
-                                >
-                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
-                                  </svg>
-                                </div>
-                                <div className="min-w-0 flex-1 text-left">
-                                  <span
-                                    className="text-[8.5px] text-[#6B7280] font-medium block leading-none truncate"
-                                    style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                                  >
-                                    {lang === "ur" ? "حالت" : "Condition"}
-                                  </span>
-                                  <span
-                                    className="font-bold text-[11.5px] leading-tight truncate block mt-0.5 text-[#065F46]"
-                                    style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                                  >
-                                    {attrCondition ? t(attrCondition) : "—"}
-                                  </span>
-                                </div>
-                              </div>
-                              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#0D9488" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 opacity-70 group-hover:opacity-100">
-                                <polyline points="6 9 12 15 18 9" />
-                              </svg>
-                            </button>
-
-                            {/* ROW 3: MOISTURE (rendered if moisture data exists) */}
-                            {hasMoistureData && (
+                      {/* BOTTOM SECTION: 5 Attributes (Balanced 50/50 column grid with aligned rows & chevrons) */}
+                      {isAttrPanelOpen && (() => {
+                        const hasMoistureData = allRows.some((r) => r.moisture && r.moisture.trim().length > 0) || (attrMoisture !== null);
+                        return (
+                          <div className="grid grid-cols-2 divide-x divide-[#EEF3F0] pt-2 animate-fadeIn">
+                            {/* LEFT COLUMN: Color, Spec, Variety */}
+                            <div className="flex flex-col gap-y-1.5 pr-2.5">
+                              {/* ROW 1: COLOR */}
                               <button
                                 type="button"
-                                onClick={() => setAttrSheet("moisture")}
+                                onClick={() => setAttrSheet("color")}
                                 className="tap-target w-full h-[36px] flex items-center justify-between py-1 px-1 rounded-lg transition active:scale-[0.98] hover:bg-[#F8FAF9] group"
                               >
                                 <div className="flex items-center gap-1.5 min-w-0 flex-1">
                                   <div
                                     className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                                    style={{ background: "#E0F2FE", color: "#0284C7" }}
+                                    style={{ background: "#E6F8F3", color: "#059669" }}
+                                  >
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                                      <path d="M12 3a9 9 0 0 0 0 18c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
+                                    </svg>
+                                  </div>
+                                  <div className="min-w-0 flex-1 text-left">
+                                    <span
+                                      className="text-[8.5px] text-[#6B7280] font-medium block leading-none truncate"
+                                      style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                                    >
+                                      {lang === "ur" ? "رنگ" : "Color"}
+                                    </span>
+                                    <span
+                                      className="font-bold text-[11.5px] leading-tight truncate block mt-0.5 text-[#059669]"
+                                      style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                                    >
+                                      {attrColor ? t(attrColor) : "—"}
+                                    </span>
+                                  </div>
+                                </div>
+                                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 opacity-70 group-hover:opacity-100">
+                                  <polyline points="6 9 12 15 18 9" />
+                                </svg>
+                              </button>
+
+                              {/* ROW 2: SPEC */}
+                              <button
+                                type="button"
+                                onClick={() => setAttrSheet("spec")}
+                                className="tap-target w-full h-[36px] flex items-center justify-between py-1 px-1 rounded-lg transition active:scale-[0.98] hover:bg-[#F8FAF9] group"
+                              >
+                                <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                                  <div
+                                    className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                                    style={{ background: "#FEF3C7", color: "#D97706" }}
+                                  >
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                                      <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
+                                    </svg>
+                                  </div>
+                                  <div className="min-w-0 flex-1 text-left">
+                                    <span
+                                      className="text-[8.5px] text-[#6B7280] font-medium block leading-none truncate"
+                                      style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                                    >
+                                      {lang === "ur" ? "خصوصیت" : "Spec"}
+                                    </span>
+                                    <span
+                                      className="font-bold text-[11.5px] leading-tight truncate block mt-0.5 text-[#92400E]"
+                                      style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                                    >
+                                      {attrSpec ? t(attrSpec) : "—"}
+                                    </span>
+                                  </div>
+                                </div>
+                                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 opacity-70 group-hover:opacity-100">
+                                  <polyline points="6 9 12 15 18 9" />
+                                </svg>
+                              </button>
+
+                              {/* ROW 3: VARIETY */}
+                              <button
+                                type="button"
+                                onClick={() => setAttrSheet("variety")}
+                                className="tap-target w-full h-[36px] flex items-center justify-between py-1 px-1 rounded-lg transition active:scale-[0.98] hover:bg-[#F8FAF9] group"
+                              >
+                                <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                                  <div
+                                    className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                                    style={{ background: "#F3E8FF", color: "#7C3AED" }}
+                                  >
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                                      <path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3 8 0 12-7 12-12zm-3.5 6.5C11 15 9 17 8 19c2.5-3 5-4.5 5.5-4.5z" />
+                                    </svg>
+                                  </div>
+                                  <div className="min-w-0 flex-1 text-left">
+                                    <span
+                                      className="text-[8.5px] text-[#6B7280] font-medium block leading-none truncate"
+                                      style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                                    >
+                                      {lang === "ur" ? "قسم" : "Variety"}
+                                    </span>
+                                    <span
+                                      className="font-bold text-[11.5px] leading-tight truncate block mt-0.5 text-[#6D28D9]"
+                                      style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                                    >
+                                      {attrVariety ? tc(attrVariety) : "—"}
+                                    </span>
+                                  </div>
+                                </div>
+                                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 opacity-70 group-hover:opacity-100">
+                                  <polyline points="6 9 12 15 18 9" />
+                                </svg>
+                              </button>
+                            </div>
+
+                            {/* RIGHT COLUMN: Quality, Condition, Moisture */}
+                            <div className="flex flex-col gap-y-1.5 pl-2.5">
+                              {/* ROW 1: QUALITY (NEW / OLD) */}
+                              <button
+                                type="button"
+                                onClick={() => setAttrSheet("newold")}
+                                className="tap-target w-full h-[36px] flex items-center justify-between py-1 px-1 rounded-lg transition active:scale-[0.98] hover:bg-[#F8FAF9] group"
+                              >
+                                <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                                  <div
+                                    className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                                    style={{ background: "#FFEDD5", color: "#EA580C" }}
+                                  >
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                                      <path d="M12 2l2.4 2.8 3.7-.4 1.4 3.4 3.4 1.5-.5 3.7 2.6 2.6-2.6 2.6.5 3.7-3.4 1.5-1.4 3.4-3.7-.4L12 22l-2.4-2.8-3.7.4-1.4-3.4-3.4-1.5.5-3.7L-1 8.4l2.6-2.6-.5-3.7 3.4-1.5 1.4-3.4 3.7.4L12 2z" transform="scale(0.85) translate(2, 2)" />
+                                      <path d="M9.5 10.5h1.2l1.3 2.5V10.5h1v4h-1.1l-1.4-2.7v2.7h-1v-4z" fill="#fff" />
+                                    </svg>
+                                  </div>
+                                  <div className="min-w-0 flex-1 text-left">
+                                    <span
+                                      className="text-[8.5px] text-[#6B7280] font-medium block leading-none truncate"
+                                      style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                                    >
+                                      {lang === "ur" ? "معیار" : "Quality"}
+                                    </span>
+                                    <span
+                                      className="font-bold text-[11.5px] leading-tight truncate block mt-0.5 text-[#C2410C]"
+                                      style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                                    >
+                                      {attrNewOld ? t(attrNewOld) : "—"}
+                                    </span>
+                                  </div>
+                                </div>
+                                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#EA580C" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 opacity-70 group-hover:opacity-100">
+                                  <polyline points="6 9 12 15 18 9" />
+                                </svg>
+                              </button>
+
+                              {/* ROW 2: CONDITION */}
+                              <button
+                                type="button"
+                                onClick={() => setAttrSheet("condition")}
+                                className="tap-target w-full h-[36px] flex items-center justify-between py-1 px-1 rounded-lg transition active:scale-[0.98] hover:bg-[#F8FAF9] group"
+                              >
+                                <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                                  <div
+                                    className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                                    style={{ background: "#CCFBF1", color: "#0D9488" }}
                                   >
                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
                                       <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
@@ -12789,2574 +12762,117 @@ function ProductRatesScreen({
                                       className="text-[8.5px] text-[#6B7280] font-medium block leading-none truncate"
                                       style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                                     >
-                                      {lang === "ur" ? "نمی" : "Moisture"}
+                                      {lang === "ur" ? "حالت" : "Condition"}
                                     </span>
                                     <span
-                                      className="font-bold text-[11.5px] leading-tight truncate block mt-0.5 text-[#0369A1]"
+                                      className="font-bold text-[11.5px] leading-tight truncate block mt-0.5 text-[#065F46]"
                                       style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                                     >
-                                      {attrMoisture
-                                        ? (lang === "ur"
-                                          ? `${toUrduDigits(attrMoisture)}${attrMoisture.includes("٪") || attrMoisture.includes("%") ? "" : "٪"}`
-                                          : `${attrMoisture}${attrMoisture.includes("%") ? "" : "%"}`)
-                                        : "—"}
+                                      {attrCondition ? t(attrCondition) : "—"}
                                     </span>
                                   </div>
                                 </div>
-                                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#0284C7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 opacity-70 group-hover:opacity-100">
+                                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#0D9488" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 opacity-70 group-hover:opacity-100">
                                   <polyline points="6 9 12 15 18 9" />
                                 </svg>
                               </button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })()}
-                  </div>
-                </div>
-              );
-            })()}
 
-            {/* Date Calendar Popup (fixed overlay) */}
-            {statDateCalOpen && (() => {
-              const mn = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-              const mnUr = ["\u062c\u0646\u0648\u0631\u06cc", "\u0641\u0631\u0648\u0631\u06cc", "\u0645\u0627\u0631\u0686", "\u0627\u067e\u0631\u06cc\u0644", "\u0645\u0626\u06cc", "\u062c\u0648\u0646", "\u062c\u0648\u0644\u0627\u0626\u06cc", "\u0627\u06af\u0633\u062a", "\u0633\u062a\u0645\u0628\u0631", "\u0627\u06a9\u062a\u0648\u0628\u0631", "\u0646\u0648\u0645\u0628\u0631", "\u062f\u0633\u0645\u0628\u0631"];
-              const sdYear = statDateCalMonth.getFullYear();
-              const sdMonthIdx = statDateCalMonth.getMonth();
-              const sdMonthName = lang === "ur"
-                ? `${mnUr[sdMonthIdx]} ${sdYear}`
-                : statDateCalMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-              const sdFirstDow = new Date(sdYear, sdMonthIdx, 1).getDay();
-              const sdDaysInMonth = new Date(sdYear, sdMonthIdx + 1, 0).getDate();
-              const sdCalDays: (number | null)[] = [
-                ...Array(sdFirstDow).fill(null),
-                ...Array.from({ length: sdDaysInMonth }, (_, i) => i + 1),
-              ];
-              while (sdCalDays.length % 7 !== 0) sdCalDays.push(null);
-              const sdIsSame = (a: Date, b: Date) =>
-                a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-              const sdIsRef = (d: Date) => sdIsSame(d, new Date(2026, 8, 14));
-              return (
-                <div className="fixed z-[120] rounded-2xl overflow-hidden shadow-2xl" style={{ top: "22%", right: 16, width: 260, background: "#F4FAF7", border: "1px solid #D5E2DD" }} onClick={(e) => e.stopPropagation()}>
-                  <div className="px-4 pt-3 pb-2">
-                    <div className="flex items-center justify-between mb-2">
-                      <button onClick={() => setStatDateCalMonth(new Date(sdYear, sdMonthIdx - 1, 1))} className="tap-target w-8 h-8 rounded-full flex items-center justify-center font-bold" style={{ background: "#E8EFEC", color: "#2F4A43", fontSize: 16 }}>&#8249;</button>
-                      <p className="font-bold" style={{ color: "#183B34", fontSize: lang === "ur" ? 16 : 14, fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}>{sdMonthName}</p>
-                      <button onClick={() => setStatDateCalMonth(new Date(sdYear, sdMonthIdx + 1, 1))} className="tap-target w-8 h-8 rounded-full flex items-center justify-center font-bold" style={{ background: "#E8EFEC", color: "#2F4A43", fontSize: 16 }}>&#8250;</button>
-                    </div>
-                    {statDateFilter && (
-                      <div className="flex justify-end mb-1">
-                        <button onClick={() => { setStatDateFilter(null); setStatDateCalOpen(false); }} className="font-bold px-2 py-0.5 rounded-full" style={{ background: "#F9E1DE", color: "#A83B37", fontSize: lang === "ur" ? 12 : 10, fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}>
-                          {lang === "ur" ? "\u06c1\u0679\u0627\u0626\u06cc\u06ba (\u0622\u062c)" : "Clear (Today)"}
-                        </button>
-                      </div>
-                    )}
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", marginBottom: 4 }}>
-                      {(lang === "ur" ? ["\u0627\u062a", "\u067e\u06cc", "\u0645\u0646", "\u0628\u062f", "\u062c\u0645", "\u062c\u0645", "\u06c1\u0641"] : ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]).map((d) => (
-                        <div key={d} className="text-center font-bold text-[10px]" style={{ color: "#80918B", paddingBottom: 2, fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}>{d}</div>
-                      ))}
-                    </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2 }}>
-                      {sdCalDays.map((day, idx) => {
-                        if (!day) return <div key={idx} />;
-                        const d = new Date(sdYear, sdMonthIdx, day);
-                        const selected = statDateFilter ? sdIsSame(d, statDateFilter) : false;
-                        const isRef = sdIsRef(d);
-                        return (
-                          <button key={idx} onClick={() => { setStatDateFilter(d); setStatDateCalOpen(false); }} className="tap-target flex items-center justify-center rounded-full font-semibold text-xs mx-auto" style={{ width: 30, height: 30, background: selected ? "#087F63" : isRef ? "#E4F2EC" : "transparent", color: selected ? "#fff" : isRef ? "#075E4F" : "#2F4A43", border: isRef && !selected ? "1.5px solid #087F63" : "none" }}>{day}</button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* Pakistan Map Interactive Expandable Card (378x76 with 3D Tilt & Spring Expansion) */}
-            {(() => {
-              const currentCommodity = product || byproduct || "Wheat";
-              const isPakistanScope = locScope.kind === "pakistan" || !locScope.label;
-
-              // The map button's label + zoom target follow the specific
-              // mandi/district the user picked (focusedMandi) even though
-              // locScope itself has been broadened to that location's
-              // province to drive the table -- so picking Okara zooms the
-              // map straight to Okara while the table shows all of Punjab.
-              // With nothing specific picked, it falls back to locScope
-              // (a province, or All Pakistan).
-              const focusedMandiEntry = focusedMandi
-                ? INITIAL_MANDIS.find(
-                  (m) =>
-                    m.name.toLowerCase() === focusedMandi.label.toLowerCase() ||
-                    m.city.toLowerCase() === focusedMandi.label.toLowerCase() ||
-                    focusedMandi.label.toLowerCase().includes(m.city.toLowerCase())
-                )
-                : undefined;
-
-              const cmn = focusedMandi
-                ? focusedMandi.label
-                : isPakistanScope
-                  ? (lang === "ur" ? "پورا پاکستان" : "All Pakistan")
-                  : locScope.label;
-
-              const prov = focusedMandi
-                ? focusedMandiEntry?.province || (locScope.kind === "province" ? locScope.label : undefined)
-                : locScope.kind === "province"
-                  ? locScope.label
-                  : undefined;
-
-              const focusMandiName = focusedMandi ? focusedMandi.label : undefined;
-              const focusProvinceName =
-                !focusedMandi && !isPakistanScope && locScope.kind === "province" ? locScope.label : undefined;
-
-              // Every real row nationwide for this by-product (allRows is
-              // unfiltered by the table's locScope) -- the map derives
-              // which mandis get a pin, and everything shown once one is
-              // tapped, from this alone.
-              const mapRecords: MapByProductRecord[] = allRows.map((r) => ({
-                mandiName: r.mandiName,
-                district: r.mandiCity,
-                province: r.province,
-                rateType: r.rateType,
-                min: r.min,
-                max: r.max,
-                arrival: r.arrival,
-                date: r.date,
-                newOld: r.newOld,
-                variety: r.variety,
-                color: r.color,
-              }));
-
-              return (
-                <ExpandableMandiMapCard
-                  mandiName={cmn}
-                  provinceName={prov}
-                  commodityName={currentCommodity}
-                  records={mapRecords}
-                  focusMandiName={focusMandiName}
-                  focusProvinceName={focusProvinceName}
-                  lang={lang}
-                  urduFont={URDU_FONT}
-                />
-              );
-            })()}
-
-            {/* Inline Mandi Rates Table — all Pakistan mandis for this byproduct */}
-            {(() => {
-              const PROVINCES = ["Punjab", "Sindh", "KPK", "Balochistan"];
-              // Source rows, honoring locScope when a specific province/district/mandi is selected
-              const tableScopedRows = allRows.filter(
-                (r) => (!attrRateType || r.rateType === attrRateType) && inLocScope(r),
-              );
-              const tableSourceRows = tableScopedRows.length > 0
-                ? tableScopedRows
-                : allRows.filter((r) => !attrRateType || r.rateType === attrRateType);
-              const tableRows = tableSourceRows.filter(
-                (r) =>
-                  !tableProvinceFilter || r.province === tableProvinceFilter,
-              );
-              const BASE_DATE = new Date(2026, 8, 14);
-              const USER_SIGNUP_DATE = new Date(2026, 8, 10); // Sign up reference date
-              const tableDateVariation = tableDateFilter
-                ? (() => {
-                  const diffMs =
-                    BASE_DATE.getTime() - tableDateFilter.getTime();
-                  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
-                  return Math.max(0.88, 1 - diffDays * 0.012);
-                })()
-                : 1;
-              const monthNames = [
-                "Jan",
-                "Feb",
-                "Mar",
-                "Apr",
-                "May",
-                "Jun",
-                "Jul",
-                "Aug",
-                "Sep",
-                "Oct",
-                "Nov",
-                "Dec",
-              ];
-              const monthNamesUr = [
-                "جنوری",
-                "فروری",
-                "مارچ",
-                "اپریل",
-                "مئی",
-                "جون",
-                "جولائی",
-                "اگست",
-                "ستمبر",
-                "اکتوبر",
-                "نومبر",
-                "دسمبر",
-              ];
-              const dateLabel = tableDateFilter
-                ? lang === "ur"
-                  ? `${tableDateFilter.getDate()} ${monthNamesUr[tableDateFilter.getMonth()]}`
-                  : `${tableDateFilter.getDate()} ${monthNames[tableDateFilter.getMonth()]}`
-                : lang === "ur"
-                  ? "آج"
-                  : "Today";
-              // Calendar helpers for table date picker
-              const tcYear = tableDateCalMonth.getFullYear();
-              const tcMonthIdx = tableDateCalMonth.getMonth();
-              const tcMonthName =
-                lang === "ur"
-                  ? `${monthNamesUr[tcMonthIdx]} ${tcYear}`
-                  : tableDateCalMonth.toLocaleDateString("en-US", {
-                    month: "long",
-                    year: "numeric",
-                  });
-              const tcFirstDow = new Date(tcYear, tcMonthIdx, 1).getDay();
-              const tcDaysInMonth = new Date(
-                tcYear,
-                tcMonthIdx + 1,
-                0,
-              ).getDate();
-              const tcCalDays: (number | null)[] = [
-                ...Array(tcFirstDow).fill(null),
-                ...Array.from({ length: tcDaysInMonth }, (_, i) => i + 1),
-              ];
-              while (tcCalDays.length % 7 !== 0) tcCalDays.push(null);
-              const tcIsSameDay = (a: Date, b: Date) =>
-                a.getFullYear() === b.getFullYear() &&
-                a.getMonth() === b.getMonth() &&
-                a.getDate() === b.getDate();
-              const tcIsToday = (d: Date) =>
-                tcIsSameDay(d, new Date(2026, 8, 14));
-              return (
-                <>
-                  {/* Backdrop overlay when expanded in landscape mode */}
-                  {isTableExpanded && (
-                    <div
-                      className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity"
-                      onClick={() => {
-                        setIsTableExpanded(false);
-                        setSelectedMandiGraphRow(null);
-                      }}
-                    />
-                  )}
-
-                  <div
-                    className={
-                      isTableExpanded
-                        ? `zm-landscape-expanded-table ${landscapeRotated ? "zm-force-landscape" : ""} transition-all duration-300`
-                        : "rounded-2xl overflow-hidden transition-all duration-300 flex flex-col shadow-sm"
-                    }
-                    style={{
-                      border: isTableExpanded ? "none" : "1.5px solid #D5E2DD",
-                      background: "#F4FAF7",
-                    }}
-                  >
-                    {/* Top Header on Bottom Sheet (portrait handle) */}
-                    {isTableExpanded && !landscapeRotated && (
-                      <div
-                        className="w-10 h-1 rounded-full mx-auto mt-2 mb-0.5 bg-[#C7D6D0] flex-shrink-0 cursor-pointer"
-                        onClick={() => {
-                          setIsTableExpanded(false);
-                          setSelectedMandiGraphRow(null);
-                        }}
-                      />
-                    )}
-                    {/* Table header with title, date button, province chips & Trend Interval selector */}
-                    <div
-                      className="px-3 sm:px-4 pt-2 pb-2"
-                      style={{
-                        borderBottom: "1px solid #E8EFEC",
-                        background: "#F1F7F4",
-                      }}
-                    >
-                      <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">
-                        <div className="flex items-center gap-2 min-w-0">
-                          {isTableExpanded && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setIsTableExpanded(false);
-                                setSelectedMandiGraphRow(null);
-                              }}
-                              className="tap-target flex items-center justify-center w-7 h-7 rounded-full bg-[#E5EFEA] hover:bg-[#D5E5DE] text-[#064E3B] transition active:scale-95 flex-shrink-0"
-                              title={lang === "ur" ? "واپس / بند کریں" : "Back / Close"}
-                            >
-                              ✕
-                            </button>
-                          )}
-                          <div className="min-w-0">
-                            <p
-                              className="font-extrabold text-sm truncate"
-                              style={{
-                                color: "#183B34",
-                                fontSize: lang === "ur" ? 17 : 14,
-                                fontFamily:
-                                  lang === "ur"
-                                    ? URDU_FONT
-                                    : "inherit",
-                              }}
-                            >
-                              {lang === "ur"
-                                ? `${tm(tableProvinceFilter || "پاکستان")} میں ${tc(title)}`
-                                : `${title} in ${tableProvinceFilter || "Pakistan"}`}
-                            </p>
-                            <p
-                              className="text-[10px] mt-0.5"
-                              style={{
-                                color: "#52635F",
-                                fontSize: lang === "ur" ? 13 : 10,
-                                fontFamily:
-                                  lang === "ur"
-                                    ? URDU_FONT
-                                    : "inherit",
-                              }}
-                            >
-                              {lang === "ur"
-                                ? `${tableRows.length} منڈیاں · تفصیل کے لیے منتخب کریں`
-                                : `${tableRows.length} mandi${tableRows.length !== 1 ? "s" : ""} · tap row to view details`}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Top Action Buttons: Rotate Toggle, Date picker & Expand/Collapse Button */}
-                        <div className="flex items-center gap-1.5 flex-shrink-0">
-                          {/* Screen Orientation Rotate Toggle (visible when expanded) */}
-                          {isTableExpanded && (
-                            <button
-                              type="button"
-                              onClick={() => setLandscapeRotated((r) => !r)}
-                              className="tap-target zm-beam-border flex items-center gap-1 px-2.5 py-1 rounded-full font-bold text-xs transition active:scale-95"
-                              style={{
-                                background: "rgba(255, 255, 255, 0.75)",
-                                color: "#064E3B",
-                                border: "1.2px solid #10B981",
-                                backdropFilter: "blur(12px)",
-                                WebkitBackdropFilter: "blur(12px)",
-                                fontSize: lang === "ur" ? 13 : 11,
-                                fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                              }}
-                              title={lang === "ur" ? "رخ تبدیل کریں" : "Rotate orientation"}
-                            >
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="#064E3B"
-                                strokeWidth="2.2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
-                              </svg>
-                              <span>{landscapeRotated ? (lang === "ur" ? "عمودی" : "Portrait") : (lang === "ur" ? "افقی" : "Landscape")}</span>
-                            </button>
-                          )}
-
-                          {/* Expand / Collapse Table Button */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsTableExpanded((prev) => {
-                                if (prev) {
-                                  setSelectedMandiGraphRow(null);
-                                  return false;
-                                }
-                                setLandscapeRotated(true);
-                                return true;
-                              });
-                            }}
-                            className="tap-target zm-beam-border flex items-center gap-1 px-3 py-1 rounded-full font-bold text-xs transition active:scale-95"
-                            style={{
-                              background: isTableExpanded
-                                ? "linear-gradient(135deg, rgba(167, 243, 208, 0.75), rgba(110, 231, 183, 0.6))"
-                                : "rgba(255, 255, 255, 0.65)",
-                              color: "#064E3B",
-                              border: "1.2px solid #10B981",
-                              backdropFilter: "blur(12px)",
-                              WebkitBackdropFilter: "blur(12px)",
-                              boxShadow: isTableExpanded
-                                ? "0 4px 14px rgba(16, 185, 129, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.7)"
-                                : "0 2px 8px rgba(16, 185, 129, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.7)",
-                              fontSize: lang === "ur" ? 14 : 12,
-                              fontFamily:
-                                lang === "ur"
-                                  ? URDU_FONT
-                                  : "inherit",
-                            }}
-                            title={
-                              isTableExpanded
-                                ? lang === "ur"
-                                  ? "ٹیبل چھوٹا کریں"
-                                  : "Collapse table"
-                                : lang === "ur"
-                                  ? "ٹیبل بڑا کریں"
-                                  : "Expand table"
-                            }
-                          >
-                            {isTableExpanded ? (
-                              /* Collapse icon */
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="#064E3B"
-                                strokeWidth="2.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <polyline points="18 15 12 9 6 15" />
-                              </svg>
-                            ) : (
-                              /* Double arrow expand icon */
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="#064E3B"
-                                strokeWidth="2.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <polyline points="15 3 21 3 21 9" />
-                                <polyline points="9 21 3 21 3 15" />
-                                <line x1="21" y1="3" x2="14" y2="10" />
-                                <line x1="3" y1="21" x2="10" y2="14" />
-                              </svg>
-                            )}
-                            <span>
-                              {isTableExpanded
-                                ? lang === "ur"
-                                  ? "چھوٹا کریں"
-                                  : "Collapse"
-                                : lang === "ur"
-                                  ? "پورا ٹیبل"
-                                  : "Expand"}
-                            </span>
-                          </button>
-
-                          {/* Date picker button */}
-                          <button
-                            onClick={() => setTableDateCalOpen((o) => !o)}
-                            className="tap-target zm-beam-border flex items-center gap-1.5 px-3 py-1 rounded-full font-bold text-xs flex-shrink-0 transition active:scale-95"
-                            style={{
-                              background: tableDateFilter
-                                ? "linear-gradient(135deg, rgba(167, 243, 208, 0.75), rgba(110, 231, 183, 0.6))"
-                                : "rgba(255, 255, 255, 0.65)",
-                              color: "#064E3B",
-                              border: "1.2px solid #10B981",
-                              backdropFilter: "blur(12px)",
-                              WebkitBackdropFilter: "blur(12px)",
-                              boxShadow: tableDateFilter
-                                ? "0 4px 14px rgba(16, 185, 129, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.7)"
-                                : "0 2px 8px rgba(16, 185, 129, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.7)",
-                              fontSize: lang === "ur" ? 14 : 12,
-                              fontFamily:
-                                lang === "ur"
-                                  ? URDU_FONT
-                                  : "inherit",
-                            }}
-                          >
-                            <svg
-                              width="12"
-                              height="12"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="#064E3B"
-                              strokeWidth="2.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <rect x="3" y="4" width="18" height="18" rx="2" />
-                              <line x1="16" y1="2" x2="16" y2="6" />
-                              <line x1="8" y1="2" x2="8" y2="6" />
-                              <line x1="3" y1="10" x2="21" y2="10" />
-                            </svg>
-                            {dateLabel}
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Filter row: Province chips */}
-                      <div className="flex items-center justify-between gap-2 flex-wrap pt-1">
-                        {/* Province filter chips */}
-                        <div
-                          className="flex gap-1.5 overflow-x-auto pb-0.5"
-                          style={{ scrollbarWidth: "none" }}
-                        >
-                          {[null, ...PROVINCES].map((p) => {
-                            const isSelected = tableProvinceFilter === p;
-                            return (
-                              <button
-                                key={p || "all"}
-                                onClick={() => {
-                                  setTableProvinceFilter(p);
-                                  // Keep the location filter (and the map's
-                                  // focus target) in sync with the chip so
-                                  // the two controls never disagree.
-                                  setFocusedMandi(null);
-                                  setLocScope(
-                                    p ? { kind: "province", label: p } : { kind: "pakistan", label: "All Pakistan" }
-                                  );
-                                  if (voiceEnabled) {
-                                    const msg = p
-                                      ? (lang === "ur" ? `صوبہ ${tm(p)}` : `${p} Province`)
-                                      : (lang === "ur" ? "تمام صوبے" : "All Provinces");
-                                    speakText(msg);
-                                  }
-                                }}
-                                className="flex-shrink-0 zm-beam-border px-3.5 py-1 rounded-full font-bold text-xs transition active:scale-95"
-                                style={{
-                                  background: isSelected
-                                    ? "linear-gradient(135deg, rgba(167, 243, 208, 0.75), rgba(110, 231, 183, 0.6))"
-                                    : "rgba(255, 255, 255, 0.65)",
-                                  color: "#064E3B",
-                                  border: "1.2px solid #10B981",
-                                  backdropFilter: "blur(12px)",
-                                  WebkitBackdropFilter: "blur(12px)",
-                                  boxShadow: isSelected
-                                    ? "0 4px 14px rgba(16, 185, 129, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.7)"
-                                    : "0 2px 6px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.7)",
-                                  fontSize: lang === "ur" ? 13.5 : 11,
-                                  fontFamily:
-                                    lang === "ur"
-                                      ? URDU_FONT
-                                      : "inherit",
-                                }}
-                              >
-                                {p
-                                  ? tm(p)
-                                  : lang === "ur"
-                                    ? "تمام صوبے"
-                                    : "All Provinces"}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Inline calendar for table date picker */}
-                    {tableDateCalOpen && (
-                      <div
-                        className="px-4 pt-3 pb-2"
-                        style={{
-                          borderBottom: "1px solid #D5E2DD",
-                          background: "#F4FAF7",
-                        }}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <button
-                            onClick={() =>
-                              setTableDateCalMonth(
-                                new Date(tcYear, tcMonthIdx - 1, 1),
-                              )
-                            }
-                            className="tap-target w-8 h-8 rounded-full flex items-center justify-center font-bold"
-                            style={{
-                              background: "#E8EFEC",
-                              color: "#2F4A43",
-                              fontSize: 16,
-                            }}
-                          >
-                            ‹
-                          </button>
-                          <p
-                            className="font-bold text-sm"
-                            style={{
-                              color: "#183B34",
-                              fontSize: lang === "ur" ? 16 : 14,
-                              fontFamily:
-                                lang === "ur"
-                                  ? URDU_FONT
-                                  : "inherit",
-                            }}
-                          >
-                            {tcMonthName}
-                          </p>
-                          <button
-                            onClick={() =>
-                              setTableDateCalMonth(
-                                new Date(tcYear, tcMonthIdx + 1, 1),
-                              )
-                            }
-                            className="tap-target w-8 h-8 rounded-full flex items-center justify-center font-bold"
-                            style={{
-                              background: "#E8EFEC",
-                              color: "#2F4A43",
-                              fontSize: 16,
-                            }}
-                          >
-                            ›
-                          </button>
-                        </div>
-                        {tableDateFilter && (
-                          <div className="flex justify-end mb-1">
-                            <button
-                              onClick={() => {
-                                setTableDateFilter(null);
-                                setTableDateCalOpen(false);
-                              }}
-                              className="font-bold px-2 py-0.5 rounded-full"
-                              style={{
-                                background: "#F9E1DE",
-                                color: "#A83B34",
-                                fontSize: lang === "ur" ? 12 : 10,
-                                fontFamily:
-                                  lang === "ur"
-                                    ? URDU_FONT
-                                    : "inherit",
-                              }}
-                            >
-                              {lang === "ur" ? "تاریخ ہٹائیں" : "Clear date"}
-                            </button>
-                          </div>
-                        )}
-                        <div
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns: "repeat(7,1fr)",
-                            marginBottom: 4,
-                          }}
-                        >
-                          {(lang === "ur"
-                            ? ["ات", "پی", "من", "بد", "جم", "جم", "ہف"]
-                            : ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
-                          ).map((d) => (
-                            <div
-                              key={d}
-                              className="text-center font-bold text-[10px]"
-                              style={{
-                                color: "#80918B",
-                                paddingBottom: 2,
-                                fontFamily:
-                                  lang === "ur"
-                                    ? URDU_FONT
-                                    : "inherit",
-                              }}
-                            >
-                              {d}
-                            </div>
-                          ))}
-                        </div>
-                        <div
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns: "repeat(7,1fr)",
-                            gap: 2,
-                          }}
-                        >
-                          {tcCalDays.map((day, idx) => {
-                            if (!day) return <div key={idx} />;
-                            const d = new Date(tcYear, tcMonthIdx, day);
-                            const selected = tableDateFilter
-                              ? tcIsSameDay(d, tableDateFilter)
-                              : false;
-                            const isRef = tcIsToday(d);
-                            // Dates prior to user signup date are locked/blurred
-                            const isPriorToSignup = d.getTime() < new Date(USER_SIGNUP_DATE.getFullYear(), USER_SIGNUP_DATE.getMonth(), USER_SIGNUP_DATE.getDate()).getTime();
-                            if (isPriorToSignup) {
-                              return (
+                              {/* ROW 3: MOISTURE (rendered if moisture data exists) */}
+                              {hasMoistureData && (
                                 <button
-                                  key={idx}
-                                  disabled
-                                  className="tap-target flex items-center justify-center rounded-full font-medium text-xs mx-auto opacity-20 cursor-not-allowed select-none"
-                                  style={{
-                                    width: 30,
-                                    height: 30,
-                                    filter: "blur(0.8px)",
-                                    color: "#80918B",
-                                  }}
-                                  title={lang === "ur" ? "سائن اپ سے پہلے کی تاریخ" : "Locked prior to signup"}
+                                  type="button"
+                                  onClick={() => setAttrSheet("moisture")}
+                                  className="tap-target w-full h-[36px] flex items-center justify-between py-1 px-1 rounded-lg transition active:scale-[0.98] hover:bg-[#F8FAF9] group"
                                 >
-                                  {day}
-                                </button>
-                              );
-                            }
-
-                            return (
-                              <button
-                                key={idx}
-                                onClick={() => {
-                                  setTableDateFilter(d);
-                                  setTableDateCalOpen(false);
-                                }}
-                                className="tap-target flex items-center justify-center rounded-full font-semibold text-xs mx-auto shadow-sm"
-                                style={{
-                                  width: 30,
-                                  height: 30,
-                                  background: selected
-                                    ? "#087F63"
-                                    : isRef
-                                      ? "#E4F2EC"
-                                      : "#fff",
-                                  color: selected
-                                    ? "#fff"
-                                    : isRef
-                                      ? "#075E4F"
-                                      : "#183B34",
-                                  border:
-                                    selected
-                                      ? "none"
-                                      : isRef
-                                        ? "1.5px solid #087F63"
-                                        : "1px solid #C7E8D8",
-                                }}
-                              >
-                                {day}
-                              </button>
-                            );
-                          })}
-                        </div>
-                        <p
-                          className="text-[9.5px] text-center text-[#52635F] mt-2 opacity-80"
-                          style={{
-                            fontFamily:
-                              lang === "ur"
-                                ? URDU_FONT
-                                : "inherit",
-                          }}
-                        >
-                          {lang === "ur"
-                            ? "* سائن اپ کی تاریخ سے پہلے کی تاریخیں غیر فعال ہیں"
-                            : "* Dates prior to signup date are locked"}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Horizontally and vertically scrollable table container with visible scrollbars */}
-                    <div
-                      ref={tableScrollRef}
-                      className="flex-1 min-h-0 w-full overflow-x-auto overflow-y-auto zm-table-scroll-container"
-                      style={{
-                        maxHeight: isTableExpanded ? "none" : 240,
-                        height: isTableExpanded ? "100%" : "auto",
-                        overscrollBehavior: "contain",
-                        WebkitOverflowScrolling: "touch",
-                        scrollbarWidth: "thin",
-                        scrollbarColor: "#087F63 #E4F2EC",
-                        paddingBottom: isTableExpanded ? 24 : 4,
-                      }}
-                    >
-                      {tableRows.length === 0 ? (
-                        <div className="flex items-center justify-center py-8 opacity-50">
-                          <p
-                            className="font-semibold"
-                            style={{
-                              fontSize: lang === "ur" ? 16 : 14,
-                              fontFamily:
-                                lang === "ur"
-                                  ? URDU_FONT
-                                  : "inherit",
-                            }}
-                          >
-                            {lang === "ur"
-                              ? `کوئی منڈی ڈیٹا دستیاب نہیں${tableProvinceFilter ? ` (${tm(tableProvinceFilter)})` : ""}`
-                              : `No mandi data${tableProvinceFilter ? ` in ${tableProvinceFilter}` : ""}`}
-                          </p>
-                        </div>
-                      ) : (
-                        <table
-                          style={{
-                            width: "100%",
-                            minWidth: "740px",
-                            borderCollapse: "separate",
-                            borderSpacing: 0,
-                            fontSize: lang === "ur" ? 12 : 11,
-                          }}
-                        >
-                          <thead
-                            style={{
-                              position: "sticky",
-                              top: 0,
-                              zIndex: 20,
-                              background: "#F1F7F4",
-                            }}
-                          >
-                            <tr style={{ borderBottom: "1.5px solid #D5E2DD" }}>
-                              {/* 1. Station (Sticky Left Column) */}
-                              <th
-                                style={{
-                                  position: "sticky",
-                                  left: 0,
-                                  zIndex: 25,
-                                  background: "#F1F7F4",
-                                  padding: "7px 6px",
-                                  textAlign: lang === "ur" ? "right" : "left",
-                                  fontWeight: 800,
-                                  fontSize: lang === "ur" ? 13 : 10,
-                                  color: "#80918B",
-                                  textTransform: "uppercase",
-                                  letterSpacing: "0.03em",
-                                  borderBottom: "1.5px solid #D5E2DD",
-                                  borderRight: "1px solid #D5E2DD",
-                                  minWidth: 84,
-                                  maxWidth: 90,
-                                  fontFamily:
-                                    lang === "ur"
-                                      ? URDU_FONT
-                                      : "inherit",
-                                }}
-                              >
-                                {lang === "ur" ? "منڈی" : "Station"}
-                              </th>
-
-                              {/* 2. Min – Max */}
-                              <th
-                                style={{
-                                  padding: "7px 4px",
-                                  textAlign: "center",
-                                  fontWeight: 800,
-                                  fontSize: lang === "ur" ? 13 : 10,
-                                  color: "#80918B",
-                                  textTransform: "uppercase",
-                                  borderBottom: "1.5px solid #D5E2DD",
-                                  minWidth: 96,
-                                  fontFamily:
-                                    lang === "ur"
-                                      ? URDU_FONT
-                                      : "inherit",
-                                }}
-                              >
-                                {lang === "ur" ? "کم – زیادہ" : "Min – Max"}
-                              </th>
-
-                              {/* 3. Price Type */}
-                              <th
-                                style={{
-                                  padding: "7px 2px",
-                                  textAlign: "center",
-                                  fontWeight: 800,
-                                  fontSize: lang === "ur" ? 13 : 9.5,
-                                  color: "#80918B",
-                                  textTransform: "uppercase",
-                                  borderBottom: "1.5px solid #D5E2DD",
-                                  minWidth: 54,
-                                  fontFamily:
-                                    lang === "ur"
-                                      ? URDU_FONT
-                                      : "inherit",
-                                }}
-                              >
-                                {lang === "ur" ? "قسم" : "Price Type"}
-                              </th>
-
-                              {/* 4. Trend (with Interval dropdown) */}
-                              <th
-                                style={{
-                                  padding: "7px 4px",
-                                  textAlign: "center",
-                                  fontWeight: 800,
-                                  fontSize: lang === "ur" ? 13 : 9.5,
-                                  color: "#80918B",
-                                  textTransform: "uppercase",
-                                  borderBottom: "1.5px solid #D5E2DD",
-                                  minWidth: 68,
-                                  fontFamily:
-                                    lang === "ur"
-                                      ? URDU_FONT
-                                      : "inherit",
-                                }}
-                              >
-                                <div className="relative inline-flex items-center justify-center">
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setTrendDropdownOpen(!trendDropdownOpen);
-                                    }}
-                                    className="tap-target inline-flex items-center gap-0.5 font-extrabold uppercase tracking-wide px-1 py-0.5 rounded-md hover:bg-[#E4F2EC] transition"
-                                    style={{
-                                      color: "#087F63",
-                                      fontSize: lang === "ur" ? 12 : 9,
-                                      fontFamily:
-                                        lang === "ur"
-                                          ? URDU_FONT
-                                          : "inherit",
-                                    }}
-                                    title={lang === "ur" ? "رجحان کا دورانیہ منتخب کریں" : "Select trend duration"}
-                                  >
-                                    <span>
-                                      {lang === "ur"
-                                        ? `رجحان (${tableTrendInterval === "24h" ? "24گھنٹے" : tableTrendInterval === "72h" ? "72گھنٹے" : tableTrendInterval === "weekly" ? "ہفتہ وار" : "ماہانہ"})`
-                                        : `Trend (${tableTrendInterval === "24h" ? "24H" : tableTrendInterval === "72h" ? "72H" : tableTrendInterval === "weekly" ? "7D" : "30D"})`}
-                                    </span>
-                                    <span className="text-[9px] text-[#087F63]">▾</span>
-                                  </button>
-
-                                  {/* Dropdown Menu for Trend Interval */}
-                                  {trendDropdownOpen && (
-                                    <>
-                                      <div
-                                        className="fixed inset-0 z-40"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setTrendDropdownOpen(false);
-                                        }}
-                                      />
-                                      <div
-                                        className="absolute right-0 top-full mt-1 z-50 bg-white rounded-xl shadow-2xl border border-[#C7E8D8] py-1 min-w-[140px] text-left"
-                                        style={{
-                                          direction: lang === "ur" ? "rtl" : "ltr",
-                                        }}
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        <div className="px-3 py-1 text-[10px] font-bold text-[#80918B] border-b border-[#E8EFEC] uppercase tracking-wider">
-                                          {lang === "ur" ? "دورانیہ منتخب کریں" : "Select Interval"}
-                                        </div>
-                                        {[
-                                          { id: "24h", labelUr: "24 گھنٹے (24h)", labelEn: "24 Hours (24h)" },
-                                          { id: "72h", labelUr: "72 گھنٹے (72h)", labelEn: "72 Hours (72h)" },
-                                          { id: "weekly", labelUr: "ہفتہ وار (7 دن)", labelEn: "Weekly (7 Days)" },
-                                          { id: "monthly", labelUr: "ماہانہ (30 دن)", labelEn: "Monthly (30 Days)" },
-                                        ].map((opt) => (
-                                          <button
-                                            key={opt.id}
-                                            type="button"
-                                            onClick={() => {
-                                              setTableTrendInterval(opt.id as any);
-                                              setTrendDropdownOpen(false);
-                                            }}
-                                            className="w-full px-3 py-2 text-xs font-bold flex items-center justify-between hover:bg-[#E8F5EF] transition text-left"
-                                            style={{
-                                              color: tableTrendInterval === opt.id ? "#087F63" : "#183B34",
-                                              background: tableTrendInterval === opt.id ? "#F0F9F5" : "transparent",
-                                              fontFamily:
-                                                lang === "ur"
-                                                  ? URDU_FONT
-                                                  : "inherit",
-                                            }}
-                                          >
-                                            <span>{lang === "ur" ? opt.labelUr : opt.labelEn}</span>
-                                            {tableTrendInterval === opt.id && (
-                                              <span className="text-[#087F63] font-black text-xs">✓</span>
-                                            )}
-                                          </button>
-                                        ))}
-                                      </div>
-                                    </>
-                                  )}
-                                </div>
-                              </th>
-
-                              {/* 5. Primary Special Attribute First (Moisture for Maize, Color for Cotton/Sesame, Variety for Rice, Quality for Wheat/Gram/others) */}
-                              {primarySpecialAttr === "moisture" && (
-                                <th
-                                  style={{
-                                    padding: "7px 4px",
-                                    textAlign: "center",
-                                    fontWeight: 800,
-                                    fontSize: lang === "ur" ? 13 : 10,
-                                    color: "#80918B",
-                                    textTransform: "uppercase",
-                                    borderBottom: "1.5px solid #D5E2DD",
-                                    minWidth: 64,
-                                    fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                                  }}
-                                >
-                                  {lang === "ur" ? "نمی" : "Moisture"}
-                                </th>
-                              )}
-                              {primarySpecialAttr === "color" && (
-                                <th
-                                  style={{
-                                    padding: "7px 4px",
-                                    textAlign: "center",
-                                    fontWeight: 800,
-                                    fontSize: lang === "ur" ? 13 : 10,
-                                    color: "#80918B",
-                                    textTransform: "uppercase",
-                                    borderBottom: "1.5px solid #D5E2DD",
-                                    minWidth: 64,
-                                    fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                                  }}
-                                >
-                                  {lang === "ur" ? "رنگ" : "Color"}
-                                </th>
-                              )}
-                              {primarySpecialAttr === "variety" && (
-                                <th
-                                  style={{
-                                    padding: "7px 4px",
-                                    textAlign: "center",
-                                    fontWeight: 800,
-                                    fontSize: lang === "ur" ? 13 : 10,
-                                    color: "#80918B",
-                                    textTransform: "uppercase",
-                                    borderBottom: "1.5px solid #D5E2DD",
-                                    minWidth: 74,
-                                    fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                                  }}
-                                >
-                                  {lang === "ur" ? "قسم" : "Variety"}
-                                </th>
-                              )}
-                              {primarySpecialAttr === "quality" && (
-                                <th
-                                  style={{
-                                    padding: "7px 4px",
-                                    textAlign: "center",
-                                    fontWeight: 800,
-                                    fontSize: lang === "ur" ? 13 : 10,
-                                    color: "#80918B",
-                                    textTransform: "uppercase",
-                                    borderBottom: "1.5px solid #D5E2DD",
-                                    minWidth: 64,
-                                    fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                                  }}
-                                >
-                                  {lang === "ur" ? "معیار" : "Quality"}
-                                </th>
-                              )}
-
-                              {/* 6. Arrival Quantity */}
-                              <th
-                                style={{
-                                  padding: "7px 4px",
-                                  textAlign: "center",
-                                  fontWeight: 800,
-                                  fontSize: lang === "ur" ? 13 : 10,
-                                  color: "#80918B",
-                                  textTransform: "uppercase",
-                                  borderBottom: "1.5px solid #D5E2DD",
-                                  minWidth: 64,
-                                  fontFamily:
-                                    lang === "ur"
-                                      ? URDU_FONT
-                                      : "inherit",
-                                }}
-                              >
-                                {lang === "ur" ? "آمد" : "Arrival"}
-                              </th>
-
-                              {/* 7. Arrival Unit */}
-                              <th
-                                style={{
-                                  padding: "7px 4px",
-                                  textAlign: "center",
-                                  fontWeight: 800,
-                                  fontSize: lang === "ur" ? 13 : 10,
-                                  color: "#80918B",
-                                  textTransform: "uppercase",
-                                  borderBottom: "1.5px solid #D5E2DD",
-                                  minWidth: 74,
-                                  fontFamily:
-                                    lang === "ur"
-                                      ? URDU_FONT
-                                      : "inherit",
-                                }}
-                              >
-                                {lang === "ur" ? "آمد کی اکائی" : "Unit"}
-                              </th>
-
-                              {/* Remaining Spec Columns */}
-                              {primarySpecialAttr !== "quality" && (
-                                <th
-                                  style={{
-                                    padding: "7px 4px",
-                                    textAlign: "center",
-                                    fontWeight: 800,
-                                    fontSize: lang === "ur" ? 13 : 10,
-                                    color: "#80918B",
-                                    textTransform: "uppercase",
-                                    borderBottom: "1.5px solid #D5E2DD",
-                                    minWidth: 64,
-                                    fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                                  }}
-                                >
-                                  {lang === "ur" ? "معیار" : "Quality"}
-                                </th>
-                              )}
-
-                              {primarySpecialAttr !== "moisture" && (
-                                <th
-                                  style={{
-                                    padding: "7px 4px",
-                                    textAlign: "center",
-                                    fontWeight: 800,
-                                    fontSize: lang === "ur" ? 13 : 10,
-                                    color: "#80918B",
-                                    textTransform: "uppercase",
-                                    borderBottom: "1.5px solid #D5E2DD",
-                                    minWidth: 64,
-                                    fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                                  }}
-                                >
-                                  {lang === "ur" ? "نمی" : "Moisture"}
-                                </th>
-                              )}
-
-                              {primarySpecialAttr !== "color" && (
-                                <th
-                                  style={{
-                                    padding: "7px 4px",
-                                    textAlign: "center",
-                                    fontWeight: 800,
-                                    fontSize: lang === "ur" ? 13 : 10,
-                                    color: "#80918B",
-                                    textTransform: "uppercase",
-                                    borderBottom: "1.5px solid #D5E2DD",
-                                    minWidth: 64,
-                                    fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                                  }}
-                                >
-                                  {lang === "ur" ? "رنگ" : "Color"}
-                                </th>
-                              )}
-
-                              {primarySpecialAttr !== "variety" && (
-                                <th
-                                  style={{
-                                    padding: "7px 4px",
-                                    textAlign: "center",
-                                    fontWeight: 800,
-                                    fontSize: lang === "ur" ? 13 : 10,
-                                    color: "#80918B",
-                                    textTransform: "uppercase",
-                                    borderBottom: "1.5px solid #D5E2DD",
-                                    minWidth: 74,
-                                    fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                                  }}
-                                >
-                                  {lang === "ur" ? "قسم" : "Variety"}
-                                </th>
-                              )}
-
-                              {/* 10. Origin */}
-                              <th
-                                style={{
-                                  padding: "7px 4px",
-                                  textAlign: "center",
-                                  fontWeight: 800,
-                                  fontSize: lang === "ur" ? 13 : 10,
-                                  color: "#80918B",
-                                  textTransform: "uppercase",
-                                  borderBottom: "1.5px solid #D5E2DD",
-                                  minWidth: 70,
-                                  fontFamily:
-                                    lang === "ur"
-                                      ? URDU_FONT
-                                      : "inherit",
-                                }}
-                              >
-                                {lang === "ur" ? "علاقہ" : "Origin"}
-                              </th>
-
-                              {/* 11. Condition */}
-                              <th
-                                style={{
-                                  padding: "7px 4px",
-                                  textAlign: "center",
-                                  fontWeight: 800,
-                                  fontSize: lang === "ur" ? 13 : 10,
-                                  color: "#80918B",
-                                  textTransform: "uppercase",
-                                  borderBottom: "1.5px solid #D5E2DD",
-                                  minWidth: 68,
-                                  fontFamily:
-                                    lang === "ur"
-                                      ? URDU_FONT
-                                      : "inherit",
-                                }}
-                              >
-                                {lang === "ur" ? "حالت" : "Condition"}
-                              </th>
-
-                              {/* 12. Specification */}
-                              <th
-                                style={{
-                                  padding: "7px 4px",
-                                  textAlign: "center",
-                                  fontWeight: 800,
-                                  fontSize: lang === "ur" ? 13 : 10,
-                                  color: "#80918B",
-                                  textTransform: "uppercase",
-                                  borderBottom: "1.5px solid #D5E2DD",
-                                  minWidth: 84,
-                                  fontFamily:
-                                    lang === "ur"
-                                      ? URDU_FONT
-                                      : "inherit",
-                                }}
-                              >
-                                {lang === "ur" ? "خصوصیت" : "Specification"}
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {tableRows.map((r, ci) => {
-                              // Multi-interval trend calculation derived from real Excel observations
-                              const rowTimeline = getExcelTimeline({
-                                product,
-                                byproduct: r.byproduct || byproduct,
-                                locationLabel: r.mandiName,
-                                locationKind: "mandi",
-                                rateType: r.rateType,
-                                range: "year",
-                              });
-
-                              let rowMin = 0;
-                              let rowMax = 0;
-                              let rowArr = 0;
-                              let intervalPct = 0;
-                              let intervalTrend: "up" | "down" | "stable" = "stable";
-
-                              if (isDateInRange && dateIdx >= 0) {
-                                const startIdx =
-                                  tableTrendInterval === "72h"
-                                    ? Math.max(0, dateIdx - 3)
-                                    : tableTrendInterval === "weekly"
-                                      ? Math.max(0, dateIdx - 7)
-                                      : tableTrendInterval === "monthly"
-                                        ? 0
-                                        : Math.max(0, dateIdx - 1);
-
-                                const sliceMins = rowTimeline.mins.slice(startIdx, dateIdx + 1).filter((v) => v > 0);
-                                rowMin = sliceMins.length > 0 ? Math.min(...sliceMins) : (rowTimeline.mins[dateIdx] ?? r.min);
-
-                                const sliceMaxs = rowTimeline.maxs.slice(startIdx, dateIdx + 1).filter((v) => v > 0);
-                                rowMax = sliceMaxs.length > 0 ? Math.max(...sliceMaxs) : (rowTimeline.maxs[dateIdx] ?? r.max);
-
-                                const sliceArrs = rowTimeline.arrivals.slice(startIdx, dateIdx + 1).filter((v) => v > 0);
-                                rowArr = sliceArrs.length > 0 ? sliceArrs.reduce((a, b) => a + b, 0) : (rowTimeline.arrivals[dateIdx] ?? parseArrival(r.arrival));
-
-                                const pSeries = rowTimeline.prices;
-                                const pLatest = pSeries[dateIdx] ?? 0;
-                                const pPrev = pSeries[startIdx] ?? pLatest;
-
-                                if (pPrev > 0 && pLatest > 0) {
-                                  const delta = pLatest - pPrev;
-                                  intervalPct = Math.round((Math.abs(delta) / pPrev) * 1000) / 10;
-                                  if (delta > 0.01) intervalTrend = "up";
-                                  else if (delta < -0.01) intervalTrend = "down";
-                                }
-                              } else {
-                                rowMin = r.min;
-                                rowMax = r.max;
-                                rowArr = parseArrival(r.arrival);
-                              }
-
-                              const trendArrow =
-                                intervalTrend === "up" ? "▲" : intervalTrend === "down" ? "▼" : "—";
-                              const trendColor =
-                                intervalTrend === "up"
-                                  ? "#16A34A"
-                                  : intervalTrend === "down"
-                                    ? "#C94A43"
-                                    : "#52635F";
-                              const rtColor = RATE_COLORS[r.rateType] || "#52635F";
-                              const isRowModalActive =
-                                selectedMandiGraphRow?.mandiName === r.mandiName &&
-                                selectedMandiGraphRow?.rateType === r.rateType;
-                              // If a mandi graph is selected/open, highlight only that active mandi; otherwise highlight the initial/scope mandi
-                              const isSelected = selectedMandiGraphRow
-                                ? isRowModalActive
-                                : (locScope.kind === "mandi" &&
-                                  (locScope.label === r.mandiName ||
-                                    locScope.label.replace(/\s*mandi$/i, "").replace(/\s*منڈی$/i, "") ===
-                                    r.mandiName.replace(/\s*mandi$/i, "").replace(/\s*منڈی$/i, "")));
-                              const rowBg = isSelected
-                                ? "#E4F2EC"
-                                : ci % 2 === 0
-                                  ? "#FFFFFF"
-                                  : "#F8FCFA";
-
-                              return (
-                                <React.Fragment key={`${r.mandiName}-${r.rateType}-${ci}`}>
-                                  <tr
-                                    onClick={() => {
-                                      // Only expand this row's own inline graph -- do NOT
-                                      // change locScope here. locScope drives the whole
-                                      // table + the top overview chart, so setting it on a
-                                      // row click was re-scoping the entire screen down to
-                                      // this one mandi instead of just expanding the row.
-                                      setSelectedMandiGraphRow((prev) => {
-                                        if (
-                                          prev?.mandiName === r.mandiName &&
-                                          prev?.rateType === r.rateType
-                                        ) {
-                                          return null;
-                                        }
-                                        if (!isTableExpanded) {
-                                          setIsTableExpanded(true);
-                                          setLandscapeRotated(false);
-                                        }
-                                        return {
-                                          mandiName: r.mandiName,
-                                          rateType: r.rateType,
-                                          min: rowMin,
-                                          max: rowMax,
-                                          trend: intervalTrend,
-                                          trendPct: intervalPct,
-                                          arrival: rowArr > 0 ? rowArr : undefined,
-                                        };
-                                      });
-
-                                      if (voiceEnabled) {
-                                        const cleanMandi = r.mandiName.replace(/\s*mandi$/i, "").replace(/\s*منڈی$/i, "");
-                                        const minVal = rowMin > 0 ? rowMin.toLocaleString("en-PK") : "";
-                                        const maxVal = rowMax > 0 ? rowMax.toLocaleString("en-PK") : "";
-                                        const rtUr = tr(r.rateType).replace(" ریٹ", "").replace(" Rate", "");
-                                        const spoken = lang === "ur"
-                                          ? `${tm(cleanMandi)} منڈی، ${rtUr}، ریٹ ${minVal} سے ${maxVal} روپے`
-                                          : `${cleanMandi} Mandi, ${r.rateType} rate, ${minVal} to ${maxVal} rupees`;
-                                        speakText(spoken);
-                                      }
-                                    }}
-                                    className="cursor-pointer transition hover:bg-[#EAF5F0]"
-                                    style={{
-                                      background: rowBg,
-                                      borderBottom: isRowModalActive ? "none" : "1px solid #EBF2EE",
-                                    }}
-                                  >
-                                    {/* 1. Station (Sticky) */}
-                                    <td
-                                      style={{
-                                        position: "sticky",
-                                        left: 0,
-                                        zIndex: 10,
-                                        background: rowBg,
-                                        padding: "7px 6px",
-                                        fontWeight: 700,
-                                        color: "#183B34",
-                                        whiteSpace: "nowrap",
-                                        overflow: "hidden",
-                                        textOverflow: "ellipsis",
-                                        maxWidth: 90,
-                                        borderRight: "1px solid #D5E2DD",
-                                        fontFamily:
-                                          lang === "ur"
-                                            ? URDU_FONT
-                                            : "inherit",
-                                      }}
+                                  <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                                    <div
+                                      className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                                      style={{ background: "#E0F2FE", color: "#0284C7" }}
                                     >
-                                      {tm(
-                                        r.mandiName
-                                          .replace(/\s*mandi$/i, "")
-                                          .replace(/\s*منڈی$/i, ""),
-                                      )}
-                                    </td>
-
-                                    {/* 2. Min – Max */}
-                                    <td
-                                      style={{
-                                        padding: "7px 4px",
-                                        textAlign: "center",
-                                        color: rowMin > 0 ? "#087F63" : "#80918B",
-                                        fontWeight: 800,
-                                        fontSize: 11,
-                                        whiteSpace: "nowrap",
-                                      }}
-                                    >
-                                      {rowMin > 0 && rowMax > 0
-                                        ? `${rowMin.toLocaleString("en-PK")} – ${rowMax.toLocaleString("en-PK")}`
-                                        : "—"}
-                                    </td>
-
-                                    {/* 3. Price Type */}
-                                    <td
-                                      style={{
-                                        padding: "7px 2px",
-                                        textAlign: "center",
-                                        whiteSpace: "nowrap",
-                                      }}
-                                    >
+                                      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+                                      </svg>
+                                    </div>
+                                    <div className="min-w-0 flex-1 text-left">
                                       <span
-                                        className="px-1.5 py-0.5 rounded-md font-bold text-[9px]"
-                                        style={{
-                                          background: `${rtColor}15`,
-                                          color: rtColor,
-                                          fontFamily:
-                                            lang === "ur"
-                                              ? URDU_FONT
-                                              : "inherit",
-                                        }}
+                                        className="text-[8.5px] text-[#6B7280] font-medium block leading-none truncate"
+                                        style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                                       >
-                                        {tr(r.rateType)
-                                          .replace(" ریٹ", "")
-                                          .replace(" Rate", "")}
+                                        {lang === "ur" ? "نمی" : "Moisture"}
                                       </span>
-                                    </td>
-
-                                    {/* 4. Trend */}
-                                    <td
-                                      style={{
-                                        padding: "7px 4px",
-                                        textAlign: "center",
-                                        color: trendColor,
-                                        fontWeight: 800,
-                                        fontSize: 10.5,
-                                        whiteSpace: "nowrap",
-                                      }}
-                                    >
-                                      {rowMin > 0 ? (
-                                        <span>
-                                          <span>{trendArrow}</span>{" "}
-                                          {intervalPct > 0 ? `${intervalPct}%` : ""}
-                                        </span>
-                                      ) : (
-                                        "—"
-                                      )}
-                                    </td>
-
-                                    {/* 5. Primary Special Attribute First */}
-                                    {primarySpecialAttr === "moisture" && (
-                                      <td
-                                        style={{
-                                          padding: "7px 4px",
-                                          textAlign: "center",
-                                          color: "#087F63",
-                                          fontWeight: 700,
-                                          fontSize: 10,
-                                          whiteSpace: "nowrap",
-                                        }}
+                                      <span
+                                        className="font-bold text-[11.5px] leading-tight truncate block mt-0.5 text-[#0369A1]"
+                                        style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                                       >
-                                        {r.moisture ? (r.moisture.includes("%") ? r.moisture : `${r.moisture}%`) : "—"}
-                                      </td>
-                                    )}
-                                    {primarySpecialAttr === "color" && (
-                                      <td
-                                        style={{
-                                          padding: "7px 4px",
-                                          textAlign: "center",
-                                          color: "#52635F",
-                                          fontWeight: 600,
-                                          fontSize: 10,
-                                          whiteSpace: "nowrap",
-                                          fontFamily:
-                                            lang === "ur"
-                                              ? URDU_FONT
-                                              : "inherit",
-                                        }}
-                                      >
-                                        {r.color ? tc(r.color) : "—"}
-                                      </td>
-                                    )}
-                                    {primarySpecialAttr === "variety" && (
-                                      <td
-                                        style={{
-                                          padding: "7px 4px",
-                                          textAlign: "center",
-                                          color: "#52635F",
-                                          fontWeight: 600,
-                                          fontSize: 10,
-                                          whiteSpace: "nowrap",
-                                          fontFamily:
-                                            lang === "ur"
-                                              ? URDU_FONT
-                                              : "inherit",
-                                        }}
-                                      >
-                                        {r.variety || "—"}
-                                      </td>
-                                    )}
-                                    {primarySpecialAttr === "quality" && (
-                                      <td
-                                        style={{
-                                          padding: "7px 4px",
-                                          textAlign: "center",
-                                          whiteSpace: "nowrap",
-                                        }}
-                                      >
-                                        <span
-                                          className="px-2 py-0.5 rounded-md font-bold text-[10px]"
-                                          style={{
-                                            background: (r.newOld || r.quality) === "New" ? "#E4F4EC" : "#FFF4E6",
-                                            color: (r.newOld || r.quality) === "New" ? "#0A7F5A" : "#B45309",
-                                            fontFamily:
-                                              lang === "ur"
-                                                ? URDU_FONT
-                                                : "inherit",
-                                           }}
-                                         >
-                                           {r.newOld || r.quality || "—"}
-                                         </span>
-                                       </td>
-                                     )}
-
-                                     {/* 6. Arrival Quantity */}
-                                     <td
-                                       style={{
-                                         padding: "7px 4px",
-                                         textAlign: "center",
-                                         color: rowArr > 0 ? "#087F63" : "#80918B",
-                                         fontWeight: 700,
-                                         fontSize: 10,
-                                         whiteSpace: "nowrap",
-                                       }}
-                                     >
-                                       {rowArr > 0
-                                         ? (lang === "ur" ? `${toUrduDigits(rowArr.toLocaleString("en-PK"))} بوریاں` : `${rowArr.toLocaleString("en-PK")} Bags`)
-                                         : "—"}
-                                     </td>
-
-                                     {/* 7. Arrival Unit */}
-                                     <td
-                                       style={{
-                                         padding: "7px 4px",
-                                         textAlign: "center",
-                                         color: rowArr > 0 ? "#087F63" : "#80918B",
-                                         fontWeight: 700,
-                                         fontSize: 10,
-                                         whiteSpace: "nowrap",
-                                         fontFamily:
-                                           lang === "ur"
-                                             ? URDU_FONT
-                                             : "inherit",
-                                       }}
-                                     >
-                                       {rowArr > 0 ? ((r as any).arrivalUnit || (lang === "ur" ? "۴۰ کلو" : "40 kg")) : "—"}
-                                     </td>
-
-                                     {/* Remaining Spec Columns */}
-                                     {primarySpecialAttr !== "quality" && (
-                                       <td
-                                         style={{
-                                           padding: "7px 4px",
-                                           textAlign: "center",
-                                           whiteSpace: "nowrap",
-                                         }}
-                                       >
-                                         <span
-                                           className="px-2 py-0.5 rounded-md font-bold text-[10px]"
-                                           style={{
-                                             background: (r.newOld || r.quality) === "New" ? "#E4F4EC" : "#FFF4E6",
-                                             color: (r.newOld || r.quality) === "New" ? "#0A7F5A" : "#B45309",
-                                             fontFamily:
-                                               lang === "ur"
-                                                 ? URDU_FONT
-                                                 : "inherit",
-                                           }}
-                                         >
-                                           {r.newOld || r.quality || "—"}
-                                         </span>
-                                       </td>
-                                     )}
-
-                                     {primarySpecialAttr !== "moisture" && (
-                                       <td
-                                         style={{
-                                           padding: "7px 4px",
-                                           textAlign: "center",
-                                           color: "#087F63",
-                                           fontWeight: 700,
-                                           fontSize: 10,
-                                           whiteSpace: "nowrap",
-                                         }}
-                                       >
-                                         {r.moisture ? (r.moisture.includes("%") ? r.moisture : `${r.moisture}%`) : "—"}
-                                       </td>
-                                     )}
-
-                                     {primarySpecialAttr !== "color" && (
-                                       <td
-                                         style={{
-                                           padding: "7px 4px",
-                                           textAlign: "center",
-                                           color: "#52635F",
-                                           fontWeight: 600,
-                                           fontSize: 10,
-                                           whiteSpace: "nowrap",
-                                           fontFamily:
-                                             lang === "ur"
-                                               ? URDU_FONT
-                                               : "inherit",
-                                         }}
-                                       >
-                                         {r.color ? tc(r.color) : "—"}
-                                       </td>
-                                     )}
-
-                                     {primarySpecialAttr !== "variety" && (
-                                       <td
-                                         style={{
-                                           padding: "7px 4px",
-                                           textAlign: "center",
-                                           color: "#52635F",
-                                           fontWeight: 600,
-                                           fontSize: 10,
-                                           whiteSpace: "nowrap",
-                                           fontFamily:
-                                             lang === "ur"
-                                               ? URDU_FONT
-                                               : "inherit",
-                                         }}
-                                       >
-                                         {r.variety || "—"}
-                                       </td>
-                                     )}
-
-                                     {/* 10. Origin */}
-                                     <td
-                                       style={{
-                                         padding: "7px 4px",
-                                         textAlign: "center",
-                                         color: "#52635F",
-                                         fontWeight: 600,
-                                         fontSize: 10,
-                                         whiteSpace: "nowrap",
-                                         fontFamily:
-                                           lang === "ur"
-                                             ? URDU_FONT
-                                             : "inherit",
-                                       }}
-                                     >
-                                       {r.origin ? tm(r.origin) : "—"}
-                                     </td>
-
-                                     {/* 11. Condition */}
-                                     <td
-                                       style={{
-                                         padding: "7px 4px",
-                                         textAlign: "center",
-                                         color: "#52635F",
-                                         fontWeight: 600,
-                                         fontSize: 10,
-                                         whiteSpace: "nowrap",
-                                         fontFamily:
-                                           lang === "ur"
-                                             ? URDU_FONT
-                                             : "inherit",
-                                       }}
-                                     >
-                                       {r.condition || r.quality || "—"}
-                                     </td>
-
-                                     {/* 12. Specification */}
-                                     <td
-                                       style={{
-                                         padding: "7px 4px",
-                                         textAlign: "center",
-                                         color: "#52635F",
-                                         fontWeight: 600,
-                                         fontSize: 10,
-                                         whiteSpace: "nowrap",
-                                         fontFamily:
-                                           lang === "ur"
-                                             ? URDU_FONT
-                                             : "inherit",
-                                       }}
-                                     >
-                                       {r.spec || "—"}
-                                     </td>
-                                   </tr>
-
-                                   {/* Inline Expandable Trend Graph Row directly below this clicked row */}
-                                  {isRowModalActive && (
-                                    <tr>
-                                      <td
-                                        colSpan={13}
-                                        className="p-0 border-b-2 border-[#10B981]"
-                                        style={{
-                                          background: "#F4FAF7",
-                                          padding: 0,
-                                        }}
-                                      >
-                                        <div
-                                          style={{
-                                            position: "sticky",
-                                            left: 0,
-                                            width: tableClientWidth > 0 ? `${tableClientWidth}px` : "100%",
-                                            maxWidth: tableClientWidth > 0 ? `${tableClientWidth}px` : "100%",
-                                            boxSizing: "border-box",
-                                          }}
-                                          className="p-2 sm:p-3.5 flex flex-col gap-2.5 shadow-inner bg-[#F4FAF7]"
-                                        >
-                                          {/* Trends-matching Card Container */}
-                                          <div
-                                            className="rounded-2xl p-3 sm:p-4 flex flex-col gap-3 shadow-sm bg-white"
-                                            style={{
-                                              border: "1px solid #D5E2DD",
-                                              width: "100%",
-                                              boxSizing: "border-box",
-                                            }}
-                                          >
-                                            {/* 1. Top Row: Price vs Arrival Switcher Tabs + Close Button */}
-                                            <div className="flex items-center justify-between gap-2 pb-2 border-b border-[#E8EFEC]">
-                                              <div className="flex items-center bg-[#E5EFEA] p-0.5 rounded-lg border border-[#CCE2D7]">
-                                                <button
-                                                  type="button"
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setTableGraphView("price");
-                                                  }}
-                                                  className="tap-target px-3 py-1 rounded-md text-[10.5px] font-extrabold transition"
-                                                  style={{
-                                                    background: tableGraphView === "price" ? "#087F63" : "transparent",
-                                                    color: tableGraphView === "price" ? "#FFFFFF" : "#4E665E",
-                                                    fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                                                  }}
-                                                >
-                                                  {lang === "ur" ? "قیمت کا رجحان" : "Price Trend"}
-                                                </button>
-                                                <button
-                                                  type="button"
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setTableGraphView("arrival");
-                                                  }}
-                                                  className="tap-target px-3 py-1 rounded-md text-[10.5px] font-extrabold transition"
-                                                  style={{
-                                                    background: tableGraphView === "arrival" ? "#D97706" : "transparent",
-                                                    color: tableGraphView === "arrival" ? "#FFFFFF" : "#4E665E",
-                                                    fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                                                  }}
-                                                >
-                                                  {lang === "ur" ? "آمد کا رجحان" : "Arrival Trend"}
-                                                </button>
-                                              </div>
-
-                                              <button
-                                                type="button"
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  setSelectedMandiGraphRow(null);
-                                                }}
-                                                className="tap-target w-7 h-7 rounded-full bg-[#E5EFEA] hover:bg-[#D5E5DE] text-[#064D40] text-xs font-bold flex items-center justify-center transition active:scale-95 flex-shrink-0"
-                                                title={lang === "ur" ? "بند کریں" : "Close"}
-                                              >
-                                                ✕
-                                              </button>
-                                            </div>
-
-                                            {/* 2. Second Row: Granularity Filters (1, 5, 15, 30, 1H, 5H, 1D, 1W, 1M) */}
-                                            <div className="flex items-center gap-1 overflow-x-auto py-1 border-b border-[#E8EFEC]" style={{ scrollbarWidth: "none" }}>
-                                              {["1", "5", "15", "30", "1H", "5H", "1D", "1W", "1M"].map((g) => {
-                                                const isGActive = tableGraphGranularity === g;
-                                                return (
-                                                  <button
-                                                    key={g}
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                      e.stopPropagation();
-                                                      setTableGraphGranularity(g);
-                                                    }}
-                                                    className={`px-2 py-0.5 rounded text-[10.5px] font-bold transition-colors flex-shrink-0 ${
-                                                      isGActive
-                                                        ? tableGraphView === "price"
-                                                          ? "bg-[#087F63] text-white shadow-xs"
-                                                          : "bg-[#D97706] text-white shadow-xs"
-                                                        : "text-[#52635F] hover:bg-[#F1F7F4] hover:text-[#143B33]"
-                                                    }`}
-                                                  >
-                                                    {g}
-                                                  </button>
-                                                );
-                                              })}
-                                            </div>
-
-                                            {/* 2. Main Graph Body according to Price vs Arrival */}
-                                            {tableGraphView === "price" ? (
-                                              <>
-                                                {(() => {
-                                                  const graphData = buildMandiInlineGraphFromRows({
-                                                    allRows,
-                                                    mandiName: r.mandiName,
-                                                    rateType: r.rateType,
-                                                    timeframe: graphTimeframe,
-                                                    lang,
-                                                    view: "price",
-                                                  });
-                                                  const pts = graphData.points;
-                                                  const len = pts.length;
-                                                  const hoverI = tableGraphHoverIdx !== null && tableGraphHoverIdx < len ? tableGraphHoverIdx : len - 1;
-                                                  const displayPrice = pts[hoverI] ?? graphData.latestPrice;
-                                                  const startPrice = pts[0] || displayPrice || 1;
-                                                  const changeAmt = displayPrice - startPrice;
-                                                  const absPct = Math.abs((changeAmt / (startPrice || 1)) * 100).toFixed(2);
-                                                  const isPositive = changeAmt > 0;
-                                                  const isFlat = changeAmt === 0;
-                                                  const seriesMax = Math.max(...pts, displayPrice);
-                                                  const seriesMin = Math.min(...pts, displayPrice);
-                                                  const seriesAvg = Math.round(pts.reduce((a, b) => a + b, 0) / (len || 1));
-                                                  const currentDateLabel = graphData.dates[hoverI] || graphData.dates[len - 1] || "14 Sep 2026";
-
-                                                  const CW = 540;
-                                                  const CH = 145;
-                                                  const PL = 42;
-                                                  const PR = 42;
-                                                  const PT = 14;
-                                                  const PB = 24;
-                                                  const chartW = CW - PL - PR;
-                                                  const chartH = CH - PT - PB;
-                                                  const pMin = graphData.yMinBound;
-                                                  const pMax = graphData.yMaxBound;
-                                                  const yOf = (v: number) => PT + chartH - ((v - pMin) / (pMax - pMin || 1)) * chartH;
-                                                  const xOf = (i: number) => PL + (i / (len - 1 || 1)) * chartW;
-                                                  const volBaseY = CH - PB;
-                                                  const volMaxH = 24;
-                                                  const maxArr = graphData.peakArrival || 1;
-                                                  const currentCloseY = yOf(displayPrice);
-
-                                                  return (
-                                                    <>
-                                                      {/* Commodity Header HUD */}
-                                                      <div className="flex flex-col gap-2 border-b border-[#E8EFEC] pb-2.5">
-                                                        <div className="flex items-center justify-between">
-                                                          <div className="flex items-center gap-2">
-                                                            <span
-                                                              className="text-xs sm:text-sm font-extrabold text-[#143B33]"
-                                                              style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                                                            >
-                                                              {tm(r.mandiName.replace(/\s*mandi$/i, "").replace(/\s*منڈی$/i, ""))} — {byproduct ? `${tc(byproduct)}` : `${tc(product)}`}
-                                                            </span>
-                                                            <span className="text-[10px] font-bold text-[#087F63] bg-[#E8F8F4] px-2 py-0.5 rounded-full border border-[#C2E8DB]">
-                                                              {tr(r.rateType).replace(" ریٹ", "").replace(" Rate", "")}
-                                                            </span>
-                                                          </div>
-                                                          <span className="text-[10px] font-bold text-[#80918B]">
-                                                            {lang === "ur" ? "روپے فی ۴۰ کلو" : "PKR / 40kg"}
-                                                          </span>
-                                                        </div>
-
-                                                        {/* Price & Change Display */}
-                                                        <div className="flex items-baseline justify-between flex-wrap gap-2">
-                                                          <div className="flex items-baseline gap-2.5">
-                                                            <span className="text-2xl sm:text-3xl font-black text-[#143B33] tracking-tight">
-                                                              {lang === "ur" ? `روپے ${toUrduDigits(displayPrice.toLocaleString())}` : `Rs. ${displayPrice.toLocaleString()}`}
-                                                            </span>
-                                                            <span
-                                                              className="text-xs font-bold px-2.5 py-0.5 rounded-md flex items-center gap-1"
-                                                              style={{
-                                                                background: isFlat ? "#F3F4F6" : isPositive ? "#DCFCE7" : "#FEE2E2",
-                                                                color: isFlat ? "#4B5563" : isPositive ? "#15803D" : "#B91C1C",
-                                                                border: `1px solid ${isFlat ? "#E5E7EB" : isPositive ? "#86EFAC" : "#FCA5A5"}`,
-                                                              }}
-                                                            >
-                                                              <span>{isFlat ? "—" : isPositive ? "▲" : "▼"}</span>
-                                                              <span>{absPct}%</span>
-                                                            </span>
-                                                          </div>
-
-                                                          {/* Date / Scrub Indicator */}
-                                                          <div className="text-[11px] font-semibold text-[#52635F]">
-                                                            {currentDateLabel}
-                                                          </div>
-                                                        </div>
-
-                                                        {/* Stat Summary Bar (High, Low, Avg) */}
-                                                        <div className="grid grid-cols-3 gap-2 pt-1 text-[10px]">
-                                                          <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
-                                                            <span className="text-[#80918B] font-semibold">
-                                                              {lang === "ur" ? "زیادہ سے زیادہ" : "Period High"}
-                                                            </span>
-                                                            <span className="font-bold text-[#143B33] text-xs">
-                                                              {lang === "ur" ? `روپے ${toUrduDigits(seriesMax.toLocaleString())}` : `Rs. ${seriesMax.toLocaleString()}`}
-                                                            </span>
-                                                          </div>
-                                                          <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
-                                                            <span className="text-[#80918B] font-semibold">
-                                                              {lang === "ur" ? "کم سے کم" : "Period Low"}
-                                                            </span>
-                                                            <span className="font-bold text-[#143B33] text-xs">
-                                                              {lang === "ur" ? `روپے ${toUrduDigits(seriesMin.toLocaleString())}` : `Rs. ${seriesMin.toLocaleString()}`}
-                                                            </span>
-                                                          </div>
-                                                          <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
-                                                            <span className="text-[#80918B] font-semibold">
-                                                              {lang === "ur" ? "اوسط ریٹ" : "Period Avg"}
-                                                            </span>
-                                                            <span className="font-bold text-[#087F63] text-xs">
-                                                              {lang === "ur" ? `روپے ${toUrduDigits(seriesAvg.toLocaleString())}` : `Rs. ${seriesAvg.toLocaleString()}`}
-                                                            </span>
-                                                          </div>
-                                                        </div>
-                                                      </div>
-
-                                                      {/* SVG Chart Canvas */}
-                                                      <div className="relative w-full select-none bg-[#FCFDFD] rounded-xl border border-[#EDF4F1] p-1">
-                                                        <svg
-                                                          viewBox={`0 0 ${CW} ${CH}`}
-                                                          className="w-full"
-                                                          style={{ height: isTableExpanded ? 160 : 135, display: "block" }}
-                                                          onMouseMove={(e) => {
-                                                            const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-                                                            const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
-                                                            const i = Math.round((relX / chartW) * (len - 1));
-                                                            setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
-                                                          }}
-                                                          onMouseLeave={() => setTableGraphHoverIdx(null)}
-                                                          onTouchMove={(e) => {
-                                                            const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-                                                            const touch = e.touches[0];
-                                                            const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
-                                                            const i = Math.round((relX / chartW) * (len - 1));
-                                                            setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
-                                                          }}
-                                                          onTouchEnd={() => setTableGraphHoverIdx(null)}
-                                                        >
-                                                          <defs>
-                                                            <linearGradient
-                                                              id={`tableInlinePriceGrad-${ci}`}
-                                                              x1="0"
-                                                              y1="0"
-                                                              x2="0"
-                                                              y2="1"
-                                                            >
-                                                              <stop offset="0%" stopColor="#087F63" stopOpacity="0.22" />
-                                                              <stop offset="75%" stopColor="#087F63" stopOpacity="0.03" />
-                                                              <stop offset="100%" stopColor="#087F63" stopOpacity="0.00" />
-                                                            </linearGradient>
-                                                          </defs>
-
-                                                          {/* Horizontal Gridlines + Left & Right Price Axis Labels */}
-                                                          {graphData.yLabels.map((tick, ti) => {
-                                                            const y = yOf(tick.val);
-                                                            return (
-                                                              <g key={`yTick-${ti}`}>
-                                                                <line
-                                                                  x1={PL}
-                                                                  y1={y}
-                                                                  x2={CW - PR}
-                                                                  y2={y}
-                                                                  stroke="#E8EFEF"
-                                                                  strokeWidth="1"
-                                                                  strokeDasharray="3 3"
-                                                                />
-                                                                <text
-                                                                  x={PL - 5}
-                                                                  y={y + 3.5}
-                                                                  textAnchor="end"
-                                                                  fontSize="8.5"
-                                                                  fontWeight="600"
-                                                                  fill="#80918B"
-                                                                >
-                                                                  {tick.label}
-                                                                </text>
-                                                                <text
-                                                                  x={CW - PR + 5}
-                                                                  y={y + 3.5}
-                                                                  textAnchor="start"
-                                                                  fontSize="8"
-                                                                  fontWeight="600"
-                                                                  fill="#9BAAA5"
-                                                                >
-                                                                  {tick.val}
-                                                                </text>
-                                                              </g>
-                                                            );
-                                                          })}
-
-                                                          {/* Volume Baseline / X-Axis Baseline */}
-                                                          <line
-                                                            x1={PL}
-                                                            y1={volBaseY}
-                                                            x2={CW - PR}
-                                                            y2={volBaseY}
-                                                            stroke="#D5E2DD"
-                                                            strokeWidth="1.2"
-                                                          />
-
-                                                          {/* X-Axis Date Labels */}
-                                                          {graphData.xLabels.map((lbl, i) =>
-                                                            lbl ? (
-                                                              <text
-                                                                key={`xPriceTick-${i}`}
-                                                                x={xOf(i)}
-                                                                y={CH - 6}
-                                                                textAnchor="middle"
-                                                                fontSize="8.5"
-                                                                fontWeight="600"
-                                                                fill="#80918B"
-                                                                fontFamily={lang === "ur" ? URDU_FONT : "inherit"}
-                                                              >
-                                                                {lbl}
-                                                              </text>
-                                                            ) : null,
-                                                          )}
-
-                                                          {/* Mini Arrival Volume Bars along Bottom */}
-                                                          {graphData.arrivals.map((arrVal, i) => {
-                                                            const barX = xOf(i);
-                                                            const barH = (arrVal / maxArr) * volMaxH;
-                                                            const prevP = i > 0 ? pts[i - 1] : pts[i];
-                                                            const curP = pts[i];
-                                                            const isUp = curP >= prevP;
-                                                            const barW = Math.max(2.5, Math.min(6, (chartW / len) * 0.55));
-                                                            const isHov = tableGraphHoverIdx === i;
-
-                                                            return (
-                                                              <rect
-                                                                key={`vol-${i}`}
-                                                                x={barX - barW / 2}
-                                                                y={volBaseY - barH}
-                                                                width={barW}
-                                                                height={barH}
-                                                                rx={1}
-                                                                fill={isUp ? "#10B981" : "#EF4444"}
-                                                                opacity={isHov ? 1 : 0.65}
-                                                              />
-                                                            );
-                                                          })}
-
-                                                          {/* Area & Line */}
-                                                          {(() => {
-                                                            const lineCoords = pts.map((v, i) => `${i === 0 ? "M" : "L"}${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`).join(" ");
-                                                            const areaCoords = `${lineCoords} L${xOf(len - 1).toFixed(1)},${volBaseY} L${PL},${volBaseY} Z`;
-                                                            return (
-                                                              <g>
-                                                                <path d={areaCoords} fill={`url(#tableInlinePriceGrad-${ci})`} />
-                                                                <path d={lineCoords} stroke="#087F63" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                                                                {/* Dotted Latest Price Guideline */}
-                                                                <line x1={PL} y1={currentCloseY} x2={CW - PR} y2={currentCloseY} stroke="#087F63" strokeWidth="0.9" strokeDasharray="3 3" opacity="0.6" />
-                                                                {/* Latest Price Tag */}
-                                                                <g transform={`translate(${CW - PR + 2}, ${currentCloseY - 7})`}>
-                                                                  <rect x={0} y={0} width={28} height={14} rx={3} fill="#087F63" />
-                                                                  <text x={14} y={10} textAnchor="middle" fontSize="8" fontWeight="bold" fill="#FFFFFF">
-                                                                    {displayPrice >= 1000 ? `${(displayPrice / 1000).toFixed(1)}k` : displayPrice}
-                                                                  </text>
-                                                                </g>
-                                                                {/* Live Pulse Dot */}
-                                                                <circle cx={xOf(len - 1)} cy={currentCloseY} r="4" fill="#087F63" stroke="#FFFFFF" strokeWidth="2" />
-                                                              </g>
-                                                            );
-                                                          })()}
-
-                                                          {/* Interactive Hover Crosshairs */}
-                                                          {tableGraphHoverIdx !== null && (
-                                                            <g>
-                                                              <line x1={xOf(tableGraphHoverIdx)} y1={PT} x2={xOf(tableGraphHoverIdx)} y2={volBaseY} stroke="#0284C7" strokeWidth="1.2" strokeDasharray="2 2" />
-                                                              <line x1={PL} y1={yOf(pts[tableGraphHoverIdx])} x2={CW - PR} y2={yOf(pts[tableGraphHoverIdx])} stroke="#0284C7" strokeWidth="1" strokeDasharray="2 2" opacity="0.75" />
-                                                              <circle cx={xOf(tableGraphHoverIdx)} cy={yOf(pts[tableGraphHoverIdx])} r="5" fill="#0284C7" stroke="#FFFFFF" strokeWidth="2" />
-                                                            </g>
-                                                          )}
-                                                        </svg>
-
-                                                        {/* Interactive Hover Tooltip */}
-                                                        {tableGraphHoverIdx !== null && (() => {
-                                                          const curP = pts[tableGraphHoverIdx] || 0;
-                                                          const minP = graphData.mins?.[tableGraphHoverIdx] || Math.max(0, curP - Math.round(curP * 0.008));
-                                                          const maxP = graphData.maxs?.[tableGraphHoverIdx] || (curP + Math.round(curP * 0.008));
-                                                          const volVal = graphData.arrivals?.[tableGraphHoverIdx] || 0;
-                                                          const dateStr = graphData.dates[tableGraphHoverIdx] || "14 Sep 2026";
-
-                                                          return (
-                                                            <div
-                                                              className="pointer-events-none absolute z-20 rounded-xl shadow-xl border p-2 flex flex-col gap-1 backdrop-blur-md transition-all duration-75"
-                                                              style={{
-                                                                left: `${Math.min(Math.max((xOf(tableGraphHoverIdx) / CW) * 100, 24), 76)}%`,
-                                                                top: 8,
-                                                                transform: "translateX(-50%)",
-                                                                background: "rgba(255, 255, 255, 0.97)",
-                                                                borderColor: "#38BDF8",
-                                                                minWidth: 150,
-                                                                boxShadow: "0 8px 24px -4px rgba(2, 132, 199, 0.22)",
-                                                              }}
-                                                            >
-                                                              <div className="flex items-center justify-between text-[10px] font-bold text-[#0284C7] border-b border-[#E0F2FE] pb-1">
-                                                                <span>DT:</span>
-                                                                <span className="font-mono text-[#0F172A]">{dateStr}</span>
-                                                              </div>
-                                                              <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10px] font-semibold text-[#334155] pt-1">
-                                                                <span className="text-[#64748B]">{lang === "ur" ? "کم سے کم ریٹ:" : "Min Rate:"}</span>
-                                                                <span className="font-mono font-bold text-right text-[#B91C1C]">Rs. {minP.toLocaleString()}</span>
-                                                                <span className="text-[#64748B]">{lang === "ur" ? "زیادہ سے زیادہ:" : "Max Rate:"}</span>
-                                                                <span className="font-mono font-bold text-right text-[#15803D]">Rs. {maxP.toLocaleString()}</span>
-                                                                <span className="text-[#64748B]">{lang === "ur" ? "آمد:" : "Arrivals:"}</span>
-                                                                <span className="font-mono font-bold text-right text-[#0284C7]">{volVal > 0 ? `${volVal.toLocaleString()} bags` : "—"}</span>
-                                                              </div>
-                                                            </div>
-                                                          );
-                                                        })()}
-                                                      </div>
-                                                    </>
-                                                  );
-                                                })()}
-                                              </>
-                                            ) : (
-                                              <>
-                                                {(() => {
-                                                  const arrivalData = buildMandiInlineGraphFromRows({
-                                                    allRows,
-                                                    mandiName: r.mandiName,
-                                                    rateType: r.rateType,
-                                                    timeframe: graphTimeframe,
-                                                    lang,
-                                                    view: "arrival",
-                                                  });
-                                                  const pts = arrivalData.points;
-                                                  const len = pts.length;
-                                                  const hoverI = tableGraphHoverIdx !== null && tableGraphHoverIdx < len ? tableGraphHoverIdx : len - 1;
-                                                  const displayArr = pts[hoverI] ?? arrivalData.latestArrival;
-                                                  const totalArr = arrivalData.totalArrival;
-                                                  const peakArr = arrivalData.peakArrival;
-                                                  const avgArr = Math.round(totalArr / (len || 1));
-                                                  const currentDateLabel = arrivalData.dates[hoverI] || arrivalData.dates[len - 1] || "14 Sep 2026";
-
-                                                  const CW = 540;
-                                                  const CH = 145;
-                                                  const PL = 42;
-                                                  const PR = 42;
-                                                  const PT = 14;
-                                                  const PB = 24;
-                                                  const chartW = CW - PL - PR;
-                                                  const chartH = CH - PT - PB;
-                                                  const aMin = 0;
-                                                  const aMax = arrivalData.yMaxBound;
-                                                  const yOf = (v: number) => PT + chartH - ((v - aMin) / (aMax - aMin || 1)) * chartH;
-                                                  const xOf = (i: number) => PL + (i / (len - 1 || 1)) * chartW;
-                                                  const volBaseY = CH - PB;
-                                                  const volMaxH = 26;
-
-                                                  return (
-                                                    <>
-                                                      {/* Arrival Header HUD */}
-                                                      <div className="flex flex-col gap-2 border-b border-[#E8EFEC] pb-2.5">
-                                                        <div className="flex items-center justify-between">
-                                                          <div className="flex items-center gap-1.5">
-                                                            <span className="w-2.5 h-2.5 rounded-full bg-[#D97706]" />
-                                                            <span
-                                                              className="text-xs sm:text-sm font-extrabold text-[#143B33]"
-                                                              style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                                                            >
-                                                              {tm(r.mandiName.replace(/\s*mandi$/i, "").replace(/\s*منڈی$/i, ""))} — {lang === "ur" ? "آمد کی مقدار (مارکیٹ رسد)" : "Arrival Volume Trend"}
-                                                            </span>
-                                                          </div>
-                                                          <span className="text-[10px] font-semibold text-[#92400E] bg-[#FEF3C7] px-2 py-0.5 rounded-md border border-[#FDE68A]">
-                                                            {lang === "ur" ? "تھیلے" : "Bags"}
-                                                          </span>
-                                                        </div>
-
-                                                        <div className="flex items-baseline justify-between flex-wrap gap-2">
-                                                          <div className="flex items-baseline gap-2">
-                                                            <span className="text-2xl font-black text-[#92400E]">
-                                                              {lang === "ur" ? `${toUrduDigits(displayArr.toLocaleString())} تھیلے` : `${displayArr.toLocaleString()} Bags`}
-                                                            </span>
-                                                          </div>
-                                                          <div className="text-[11px] font-semibold text-[#52635F]">
-                                                            {currentDateLabel}
-                                                          </div>
-                                                        </div>
-
-                                                        <div className="grid grid-cols-3 gap-2 pt-1 text-[10px]">
-                                                          <div className="bg-[#FFFDF5] p-1.5 rounded-lg border border-[#FDE68A] flex flex-col">
-                                                            <span className="text-[#92400E] font-semibold">{lang === "ur" ? "کل آمد" : "Total Period"}</span>
-                                                            <span className="font-bold text-[#78350F] text-xs">
-                                                              {totalArr.toLocaleString()} Bags
-                                                            </span>
-                                                          </div>
-                                                          <div className="bg-[#FFFDF5] p-1.5 rounded-lg border border-[#FDE68A] flex flex-col">
-                                                            <span className="text-[#92400E] font-semibold">{lang === "ur" ? "سب سے زیادہ" : "Peak Day"}</span>
-                                                            <span className="font-bold text-[#78350F] text-xs">
-                                                              {peakArr.toLocaleString()} Bags
-                                                            </span>
-                                                          </div>
-                                                          <div className="bg-[#FFFDF5] p-1.5 rounded-lg border border-[#FDE68A] flex flex-col">
-                                                            <span className="text-[#92400E] font-semibold">{lang === "ur" ? "روزانہ اوسط" : "Daily Avg"}</span>
-                                                            <span className="font-bold text-[#92400E] text-xs">
-                                                              {avgArr.toLocaleString()} Bags
-                                                            </span>
-                                                          </div>
-                                                        </div>
-                                                      </div>
-
-                                                      {/* SVG Arrival Canvas */}
-                                                      <div className="relative w-full select-none bg-[#FCFDFD] rounded-xl border border-[#EDF4F1] p-1">
-                                                        <svg
-                                                          viewBox={`0 0 ${CW} ${CH}`}
-                                                          className="w-full"
-                                                          style={{ height: isTableExpanded ? 160 : 135, display: "block" }}
-                                                          onMouseMove={(e) => {
-                                                            const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-                                                            const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
-                                                            const i = Math.round((relX / chartW) * (len - 1));
-                                                            setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
-                                                          }}
-                                                          onMouseLeave={() => setTableGraphHoverIdx(null)}
-                                                          onTouchMove={(e) => {
-                                                            const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-                                                            const touch = e.touches[0];
-                                                            const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
-                                                            const i = Math.round((relX / chartW) * (len - 1));
-                                                            setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
-                                                          }}
-                                                          onTouchEnd={() => setTableGraphHoverIdx(null)}
-                                                        >
-                                                          <defs>
-                                                            <linearGradient id={`tableInlineArrGrad-${ci}`} x1="0" y1="0" x2="0" y2="1">
-                                                              <stop offset="0%" stopColor="#D97706" stopOpacity="0.32" />
-                                                              <stop offset="85%" stopColor="#D97706" stopOpacity="0.04" />
-                                                              <stop offset="100%" stopColor="#D97706" stopOpacity="0.00" />
-                                                            </linearGradient>
-                                                          </defs>
-
-                                                          {/* Horizontal Dashed Gridlines + Y Ticks */}
-                                                          {arrivalData.yLabels.map((tick, ti) => {
-                                                            const y = yOf(tick.val);
-                                                            return (
-                                                              <g key={`yArrTick-${ti}`}>
-                                                                <line x1={PL} y1={y} x2={CW - PR} y2={y} stroke="#E5EAE8" strokeWidth="1" strokeDasharray="4 4" />
-                                                                <text x={PL - 6} y={y + 3.5} textAnchor="end" fontSize="9" fontWeight="600" fill="#80918B">
-                                                                  {tick.label}
-                                                                </text>
-                                                              </g>
-                                                            );
-                                                          })}
-
-                                                          {/* X-Axis Baseline */}
-                                                          <line x1={PL} y1={volBaseY} x2={CW - PR} y2={volBaseY} stroke="#D5E2DD" strokeWidth="1.2" />
-
-                                                          {/* X-Axis Dates */}
-                                                          {arrivalData.xLabels.map((lbl, i) =>
-                                                            lbl ? (
-                                                              <text key={`xArrTick-${i}`} x={xOf(i)} y={CH - 6} textAnchor="middle" fontSize="8.5" fontWeight="600" fill="#80918B" fontFamily={lang === "ur" ? URDU_FONT : "inherit"}>
-                                                                {lbl}
-                                                              </text>
-                                                            ) : null,
-                                                          )}
-
-                                                          {/* Arrival Volume Bars along Bottom */}
-                                                          {pts.map((arrVal, i) => {
-                                                            const barX = xOf(i);
-                                                            const maxVal = arrivalData.peakArrival || 1;
-                                                            const barH = (arrVal / maxVal) * volMaxH;
-                                                            const barW = Math.max(2.5, Math.min(6, (chartW / len) * 0.55));
-                                                            const isHov = tableGraphHoverIdx === i;
-                                                            return (
-                                                              <rect
-                                                                key={`arr-vol-bar-${i}`}
-                                                                x={barX - barW / 2}
-                                                                y={volBaseY - barH}
-                                                                width={barW}
-                                                                height={barH}
-                                                                rx={1}
-                                                                fill="#D97706"
-                                                                opacity={isHov ? 0.95 : 0.6}
-                                                              />
-                                                            );
-                                                          })}
-
-                                                          {/* Area Fill */}
-                                                          <path
-                                                            d={[
-                                                              ...pts.map((v, i) => `${i === 0 ? "M" : "L"}${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`),
-                                                              `L${xOf(len - 1).toFixed(1)},${volBaseY}`,
-                                                              `L${PL},${volBaseY}`,
-                                                              "Z",
-                                                            ].join(" ")}
-                                                            fill={`url(#tableInlineArrGrad-${ci})`}
-                                                          />
-
-                                                          {/* Main Line */}
-                                                          <path
-                                                            d={pts.map((v, i) => `${i === 0 ? "M" : "L"}${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`).join(" ")}
-                                                            stroke="#D97706"
-                                                            strokeWidth="2.8"
-                                                            fill="none"
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                          />
-
-                                                          {/* Hover Guide and Marker */}
-                                                          {tableGraphHoverIdx !== null && (
-                                                            <g>
-                                                              <line x1={xOf(tableGraphHoverIdx)} y1={PT} x2={xOf(tableGraphHoverIdx)} y2={volBaseY} stroke="#92400E" strokeWidth="1.2" strokeDasharray="3 3" />
-                                                              <circle cx={xOf(tableGraphHoverIdx)} cy={yOf(pts[tableGraphHoverIdx])} r="5" fill="#D97706" stroke="#FFFFFF" strokeWidth="2" />
-                                                            </g>
-                                                          )}
-                                                        </svg>
-
-                                                        {/* Interactive Hover Tooltip for Arrival */}
-                                                        {tableGraphHoverIdx !== null && (() => {
-                                                          const volVal = pts[tableGraphHoverIdx] || 0;
-                                                          const dateStr = arrivalData.dates[tableGraphHoverIdx] || "14 Sep 2026";
-                                                          return (
-                                                            <div
-                                                              className="pointer-events-none absolute z-20 rounded-xl shadow-xl border p-2 flex flex-col gap-1 backdrop-blur-md transition-all duration-75"
-                                                              style={{
-                                                                left: `${Math.min(Math.max((xOf(tableGraphHoverIdx) / CW) * 100, 24), 76)}%`,
-                                                                top: 8,
-                                                                transform: "translateX(-50%)",
-                                                                background: "rgba(255, 255, 255, 0.97)",
-                                                                borderColor: "#FDE68A",
-                                                                minWidth: 140,
-                                                                boxShadow: "0 8px 24px -4px rgba(217, 119, 6, 0.22)",
-                                                              }}
-                                                            >
-                                                              <div className="flex items-center justify-between text-[10px] font-bold text-[#92400E] border-b border-[#FEF3C7] pb-1">
-                                                                <span>DT:</span>
-                                                                <span className="font-mono text-[#0F172A]">{dateStr}</span>
-                                                              </div>
-                                                              <div className="flex items-center justify-between text-[10.5px] font-semibold text-[#334155] pt-1">
-                                                                <span className="text-[#78350F]">{lang === "ur" ? "آمد:" : "Arrivals:"}</span>
-                                                                <span className="font-mono font-bold text-right text-[#92400E]">
-                                                                  {volVal > 0 ? `${volVal.toLocaleString()} bags` : "—"}
-                                                                </span>
-                                                              </div>
-                                                            </div>
-                                                          );
-                                                        })()}
-                                                      </div>
-                                                    </>
-                                                  );
-                                                })()}
-                                              </>
-                                            )}
-
-                                            {/* 3. Timeframe Filter: 1 Month, 3 Months, 6 Months, 1 Year */}
-                                            <div className="pt-0.5">
-                                              <div className="grid grid-cols-4 gap-1.5 border border-[#D5E2DD] rounded-xl p-1 bg-[#F9FBFA]">
-                                                {[
-                                                  { id: "1M", labelEn: "1 Month", labelUr: "۱ مہینہ" },
-                                                  { id: "3M", labelEn: "3 Months", labelUr: "۳ مہینے" },
-                                                  { id: "6M", labelEn: "6 Months", labelUr: "۶ مہینے" },
-                                                  { id: "1Y", labelEn: "1 Year", labelUr: "۱ سال" },
-                                                ].map((tf) => {
-                                                  const isTfActive = graphTimeframe === tf.id;
-                                                  return (
-                                                    <button
-                                                      key={tf.id}
-                                                      type="button"
-                                                      onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setGraphTimeframe(tf.id as any);
-                                                      }}
-                                                      className={`flex items-center justify-center py-2 px-1 rounded-lg transition-all font-bold ${
-                                                        isTfActive
-                                                          ? tableGraphView === "price"
-                                                            ? "bg-[#087F63] text-white shadow-sm ring-1 ring-[#087F63]/30 scale-[1.01]"
-                                                            : "bg-[#D97706] text-white shadow-sm ring-1 ring-[#D97706]/30 scale-[1.01]"
-                                                          : "bg-white/80 text-[#52635F] hover:bg-white hover:text-[#183B34] border border-[#E8EFEC]"
-                                                      }`}
-                                                      style={{
-                                                        fontSize: lang === "ur" ? 13 : 11,
-                                                        fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                                                      }}
-                                                    >
-                                                      <span>{lang === "ur" ? tf.labelUr : tf.labelEn}</span>
-                                                    </button>
-                                                  );
-                                                })}
-                                              </div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </td>
-                                    </tr>
-                                   )}
-                                </React.Fragment>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      )}
+                                        {attrMoisture
+                                          ? (lang === "ur"
+                                            ? `${toUrduDigits(attrMoisture)}${attrMoisture.includes("٪") || attrMoisture.includes("%") ? "" : "٪"}`
+                                            : `${attrMoisture}${attrMoisture.includes("%") ? "" : "%"}`)
+                                          : "—"}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#0284C7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 opacity-70 group-hover:opacity-100">
+                                    <polyline points="6 9 12 15 18 9" />
+                                  </svg>
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
-                </>
-              );
-            })()}
+                );
+              })()}
 
-            {/*  Attribute picker sheet  */}
-            {attrSheet &&
-              (() => {
-                const opts: Record<string, string[]> = {
-                  variety: [
-                    "Sona Moti",
-                    "TD-1",
-                    "SurSabz",
-                    "Akbar",
-                    "Anaj",
-                    "Ujala",
-                    "Galaxy",
-                    "Dilkush",
-                    "Arooj",
-                    "Subham",
-                  ],
-                  newold: ["New", "Old"],
-                  color: ["Golden", "White", "Yellow"],
-                  spec: ["Seed Quality", "Retail", "Damage"],
-                  condition: ["Wet", "Dry", "Mix"],
-                  ratetype: ALL_RATE_TYPES,
-                };
-                const labels: Record<string, string> = {
-                  variety: lang === "ur" ? "قسم منتخب کریں" : "Variety",
-                  newold:
-                    lang === "ur" ? "معیار منتخب کریں" : "Quality",
-                  color: lang === "ur" ? "رنگ منتخب کریں" : "Color",
-                  spec: lang === "ur" ? "خصوصیت منتخب کریں" : "Specifications",
-                  condition: lang === "ur" ? "حالت منتخب کریں" : "Condition",
-                  ratetype:
-                    lang === "ur" ? "نرخ کی قسم منتخب کریں" : "Rate Type",
-                };
-                const currVal =
-                  attrSheet === "variety"
-                    ? attrVariety
-                    : attrSheet === "newold"
-                      ? attrNewOld
-                      : attrSheet === "color"
-                        ? attrColor
-                        : attrSheet === "spec"
-                          ? attrSpec
-                          : attrSheet === "ratetype"
-                            ? attrRateType
-                            : attrCondition;
-                const setter = (v: string | null) => {
-                  if (attrSheet === "variety") setAttrVariety(v);
-                  else if (attrSheet === "newold") setAttrNewOld(v);
-                  else if (attrSheet === "color") setAttrColor(v);
-                  else if (attrSheet === "spec") setAttrSpec(v);
-                  else if (attrSheet === "ratetype") setAttrRateType(v);
-                  else setAttrCondition(v);
-                  setAttrSheet(null);
-                };
+              {/* Date Calendar Popup (fixed overlay) */}
+              {statDateCalOpen && (() => {
+                const mn = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                const mnUr = ["\u062c\u0646\u0648\u0631\u06cc", "\u0641\u0631\u0648\u0631\u06cc", "\u0645\u0627\u0631\u0686", "\u0627\u067e\u0631\u06cc\u0644", "\u0645\u0626\u06cc", "\u062c\u0648\u0646", "\u062c\u0648\u0644\u0627\u0626\u06cc", "\u0627\u06af\u0633\u062a", "\u0633\u062a\u0645\u0628\u0631", "\u0627\u06a9\u062a\u0648\u0628\u0631", "\u0646\u0648\u0645\u0628\u0631", "\u062f\u0633\u0645\u0628\u0631"];
+                const sdYear = statDateCalMonth.getFullYear();
+                const sdMonthIdx = statDateCalMonth.getMonth();
+                const sdMonthName = lang === "ur"
+                  ? `${mnUr[sdMonthIdx]} ${sdYear}`
+                  : statDateCalMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+                const sdFirstDow = new Date(sdYear, sdMonthIdx, 1).getDay();
+                const sdDaysInMonth = new Date(sdYear, sdMonthIdx + 1, 0).getDate();
+                const sdCalDays: (number | null)[] = [
+                  ...Array(sdFirstDow).fill(null),
+                  ...Array.from({ length: sdDaysInMonth }, (_, i) => i + 1),
+                ];
+                while (sdCalDays.length % 7 !== 0) sdCalDays.push(null);
+                const sdIsSame = (a: Date, b: Date) =>
+                  a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+                const sdIsRef = (d: Date) => sdIsSame(d, new Date(2026, 8, 14));
                 return (
-                  <div
-                    className="zm-sheet-overlay"
-                    style={{ zIndex: 250 }}
-                    onClick={() => setAttrSheet(null)}
-                  >
-                    <div
-                      className="zm-sheet"
-                      style={{
-                        maxHeight: "60vh",
-                        display: "flex",
-                        flexDirection: "column",
-                        background: "#F8FCFA",
-                        borderTopLeftRadius: 24,
-                        borderTopRightRadius: 24,
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <div className="px-5 pt-3 pb-2.5 border-b border-[#DCE8E3] flex-shrink-0">
-                        <div className="w-10 h-1 rounded-full mx-auto mb-2 bg-[#C7D6D0]" />
-                        <p
-                          className="font-extrabold text-center"
-                          style={{
-                            color: "#183B34",
-                            fontSize: lang === "ur" ? 19 : 16,
-                            fontFamily:
-                              lang === "ur"
-                                ? URDU_FONT
-                                : "inherit",
-                          }}
-                        >
-                          {labels[attrSheet]}
-                        </p>
+                  <div className="fixed z-[120] rounded-2xl overflow-hidden shadow-2xl" style={{ top: "22%", right: 16, width: 260, background: "#F4FAF7", border: "1px solid #D5E2DD" }} onClick={(e) => e.stopPropagation()}>
+                    <div className="px-4 pt-3 pb-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <button onClick={() => setStatDateCalMonth(new Date(sdYear, sdMonthIdx - 1, 1))} className="tap-target w-8 h-8 rounded-full flex items-center justify-center font-bold" style={{ background: "#E8EFEC", color: "#2F4A43", fontSize: 16 }}>&#8249;</button>
+                        <p className="font-bold" style={{ color: "#183B34", fontSize: lang === "ur" ? 16 : 14, fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}>{sdMonthName}</p>
+                        <button onClick={() => setStatDateCalMonth(new Date(sdYear, sdMonthIdx + 1, 1))} className="tap-target w-8 h-8 rounded-full flex items-center justify-center font-bold" style={{ background: "#E8EFEC", color: "#2F4A43", fontSize: 16 }}>&#8250;</button>
                       </div>
-                      <div
-                        className="p-3.5 flex flex-col gap-2 overflow-y-auto flex-1"
-                        style={{ minHeight: 0 }}
-                      >
-                        {currVal && (
-                          <button
-                            onClick={() => setter(null)}
-                            className="tap-target rounded-xl px-4 flex items-center justify-center transition active:scale-[0.98]"
-                            style={{
-                              background: "#FFF1F2",
-                              border: "1.5px solid #FDA4AF",
-                              minHeight: 44,
-                            }}
-                          >
-                            <span
-                              className="font-bold text-sm text-[#BE123C]"
-                              style={{
-                                fontSize: lang === "ur" ? 15 : 13.5,
-                                fontFamily:
-                                  lang === "ur"
-                                    ? URDU_FONT
-                                    : "inherit",
-                              }}
-                            >
-                              {lang === "ur"
-                                ? "انتخاب ہٹائیں"
-                                : "Clear selection"}
-                            </span>
+                      {statDateFilter && (
+                        <div className="flex justify-end mb-1">
+                          <button onClick={() => { setStatDateFilter(null); setStatDateCalOpen(false); }} className="font-bold px-2 py-0.5 rounded-full" style={{ background: "#F9E1DE", color: "#A83B37", fontSize: lang === "ur" ? 12 : 10, fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}>
+                            {lang === "ur" ? "\u06c1\u0679\u0627\u0626\u06cc\u06ba (\u0622\u062c)" : "Clear (Today)"}
                           </button>
-                        )}
-                        {opts[attrSheet].map((opt) => {
-                          // Check if this attribute option is available in selected mandi
-                          const mandiAttrs =
-                            locScope.kind === "mandi"
-                              ? MANDI_ATTR_AVAILABLE[locScope.label]
-                              : null;
-                          const attrKey =
-                            attrSheet === "newold"
-                              ? "newold"
-                              : (attrSheet as
-                                | "color"
-                                | "variety"
-                                | "spec"
-                                | "condition"
-                                | "newold");
-                          const available =
-                            !mandiAttrs ||
-                            !mandiAttrs[attrKey] ||
-                            mandiAttrs[attrKey].includes(opt);
-                          const optLabel =
-                            attrSheet === "variety"
-                              ? tc(opt)
-                              : attrSheet === "ratetype"
-                                ? tr(opt)
-                                : t(opt);
-                          const isSelected = currVal === opt;
+                        </div>
+                      )}
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", marginBottom: 4 }}>
+                        {(lang === "ur" ? ["\u0627\u062a", "\u067e\u06cc", "\u0645\u0646", "\u0628\u062f", "\u062c\u0645", "\u062c\u0645", "\u06c1\u0641"] : ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]).map((d) => (
+                          <div key={d} className="text-center font-bold text-[10px]" style={{ color: "#80918B", paddingBottom: 2, fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}>{d}</div>
+                        ))}
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2 }}>
+                        {sdCalDays.map((day, idx) => {
+                          if (!day) return <div key={idx} />;
+                          const d = new Date(sdYear, sdMonthIdx, day);
+                          const selected = statDateFilter ? sdIsSame(d, statDateFilter) : false;
+                          const isRef = sdIsRef(d);
                           return (
-                            <button
-                              key={opt}
-                              onClick={() =>
-                                available ? setter(opt) : undefined
-                              }
-                              className="tap-target rounded-xl px-4 flex items-center justify-between transition active:scale-[0.98]"
-                              style={{
-                                background: !available
-                                  ? "#F4FAF7"
-                                  : isSelected
-                                    ? "#E8F5EE"
-                                    : "#FFFFFF",
-                                border: !available
-                                  ? "1px dashed #D5E2DD"
-                                  : isSelected
-                                    ? "1.5px solid #087F63"
-                                    : "1px solid #E2EBE7",
-                                minHeight: 44,
-                                opacity: available ? 1 : 0.45,
-                                boxShadow: isSelected
-                                  ? "0 2px 8px rgba(8,127,99,0.12)"
-                                  : "0 1px 3px rgba(0,0,0,0.02)",
-                              }}
-                            >
-                              <span
-                                className={`${lang === "ur" ? "text-right" : "text-left"} font-bold text-sm`}
-                                style={{
-                                  color: !available
-                                    ? "#80918B"
-                                    : isSelected
-                                      ? "#064D40"
-                                      : "#183B34",
-                                  fontSize: lang === "ur" ? 16 : 13.5,
-                                  fontFamily:
-                                    lang === "ur"
-                                      ? URDU_FONT
-                                      : "inherit",
-                                }}
-                              >
-                                {optLabel}
-                              </span>
-                              {!available && (
-                                <span
-                                  style={{
-                                    fontSize: lang === "ur" ? 12 : 10,
-                                    color: "#80918B",
-                                    fontFamily:
-                                      lang === "ur"
-                                        ? URDU_FONT
-                                        : "inherit",
-                                  }}
-                                >
-                                  {lang === "ur"
-                                    ? "منڈی میں نہیں"
-                                    : "Not in mandi"}
-                                </span>
-                              )}
-                              {available && isSelected && (
-                                <span
-                                  style={{ color: "#087F63", fontWeight: 900, fontSize: 15 }}
-                                >
-                                  ✓
-                                </span>
-                              )}
-                            </button>
+                            <button key={idx} onClick={() => { setStatDateFilter(d); setStatDateCalOpen(false); }} className="tap-target flex items-center justify-center rounded-full font-semibold text-xs mx-auto" style={{ width: 30, height: 30, background: selected ? "#087F63" : isRef ? "#E4F2EC" : "transparent", color: selected ? "#fff" : isRef ? "#075E4F" : "#2F4A43", border: isRef && !selected ? "1.5px solid #087F63" : "none" }}>{day}</button>
                           );
                         })}
                       </div>
@@ -15365,66 +12881,113 @@ function ProductRatesScreen({
                 );
               })()}
 
-            {/* Date table sheet */}
-            {dateTableOpen &&
-              (() => {
-                const allTableRows = getRowsForProducts([product]).filter(
-                  (r) => !byproduct || isMatchByproduct(r.byproduct, byproduct),
+              {/* Pakistan Map Interactive Expandable Card (378x76 with 3D Tilt & Spring Expansion) */}
+              {(() => {
+                const currentCommodity = product || byproduct || "Wheat";
+                const isPakistanScope = locScope.kind === "pakistan" || !locScope.label;
+
+                // The map button's label + zoom target follow the specific
+                // mandi/district the user picked (focusedMandi) even though
+                // locScope itself has been broadened to that location's
+                // province to drive the table -- so picking Okara zooms the
+                // map straight to Okara while the table shows all of Punjab.
+                // With nothing specific picked, it falls back to locScope
+                // (a province, or All Pakistan).
+                const focusedMandiEntry = focusedMandi
+                  ? INITIAL_MANDIS.find(
+                    (m) =>
+                      m.name.toLowerCase() === focusedMandi.label.toLowerCase() ||
+                      m.city.toLowerCase() === focusedMandi.label.toLowerCase() ||
+                      focusedMandi.label.toLowerCase().includes(m.city.toLowerCase())
+                  )
+                  : undefined;
+
+                const cmn = focusedMandi
+                  ? focusedMandi.label
+                  : isPakistanScope
+                    ? (lang === "ur" ? "پورا پاکستان" : "All Pakistan")
+                    : locScope.label;
+
+                const prov = focusedMandi
+                  ? focusedMandiEntry?.province || (locScope.kind === "province" ? locScope.label : undefined)
+                  : locScope.kind === "province"
+                    ? locScope.label
+                    : undefined;
+
+                const focusMandiName = focusedMandi ? focusedMandi.label : undefined;
+                const focusProvinceName =
+                  !focusedMandi && !isPakistanScope && locScope.kind === "province" ? locScope.label : undefined;
+
+                // Every real row nationwide for this by-product (allRows is
+                // unfiltered by the table's locScope) -- the map derives
+                // which mandis get a pin, and everything shown once one is
+                // tapped, from this alone.
+                const mapRecords: MapByProductRecord[] = allRows.map((r) => ({
+                  mandiName: r.mandiName,
+                  district: r.mandiCity,
+                  province: r.province,
+                  rateType: r.rateType,
+                  min: r.min,
+                  max: r.max,
+                  arrival: r.arrival,
+                  date: r.date,
+                  newOld: r.newOld,
+                  variety: r.variety,
+                  color: r.color,
+                }));
+
+                return (
+                  <ExpandableMandiMapCard
+                    mandiName={cmn}
+                    provinceName={prov}
+                    commodityName={currentCommodity}
+                    records={mapRecords}
+                    focusMandiName={focusMandiName}
+                    focusProvinceName={focusProvinceName}
+                    lang={lang}
+                    urduFont={URDU_FONT}
+                  />
                 );
+              })()}
 
-                // Query actual real Excel observations for the selected historical date
-                const selYear = dtSelDate.getFullYear();
-                const selMonth = String(dtSelDate.getMonth() + 1).padStart(2, "0");
-                const selDay = String(dtSelDate.getDate()).padStart(2, "0");
-                const targetDateKey = `${selYear}-${selMonth}-${selDay}`;
-
-                const dateIdx = REAL_DATES_TIMELINE.indexOf(targetDateKey);
-
-                const filteredTableRows = allTableRows
-                  .filter((r) => {
-                    if (dtPriceType && r.rateType !== dtPriceType) return false;
-                    return true;
-                  })
-                  .map((r) => {
-                    if (dateIdx >= 0) {
-                      const rowTimeline = getExcelTimeline({
-                        product,
-                        byproduct: r.byproduct || byproduct,
-                        locationLabel: r.mandiName,
-                        locationKind: "mandi",
-                        rateType: r.rateType,
-                        range: "year",
-                      });
-                      const mi = rowTimeline.mins[dateIdx] ?? r.min;
-                      const mx = rowTimeline.maxs[dateIdx] ?? r.max;
-                      const arr = rowTimeline.arrivals[dateIdx] ?? 0;
-                      return {
-                        ...r,
-                        min: mi,
-                        max: mx,
-                        arrival: arr > 0 ? arr.toLocaleString("en-PK") : "—",
-                      };
-                    }
-                    return r;
-                  });
-
-                const allPriceTypes = [
-                  ...new Set(allTableRows.map((r) => r.rateType)),
+              {/* Inline Mandi Rates Table — all Pakistan mandis for this byproduct */}
+              {(() => {
+                const PROVINCES = ["Punjab", "Sindh", "KPK", "Balochistan"];
+                // Source rows, honoring locScope when a specific province/district/mandi is selected
+                const tableScopedRows = allRows.filter(
+                  (r) => (!attrRateType || r.rateType === attrRateType) && inLocScope(r),
+                );
+                const tableSourceRows = tableScopedRows.length > 0
+                  ? tableScopedRows
+                  : allRows.filter((r) => !attrRateType || r.rateType === attrRateType);
+                const tableRows = tableSourceRows.filter(
+                  (r) =>
+                    !tableProvinceFilter || r.province === tableProvinceFilter,
+                );
+                const BASE_DATE = new Date(2026, 8, 14);
+                const USER_SIGNUP_DATE = new Date(2026, 8, 10); // Sign up reference date
+                const tableDateVariation = tableDateFilter
+                  ? (() => {
+                    const diffMs =
+                      BASE_DATE.getTime() - tableDateFilter.getTime();
+                    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+                    return Math.max(0.88, 1 - diffDays * 0.012);
+                  })()
+                  : 1;
+                const monthNames = [
+                  "Jan",
+                  "Feb",
+                  "Mar",
+                  "Apr",
+                  "May",
+                  "Jun",
+                  "Jul",
+                  "Aug",
+                  "Sep",
+                  "Oct",
+                  "Nov",
+                  "Dec",
                 ];
-                const specs = [
-                  "Seed Quality",
-                  "Retail",
-                  "Damage",
-                  "Export Grade",
-                ];
-                const conditions = ["Dry", "Wet", "Mix"];
-                const qualities = ["New", "Old", "Cleaned", "Uncleaned"];
-
-                // Calendar helpers
-                const selD = dtSelDate;
-                const calM = dtCalMonth;
-                const calYear = calM.getFullYear();
-                const calMonthIdx = calM.getMonth();
                 const monthNamesUr = [
                   "جنوری",
                   "فروری",
@@ -15439,199 +13002,372 @@ function ProductRatesScreen({
                   "نومبر",
                   "دسمبر",
                 ];
-                const monthName =
+                const dateLabel = tableDateFilter
+                  ? lang === "ur"
+                    ? `${tableDateFilter.getDate()} ${monthNamesUr[tableDateFilter.getMonth()]}`
+                    : `${tableDateFilter.getDate()} ${monthNames[tableDateFilter.getMonth()]}`
+                  : lang === "ur"
+                    ? "آج"
+                    : "Today";
+                // Calendar helpers for table date picker
+                const tcYear = tableDateCalMonth.getFullYear();
+                const tcMonthIdx = tableDateCalMonth.getMonth();
+                const tcMonthName =
                   lang === "ur"
-                    ? `${monthNamesUr[calMonthIdx]} ${calYear}`
-                    : calM.toLocaleDateString("en-US", {
+                    ? `${monthNamesUr[tcMonthIdx]} ${tcYear}`
+                    : tableDateCalMonth.toLocaleDateString("en-US", {
                       month: "long",
                       year: "numeric",
                     });
-                const firstDow = new Date(calYear, calMonthIdx, 1).getDay(); // 0=Sun
-                const daysInMonth = new Date(
-                  calYear,
-                  calMonthIdx + 1,
+                const tcFirstDow = new Date(tcYear, tcMonthIdx, 1).getDay();
+                const tcDaysInMonth = new Date(
+                  tcYear,
+                  tcMonthIdx + 1,
                   0,
                 ).getDate();
-                const prevMonth = () =>
-                  setDtCalMonth(new Date(calYear, calMonthIdx - 1, 1));
-                const nextMonth = () =>
-                  setDtCalMonth(new Date(calYear, calMonthIdx + 1, 1));
-                const isSameDay = (a: Date, b: Date) =>
+                const tcCalDays: (number | null)[] = [
+                  ...Array(tcFirstDow).fill(null),
+                  ...Array.from({ length: tcDaysInMonth }, (_, i) => i + 1),
+                ];
+                while (tcCalDays.length % 7 !== 0) tcCalDays.push(null);
+                const tcIsSameDay = (a: Date, b: Date) =>
                   a.getFullYear() === b.getFullYear() &&
                   a.getMonth() === b.getMonth() &&
                   a.getDate() === b.getDate();
-                const isToday = (d: Date) => isSameDay(d, new Date());
-                const calDays: (number | null)[] = [
-                  ...Array(firstDow).fill(null),
-                  ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
-                ];
-                while (calDays.length % 7 !== 0) calDays.push(null);
-
-                const urDaysFull = [
-                  "اتوار",
-                  "پیر",
-                  "منگل",
-                  "بدھ",
-                  "جمعرات",
-                  "جمعہ",
-                  "ہفتہ",
-                ];
-                const selDateStr =
-                  lang === "ur"
-                    ? `${urDaysFull[selD.getDay()]}، ${selD.getDate()} ${monthNamesUr[selD.getMonth()]} ${selD.getFullYear()}`
-                    : selD.toLocaleDateString("en-GB", {
-                      weekday: "long",
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    });
-
-                // Column header dropdown opts
-                const colOpts: Record<string, string[]> = {
-                  Quality: qualities,
-                  "Price Type": allPriceTypes.map((tPt) =>
-                    tPt.replace(" Rate", ""),
-                  ),
-                  Specification: specs,
-                  Condition: conditions,
-                };
-                const colLabels: Record<string, string> = {
-                  Station: lang === "ur" ? "منڈی" : "Station",
-                  "Min – Max": lang === "ur" ? "کم – زیادہ" : "Min – Max",
-                  "Price Type": lang === "ur" ? "نرخ کی قسم" : "Price Type",
-                  Trend: lang === "ur" ? "رجحان" : "Trend",
-                  Quality: lang === "ur" ? "معیار" : "Quality",
-                  Arrival: lang === "ur" ? "آمد" : "Arrival",
-                  Color: lang === "ur" ? "رنگ" : "Color",
-                  Variety: lang === "ur" ? "قسم" : "Variety",
-                  Condition: lang === "ur" ? "حالت" : "Condition",
-                  Specification: lang === "ur" ? "خصوصیت" : "Specification",
-                };
-                const colState: Record<string, string | null> = {
-                  Quality: dtQuality,
-                  "Price Type": dtPriceType,
-                  Specification: dtSpec,
-                  Condition: dtCondition,
-                };
-                const colSetter: Record<string, (v: string | null) => void> = {
-                  Quality: setDtQuality,
-                  "Price Type": (v) => setDtPriceType(v ? v + " Rate" : null),
-                  Specification: setDtSpec,
-                  Condition: setDtCondition,
-                };
-
+                const tcIsToday = (d: Date) =>
+                  tcIsSameDay(d, new Date(2026, 8, 14));
                 return (
-                  <div
-                    className="zm-sheet-overlay"
-                    style={{ zIndex: 250 }}
-                    onClick={() => {
-                      setDateTableOpen(false);
-                      setDtOpenCol(null);
-                    }}
-                  >
-                    <div
-                      className="zm-sheet-high"
-                      style={{ background: "#F4FAF7", maxHeight: "96vh" }}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {/* Drag handle + title + calendar icon button */}
+                  <>
+                    {/* Backdrop overlay when expanded in landscape mode */}
+                    {isTableExpanded && (
                       <div
-                        className="px-5 pt-4 pb-3 flex-shrink-0"
+                        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity"
+                        onClick={() => {
+                          setIsTableExpanded(false);
+                          setSelectedMandiGraphRow(null);
+                        }}
+                      />
+                    )}
+
+                    <div
+                      className={
+                        isTableExpanded
+                          ? `zm-landscape-expanded-table ${landscapeRotated ? "zm-force-landscape" : ""} transition-all duration-300`
+                          : "rounded-2xl overflow-hidden transition-all duration-300 flex flex-col shadow-sm"
+                      }
+                      style={{
+                        border: isTableExpanded ? "none" : "1.5px solid #D5E2DD",
+                        background: "#F4FAF7",
+                      }}
+                    >
+                      {/* Top Header on Bottom Sheet (portrait handle) */}
+                      {isTableExpanded && !landscapeRotated && (
+                        <div
+                          className="w-10 h-1 rounded-full mx-auto mt-2 mb-0.5 bg-[#C7D6D0] flex-shrink-0 cursor-pointer"
+                          onClick={() => {
+                            setIsTableExpanded(false);
+                            setSelectedMandiGraphRow(null);
+                          }}
+                        />
+                      )}
+                      {/* Table header with title, date button, province chips & Trend Interval selector */}
+                      <div
+                        className="px-3 sm:px-4 pt-2 pb-2"
                         style={{
-                          borderBottom: "1px solid #D5E2DD",
+                          borderBottom: "1px solid #E8EFEC",
                           background: "#F1F7F4",
                         }}
                       >
-                        <div
-                          className="w-10 h-1 rounded-full mx-auto mb-3"
-                          style={{ background: "#C7D6D0" }}
-                        />
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p
-                              className="font-extrabold text-base"
-                              style={{
-                                color: "#075E4F",
-                                fontSize: lang === "ur" ? 18 : 16,
-                                fontFamily:
-                                  lang === "ur"
-                                    ? URDU_FONT
-                                    : "inherit",
-                              }}
-                            >
-                              {lang === "ur"
-                                ? `${tc(title)} ریٹ پنجاب`
-                                : `${title} Rate Punjab`}
-                            </p>
-                            <p
-                              className="text-xs mt-0.5"
-                              style={{
-                                color: "#52635F",
-                                fontSize: lang === "ur" ? 13 : 12,
-                                fontFamily:
-                                  lang === "ur"
-                                    ? URDU_FONT
-                                    : "inherit",
-                              }}
-                            >
-                              {selDateStr}
-                            </p>
+                        <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            {isTableExpanded && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setIsTableExpanded(false);
+                                  setSelectedMandiGraphRow(null);
+                                }}
+                                className="tap-target flex items-center justify-center w-7 h-7 rounded-full bg-[#E5EFEA] hover:bg-[#D5E5DE] text-[#064E3B] transition active:scale-95 flex-shrink-0"
+                                title={lang === "ur" ? "واپس / بند کریں" : "Back / Close"}
+                              >
+                                ✕
+                              </button>
+                            )}
+                            <div className="min-w-0">
+                              <p
+                                className="font-extrabold text-sm truncate"
+                                style={{
+                                  color: "#183B34",
+                                  fontSize: lang === "ur" ? 17 : 14,
+                                  fontFamily:
+                                    lang === "ur"
+                                      ? URDU_FONT
+                                      : "inherit",
+                                }}
+                              >
+                                {lang === "ur"
+                                  ? `${tm(tableProvinceFilter || "پاکستان")} میں ${tc(title)}`
+                                  : `${title} in ${tableProvinceFilter || "Pakistan"}`}
+                              </p>
+                              <p
+                                className="text-[10px] mt-0.5"
+                                style={{
+                                  color: "#52635F",
+                                  fontSize: lang === "ur" ? 13 : 10,
+                                  fontFamily:
+                                    lang === "ur"
+                                      ? URDU_FONT
+                                      : "inherit",
+                                }}
+                              >
+                                {lang === "ur"
+                                  ? `${tableRows.length} منڈیاں · تفصیل کے لیے منتخب کریں`
+                                  : `${tableRows.length} mandi${tableRows.length !== 1 ? "s" : ""} · tap row to view details`}
+                              </p>
+                            </div>
                           </div>
-                          {/* Calendar icon button */}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setDtCalOpen((o) => !o);
-                            }}
-                            className="tap-target flex items-center gap-1.5 rounded-xl px-3 py-2 font-semibold text-xs"
-                            style={{
-                              background: dtCalOpen ? "#087F63" : "#E4F2EC",
-                              color: dtCalOpen ? "#fff" : "#075E4F",
-                              border: "1px solid #C7E8D8",
-                              fontSize: lang === "ur" ? 14 : 12,
-                              fontFamily:
-                                lang === "ur"
-                                  ? URDU_FONT
-                                  : "inherit",
-                            }}
-                          >
-                            <svg
-                              width="14"
-                              height="14"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
+
+                          {/* Top Action Buttons: Rotate Toggle, Date picker & Expand/Collapse Button */}
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            {/* Screen Orientation Rotate Toggle (visible when expanded) */}
+                            {isTableExpanded && (
+                              <button
+                                type="button"
+                                onClick={() => setLandscapeRotated((r) => !r)}
+                                className="tap-target zm-beam-border flex items-center gap-1 px-2.5 py-1 rounded-full font-bold text-xs transition active:scale-95"
+                                style={{
+                                  background: "rgba(255, 255, 255, 0.75)",
+                                  color: "#064E3B",
+                                  border: "1.2px solid #10B981",
+                                  backdropFilter: "blur(12px)",
+                                  WebkitBackdropFilter: "blur(12px)",
+                                  fontSize: lang === "ur" ? 13 : 11,
+                                  fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                }}
+                                title={lang === "ur" ? "رخ تبدیل کریں" : "Rotate orientation"}
+                              >
+                                <svg
+                                  width="12"
+                                  height="12"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="#064E3B"
+                                  strokeWidth="2.2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                                </svg>
+                                <span>{landscapeRotated ? (lang === "ur" ? "عمودی" : "Portrait") : (lang === "ur" ? "افقی" : "Landscape")}</span>
+                              </button>
+                            )}
+
+                            {/* Expand / Collapse Table Button */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsTableExpanded((prev) => {
+                                  if (prev) {
+                                    setSelectedMandiGraphRow(null);
+                                    return false;
+                                  }
+                                  setLandscapeRotated(true);
+                                  return true;
+                                });
+                              }}
+                              className="tap-target zm-beam-border flex items-center gap-1 px-3 py-1 rounded-full font-bold text-xs transition active:scale-95"
+                              style={{
+                                background: isTableExpanded
+                                  ? "linear-gradient(135deg, rgba(167, 243, 208, 0.75), rgba(110, 231, 183, 0.6))"
+                                  : "rgba(255, 255, 255, 0.65)",
+                                color: "#064E3B",
+                                border: "1.2px solid #10B981",
+                                backdropFilter: "blur(12px)",
+                                WebkitBackdropFilter: "blur(12px)",
+                                boxShadow: isTableExpanded
+                                  ? "0 4px 14px rgba(16, 185, 129, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.7)"
+                                  : "0 2px 8px rgba(16, 185, 129, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.7)",
+                                fontSize: lang === "ur" ? 14 : 12,
+                                fontFamily:
+                                  lang === "ur"
+                                    ? URDU_FONT
+                                    : "inherit",
+                              }}
+                              title={
+                                isTableExpanded
+                                  ? lang === "ur"
+                                    ? "ٹیبل چھوٹا کریں"
+                                    : "Collapse table"
+                                  : lang === "ur"
+                                    ? "ٹیبل بڑا کریں"
+                                    : "Expand table"
+                              }
                             >
-                              <rect x="3" y="4" width="18" height="18" rx="2" />
-                              <line x1="16" y1="2" x2="16" y2="6" />
-                              <line x1="8" y1="2" x2="8" y2="6" />
-                              <line x1="3" y1="10" x2="21" y2="10" />
-                            </svg>
-                            {lang === "ur" ? "تاریخ منتخب کریں" : "Pick Date"}
-                          </button>
+                              {isTableExpanded ? (
+                                /* Collapse icon */
+                                <svg
+                                  width="12"
+                                  height="12"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="#064E3B"
+                                  strokeWidth="2.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <polyline points="18 15 12 9 6 15" />
+                                </svg>
+                              ) : (
+                                /* Double arrow expand icon */
+                                <svg
+                                  width="12"
+                                  height="12"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="#064E3B"
+                                  strokeWidth="2.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <polyline points="15 3 21 3 21 9" />
+                                  <polyline points="9 21 3 21 3 15" />
+                                  <line x1="21" y1="3" x2="14" y2="10" />
+                                  <line x1="3" y1="21" x2="10" y2="14" />
+                                </svg>
+                              )}
+                              <span>
+                                {isTableExpanded
+                                  ? lang === "ur"
+                                    ? "چھوٹا کریں"
+                                    : "Collapse"
+                                  : lang === "ur"
+                                    ? "پورا ٹیبل"
+                                    : "Expand"}
+                              </span>
+                            </button>
+
+                            {/* Date picker button */}
+                            <button
+                              onClick={() => setTableDateCalOpen((o) => !o)}
+                              className="tap-target zm-beam-border flex items-center gap-1.5 px-3 py-1 rounded-full font-bold text-xs flex-shrink-0 transition active:scale-95"
+                              style={{
+                                background: tableDateFilter
+                                  ? "linear-gradient(135deg, rgba(167, 243, 208, 0.75), rgba(110, 231, 183, 0.6))"
+                                  : "rgba(255, 255, 255, 0.65)",
+                                color: "#064E3B",
+                                border: "1.2px solid #10B981",
+                                backdropFilter: "blur(12px)",
+                                WebkitBackdropFilter: "blur(12px)",
+                                boxShadow: tableDateFilter
+                                  ? "0 4px 14px rgba(16, 185, 129, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.7)"
+                                  : "0 2px 8px rgba(16, 185, 129, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.7)",
+                                fontSize: lang === "ur" ? 14 : 12,
+                                fontFamily:
+                                  lang === "ur"
+                                    ? URDU_FONT
+                                    : "inherit",
+                              }}
+                            >
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="#064E3B"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <rect x="3" y="4" width="18" height="18" rx="2" />
+                                <line x1="16" y1="2" x2="16" y2="6" />
+                                <line x1="8" y1="2" x2="8" y2="6" />
+                                <line x1="3" y1="10" x2="21" y2="10" />
+                              </svg>
+                              {dateLabel}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Filter row: Province chips */}
+                        <div className="flex items-center justify-between gap-2 flex-wrap pt-1">
+                          {/* Province filter chips */}
+                          <div
+                            className="flex gap-1.5 overflow-x-auto pb-0.5"
+                            style={{ scrollbarWidth: "none" }}
+                          >
+                            {[null, ...PROVINCES].map((p) => {
+                              const isSelected = tableProvinceFilter === p;
+                              return (
+                                <button
+                                  key={p || "all"}
+                                  onClick={() => {
+                                    setTableProvinceFilter(p);
+                                    // Keep the location filter (and the map's
+                                    // focus target) in sync with the chip so
+                                    // the two controls never disagree.
+                                    setFocusedMandi(null);
+                                    setLocScope(
+                                      p ? { kind: "province", label: p } : { kind: "pakistan", label: "All Pakistan" }
+                                    );
+                                    if (voiceEnabled) {
+                                      const msg = p
+                                        ? (lang === "ur" ? `صوبہ ${tm(p)}` : `${p} Province`)
+                                        : (lang === "ur" ? "تمام صوبے" : "All Provinces");
+                                      speakText(msg);
+                                    }
+                                  }}
+                                  className="flex-shrink-0 zm-beam-border px-3.5 py-1 rounded-full font-bold text-xs transition active:scale-95"
+                                  style={{
+                                    background: isSelected
+                                      ? "linear-gradient(135deg, rgba(167, 243, 208, 0.75), rgba(110, 231, 183, 0.6))"
+                                      : "rgba(255, 255, 255, 0.65)",
+                                    color: "#064E3B",
+                                    border: "1.2px solid #10B981",
+                                    backdropFilter: "blur(12px)",
+                                    WebkitBackdropFilter: "blur(12px)",
+                                    boxShadow: isSelected
+                                      ? "0 4px 14px rgba(16, 185, 129, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.7)"
+                                      : "0 2px 6px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.7)",
+                                    fontSize: lang === "ur" ? 13.5 : 11,
+                                    fontFamily:
+                                      lang === "ur"
+                                        ? URDU_FONT
+                                        : "inherit",
+                                  }}
+                                >
+                                  {p
+                                    ? tm(p)
+                                    : lang === "ur"
+                                      ? "تمام صوبے"
+                                      : "All Provinces"}
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
 
-                      {/* Expandable calendar */}
-                      {dtCalOpen && (
+                      {/* Inline calendar for table date picker */}
+                      {tableDateCalOpen && (
                         <div
-                          className="px-4 pt-3 pb-2 flex-shrink-0"
+                          className="px-4 pt-3 pb-2"
                           style={{
                             borderBottom: "1px solid #D5E2DD",
                             background: "#F4FAF7",
                           }}
                         >
-                          {/* Month nav */}
                           <div className="flex items-center justify-between mb-2">
                             <button
-                              onClick={prevMonth}
-                              className="tap-target w-8 h-8 rounded-full flex items-center justify-center font-bold text-base"
+                              onClick={() =>
+                                setTableDateCalMonth(
+                                  new Date(tcYear, tcMonthIdx - 1, 1),
+                                )
+                              }
+                              className="tap-target w-8 h-8 rounded-full flex items-center justify-center font-bold"
                               style={{
                                 background: "#E8EFEC",
                                 color: "#2F4A43",
+                                fontSize: 16,
                               }}
                             >
                               ‹
@@ -15647,20 +13383,46 @@ function ProductRatesScreen({
                                     : "inherit",
                               }}
                             >
-                              {monthName}
+                              {tcMonthName}
                             </p>
                             <button
-                              onClick={nextMonth}
-                              className="tap-target w-8 h-8 rounded-full flex items-center justify-center font-bold text-base"
+                              onClick={() =>
+                                setTableDateCalMonth(
+                                  new Date(tcYear, tcMonthIdx + 1, 1),
+                                )
+                              }
+                              className="tap-target w-8 h-8 rounded-full flex items-center justify-center font-bold"
                               style={{
                                 background: "#E8EFEC",
                                 color: "#2F4A43",
+                                fontSize: 16,
                               }}
                             >
                               ›
                             </button>
                           </div>
-                          {/* Day headers */}
+                          {tableDateFilter && (
+                            <div className="flex justify-end mb-1">
+                              <button
+                                onClick={() => {
+                                  setTableDateFilter(null);
+                                  setTableDateCalOpen(false);
+                                }}
+                                className="font-bold px-2 py-0.5 rounded-full"
+                                style={{
+                                  background: "#F9E1DE",
+                                  color: "#A83B34",
+                                  fontSize: lang === "ur" ? 12 : 10,
+                                  fontFamily:
+                                    lang === "ur"
+                                      ? URDU_FONT
+                                      : "inherit",
+                                }}
+                              >
+                                {lang === "ur" ? "تاریخ ہٹائیں" : "Clear date"}
+                              </button>
+                            </div>
+                          )}
                           <div
                             style={{
                               display: "grid",
@@ -15688,7 +13450,6 @@ function ProductRatesScreen({
                               </div>
                             ))}
                           </div>
-                          {/* Day grid */}
                           <div
                             style={{
                               display: "grid",
@@ -15696,36 +13457,61 @@ function ProductRatesScreen({
                               gap: 2,
                             }}
                           >
-                            {calDays.map((day, idx) => {
+                            {tcCalDays.map((day, idx) => {
                               if (!day) return <div key={idx} />;
-                              const d = new Date(calYear, calMonthIdx, day);
-                              const selected = isSameDay(d, selD);
-                              const today = isToday(d);
+                              const d = new Date(tcYear, tcMonthIdx, day);
+                              const selected = tableDateFilter
+                                ? tcIsSameDay(d, tableDateFilter)
+                                : false;
+                              const isRef = tcIsToday(d);
+                              // Dates prior to user signup date are locked/blurred
+                              const isPriorToSignup = d.getTime() < new Date(USER_SIGNUP_DATE.getFullYear(), USER_SIGNUP_DATE.getMonth(), USER_SIGNUP_DATE.getDate()).getTime();
+                              if (isPriorToSignup) {
+                                return (
+                                  <button
+                                    key={idx}
+                                    disabled
+                                    className="tap-target flex items-center justify-center rounded-full font-medium text-xs mx-auto opacity-20 cursor-not-allowed select-none"
+                                    style={{
+                                      width: 30,
+                                      height: 30,
+                                      filter: "blur(0.8px)",
+                                      color: "#80918B",
+                                    }}
+                                    title={lang === "ur" ? "سائن اپ سے پہلے کی تاریخ" : "Locked prior to signup"}
+                                  >
+                                    {day}
+                                  </button>
+                                );
+                              }
+
                               return (
                                 <button
                                   key={idx}
                                   onClick={() => {
-                                    setDtSelDate(d);
-                                    setDtCalOpen(false);
+                                    setTableDateFilter(d);
+                                    setTableDateCalOpen(false);
                                   }}
-                                  className="tap-target flex items-center justify-center rounded-full font-semibold text-xs mx-auto"
+                                  className="tap-target flex items-center justify-center rounded-full font-semibold text-xs mx-auto shadow-sm"
                                   style={{
-                                    width: 32,
-                                    height: 32,
+                                    width: 30,
+                                    height: 30,
                                     background: selected
                                       ? "#087F63"
-                                      : today
+                                      : isRef
                                         ? "#E4F2EC"
-                                        : "transparent",
+                                        : "#fff",
                                     color: selected
                                       ? "#fff"
-                                      : today
+                                      : isRef
                                         ? "#075E4F"
-                                        : "#2F4A43",
+                                        : "#183B34",
                                     border:
-                                      today && !selected
-                                        ? "1.5px solid #087F63"
-                                        : "none",
+                                      selected
+                                        ? "none"
+                                        : isRef
+                                          ? "1.5px solid #087F63"
+                                          : "1px solid #C7E8D8",
                                   }}
                                 >
                                   {day}
@@ -15733,94 +13519,2630 @@ function ProductRatesScreen({
                               );
                             })}
                           </div>
+                          <p
+                            className="text-[9.5px] text-center text-[#52635F] mt-2 opacity-80"
+                            style={{
+                              fontFamily:
+                                lang === "ur"
+                                  ? URDU_FONT
+                                  : "inherit",
+                            }}
+                          >
+                            {lang === "ur"
+                              ? "* سائن اپ کی تاریخ سے پہلے کی تاریخیں غیر فعال ہیں"
+                              : "* Dates prior to signup date are locked"}
+                          </p>
                         </div>
                       )}
 
-                      {/* Table with column-header dropdowns & visible scrollbars */}
+                      {/* Horizontally and vertically scrollable table container with visible scrollbars */}
                       <div
-                        className="flex-1 overflow-auto zm-table-scroll-container"
+                        ref={tableScrollRef}
+                        className="flex-1 min-h-0 w-full overflow-x-auto overflow-y-auto zm-table-scroll-container"
                         style={{
+                          maxHeight: isTableExpanded ? "none" : 240,
+                          height: isTableExpanded ? "100%" : "auto",
+                          overscrollBehavior: "contain",
+                          WebkitOverflowScrolling: "touch",
                           scrollbarWidth: "thin",
                           scrollbarColor: "#087F63 #E4F2EC",
+                          paddingBottom: isTableExpanded ? 24 : 4,
                         }}
-                        onClick={() => setDtOpenCol(null)}
                       >
-                        <table
-                          style={{
-                            width: "100%",
-                            borderCollapse: "collapse",
-                            fontSize: lang === "ur" ? 12 : 10.5,
-                          }}
-                        >
-                          <thead
-                            style={{ position: "sticky", top: 0, zIndex: 10 }}
-                          >
-                            <tr
-                              style={{ background: "#075E4F", color: "#fff" }}
+                        {tableRows.length === 0 ? (
+                          <div className="flex items-center justify-center py-8 opacity-50">
+                            <p
+                              className="font-semibold"
+                              style={{
+                                fontSize: lang === "ur" ? 16 : 14,
+                                fontFamily:
+                                  lang === "ur"
+                                    ? URDU_FONT
+                                    : "inherit",
+                              }}
                             >
-                              {[
-                                "Station",
-                                "Min – Max",
-                                "Price Type",
-                                "Trend",
-                                "Quality",
-                                "Arrival",
-                                "Color",
-                                "Variety",
-                                "Condition",
-                                "Specification",
-                              ].map((col) => {
-                                const hasFilter = col in colOpts;
-                                const activeVal = colState[col];
-                                const displayVal =
-                                  col === "Price Type" && dtPriceType
-                                    ? tr(dtPriceType)
-                                      .replace(" ریٹ", "")
-                                      .replace(" Rate", "")
-                                    : activeVal
-                                      ? col === "Specification" ||
-                                        col === "Condition" ||
-                                        col === "Quality" ||
-                                        col === "Color" ||
-                                        col === "Variety"
-                                        ? t(activeVal)
-                                        : activeVal
-                                      : null;
-                                const colTitle = colLabels[col] || col;
-                                return (
+                              {lang === "ur"
+                                ? `کوئی منڈی ڈیٹا دستیاب نہیں${tableProvinceFilter ? ` (${tm(tableProvinceFilter)})` : ""}`
+                                : `No mandi data${tableProvinceFilter ? ` in ${tableProvinceFilter}` : ""}`}
+                            </p>
+                          </div>
+                        ) : (
+                          <table
+                            style={{
+                              width: "100%",
+                              minWidth: "740px",
+                              borderCollapse: "separate",
+                              borderSpacing: 0,
+                              fontSize: lang === "ur" ? 12 : 11,
+                            }}
+                          >
+                            <thead
+                              style={{
+                                position: "sticky",
+                                top: 0,
+                                zIndex: 20,
+                                background: "#F1F7F4",
+                              }}
+                            >
+                              <tr style={{ borderBottom: "1.5px solid #D5E2DD" }}>
+                                {/* 1. Station (Sticky Left Column) */}
+                                <th
+                                  style={{
+                                    position: "sticky",
+                                    left: 0,
+                                    zIndex: 25,
+                                    background: "#F1F7F4",
+                                    padding: "7px 6px",
+                                    textAlign: lang === "ur" ? "right" : "left",
+                                    fontWeight: 800,
+                                    fontSize: lang === "ur" ? 13 : 10,
+                                    color: "#80918B",
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.03em",
+                                    borderBottom: "1.5px solid #D5E2DD",
+                                    borderRight: "1px solid #D5E2DD",
+                                    minWidth: 84,
+                                    maxWidth: 90,
+                                    fontFamily:
+                                      lang === "ur"
+                                        ? URDU_FONT
+                                        : "inherit",
+                                  }}
+                                >
+                                  {lang === "ur" ? "منڈی" : "Station"}
+                                </th>
+
+                                {/* 2. Min – Max */}
+                                <th
+                                  style={{
+                                    padding: "7px 4px",
+                                    textAlign: "center",
+                                    fontWeight: 800,
+                                    fontSize: lang === "ur" ? 13 : 10,
+                                    color: "#80918B",
+                                    textTransform: "uppercase",
+                                    borderBottom: "1.5px solid #D5E2DD",
+                                    minWidth: 96,
+                                    fontFamily:
+                                      lang === "ur"
+                                        ? URDU_FONT
+                                        : "inherit",
+                                  }}
+                                >
+                                  {lang === "ur" ? "کم – زیادہ" : "Min – Max"}
+                                </th>
+
+                                {/* 3. Price Type */}
+                                <th
+                                  style={{
+                                    padding: "7px 2px",
+                                    textAlign: "center",
+                                    fontWeight: 800,
+                                    fontSize: lang === "ur" ? 13 : 9.5,
+                                    color: "#80918B",
+                                    textTransform: "uppercase",
+                                    borderBottom: "1.5px solid #D5E2DD",
+                                    minWidth: 54,
+                                    fontFamily:
+                                      lang === "ur"
+                                        ? URDU_FONT
+                                        : "inherit",
+                                  }}
+                                >
+                                  {lang === "ur" ? "قسم" : "Price Type"}
+                                </th>
+
+                                {/* 4. Trend (with Interval dropdown) */}
+                                <th
+                                  style={{
+                                    padding: "7px 4px",
+                                    textAlign: "center",
+                                    fontWeight: 800,
+                                    fontSize: lang === "ur" ? 13 : 9.5,
+                                    color: "#80918B",
+                                    textTransform: "uppercase",
+                                    borderBottom: "1.5px solid #D5E2DD",
+                                    minWidth: 68,
+                                    fontFamily:
+                                      lang === "ur"
+                                        ? URDU_FONT
+                                        : "inherit",
+                                  }}
+                                >
+                                  <div className="relative inline-flex items-center justify-center">
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setTrendDropdownOpen(!trendDropdownOpen);
+                                      }}
+                                      className="tap-target inline-flex items-center gap-0.5 font-extrabold uppercase tracking-wide px-1 py-0.5 rounded-md hover:bg-[#E4F2EC] transition"
+                                      style={{
+                                        color: "#087F63",
+                                        fontSize: lang === "ur" ? 12 : 9,
+                                        fontFamily:
+                                          lang === "ur"
+                                            ? URDU_FONT
+                                            : "inherit",
+                                      }}
+                                      title={lang === "ur" ? "رجحان کا دورانیہ منتخب کریں" : "Select trend duration"}
+                                    >
+                                      <span>
+                                        {lang === "ur"
+                                          ? `رجحان (${tableTrendInterval === "24h" ? "24گھنٹے" : tableTrendInterval === "72h" ? "72گھنٹے" : tableTrendInterval === "weekly" ? "ہفتہ وار" : "ماہانہ"})`
+                                          : `Trend (${tableTrendInterval === "24h" ? "24H" : tableTrendInterval === "72h" ? "72H" : tableTrendInterval === "weekly" ? "7D" : "30D"})`}
+                                      </span>
+                                      <span className="text-[9px] text-[#087F63]">▾</span>
+                                    </button>
+
+                                    {/* Dropdown Menu for Trend Interval */}
+                                    {trendDropdownOpen && (
+                                      <>
+                                        <div
+                                          className="fixed inset-0 z-40"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setTrendDropdownOpen(false);
+                                          }}
+                                        />
+                                        <div
+                                          className="absolute right-0 top-full mt-1 z-50 bg-white rounded-xl shadow-2xl border border-[#C7E8D8] py-1 min-w-[140px] text-left"
+                                          style={{
+                                            direction: lang === "ur" ? "rtl" : "ltr",
+                                          }}
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          <div className="px-3 py-1 text-[10px] font-bold text-[#80918B] border-b border-[#E8EFEC] uppercase tracking-wider">
+                                            {lang === "ur" ? "دورانیہ منتخب کریں" : "Select Interval"}
+                                          </div>
+                                          {[
+                                            { id: "24h", labelUr: "24 گھنٹے (24h)", labelEn: "24 Hours (24h)" },
+                                            { id: "72h", labelUr: "72 گھنٹے (72h)", labelEn: "72 Hours (72h)" },
+                                            { id: "weekly", labelUr: "ہفتہ وار (7 دن)", labelEn: "Weekly (7 Days)" },
+                                            { id: "monthly", labelUr: "ماہانہ (30 دن)", labelEn: "Monthly (30 Days)" },
+                                          ].map((opt) => (
+                                            <button
+                                              key={opt.id}
+                                              type="button"
+                                              onClick={() => {
+                                                setTableTrendInterval(opt.id as any);
+                                                setTrendDropdownOpen(false);
+                                              }}
+                                              className="w-full px-3 py-2 text-xs font-bold flex items-center justify-between hover:bg-[#E8F5EF] transition text-left"
+                                              style={{
+                                                color: tableTrendInterval === opt.id ? "#087F63" : "#183B34",
+                                                background: tableTrendInterval === opt.id ? "#F0F9F5" : "transparent",
+                                                fontFamily:
+                                                  lang === "ur"
+                                                    ? URDU_FONT
+                                                    : "inherit",
+                                              }}
+                                            >
+                                              <span>{lang === "ur" ? opt.labelUr : opt.labelEn}</span>
+                                              {tableTrendInterval === opt.id && (
+                                                <span className="text-[#087F63] font-black text-xs">✓</span>
+                                              )}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
+                                </th>
+
+                                {/* 5. Primary Special Attribute First (Moisture for Maize, Color for Cotton/Sesame, Variety for Rice, Quality for Wheat/Gram/others) */}
+                                {primarySpecialAttr === "moisture" && (
                                   <th
-                                    key={col}
                                     style={{
-                                      padding: "7px 8px",
-                                      textAlign:
-                                        col === "Station"
-                                          ? lang === "ur" ? "right" : "left"
-                                          : "center",
-                                      fontWeight: 700,
-                                      whiteSpace: "nowrap",
-                                      borderRight:
-                                        "1px solid rgba(255,255,255,0.15)",
-                                      position: col === "Station" ? "sticky" : "relative",
-                                      left: col === "Station" ? 0 : "auto",
-                                      zIndex: col === "Station" ? 15 : 10,
-                                      background: "#075E4F",
-                                      fontSize: lang === "ur" ? 13 : 10.5,
+                                      padding: "7px 4px",
+                                      textAlign: "center",
+                                      fontWeight: 800,
+                                      fontSize: lang === "ur" ? 13 : 10,
+                                      color: "#80918B",
+                                      textTransform: "uppercase",
+                                      borderBottom: "1.5px solid #D5E2DD",
+                                      minWidth: 64,
+                                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                    }}
+                                  >
+                                    {lang === "ur" ? "نمی" : "Moisture"}
+                                  </th>
+                                )}
+                                {primarySpecialAttr === "color" && (
+                                  <th
+                                    style={{
+                                      padding: "7px 4px",
+                                      textAlign: "center",
+                                      fontWeight: 800,
+                                      fontSize: lang === "ur" ? 13 : 10,
+                                      color: "#80918B",
+                                      textTransform: "uppercase",
+                                      borderBottom: "1.5px solid #D5E2DD",
+                                      minWidth: 64,
+                                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                    }}
+                                  >
+                                    {lang === "ur" ? "رنگ" : "Color"}
+                                  </th>
+                                )}
+                                {primarySpecialAttr === "variety" && (
+                                  <th
+                                    style={{
+                                      padding: "7px 4px",
+                                      textAlign: "center",
+                                      fontWeight: 800,
+                                      fontSize: lang === "ur" ? 13 : 10,
+                                      color: "#80918B",
+                                      textTransform: "uppercase",
+                                      borderBottom: "1.5px solid #D5E2DD",
+                                      minWidth: 74,
+                                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                    }}
+                                  >
+                                    {lang === "ur" ? "قسم" : "Variety"}
+                                  </th>
+                                )}
+                                {primarySpecialAttr === "quality" && (
+                                  <th
+                                    style={{
+                                      padding: "7px 4px",
+                                      textAlign: "center",
+                                      fontWeight: 800,
+                                      fontSize: lang === "ur" ? 13 : 10,
+                                      color: "#80918B",
+                                      textTransform: "uppercase",
+                                      borderBottom: "1.5px solid #D5E2DD",
+                                      minWidth: 64,
+                                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                    }}
+                                  >
+                                    {lang === "ur" ? "معیار" : "Quality"}
+                                  </th>
+                                )}
+
+                                {/* 6. Arrival Quantity */}
+                                <th
+                                  style={{
+                                    padding: "7px 4px",
+                                    textAlign: "center",
+                                    fontWeight: 800,
+                                    fontSize: lang === "ur" ? 13 : 10,
+                                    color: "#80918B",
+                                    textTransform: "uppercase",
+                                    borderBottom: "1.5px solid #D5E2DD",
+                                    minWidth: 64,
+                                    fontFamily:
+                                      lang === "ur"
+                                        ? URDU_FONT
+                                        : "inherit",
+                                  }}
+                                >
+                                  {lang === "ur" ? "آمد" : "Arrival"}
+                                </th>
+
+                                {/* 7. Arrival Unit */}
+                                <th
+                                  style={{
+                                    padding: "7px 4px",
+                                    textAlign: "center",
+                                    fontWeight: 800,
+                                    fontSize: lang === "ur" ? 13 : 10,
+                                    color: "#80918B",
+                                    textTransform: "uppercase",
+                                    borderBottom: "1.5px solid #D5E2DD",
+                                    minWidth: 74,
+                                    fontFamily:
+                                      lang === "ur"
+                                        ? URDU_FONT
+                                        : "inherit",
+                                  }}
+                                >
+                                  {lang === "ur" ? "آمد کی اکائی" : "Unit"}
+                                </th>
+
+                                {/* Remaining Spec Columns */}
+                                {primarySpecialAttr !== "quality" && (
+                                  <th
+                                    style={{
+                                      padding: "7px 4px",
+                                      textAlign: "center",
+                                      fontWeight: 800,
+                                      fontSize: lang === "ur" ? 13 : 10,
+                                      color: "#80918B",
+                                      textTransform: "uppercase",
+                                      borderBottom: "1.5px solid #D5E2DD",
+                                      minWidth: 64,
+                                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                    }}
+                                  >
+                                    {lang === "ur" ? "معیار" : "Quality"}
+                                  </th>
+                                )}
+
+                                {primarySpecialAttr !== "moisture" && (
+                                  <th
+                                    style={{
+                                      padding: "7px 4px",
+                                      textAlign: "center",
+                                      fontWeight: 800,
+                                      fontSize: lang === "ur" ? 13 : 10,
+                                      color: "#80918B",
+                                      textTransform: "uppercase",
+                                      borderBottom: "1.5px solid #D5E2DD",
+                                      minWidth: 64,
+                                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                    }}
+                                  >
+                                    {lang === "ur" ? "نمی" : "Moisture"}
+                                  </th>
+                                )}
+
+                                {primarySpecialAttr !== "color" && (
+                                  <th
+                                    style={{
+                                      padding: "7px 4px",
+                                      textAlign: "center",
+                                      fontWeight: 800,
+                                      fontSize: lang === "ur" ? 13 : 10,
+                                      color: "#80918B",
+                                      textTransform: "uppercase",
+                                      borderBottom: "1.5px solid #D5E2DD",
+                                      minWidth: 64,
+                                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                    }}
+                                  >
+                                    {lang === "ur" ? "رنگ" : "Color"}
+                                  </th>
+                                )}
+
+                                {primarySpecialAttr !== "variety" && (
+                                  <th
+                                    style={{
+                                      padding: "7px 4px",
+                                      textAlign: "center",
+                                      fontWeight: 800,
+                                      fontSize: lang === "ur" ? 13 : 10,
+                                      color: "#80918B",
+                                      textTransform: "uppercase",
+                                      borderBottom: "1.5px solid #D5E2DD",
+                                      minWidth: 74,
+                                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                    }}
+                                  >
+                                    {lang === "ur" ? "قسم" : "Variety"}
+                                  </th>
+                                )}
+
+                                {/* 10. Origin */}
+                                <th
+                                  style={{
+                                    padding: "7px 4px",
+                                    textAlign: "center",
+                                    fontWeight: 800,
+                                    fontSize: lang === "ur" ? 13 : 10,
+                                    color: "#80918B",
+                                    textTransform: "uppercase",
+                                    borderBottom: "1.5px solid #D5E2DD",
+                                    minWidth: 70,
+                                    fontFamily:
+                                      lang === "ur"
+                                        ? URDU_FONT
+                                        : "inherit",
+                                  }}
+                                >
+                                  {lang === "ur" ? "علاقہ" : "Origin"}
+                                </th>
+
+                                {/* 11. Condition */}
+                                <th
+                                  style={{
+                                    padding: "7px 4px",
+                                    textAlign: "center",
+                                    fontWeight: 800,
+                                    fontSize: lang === "ur" ? 13 : 10,
+                                    color: "#80918B",
+                                    textTransform: "uppercase",
+                                    borderBottom: "1.5px solid #D5E2DD",
+                                    minWidth: 68,
+                                    fontFamily:
+                                      lang === "ur"
+                                        ? URDU_FONT
+                                        : "inherit",
+                                  }}
+                                >
+                                  {lang === "ur" ? "حالت" : "Condition"}
+                                </th>
+
+                                {/* 12. Specification */}
+                                <th
+                                  style={{
+                                    padding: "7px 4px",
+                                    textAlign: "center",
+                                    fontWeight: 800,
+                                    fontSize: lang === "ur" ? 13 : 10,
+                                    color: "#80918B",
+                                    textTransform: "uppercase",
+                                    borderBottom: "1.5px solid #D5E2DD",
+                                    minWidth: 84,
+                                    fontFamily:
+                                      lang === "ur"
+                                        ? URDU_FONT
+                                        : "inherit",
+                                  }}
+                                >
+                                  {lang === "ur" ? "خصوصیت" : "Specification"}
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {tableRows.map((r, ci) => {
+                                // Multi-interval trend calculation derived from real Excel observations
+                                const rowTimeline = getExcelTimeline({
+                                  product,
+                                  byproduct: r.byproduct || byproduct,
+                                  locationLabel: r.mandiName,
+                                  locationKind: "mandi",
+                                  rateType: r.rateType,
+                                  range: "year",
+                                });
+
+                                let rowMin = 0;
+                                let rowMax = 0;
+                                let rowArr = 0;
+                                let intervalPct = 0;
+                                let intervalTrend: "up" | "down" | "stable" = "stable";
+
+                                if (isDateInRange && dateIdx >= 0) {
+                                  const startIdx =
+                                    tableTrendInterval === "72h"
+                                      ? Math.max(0, dateIdx - 3)
+                                      : tableTrendInterval === "weekly"
+                                        ? Math.max(0, dateIdx - 7)
+                                        : tableTrendInterval === "monthly"
+                                          ? 0
+                                          : Math.max(0, dateIdx - 1);
+
+                                  const sliceMins = rowTimeline.mins.slice(startIdx, dateIdx + 1).filter((v) => v > 0);
+                                  rowMin = sliceMins.length > 0 ? Math.min(...sliceMins) : (rowTimeline.mins[dateIdx] ?? r.min);
+
+                                  const sliceMaxs = rowTimeline.maxs.slice(startIdx, dateIdx + 1).filter((v) => v > 0);
+                                  rowMax = sliceMaxs.length > 0 ? Math.max(...sliceMaxs) : (rowTimeline.maxs[dateIdx] ?? r.max);
+
+                                  const sliceArrs = rowTimeline.arrivals.slice(startIdx, dateIdx + 1).filter((v) => v > 0);
+                                  rowArr = sliceArrs.length > 0 ? sliceArrs.reduce((a, b) => a + b, 0) : (rowTimeline.arrivals[dateIdx] ?? parseArrival(r.arrival));
+
+                                  const pSeries = rowTimeline.prices;
+                                  const pLatest = pSeries[dateIdx] ?? 0;
+                                  const pPrev = pSeries[startIdx] ?? pLatest;
+
+                                  if (pPrev > 0 && pLatest > 0) {
+                                    const delta = pLatest - pPrev;
+                                    intervalPct = Math.round((Math.abs(delta) / pPrev) * 1000) / 10;
+                                    if (delta > 0.01) intervalTrend = "up";
+                                    else if (delta < -0.01) intervalTrend = "down";
+                                  }
+                                } else {
+                                  rowMin = r.min;
+                                  rowMax = r.max;
+                                  rowArr = parseArrival(r.arrival);
+                                }
+
+                                const trendArrow =
+                                  intervalTrend === "up" ? "▲" : intervalTrend === "down" ? "▼" : "—";
+                                const trendColor =
+                                  intervalTrend === "up"
+                                    ? "#16A34A"
+                                    : intervalTrend === "down"
+                                      ? "#C94A43"
+                                      : "#52635F";
+                                const rtColor = RATE_COLORS[r.rateType] || "#52635F";
+                                const isRowModalActive =
+                                  selectedMandiGraphRow?.mandiName === r.mandiName &&
+                                  selectedMandiGraphRow?.rateType === r.rateType;
+                                // If a mandi graph is selected/open, highlight only that active mandi; otherwise highlight the initial/scope mandi
+                                const isSelected = selectedMandiGraphRow
+                                  ? isRowModalActive
+                                  : (locScope.kind === "mandi" &&
+                                    (locScope.label === r.mandiName ||
+                                      locScope.label.replace(/\s*mandi$/i, "").replace(/\s*منڈی$/i, "") ===
+                                      r.mandiName.replace(/\s*mandi$/i, "").replace(/\s*منڈی$/i, "")));
+                                const rowBg = isSelected
+                                  ? "#E4F2EC"
+                                  : ci % 2 === 0
+                                    ? "#FFFFFF"
+                                    : "#F8FCFA";
+
+                                return (
+                                  <React.Fragment key={`${r.mandiName}-${r.rateType}-${ci}`}>
+                                    <tr
+                                      onClick={() => {
+                                        // Only expand this row's own inline graph -- do NOT
+                                        // change locScope here. locScope drives the whole
+                                        // table + the top overview chart, so setting it on a
+                                        // row click was re-scoping the entire screen down to
+                                        // this one mandi instead of just expanding the row.
+                                        setSelectedMandiGraphRow((prev) => {
+                                          if (
+                                            prev?.mandiName === r.mandiName &&
+                                            prev?.rateType === r.rateType
+                                          ) {
+                                            return null;
+                                          }
+                                          if (!isTableExpanded) {
+                                            setIsTableExpanded(true);
+                                            setLandscapeRotated(false);
+                                          }
+                                          return {
+                                            mandiName: r.mandiName,
+                                            rateType: r.rateType,
+                                            min: rowMin,
+                                            max: rowMax,
+                                            trend: intervalTrend,
+                                            trendPct: intervalPct,
+                                            arrival: rowArr > 0 ? rowArr : undefined,
+                                          };
+                                        });
+
+                                        if (voiceEnabled) {
+                                          const cleanMandi = r.mandiName.replace(/\s*mandi$/i, "").replace(/\s*منڈی$/i, "");
+                                          const minVal = rowMin > 0 ? rowMin.toLocaleString("en-PK") : "";
+                                          const maxVal = rowMax > 0 ? rowMax.toLocaleString("en-PK") : "";
+                                          const rtUr = tr(r.rateType).replace(" ریٹ", "").replace(" Rate", "");
+                                          const spoken = lang === "ur"
+                                            ? `${tm(cleanMandi)} منڈی، ${rtUr}، ریٹ ${minVal} سے ${maxVal} روپے`
+                                            : `${cleanMandi} Mandi, ${r.rateType} rate, ${minVal} to ${maxVal} rupees`;
+                                          speakText(spoken);
+                                        }
+                                      }}
+                                      className="cursor-pointer transition hover:bg-[#EAF5F0]"
+                                      style={{
+                                        background: rowBg,
+                                        borderBottom: isRowModalActive ? "none" : "1px solid #EBF2EE",
+                                      }}
+                                    >
+                                      {/* 1. Station (Sticky) */}
+                                      <td
+                                        style={{
+                                          position: "sticky",
+                                          left: 0,
+                                          zIndex: 10,
+                                          background: rowBg,
+                                          padding: "7px 6px",
+                                          fontWeight: 700,
+                                          color: "#183B34",
+                                          whiteSpace: "nowrap",
+                                          overflow: "hidden",
+                                          textOverflow: "ellipsis",
+                                          maxWidth: 90,
+                                          borderRight: "1px solid #D5E2DD",
+                                          fontFamily:
+                                            lang === "ur"
+                                              ? URDU_FONT
+                                              : "inherit",
+                                        }}
+                                      >
+                                        {tm(
+                                          r.mandiName
+                                            .replace(/\s*mandi$/i, "")
+                                            .replace(/\s*منڈی$/i, ""),
+                                        )}
+                                      </td>
+
+                                      {/* 2. Min – Max */}
+                                      <td
+                                        style={{
+                                          padding: "7px 4px",
+                                          textAlign: "center",
+                                          color: rowMin > 0 ? "#087F63" : "#80918B",
+                                          fontWeight: 800,
+                                          fontSize: 11,
+                                          whiteSpace: "nowrap",
+                                        }}
+                                      >
+                                        {rowMin > 0 && rowMax > 0
+                                          ? `${rowMin.toLocaleString("en-PK")} – ${rowMax.toLocaleString("en-PK")}`
+                                          : "—"}
+                                      </td>
+
+                                      {/* 3. Price Type */}
+                                      <td
+                                        style={{
+                                          padding: "7px 2px",
+                                          textAlign: "center",
+                                          whiteSpace: "nowrap",
+                                        }}
+                                      >
+                                        <span
+                                          className="px-1.5 py-0.5 rounded-md font-bold text-[9px]"
+                                          style={{
+                                            background: `${rtColor}15`,
+                                            color: rtColor,
+                                            fontFamily:
+                                              lang === "ur"
+                                                ? URDU_FONT
+                                                : "inherit",
+                                          }}
+                                        >
+                                          {tr(r.rateType)
+                                            .replace(" ریٹ", "")
+                                            .replace(" Rate", "")}
+                                        </span>
+                                      </td>
+
+                                      {/* 4. Trend */}
+                                      <td
+                                        style={{
+                                          padding: "7px 4px",
+                                          textAlign: "center",
+                                          color: trendColor,
+                                          fontWeight: 800,
+                                          fontSize: 10.5,
+                                          whiteSpace: "nowrap",
+                                        }}
+                                      >
+                                        {rowMin > 0 ? (
+                                          <span>
+                                            <span>{trendArrow}</span>{" "}
+                                            {intervalPct > 0 ? `${intervalPct}%` : ""}
+                                          </span>
+                                        ) : (
+                                          "—"
+                                        )}
+                                      </td>
+
+                                      {/* 5. Primary Special Attribute First */}
+                                      {primarySpecialAttr === "moisture" && (
+                                        <td
+                                          style={{
+                                            padding: "7px 4px",
+                                            textAlign: "center",
+                                            color: "#087F63",
+                                            fontWeight: 700,
+                                            fontSize: 10,
+                                            whiteSpace: "nowrap",
+                                          }}
+                                        >
+                                          {r.moisture ? (r.moisture.includes("%") ? r.moisture : `${r.moisture}%`) : "—"}
+                                        </td>
+                                      )}
+                                      {primarySpecialAttr === "color" && (
+                                        <td
+                                          style={{
+                                            padding: "7px 4px",
+                                            textAlign: "center",
+                                            color: "#52635F",
+                                            fontWeight: 600,
+                                            fontSize: 10,
+                                            whiteSpace: "nowrap",
+                                            fontFamily:
+                                              lang === "ur"
+                                                ? URDU_FONT
+                                                : "inherit",
+                                          }}
+                                        >
+                                          {r.color ? tc(r.color) : "—"}
+                                        </td>
+                                      )}
+                                      {primarySpecialAttr === "variety" && (
+                                        <td
+                                          style={{
+                                            padding: "7px 4px",
+                                            textAlign: "center",
+                                            color: "#52635F",
+                                            fontWeight: 600,
+                                            fontSize: 10,
+                                            whiteSpace: "nowrap",
+                                            fontFamily:
+                                              lang === "ur"
+                                                ? URDU_FONT
+                                                : "inherit",
+                                          }}
+                                        >
+                                          {r.variety || "—"}
+                                        </td>
+                                      )}
+                                      {primarySpecialAttr === "quality" && (
+                                        <td
+                                          style={{
+                                            padding: "7px 4px",
+                                            textAlign: "center",
+                                            whiteSpace: "nowrap",
+                                          }}
+                                        >
+                                          <span
+                                            className="px-2 py-0.5 rounded-md font-bold text-[10px]"
+                                            style={{
+                                              background: (r.newOld || r.quality) === "New" ? "#E4F4EC" : "#FFF4E6",
+                                              color: (r.newOld || r.quality) === "New" ? "#0A7F5A" : "#B45309",
+                                              fontFamily:
+                                                lang === "ur"
+                                                  ? URDU_FONT
+                                                  : "inherit",
+                                            }}
+                                          >
+                                            {r.newOld || r.quality || "—"}
+                                          </span>
+                                        </td>
+                                      )}
+
+                                      {/* 6. Arrival Quantity */}
+                                      <td
+                                        style={{
+                                          padding: "7px 4px",
+                                          textAlign: "center",
+                                          color: rowArr > 0 ? "#087F63" : "#80918B",
+                                          fontWeight: 700,
+                                          fontSize: 10,
+                                          whiteSpace: "nowrap",
+                                        }}
+                                      >
+                                        {rowArr > 0
+                                          ? (lang === "ur" ? `${toUrduDigits(rowArr.toLocaleString("en-PK"))} بوریاں` : `${rowArr.toLocaleString("en-PK")} Bags`)
+                                          : "—"}
+                                      </td>
+
+                                      {/* 7. Arrival Unit */}
+                                      <td
+                                        style={{
+                                          padding: "7px 4px",
+                                          textAlign: "center",
+                                          color: rowArr > 0 ? "#087F63" : "#80918B",
+                                          fontWeight: 700,
+                                          fontSize: 10,
+                                          whiteSpace: "nowrap",
+                                          fontFamily:
+                                            lang === "ur"
+                                              ? URDU_FONT
+                                              : "inherit",
+                                        }}
+                                      >
+                                        {rowArr > 0 ? ((r as any).arrivalUnit || (lang === "ur" ? "۴۰ کلو" : "40 kg")) : "—"}
+                                      </td>
+
+                                      {/* Remaining Spec Columns */}
+                                      {primarySpecialAttr !== "quality" && (
+                                        <td
+                                          style={{
+                                            padding: "7px 4px",
+                                            textAlign: "center",
+                                            whiteSpace: "nowrap",
+                                          }}
+                                        >
+                                          <span
+                                            className="px-2 py-0.5 rounded-md font-bold text-[10px]"
+                                            style={{
+                                              background: (r.newOld || r.quality) === "New" ? "#E4F4EC" : "#FFF4E6",
+                                              color: (r.newOld || r.quality) === "New" ? "#0A7F5A" : "#B45309",
+                                              fontFamily:
+                                                lang === "ur"
+                                                  ? URDU_FONT
+                                                  : "inherit",
+                                            }}
+                                          >
+                                            {r.newOld || r.quality || "—"}
+                                          </span>
+                                        </td>
+                                      )}
+
+                                      {primarySpecialAttr !== "moisture" && (
+                                        <td
+                                          style={{
+                                            padding: "7px 4px",
+                                            textAlign: "center",
+                                            color: "#087F63",
+                                            fontWeight: 700,
+                                            fontSize: 10,
+                                            whiteSpace: "nowrap",
+                                          }}
+                                        >
+                                          {r.moisture ? (r.moisture.includes("%") ? r.moisture : `${r.moisture}%`) : "—"}
+                                        </td>
+                                      )}
+
+                                      {primarySpecialAttr !== "color" && (
+                                        <td
+                                          style={{
+                                            padding: "7px 4px",
+                                            textAlign: "center",
+                                            color: "#52635F",
+                                            fontWeight: 600,
+                                            fontSize: 10,
+                                            whiteSpace: "nowrap",
+                                            fontFamily:
+                                              lang === "ur"
+                                                ? URDU_FONT
+                                                : "inherit",
+                                          }}
+                                        >
+                                          {r.color ? tc(r.color) : "—"}
+                                        </td>
+                                      )}
+
+                                      {primarySpecialAttr !== "variety" && (
+                                        <td
+                                          style={{
+                                            padding: "7px 4px",
+                                            textAlign: "center",
+                                            color: "#52635F",
+                                            fontWeight: 600,
+                                            fontSize: 10,
+                                            whiteSpace: "nowrap",
+                                            fontFamily:
+                                              lang === "ur"
+                                                ? URDU_FONT
+                                                : "inherit",
+                                          }}
+                                        >
+                                          {r.variety || "—"}
+                                        </td>
+                                      )}
+
+                                      {/* 10. Origin */}
+                                      <td
+                                        style={{
+                                          padding: "7px 4px",
+                                          textAlign: "center",
+                                          color: "#52635F",
+                                          fontWeight: 600,
+                                          fontSize: 10,
+                                          whiteSpace: "nowrap",
+                                          fontFamily:
+                                            lang === "ur"
+                                              ? URDU_FONT
+                                              : "inherit",
+                                        }}
+                                      >
+                                        {r.origin ? tm(r.origin) : "—"}
+                                      </td>
+
+                                      {/* 11. Condition */}
+                                      <td
+                                        style={{
+                                          padding: "7px 4px",
+                                          textAlign: "center",
+                                          color: "#52635F",
+                                          fontWeight: 600,
+                                          fontSize: 10,
+                                          whiteSpace: "nowrap",
+                                          fontFamily:
+                                            lang === "ur"
+                                              ? URDU_FONT
+                                              : "inherit",
+                                        }}
+                                      >
+                                        {r.condition || r.quality || "—"}
+                                      </td>
+
+                                      {/* 12. Specification */}
+                                      <td
+                                        style={{
+                                          padding: "7px 4px",
+                                          textAlign: "center",
+                                          color: "#52635F",
+                                          fontWeight: 600,
+                                          fontSize: 10,
+                                          whiteSpace: "nowrap",
+                                          fontFamily:
+                                            lang === "ur"
+                                              ? URDU_FONT
+                                              : "inherit",
+                                        }}
+                                      >
+                                        {r.spec || "—"}
+                                      </td>
+                                    </tr>
+
+                                    {/* Inline Expandable Trend Graph Row directly below this clicked row */}
+                                    {isRowModalActive && (
+                                      <tr>
+                                        <td
+                                          colSpan={13}
+                                          className="p-0 border-b-2 border-[#10B981]"
+                                          style={{
+                                            background: "#F4FAF7",
+                                            padding: 0,
+                                          }}
+                                        >
+                                          <div
+                                            style={{
+                                              position: "sticky",
+                                              left: 0,
+                                              width: tableClientWidth > 0 ? `${tableClientWidth}px` : "100%",
+                                              maxWidth: tableClientWidth > 0 ? `${tableClientWidth}px` : "100%",
+                                              boxSizing: "border-box",
+                                            }}
+                                            className="p-2 sm:p-3.5 flex flex-col gap-2.5 shadow-inner bg-[#F4FAF7]"
+                                          >
+                                            {/* Trends-matching Card Container */}
+                                            <div
+                                              className="rounded-2xl p-3 sm:p-4 flex flex-col gap-3 shadow-sm bg-white"
+                                              style={{
+                                                border: "1px solid #D5E2DD",
+                                                width: "100%",
+                                                boxSizing: "border-box",
+                                              }}
+                                            >
+                                              {/* 1. Top Row: Price vs Arrival Switcher Tabs + Close Button */}
+                                              <div className="flex items-center justify-between gap-2 pb-2 border-b border-[#E8EFEC]">
+                                                <div className="flex items-center bg-[#E5EFEA] p-0.5 rounded-lg border border-[#CCE2D7]">
+                                                  <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      setTableGraphView("price");
+                                                    }}
+                                                    className="tap-target px-3 py-1 rounded-md text-[10.5px] font-extrabold transition"
+                                                    style={{
+                                                      background: tableGraphView === "price" ? "#087F63" : "transparent",
+                                                      color: tableGraphView === "price" ? "#FFFFFF" : "#4E665E",
+                                                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                                    }}
+                                                  >
+                                                    {lang === "ur" ? "قیمت کا رجحان" : "Price Trend"}
+                                                  </button>
+                                                  <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      setTableGraphView("arrival");
+                                                    }}
+                                                    className="tap-target px-3 py-1 rounded-md text-[10.5px] font-extrabold transition"
+                                                    style={{
+                                                      background: tableGraphView === "arrival" ? "#D97706" : "transparent",
+                                                      color: tableGraphView === "arrival" ? "#FFFFFF" : "#4E665E",
+                                                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                                    }}
+                                                  >
+                                                    {lang === "ur" ? "آمد کا رجحان" : "Arrival Trend"}
+                                                  </button>
+                                                </div>
+
+                                                <button
+                                                  type="button"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedMandiGraphRow(null);
+                                                  }}
+                                                  className="tap-target w-7 h-7 rounded-full bg-[#E5EFEA] hover:bg-[#D5E5DE] text-[#064D40] text-xs font-bold flex items-center justify-center transition active:scale-95 flex-shrink-0"
+                                                  title={lang === "ur" ? "بند کریں" : "Close"}
+                                                >
+                                                  ✕
+                                                </button>
+                                              </div>
+
+                                              {/* 2. Second Row: Granularity Filters (1, 5, 15, 30, 1H, 5H, 1D, 1W, 1M) */}
+                                              <div className="flex items-center gap-1 overflow-x-auto py-1 border-b border-[#E8EFEC]" style={{ scrollbarWidth: "none" }}>
+                                                {["1", "5", "15", "30", "1H", "5H", "1D", "1W", "1M"].map((g) => {
+                                                  const isGActive = tableGraphGranularity === g;
+                                                  return (
+                                                    <button
+                                                      key={g}
+                                                      type="button"
+                                                      onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setTableGraphGranularity(g);
+                                                      }}
+                                                      className={`px-2 py-0.5 rounded text-[10.5px] font-bold transition-colors flex-shrink-0 ${isGActive
+                                                        ? tableGraphView === "price"
+                                                          ? "bg-[#087F63] text-white shadow-xs"
+                                                          : "bg-[#D97706] text-white shadow-xs"
+                                                        : "text-[#52635F] hover:bg-[#F1F7F4] hover:text-[#143B33]"
+                                                        }`}
+                                                    >
+                                                      {g}
+                                                    </button>
+                                                  );
+                                                })}
+                                              </div>
+
+                                              {/* 2. Main Graph Body according to Price vs Arrival */}
+                                              {tableGraphView === "price" ? (
+                                                <>
+                                                  {(() => {
+                                                    const graphData = buildMandiInlineGraphFromRows({
+                                                      allRows,
+                                                      mandiName: r.mandiName,
+                                                      rateType: r.rateType,
+                                                      timeframe: graphTimeframe,
+                                                      lang,
+                                                      view: "price",
+                                                    });
+                                                    const pts = graphData.points;
+                                                    const len = pts.length;
+                                                    const hoverI = tableGraphHoverIdx !== null && tableGraphHoverIdx < len ? tableGraphHoverIdx : len - 1;
+                                                    const displayPrice = pts[hoverI] ?? graphData.latestPrice;
+                                                    const startPrice = pts[0] || displayPrice || 1;
+                                                    const changeAmt = displayPrice - startPrice;
+                                                    const absPct = Math.abs((changeAmt / (startPrice || 1)) * 100).toFixed(2);
+                                                    const isPositive = changeAmt > 0;
+                                                    const isFlat = changeAmt === 0;
+                                                    const seriesMax = Math.max(...pts, displayPrice);
+                                                    const seriesMin = Math.min(...pts, displayPrice);
+                                                    const seriesAvg = Math.round(pts.reduce((a, b) => a + b, 0) / (len || 1));
+                                                    const currentDateLabel = graphData.dates[hoverI] || graphData.dates[len - 1] || "14 Sep 2026";
+
+                                                    const CW = 540;
+                                                    const CH = 145;
+                                                    const PL = 42;
+                                                    const PR = 42;
+                                                    const PT = 14;
+                                                    const PB = 24;
+                                                    const chartW = CW - PL - PR;
+                                                    const chartH = CH - PT - PB;
+                                                    const pMin = graphData.yMinBound;
+                                                    const pMax = graphData.yMaxBound;
+                                                    const yOf = (v: number) => PT + chartH - ((v - pMin) / (pMax - pMin || 1)) * chartH;
+                                                    const xOf = (i: number) => PL + (i / (len - 1 || 1)) * chartW;
+                                                    const volBaseY = CH - PB;
+                                                    const volMaxH = 24;
+                                                    const maxArr = graphData.peakArrival || 1;
+                                                    const currentCloseY = yOf(displayPrice);
+
+                                                    return (
+                                                      <>
+                                                        {/* Commodity Header HUD */}
+                                                        <div className="flex flex-col gap-2 border-b border-[#E8EFEC] pb-2.5">
+                                                          <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-2">
+                                                              <span
+                                                                className="text-xs sm:text-sm font-extrabold text-[#143B33]"
+                                                                style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                                                              >
+                                                                {tm(r.mandiName.replace(/\s*mandi$/i, "").replace(/\s*منڈی$/i, ""))} — {byproduct ? `${tc(byproduct)}` : `${tc(product)}`}
+                                                              </span>
+                                                              <span className="text-[10px] font-bold text-[#087F63] bg-[#E8F8F4] px-2 py-0.5 rounded-full border border-[#C2E8DB]">
+                                                                {tr(r.rateType).replace(" ریٹ", "").replace(" Rate", "")}
+                                                              </span>
+                                                            </div>
+                                                            <span className="text-[10px] font-bold text-[#80918B]">
+                                                              {lang === "ur" ? "روپے فی ۴۰ کلو" : "PKR / 40kg"}
+                                                            </span>
+                                                          </div>
+
+                                                          {/* Price & Change Display */}
+                                                          <div className="flex items-baseline justify-between flex-wrap gap-2">
+                                                            <div className="flex items-baseline gap-2.5">
+                                                              <span className="text-2xl sm:text-3xl font-black text-[#143B33] tracking-tight">
+                                                                {lang === "ur" ? `روپے ${toUrduDigits(displayPrice.toLocaleString())}` : `Rs. ${displayPrice.toLocaleString()}`}
+                                                              </span>
+                                                              <span
+                                                                className="text-xs font-bold px-2.5 py-0.5 rounded-md flex items-center gap-1"
+                                                                style={{
+                                                                  background: isFlat ? "#F3F4F6" : isPositive ? "#DCFCE7" : "#FEE2E2",
+                                                                  color: isFlat ? "#4B5563" : isPositive ? "#15803D" : "#B91C1C",
+                                                                  border: `1px solid ${isFlat ? "#E5E7EB" : isPositive ? "#86EFAC" : "#FCA5A5"}`,
+                                                                }}
+                                                              >
+                                                                <span>{isFlat ? "—" : isPositive ? "▲" : "▼"}</span>
+                                                                <span>{absPct}%</span>
+                                                              </span>
+                                                            </div>
+
+                                                            {/* Date / Scrub Indicator */}
+                                                            <div className="text-[11px] font-semibold text-[#52635F]">
+                                                              {currentDateLabel}
+                                                            </div>
+                                                          </div>
+
+                                                          {/* Stat Summary Bar (High, Low, Avg) */}
+                                                          <div className="grid grid-cols-3 gap-2 pt-1 text-[10px]">
+                                                            <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
+                                                              <span className="text-[#80918B] font-semibold">
+                                                                {lang === "ur" ? "زیادہ سے زیادہ" : "Period High"}
+                                                              </span>
+                                                              <span className="font-bold text-[#143B33] text-xs">
+                                                                {lang === "ur" ? `روپے ${toUrduDigits(seriesMax.toLocaleString())}` : `Rs. ${seriesMax.toLocaleString()}`}
+                                                              </span>
+                                                            </div>
+                                                            <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
+                                                              <span className="text-[#80918B] font-semibold">
+                                                                {lang === "ur" ? "کم سے کم" : "Period Low"}
+                                                              </span>
+                                                              <span className="font-bold text-[#143B33] text-xs">
+                                                                {lang === "ur" ? `روپے ${toUrduDigits(seriesMin.toLocaleString())}` : `Rs. ${seriesMin.toLocaleString()}`}
+                                                              </span>
+                                                            </div>
+                                                            <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
+                                                              <span className="text-[#80918B] font-semibold">
+                                                                {lang === "ur" ? "اوسط ریٹ" : "Period Avg"}
+                                                              </span>
+                                                              <span className="font-bold text-[#087F63] text-xs">
+                                                                {lang === "ur" ? `روپے ${toUrduDigits(seriesAvg.toLocaleString())}` : `Rs. ${seriesAvg.toLocaleString()}`}
+                                                              </span>
+                                                            </div>
+                                                          </div>
+                                                        </div>
+
+                                                        {/* SVG Chart Canvas */}
+                                                        <div className="relative w-full select-none bg-[#FCFDFD] rounded-xl border border-[#EDF4F1] p-1">
+                                                          <svg
+                                                            viewBox={`0 0 ${CW} ${CH}`}
+                                                            className="w-full"
+                                                            style={{ height: isTableExpanded ? 160 : 135, display: "block" }}
+                                                            onMouseMove={(e) => {
+                                                              const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                                                              const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
+                                                              const i = Math.round((relX / chartW) * (len - 1));
+                                                              setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                                                            }}
+                                                            onMouseLeave={() => setTableGraphHoverIdx(null)}
+                                                            onTouchMove={(e) => {
+                                                              const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                                                              const touch = e.touches[0];
+                                                              const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
+                                                              const i = Math.round((relX / chartW) * (len - 1));
+                                                              setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                                                            }}
+                                                            onTouchEnd={() => setTableGraphHoverIdx(null)}
+                                                          >
+                                                            <defs>
+                                                              <linearGradient
+                                                                id={`tableInlinePriceGrad-${ci}`}
+                                                                x1="0"
+                                                                y1="0"
+                                                                x2="0"
+                                                                y2="1"
+                                                              >
+                                                                <stop offset="0%" stopColor="#087F63" stopOpacity="0.22" />
+                                                                <stop offset="75%" stopColor="#087F63" stopOpacity="0.03" />
+                                                                <stop offset="100%" stopColor="#087F63" stopOpacity="0.00" />
+                                                              </linearGradient>
+                                                            </defs>
+
+                                                            {/* Horizontal Gridlines + Left & Right Price Axis Labels */}
+                                                            {graphData.yLabels.map((tick, ti) => {
+                                                              const y = yOf(tick.val);
+                                                              return (
+                                                                <g key={`yTick-${ti}`}>
+                                                                  <line
+                                                                    x1={PL}
+                                                                    y1={y}
+                                                                    x2={CW - PR}
+                                                                    y2={y}
+                                                                    stroke="#E8EFEF"
+                                                                    strokeWidth="1"
+                                                                    strokeDasharray="3 3"
+                                                                  />
+                                                                  <text
+                                                                    x={PL - 5}
+                                                                    y={y + 3.5}
+                                                                    textAnchor="end"
+                                                                    fontSize="8.5"
+                                                                    fontWeight="600"
+                                                                    fill="#80918B"
+                                                                  >
+                                                                    {tick.label}
+                                                                  </text>
+                                                                  <text
+                                                                    x={CW - PR + 5}
+                                                                    y={y + 3.5}
+                                                                    textAnchor="start"
+                                                                    fontSize="8"
+                                                                    fontWeight="600"
+                                                                    fill="#9BAAA5"
+                                                                  >
+                                                                    {tick.val}
+                                                                  </text>
+                                                                </g>
+                                                              );
+                                                            })}
+
+                                                            {/* Volume Baseline / X-Axis Baseline */}
+                                                            <line
+                                                              x1={PL}
+                                                              y1={volBaseY}
+                                                              x2={CW - PR}
+                                                              y2={volBaseY}
+                                                              stroke="#D5E2DD"
+                                                              strokeWidth="1.2"
+                                                            />
+
+                                                            {/* X-Axis Date Labels */}
+                                                            {graphData.xLabels.map((lbl, i) =>
+                                                              lbl ? (
+                                                                <text
+                                                                  key={`xPriceTick-${i}`}
+                                                                  x={xOf(i)}
+                                                                  y={CH - 6}
+                                                                  textAnchor="middle"
+                                                                  fontSize="8.5"
+                                                                  fontWeight="600"
+                                                                  fill="#80918B"
+                                                                  fontFamily={lang === "ur" ? URDU_FONT : "inherit"}
+                                                                >
+                                                                  {lbl}
+                                                                </text>
+                                                              ) : null,
+                                                            )}
+
+                                                            {/* Mini Arrival Volume Bars along Bottom */}
+                                                            {graphData.arrivals.map((arrVal, i) => {
+                                                              const barX = xOf(i);
+                                                              const barH = (arrVal / maxArr) * volMaxH;
+                                                              const prevP = i > 0 ? pts[i - 1] : pts[i];
+                                                              const curP = pts[i];
+                                                              const isUp = curP >= prevP;
+                                                              const barW = Math.max(2.5, Math.min(6, (chartW / len) * 0.55));
+                                                              const isHov = tableGraphHoverIdx === i;
+
+                                                              return (
+                                                                <rect
+                                                                  key={`vol-${i}`}
+                                                                  x={barX - barW / 2}
+                                                                  y={volBaseY - barH}
+                                                                  width={barW}
+                                                                  height={barH}
+                                                                  rx={1}
+                                                                  fill={isUp ? "#10B981" : "#EF4444"}
+                                                                  opacity={isHov ? 1 : 0.65}
+                                                                />
+                                                              );
+                                                            })}
+
+                                                            {/* Area & Line */}
+                                                            {(() => {
+                                                              const lineCoords = pts.map((v, i) => `${i === 0 ? "M" : "L"}${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`).join(" ");
+                                                              const areaCoords = `${lineCoords} L${xOf(len - 1).toFixed(1)},${volBaseY} L${PL},${volBaseY} Z`;
+                                                              return (
+                                                                <g>
+                                                                  <path d={areaCoords} fill={`url(#tableInlinePriceGrad-${ci})`} />
+                                                                  <path d={lineCoords} stroke="#087F63" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                                                                  {/* Dotted Latest Price Guideline */}
+                                                                  <line x1={PL} y1={currentCloseY} x2={CW - PR} y2={currentCloseY} stroke="#087F63" strokeWidth="0.9" strokeDasharray="3 3" opacity="0.6" />
+                                                                  {/* Latest Price Tag */}
+                                                                  <g transform={`translate(${CW - PR + 2}, ${currentCloseY - 7})`}>
+                                                                    <rect x={0} y={0} width={28} height={14} rx={3} fill="#087F63" />
+                                                                    <text x={14} y={10} textAnchor="middle" fontSize="8" fontWeight="bold" fill="#FFFFFF">
+                                                                      {displayPrice >= 1000 ? `${(displayPrice / 1000).toFixed(1)}k` : displayPrice}
+                                                                    </text>
+                                                                  </g>
+                                                                  {/* Live Pulse Dot */}
+                                                                  <circle cx={xOf(len - 1)} cy={currentCloseY} r="4" fill="#087F63" stroke="#FFFFFF" strokeWidth="2" />
+                                                                </g>
+                                                              );
+                                                            })()}
+
+                                                            {/* Interactive Hover Crosshairs */}
+                                                            {tableGraphHoverIdx !== null && (
+                                                              <g>
+                                                                <line x1={xOf(tableGraphHoverIdx)} y1={PT} x2={xOf(tableGraphHoverIdx)} y2={volBaseY} stroke="#0284C7" strokeWidth="1.2" strokeDasharray="2 2" />
+                                                                <line x1={PL} y1={yOf(pts[tableGraphHoverIdx])} x2={CW - PR} y2={yOf(pts[tableGraphHoverIdx])} stroke="#0284C7" strokeWidth="1" strokeDasharray="2 2" opacity="0.75" />
+                                                                <circle cx={xOf(tableGraphHoverIdx)} cy={yOf(pts[tableGraphHoverIdx])} r="5" fill="#0284C7" stroke="#FFFFFF" strokeWidth="2" />
+                                                              </g>
+                                                            )}
+                                                          </svg>
+
+                                                          {/* Interactive Hover Tooltip */}
+                                                          {tableGraphHoverIdx !== null && (() => {
+                                                            const curP = pts[tableGraphHoverIdx] || 0;
+                                                            const minP = graphData.mins?.[tableGraphHoverIdx] || Math.max(0, curP - Math.round(curP * 0.008));
+                                                            const maxP = graphData.maxs?.[tableGraphHoverIdx] || (curP + Math.round(curP * 0.008));
+                                                            const volVal = graphData.arrivals?.[tableGraphHoverIdx] || 0;
+                                                            const dateStr = graphData.dates[tableGraphHoverIdx] || "14 Sep 2026";
+
+                                                            return (
+                                                              <div
+                                                                className="pointer-events-none absolute z-20 rounded-xl shadow-xl border p-2 flex flex-col gap-1 backdrop-blur-md transition-all duration-75"
+                                                                style={{
+                                                                  left: `${Math.min(Math.max((xOf(tableGraphHoverIdx) / CW) * 100, 24), 76)}%`,
+                                                                  top: 8,
+                                                                  transform: "translateX(-50%)",
+                                                                  background: "rgba(255, 255, 255, 0.97)",
+                                                                  borderColor: "#38BDF8",
+                                                                  minWidth: 150,
+                                                                  boxShadow: "0 8px 24px -4px rgba(2, 132, 199, 0.22)",
+                                                                }}
+                                                              >
+                                                                <div className="flex items-center justify-between text-[10px] font-bold text-[#0284C7] border-b border-[#E0F2FE] pb-1">
+                                                                  <span>DT:</span>
+                                                                  <span className="font-mono text-[#0F172A]">{dateStr}</span>
+                                                                </div>
+                                                                <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10px] font-semibold text-[#334155] pt-1">
+                                                                  <span className="text-[#64748B]">{lang === "ur" ? "کم سے کم ریٹ:" : "Min Rate:"}</span>
+                                                                  <span className="font-mono font-bold text-right text-[#B91C1C]">Rs. {minP.toLocaleString()}</span>
+                                                                  <span className="text-[#64748B]">{lang === "ur" ? "زیادہ سے زیادہ:" : "Max Rate:"}</span>
+                                                                  <span className="font-mono font-bold text-right text-[#15803D]">Rs. {maxP.toLocaleString()}</span>
+                                                                  <span className="text-[#64748B]">{lang === "ur" ? "آمد:" : "Arrivals:"}</span>
+                                                                  <span className="font-mono font-bold text-right text-[#0284C7]">{volVal > 0 ? `${volVal.toLocaleString()} bags` : "—"}</span>
+                                                                </div>
+                                                              </div>
+                                                            );
+                                                          })()}
+                                                        </div>
+                                                      </>
+                                                    );
+                                                  })()}
+                                                </>
+                                              ) : (
+                                                <>
+                                                  {(() => {
+                                                    const arrivalData = buildMandiInlineGraphFromRows({
+                                                      allRows,
+                                                      mandiName: r.mandiName,
+                                                      rateType: r.rateType,
+                                                      timeframe: graphTimeframe,
+                                                      lang,
+                                                      view: "arrival",
+                                                    });
+                                                    const pts = arrivalData.points;
+                                                    const len = pts.length;
+                                                    const hoverI = tableGraphHoverIdx !== null && tableGraphHoverIdx < len ? tableGraphHoverIdx : len - 1;
+                                                    const displayArr = pts[hoverI] ?? arrivalData.latestArrival;
+                                                    const totalArr = arrivalData.totalArrival;
+                                                    const peakArr = arrivalData.peakArrival;
+                                                    const avgArr = Math.round(totalArr / (len || 1));
+                                                    const currentDateLabel = arrivalData.dates[hoverI] || arrivalData.dates[len - 1] || "14 Sep 2026";
+
+                                                    const CW = 540;
+                                                    const CH = 145;
+                                                    const PL = 42;
+                                                    const PR = 42;
+                                                    const PT = 14;
+                                                    const PB = 24;
+                                                    const chartW = CW - PL - PR;
+                                                    const chartH = CH - PT - PB;
+                                                    const aMin = 0;
+                                                    const aMax = arrivalData.yMaxBound;
+                                                    const yOf = (v: number) => PT + chartH - ((v - aMin) / (aMax - aMin || 1)) * chartH;
+                                                    const xOf = (i: number) => PL + (i / (len - 1 || 1)) * chartW;
+                                                    const volBaseY = CH - PB;
+                                                    const volMaxH = 26;
+
+                                                    return (
+                                                      <>
+                                                        {/* Arrival Header HUD */}
+                                                        <div className="flex flex-col gap-2 border-b border-[#E8EFEC] pb-2.5">
+                                                          <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-1.5">
+                                                              <span className="w-2.5 h-2.5 rounded-full bg-[#D97706]" />
+                                                              <span
+                                                                className="text-xs sm:text-sm font-extrabold text-[#143B33]"
+                                                                style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                                                              >
+                                                                {tm(r.mandiName.replace(/\s*mandi$/i, "").replace(/\s*منڈی$/i, ""))} — {lang === "ur" ? "آمد کی مقدار (مارکیٹ رسد)" : "Arrival Volume Trend"}
+                                                              </span>
+                                                            </div>
+                                                            <span className="text-[10px] font-semibold text-[#92400E] bg-[#FEF3C7] px-2 py-0.5 rounded-md border border-[#FDE68A]">
+                                                              {lang === "ur" ? "تھیلے" : "Bags"}
+                                                            </span>
+                                                          </div>
+
+                                                          <div className="flex items-baseline justify-between flex-wrap gap-2">
+                                                            <div className="flex items-baseline gap-2">
+                                                              <span className="text-2xl font-black text-[#92400E]">
+                                                                {lang === "ur" ? `${toUrduDigits(displayArr.toLocaleString())} تھیلے` : `${displayArr.toLocaleString()} Bags`}
+                                                              </span>
+                                                            </div>
+                                                            <div className="text-[11px] font-semibold text-[#52635F]">
+                                                              {currentDateLabel}
+                                                            </div>
+                                                          </div>
+
+                                                          <div className="grid grid-cols-3 gap-2 pt-1 text-[10px]">
+                                                            <div className="bg-[#FFFDF5] p-1.5 rounded-lg border border-[#FDE68A] flex flex-col">
+                                                              <span className="text-[#92400E] font-semibold">{lang === "ur" ? "کل آمد" : "Total Period"}</span>
+                                                              <span className="font-bold text-[#78350F] text-xs">
+                                                                {totalArr.toLocaleString()} Bags
+                                                              </span>
+                                                            </div>
+                                                            <div className="bg-[#FFFDF5] p-1.5 rounded-lg border border-[#FDE68A] flex flex-col">
+                                                              <span className="text-[#92400E] font-semibold">{lang === "ur" ? "سب سے زیادہ" : "Peak Day"}</span>
+                                                              <span className="font-bold text-[#78350F] text-xs">
+                                                                {peakArr.toLocaleString()} Bags
+                                                              </span>
+                                                            </div>
+                                                            <div className="bg-[#FFFDF5] p-1.5 rounded-lg border border-[#FDE68A] flex flex-col">
+                                                              <span className="text-[#92400E] font-semibold">{lang === "ur" ? "روزانہ اوسط" : "Daily Avg"}</span>
+                                                              <span className="font-bold text-[#92400E] text-xs">
+                                                                {avgArr.toLocaleString()} Bags
+                                                              </span>
+                                                            </div>
+                                                          </div>
+                                                        </div>
+
+                                                        {/* SVG Arrival Canvas */}
+                                                        <div className="relative w-full select-none bg-[#FCFDFD] rounded-xl border border-[#EDF4F1] p-1">
+                                                          <svg
+                                                            viewBox={`0 0 ${CW} ${CH}`}
+                                                            className="w-full"
+                                                            style={{ height: isTableExpanded ? 160 : 135, display: "block" }}
+                                                            onMouseMove={(e) => {
+                                                              const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                                                              const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
+                                                              const i = Math.round((relX / chartW) * (len - 1));
+                                                              setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                                                            }}
+                                                            onMouseLeave={() => setTableGraphHoverIdx(null)}
+                                                            onTouchMove={(e) => {
+                                                              const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                                                              const touch = e.touches[0];
+                                                              const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
+                                                              const i = Math.round((relX / chartW) * (len - 1));
+                                                              setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                                                            }}
+                                                            onTouchEnd={() => setTableGraphHoverIdx(null)}
+                                                          >
+                                                            <defs>
+                                                              <linearGradient id={`tableInlineArrGrad-${ci}`} x1="0" y1="0" x2="0" y2="1">
+                                                                <stop offset="0%" stopColor="#D97706" stopOpacity="0.32" />
+                                                                <stop offset="85%" stopColor="#D97706" stopOpacity="0.04" />
+                                                                <stop offset="100%" stopColor="#D97706" stopOpacity="0.00" />
+                                                              </linearGradient>
+                                                            </defs>
+
+                                                            {/* Horizontal Dashed Gridlines + Y Ticks */}
+                                                            {arrivalData.yLabels.map((tick, ti) => {
+                                                              const y = yOf(tick.val);
+                                                              return (
+                                                                <g key={`yArrTick-${ti}`}>
+                                                                  <line x1={PL} y1={y} x2={CW - PR} y2={y} stroke="#E5EAE8" strokeWidth="1" strokeDasharray="4 4" />
+                                                                  <text x={PL - 6} y={y + 3.5} textAnchor="end" fontSize="9" fontWeight="600" fill="#80918B">
+                                                                    {tick.label}
+                                                                  </text>
+                                                                </g>
+                                                              );
+                                                            })}
+
+                                                            {/* X-Axis Baseline */}
+                                                            <line x1={PL} y1={volBaseY} x2={CW - PR} y2={volBaseY} stroke="#D5E2DD" strokeWidth="1.2" />
+
+                                                            {/* X-Axis Dates */}
+                                                            {arrivalData.xLabels.map((lbl, i) =>
+                                                              lbl ? (
+                                                                <text key={`xArrTick-${i}`} x={xOf(i)} y={CH - 6} textAnchor="middle" fontSize="8.5" fontWeight="600" fill="#80918B" fontFamily={lang === "ur" ? URDU_FONT : "inherit"}>
+                                                                  {lbl}
+                                                                </text>
+                                                              ) : null,
+                                                            )}
+
+                                                            {/* Arrival Volume Bars along Bottom */}
+                                                            {pts.map((arrVal, i) => {
+                                                              const barX = xOf(i);
+                                                              const maxVal = arrivalData.peakArrival || 1;
+                                                              const barH = (arrVal / maxVal) * volMaxH;
+                                                              const barW = Math.max(2.5, Math.min(6, (chartW / len) * 0.55));
+                                                              const isHov = tableGraphHoverIdx === i;
+                                                              return (
+                                                                <rect
+                                                                  key={`arr-vol-bar-${i}`}
+                                                                  x={barX - barW / 2}
+                                                                  y={volBaseY - barH}
+                                                                  width={barW}
+                                                                  height={barH}
+                                                                  rx={1}
+                                                                  fill="#D97706"
+                                                                  opacity={isHov ? 0.95 : 0.6}
+                                                                />
+                                                              );
+                                                            })}
+
+                                                            {/* Area Fill */}
+                                                            <path
+                                                              d={[
+                                                                ...pts.map((v, i) => `${i === 0 ? "M" : "L"}${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`),
+                                                                `L${xOf(len - 1).toFixed(1)},${volBaseY}`,
+                                                                `L${PL},${volBaseY}`,
+                                                                "Z",
+                                                              ].join(" ")}
+                                                              fill={`url(#tableInlineArrGrad-${ci})`}
+                                                            />
+
+                                                            {/* Main Line */}
+                                                            <path
+                                                              d={pts.map((v, i) => `${i === 0 ? "M" : "L"}${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`).join(" ")}
+                                                              stroke="#D97706"
+                                                              strokeWidth="2.8"
+                                                              fill="none"
+                                                              strokeLinecap="round"
+                                                              strokeLinejoin="round"
+                                                            />
+
+                                                            {/* Hover Guide and Marker */}
+                                                            {tableGraphHoverIdx !== null && (
+                                                              <g>
+                                                                <line x1={xOf(tableGraphHoverIdx)} y1={PT} x2={xOf(tableGraphHoverIdx)} y2={volBaseY} stroke="#92400E" strokeWidth="1.2" strokeDasharray="3 3" />
+                                                                <circle cx={xOf(tableGraphHoverIdx)} cy={yOf(pts[tableGraphHoverIdx])} r="5" fill="#D97706" stroke="#FFFFFF" strokeWidth="2" />
+                                                              </g>
+                                                            )}
+                                                          </svg>
+
+                                                          {/* Interactive Hover Tooltip for Arrival */}
+                                                          {tableGraphHoverIdx !== null && (() => {
+                                                            const volVal = pts[tableGraphHoverIdx] || 0;
+                                                            const dateStr = arrivalData.dates[tableGraphHoverIdx] || "14 Sep 2026";
+                                                            return (
+                                                              <div
+                                                                className="pointer-events-none absolute z-20 rounded-xl shadow-xl border p-2 flex flex-col gap-1 backdrop-blur-md transition-all duration-75"
+                                                                style={{
+                                                                  left: `${Math.min(Math.max((xOf(tableGraphHoverIdx) / CW) * 100, 24), 76)}%`,
+                                                                  top: 8,
+                                                                  transform: "translateX(-50%)",
+                                                                  background: "rgba(255, 255, 255, 0.97)",
+                                                                  borderColor: "#FDE68A",
+                                                                  minWidth: 140,
+                                                                  boxShadow: "0 8px 24px -4px rgba(217, 119, 6, 0.22)",
+                                                                }}
+                                                              >
+                                                                <div className="flex items-center justify-between text-[10px] font-bold text-[#92400E] border-b border-[#FEF3C7] pb-1">
+                                                                  <span>DT:</span>
+                                                                  <span className="font-mono text-[#0F172A]">{dateStr}</span>
+                                                                </div>
+                                                                <div className="flex items-center justify-between text-[10.5px] font-semibold text-[#334155] pt-1">
+                                                                  <span className="text-[#78350F]">{lang === "ur" ? "آمد:" : "Arrivals:"}</span>
+                                                                  <span className="font-mono font-bold text-right text-[#92400E]">
+                                                                    {volVal > 0 ? `${volVal.toLocaleString()} bags` : "—"}
+                                                                  </span>
+                                                                </div>
+                                                              </div>
+                                                            );
+                                                          })()}
+                                                        </div>
+                                                      </>
+                                                    );
+                                                  })()}
+                                                </>
+                                              )}
+
+                                              {/* 3. Timeframe Filter: 1 Month, 3 Months, 6 Months, 1 Year */}
+                                              <div className="pt-0.5">
+                                                <div className="grid grid-cols-4 gap-1.5 border border-[#D5E2DD] rounded-xl p-1 bg-[#F9FBFA]">
+                                                  {[
+                                                    { id: "1M", labelEn: "1 Month", labelUr: "۱ مہینہ" },
+                                                    { id: "3M", labelEn: "3 Months", labelUr: "۳ مہینے" },
+                                                    { id: "6M", labelEn: "6 Months", labelUr: "۶ مہینے" },
+                                                    { id: "1Y", labelEn: "1 Year", labelUr: "۱ سال" },
+                                                  ].map((tf) => {
+                                                    const isTfActive = graphTimeframe === tf.id;
+                                                    return (
+                                                      <button
+                                                        key={tf.id}
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                          e.stopPropagation();
+                                                          setGraphTimeframe(tf.id as any);
+                                                        }}
+                                                        className={`flex items-center justify-center py-2 px-1 rounded-lg transition-all font-bold ${isTfActive
+                                                          ? tableGraphView === "price"
+                                                            ? "bg-[#087F63] text-white shadow-sm ring-1 ring-[#087F63]/30 scale-[1.01]"
+                                                            : "bg-[#D97706] text-white shadow-sm ring-1 ring-[#D97706]/30 scale-[1.01]"
+                                                          : "bg-white/80 text-[#52635F] hover:bg-white hover:text-[#183B34] border border-[#E8EFEC]"
+                                                          }`}
+                                                        style={{
+                                                          fontSize: lang === "ur" ? 13 : 11,
+                                                          fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                                        }}
+                                                      >
+                                                        <span>{lang === "ur" ? tf.labelUr : tf.labelEn}</span>
+                                                      </button>
+                                                    );
+                                                  })}
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    )}
+                                  </React.Fragment>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
+
+              {/*  Attribute picker sheet  */}
+              {attrSheet &&
+                (() => {
+                  const opts: Record<string, string[]> = {
+                    variety: [
+                      "Sona Moti",
+                      "TD-1",
+                      "SurSabz",
+                      "Akbar",
+                      "Anaj",
+                      "Ujala",
+                      "Galaxy",
+                      "Dilkush",
+                      "Arooj",
+                      "Subham",
+                    ],
+                    newold: ["New", "Old"],
+                    color: ["Golden", "White", "Yellow"],
+                    spec: ["Seed Quality", "Retail", "Damage"],
+                    condition: ["Wet", "Dry", "Mix"],
+                    ratetype: ALL_RATE_TYPES,
+                  };
+                  const labels: Record<string, string> = {
+                    variety: lang === "ur" ? "قسم منتخب کریں" : "Variety",
+                    newold:
+                      lang === "ur" ? "معیار منتخب کریں" : "Quality",
+                    color: lang === "ur" ? "رنگ منتخب کریں" : "Color",
+                    spec: lang === "ur" ? "خصوصیت منتخب کریں" : "Specifications",
+                    condition: lang === "ur" ? "حالت منتخب کریں" : "Condition",
+                    ratetype:
+                      lang === "ur" ? "نرخ کی قسم منتخب کریں" : "Rate Type",
+                  };
+                  const currVal =
+                    attrSheet === "variety"
+                      ? attrVariety
+                      : attrSheet === "newold"
+                        ? attrNewOld
+                        : attrSheet === "color"
+                          ? attrColor
+                          : attrSheet === "spec"
+                            ? attrSpec
+                            : attrSheet === "ratetype"
+                              ? attrRateType
+                              : attrCondition;
+                  const setter = (v: string | null) => {
+                    if (attrSheet === "variety") setAttrVariety(v);
+                    else if (attrSheet === "newold") setAttrNewOld(v);
+                    else if (attrSheet === "color") setAttrColor(v);
+                    else if (attrSheet === "spec") setAttrSpec(v);
+                    else if (attrSheet === "ratetype") setAttrRateType(v);
+                    else setAttrCondition(v);
+                    setAttrSheet(null);
+                  };
+                  return (
+                    <div
+                      className="zm-sheet-overlay"
+                      style={{ zIndex: 250 }}
+                      onClick={() => setAttrSheet(null)}
+                    >
+                      <div
+                        className="zm-sheet"
+                        style={{
+                          maxHeight: "60vh",
+                          display: "flex",
+                          flexDirection: "column",
+                          background: "#F8FCFA",
+                          borderTopLeftRadius: 24,
+                          borderTopRightRadius: 24,
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="px-5 pt-3 pb-2.5 border-b border-[#DCE8E3] flex-shrink-0">
+                          <div className="w-10 h-1 rounded-full mx-auto mb-2 bg-[#C7D6D0]" />
+                          <p
+                            className="font-extrabold text-center"
+                            style={{
+                              color: "#183B34",
+                              fontSize: lang === "ur" ? 19 : 16,
+                              fontFamily:
+                                lang === "ur"
+                                  ? URDU_FONT
+                                  : "inherit",
+                            }}
+                          >
+                            {labels[attrSheet]}
+                          </p>
+                        </div>
+                        <div
+                          className="p-3.5 flex flex-col gap-2 overflow-y-auto flex-1"
+                          style={{ minHeight: 0 }}
+                        >
+                          {currVal && (
+                            <button
+                              onClick={() => setter(null)}
+                              className="tap-target rounded-xl px-4 flex items-center justify-center transition active:scale-[0.98]"
+                              style={{
+                                background: "#FFF1F2",
+                                border: "1.5px solid #FDA4AF",
+                                minHeight: 44,
+                              }}
+                            >
+                              <span
+                                className="font-bold text-sm text-[#BE123C]"
+                                style={{
+                                  fontSize: lang === "ur" ? 15 : 13.5,
+                                  fontFamily:
+                                    lang === "ur"
+                                      ? URDU_FONT
+                                      : "inherit",
+                                }}
+                              >
+                                {lang === "ur"
+                                  ? "انتخاب ہٹائیں"
+                                  : "Clear selection"}
+                              </span>
+                            </button>
+                          )}
+                          {opts[attrSheet].map((opt) => {
+                            // Check if this attribute option is available in selected mandi
+                            const mandiAttrs =
+                              locScope.kind === "mandi"
+                                ? MANDI_ATTR_AVAILABLE[locScope.label]
+                                : null;
+                            const attrKey =
+                              attrSheet === "newold"
+                                ? "newold"
+                                : (attrSheet as
+                                  | "color"
+                                  | "variety"
+                                  | "spec"
+                                  | "condition"
+                                  | "newold");
+                            const available =
+                              !mandiAttrs ||
+                              !mandiAttrs[attrKey] ||
+                              mandiAttrs[attrKey].includes(opt);
+                            const optLabel =
+                              attrSheet === "variety"
+                                ? tc(opt)
+                                : attrSheet === "ratetype"
+                                  ? tr(opt)
+                                  : t(opt);
+                            const isSelected = currVal === opt;
+                            return (
+                              <button
+                                key={opt}
+                                onClick={() =>
+                                  available ? setter(opt) : undefined
+                                }
+                                className="tap-target rounded-xl px-4 flex items-center justify-between transition active:scale-[0.98]"
+                                style={{
+                                  background: !available
+                                    ? "#F4FAF7"
+                                    : isSelected
+                                      ? "#E8F5EE"
+                                      : "#FFFFFF",
+                                  border: !available
+                                    ? "1px dashed #D5E2DD"
+                                    : isSelected
+                                      ? "1.5px solid #087F63"
+                                      : "1px solid #E2EBE7",
+                                  minHeight: 44,
+                                  opacity: available ? 1 : 0.45,
+                                  boxShadow: isSelected
+                                    ? "0 2px 8px rgba(8,127,99,0.12)"
+                                    : "0 1px 3px rgba(0,0,0,0.02)",
+                                }}
+                              >
+                                <span
+                                  className={`${lang === "ur" ? "text-right" : "text-left"} font-bold text-sm`}
+                                  style={{
+                                    color: !available
+                                      ? "#80918B"
+                                      : isSelected
+                                        ? "#064D40"
+                                        : "#183B34",
+                                    fontSize: lang === "ur" ? 16 : 13.5,
+                                    fontFamily:
+                                      lang === "ur"
+                                        ? URDU_FONT
+                                        : "inherit",
+                                  }}
+                                >
+                                  {optLabel}
+                                </span>
+                                {!available && (
+                                  <span
+                                    style={{
+                                      fontSize: lang === "ur" ? 12 : 10,
+                                      color: "#80918B",
                                       fontFamily:
                                         lang === "ur"
                                           ? URDU_FONT
                                           : "inherit",
                                     }}
                                   >
-                                    {hasFilter ? (
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setDtOpenCol(
-                                            dtOpenCol === col ? null : col,
-                                          );
-                                        }}
-                                        className="flex items-center justify-center gap-0.5 font-bold text-white mx-auto"
+                                    {lang === "ur"
+                                      ? "منڈی میں نہیں"
+                                      : "Not in mandi"}
+                                  </span>
+                                )}
+                                {available && isSelected && (
+                                  <span
+                                    style={{ color: "#087F63", fontWeight: 900, fontSize: 15 }}
+                                  >
+                                    ✓
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+              {/* Date table sheet */}
+              {dateTableOpen &&
+                (() => {
+                  const allTableRows = getRowsForProducts([product]).filter(
+                    (r) => !byproduct || isMatchByproduct(r.byproduct, byproduct),
+                  );
+
+                  // Query actual real Excel observations for the selected historical date
+                  const selYear = dtSelDate.getFullYear();
+                  const selMonth = String(dtSelDate.getMonth() + 1).padStart(2, "0");
+                  const selDay = String(dtSelDate.getDate()).padStart(2, "0");
+                  const targetDateKey = `${selYear}-${selMonth}-${selDay}`;
+
+                  const dateIdx = REAL_DATES_TIMELINE.indexOf(targetDateKey);
+
+                  const filteredTableRows = allTableRows
+                    .filter((r) => {
+                      if (dtPriceType && r.rateType !== dtPriceType) return false;
+                      return true;
+                    })
+                    .map((r) => {
+                      if (dateIdx >= 0) {
+                        const rowTimeline = getExcelTimeline({
+                          product,
+                          byproduct: r.byproduct || byproduct,
+                          locationLabel: r.mandiName,
+                          locationKind: "mandi",
+                          rateType: r.rateType,
+                          range: "year",
+                        });
+                        const mi = rowTimeline.mins[dateIdx] ?? r.min;
+                        const mx = rowTimeline.maxs[dateIdx] ?? r.max;
+                        const arr = rowTimeline.arrivals[dateIdx] ?? 0;
+                        return {
+                          ...r,
+                          min: mi,
+                          max: mx,
+                          arrival: arr > 0 ? arr.toLocaleString("en-PK") : "—",
+                        };
+                      }
+                      return r;
+                    });
+
+                  const allPriceTypes = [
+                    ...new Set(allTableRows.map((r) => r.rateType)),
+                  ];
+                  const specs = [
+                    "Seed Quality",
+                    "Retail",
+                    "Damage",
+                    "Export Grade",
+                  ];
+                  const conditions = ["Dry", "Wet", "Mix"];
+                  const qualities = ["New", "Old", "Cleaned", "Uncleaned"];
+
+                  // Calendar helpers
+                  const selD = dtSelDate;
+                  const calM = dtCalMonth;
+                  const calYear = calM.getFullYear();
+                  const calMonthIdx = calM.getMonth();
+                  const monthNamesUr = [
+                    "جنوری",
+                    "فروری",
+                    "مارچ",
+                    "اپریل",
+                    "مئی",
+                    "جون",
+                    "جولائی",
+                    "اگست",
+                    "ستمبر",
+                    "اکتوبر",
+                    "نومبر",
+                    "دسمبر",
+                  ];
+                  const monthName =
+                    lang === "ur"
+                      ? `${monthNamesUr[calMonthIdx]} ${calYear}`
+                      : calM.toLocaleDateString("en-US", {
+                        month: "long",
+                        year: "numeric",
+                      });
+                  const firstDow = new Date(calYear, calMonthIdx, 1).getDay(); // 0=Sun
+                  const daysInMonth = new Date(
+                    calYear,
+                    calMonthIdx + 1,
+                    0,
+                  ).getDate();
+                  const prevMonth = () =>
+                    setDtCalMonth(new Date(calYear, calMonthIdx - 1, 1));
+                  const nextMonth = () =>
+                    setDtCalMonth(new Date(calYear, calMonthIdx + 1, 1));
+                  const isSameDay = (a: Date, b: Date) =>
+                    a.getFullYear() === b.getFullYear() &&
+                    a.getMonth() === b.getMonth() &&
+                    a.getDate() === b.getDate();
+                  const isToday = (d: Date) => isSameDay(d, new Date());
+                  const calDays: (number | null)[] = [
+                    ...Array(firstDow).fill(null),
+                    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+                  ];
+                  while (calDays.length % 7 !== 0) calDays.push(null);
+
+                  const urDaysFull = [
+                    "اتوار",
+                    "پیر",
+                    "منگل",
+                    "بدھ",
+                    "جمعرات",
+                    "جمعہ",
+                    "ہفتہ",
+                  ];
+                  const selDateStr =
+                    lang === "ur"
+                      ? `${urDaysFull[selD.getDay()]}، ${selD.getDate()} ${monthNamesUr[selD.getMonth()]} ${selD.getFullYear()}`
+                      : selD.toLocaleDateString("en-GB", {
+                        weekday: "long",
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      });
+
+                  // Column header dropdown opts
+                  const colOpts: Record<string, string[]> = {
+                    Quality: qualities,
+                    "Price Type": allPriceTypes.map((tPt) =>
+                      tPt.replace(" Rate", ""),
+                    ),
+                    Specification: specs,
+                    Condition: conditions,
+                  };
+                  const colLabels: Record<string, string> = {
+                    Station: lang === "ur" ? "منڈی" : "Station",
+                    "Min – Max": lang === "ur" ? "کم – زیادہ" : "Min – Max",
+                    "Price Type": lang === "ur" ? "نرخ کی قسم" : "Price Type",
+                    Trend: lang === "ur" ? "رجحان" : "Trend",
+                    Quality: lang === "ur" ? "معیار" : "Quality",
+                    Arrival: lang === "ur" ? "آمد" : "Arrival",
+                    Color: lang === "ur" ? "رنگ" : "Color",
+                    Variety: lang === "ur" ? "قسم" : "Variety",
+                    Condition: lang === "ur" ? "حالت" : "Condition",
+                    Specification: lang === "ur" ? "خصوصیت" : "Specification",
+                  };
+                  const colState: Record<string, string | null> = {
+                    Quality: dtQuality,
+                    "Price Type": dtPriceType,
+                    Specification: dtSpec,
+                    Condition: dtCondition,
+                  };
+                  const colSetter: Record<string, (v: string | null) => void> = {
+                    Quality: setDtQuality,
+                    "Price Type": (v) => setDtPriceType(v ? v + " Rate" : null),
+                    Specification: setDtSpec,
+                    Condition: setDtCondition,
+                  };
+
+                  return (
+                    <div
+                      className="zm-sheet-overlay"
+                      style={{ zIndex: 250 }}
+                      onClick={() => {
+                        setDateTableOpen(false);
+                        setDtOpenCol(null);
+                      }}
+                    >
+                      <div
+                        className="zm-sheet-high"
+                        style={{ background: "#F4FAF7", maxHeight: "96vh" }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {/* Drag handle + title + calendar icon button */}
+                        <div
+                          className="px-5 pt-4 pb-3 flex-shrink-0"
+                          style={{
+                            borderBottom: "1px solid #D5E2DD",
+                            background: "#F1F7F4",
+                          }}
+                        >
+                          <div
+                            className="w-10 h-1 rounded-full mx-auto mb-3"
+                            style={{ background: "#C7D6D0" }}
+                          />
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p
+                                className="font-extrabold text-base"
+                                style={{
+                                  color: "#075E4F",
+                                  fontSize: lang === "ur" ? 18 : 16,
+                                  fontFamily:
+                                    lang === "ur"
+                                      ? URDU_FONT
+                                      : "inherit",
+                                }}
+                              >
+                                {lang === "ur"
+                                  ? `${tc(title)} ریٹ پنجاب`
+                                  : `${title} Rate Punjab`}
+                              </p>
+                              <p
+                                className="text-xs mt-0.5"
+                                style={{
+                                  color: "#52635F",
+                                  fontSize: lang === "ur" ? 13 : 12,
+                                  fontFamily:
+                                    lang === "ur"
+                                      ? URDU_FONT
+                                      : "inherit",
+                                }}
+                              >
+                                {selDateStr}
+                              </p>
+                            </div>
+                            {/* Calendar icon button */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDtCalOpen((o) => !o);
+                              }}
+                              className="tap-target flex items-center gap-1.5 rounded-xl px-3 py-2 font-semibold text-xs"
+                              style={{
+                                background: dtCalOpen ? "#087F63" : "#E4F2EC",
+                                color: dtCalOpen ? "#fff" : "#075E4F",
+                                border: "1px solid #C7E8D8",
+                                fontSize: lang === "ur" ? 14 : 12,
+                                fontFamily:
+                                  lang === "ur"
+                                    ? URDU_FONT
+                                    : "inherit",
+                              }}
+                            >
+                              <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <rect x="3" y="4" width="18" height="18" rx="2" />
+                                <line x1="16" y1="2" x2="16" y2="6" />
+                                <line x1="8" y1="2" x2="8" y2="6" />
+                                <line x1="3" y1="10" x2="21" y2="10" />
+                              </svg>
+                              {lang === "ur" ? "تاریخ منتخب کریں" : "Pick Date"}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Expandable calendar */}
+                        {dtCalOpen && (
+                          <div
+                            className="px-4 pt-3 pb-2 flex-shrink-0"
+                            style={{
+                              borderBottom: "1px solid #D5E2DD",
+                              background: "#F4FAF7",
+                            }}
+                          >
+                            {/* Month nav */}
+                            <div className="flex items-center justify-between mb-2">
+                              <button
+                                onClick={prevMonth}
+                                className="tap-target w-8 h-8 rounded-full flex items-center justify-center font-bold text-base"
+                                style={{
+                                  background: "#E8EFEC",
+                                  color: "#2F4A43",
+                                }}
+                              >
+                                ‹
+                              </button>
+                              <p
+                                className="font-bold text-sm"
+                                style={{
+                                  color: "#183B34",
+                                  fontSize: lang === "ur" ? 16 : 14,
+                                  fontFamily:
+                                    lang === "ur"
+                                      ? URDU_FONT
+                                      : "inherit",
+                                }}
+                              >
+                                {monthName}
+                              </p>
+                              <button
+                                onClick={nextMonth}
+                                className="tap-target w-8 h-8 rounded-full flex items-center justify-center font-bold text-base"
+                                style={{
+                                  background: "#E8EFEC",
+                                  color: "#2F4A43",
+                                }}
+                              >
+                                ›
+                              </button>
+                            </div>
+                            {/* Day headers */}
+                            <div
+                              style={{
+                                display: "grid",
+                                gridTemplateColumns: "repeat(7,1fr)",
+                                marginBottom: 4,
+                              }}
+                            >
+                              {(lang === "ur"
+                                ? ["ات", "پی", "من", "بد", "جم", "جم", "ہف"]
+                                : ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
+                              ).map((d) => (
+                                <div
+                                  key={d}
+                                  className="text-center font-bold text-[10px]"
+                                  style={{
+                                    color: "#80918B",
+                                    paddingBottom: 2,
+                                    fontFamily:
+                                      lang === "ur"
+                                        ? URDU_FONT
+                                        : "inherit",
+                                  }}
+                                >
+                                  {d}
+                                </div>
+                              ))}
+                            </div>
+                            {/* Day grid */}
+                            <div
+                              style={{
+                                display: "grid",
+                                gridTemplateColumns: "repeat(7,1fr)",
+                                gap: 2,
+                              }}
+                            >
+                              {calDays.map((day, idx) => {
+                                if (!day) return <div key={idx} />;
+                                const d = new Date(calYear, calMonthIdx, day);
+                                const selected = isSameDay(d, selD);
+                                const today = isToday(d);
+                                return (
+                                  <button
+                                    key={idx}
+                                    onClick={() => {
+                                      setDtSelDate(d);
+                                      setDtCalOpen(false);
+                                    }}
+                                    className="tap-target flex items-center justify-center rounded-full font-semibold text-xs mx-auto"
+                                    style={{
+                                      width: 32,
+                                      height: 32,
+                                      background: selected
+                                        ? "#087F63"
+                                        : today
+                                          ? "#E4F2EC"
+                                          : "transparent",
+                                      color: selected
+                                        ? "#fff"
+                                        : today
+                                          ? "#075E4F"
+                                          : "#2F4A43",
+                                      border:
+                                        today && !selected
+                                          ? "1.5px solid #087F63"
+                                          : "none",
+                                    }}
+                                  >
+                                    {day}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Table with column-header dropdowns & visible scrollbars */}
+                        <div
+                          className="flex-1 overflow-auto zm-table-scroll-container"
+                          style={{
+                            scrollbarWidth: "thin",
+                            scrollbarColor: "#087F63 #E4F2EC",
+                          }}
+                          onClick={() => setDtOpenCol(null)}
+                        >
+                          <table
+                            style={{
+                              width: "100%",
+                              borderCollapse: "collapse",
+                              fontSize: lang === "ur" ? 12 : 10.5,
+                            }}
+                          >
+                            <thead
+                              style={{ position: "sticky", top: 0, zIndex: 10 }}
+                            >
+                              <tr
+                                style={{ background: "#075E4F", color: "#fff" }}
+                              >
+                                {[
+                                  "Station",
+                                  "Min – Max",
+                                  "Price Type",
+                                  "Trend",
+                                  "Quality",
+                                  "Arrival",
+                                  "Color",
+                                  "Variety",
+                                  "Condition",
+                                  "Specification",
+                                ].map((col) => {
+                                  const hasFilter = col in colOpts;
+                                  const activeVal = colState[col];
+                                  const displayVal =
+                                    col === "Price Type" && dtPriceType
+                                      ? tr(dtPriceType)
+                                        .replace(" ریٹ", "")
+                                        .replace(" Rate", "")
+                                      : activeVal
+                                        ? col === "Specification" ||
+                                          col === "Condition" ||
+                                          col === "Quality" ||
+                                          col === "Color" ||
+                                          col === "Variety"
+                                          ? t(activeVal)
+                                          : activeVal
+                                        : null;
+                                  const colTitle = colLabels[col] || col;
+                                  return (
+                                    <th
+                                      key={col}
+                                      style={{
+                                        padding: "7px 8px",
+                                        textAlign:
+                                          col === "Station"
+                                            ? lang === "ur" ? "right" : "left"
+                                            : "center",
+                                        fontWeight: 700,
+                                        whiteSpace: "nowrap",
+                                        borderRight:
+                                          "1px solid rgba(255,255,255,0.15)",
+                                        position: col === "Station" ? "sticky" : "relative",
+                                        left: col === "Station" ? 0 : "auto",
+                                        zIndex: col === "Station" ? 15 : 10,
+                                        background: "#075E4F",
+                                        fontSize: lang === "ur" ? 13 : 10.5,
+                                        fontFamily:
+                                          lang === "ur"
+                                            ? URDU_FONT
+                                            : "inherit",
+                                      }}
+                                    >
+                                      {hasFilter ? (
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setDtOpenCol(
+                                              dtOpenCol === col ? null : col,
+                                            );
+                                          }}
+                                          className="flex items-center justify-center gap-0.5 font-bold text-white mx-auto"
+                                          style={{
+                                            fontSize: lang === "ur" ? 13 : 10.5,
+                                            fontFamily:
+                                              lang === "ur"
+                                                ? URDU_FONT
+                                                : "inherit",
+                                          }}
+                                        >
+                                          {displayVal ? (
+                                            <span
+                                              style={{
+                                                background:
+                                                  "rgba(255,255,255,0.25)",
+                                                borderRadius: 4,
+                                                padding: "1px 4px",
+                                              }}
+                                            >
+                                              {displayVal}
+                                            </span>
+                                          ) : (
+                                            colTitle
+                                          )}
+                                          <span
+                                            style={{ fontSize: 8, opacity: 0.8 }}
+                                          >
+                                            ▾
+                                          </span>
+                                        </button>
+                                      ) : (
+                                        colTitle
+                                      )}
+                                      {/* Dropdown */}
+                                      {dtOpenCol === col && (
+                                        <div
+                                          onClick={(e) => e.stopPropagation()}
+                                          style={{
+                                            position: "absolute",
+                                            top: "100%",
+                                            left: lang === "ur" ? "auto" : 0,
+                                            right: lang === "ur" ? 0 : "auto",
+                                            zIndex: 100,
+                                            background: "#F4FAF7",
+                                            borderRadius: 10,
+                                            boxShadow:
+                                              "0 8px 24px rgba(0,0,0,0.18)",
+                                            minWidth: 140,
+                                            overflow: "hidden",
+                                            border: "1px solid #D5E2DD",
+                                          }}
+                                        >
+                                          <button
+                                            onClick={() => {
+                                              colSetter[col](null);
+                                              setDtOpenCol(null);
+                                            }}
+                                            className={`tap-target w-full ${lang === "ur" ? "text-right" : "text-left"} px-3 py-2 text-xs font-semibold`}
+                                            style={{
+                                              color:
+                                                !activeVal &&
+                                                  !(
+                                                    col === "Price Type" &&
+                                                    dtPriceType
+                                                  )
+                                                  ? "#075E4F"
+                                                  : "#2F4A43",
+                                              background:
+                                                !activeVal &&
+                                                  !(
+                                                    col === "Price Type" &&
+                                                    dtPriceType
+                                                  )
+                                                  ? "#E4F2EC"
+                                                  : "#fff",
+                                              fontSize: lang === "ur" ? 14 : 12,
+                                              fontFamily:
+                                                lang === "ur"
+                                                  ? URDU_FONT
+                                                  : "inherit",
+                                            }}
+                                          >
+                                            {lang === "ur" ? "تمام" : "All"}
+                                          </button>
+                                          {colOpts[col].map((opt) => {
+                                            const isActive =
+                                              col === "Price Type"
+                                                ? dtPriceType === opt + " Rate"
+                                                : activeVal === opt;
+                                            const optText =
+                                              col === "Price Type"
+                                                ? tr(opt + " Rate")
+                                                  .replace(" ریٹ", "")
+                                                  .replace(" Rate", "")
+                                                : t(opt);
+                                            return (
+                                              <button
+                                                key={opt}
+                                                onClick={() => {
+                                                  colSetter[col](
+                                                    isActive ? null : opt,
+                                                  );
+                                                  setDtOpenCol(null);
+                                                }}
+                                                className={`tap-target w-full ${lang === "ur" ? "text-right" : "text-left"} px-3 py-2 text-xs font-semibold`}
+                                                style={{
+                                                  color: isActive
+                                                    ? "#075E4F"
+                                                    : "#2F4A43",
+                                                  background: isActive
+                                                    ? "#E4F2EC"
+                                                    : "#fff",
+                                                  fontSize:
+                                                    lang === "ur" ? 14 : 12,
+                                                  fontFamily:
+                                                    lang === "ur"
+                                                      ? URDU_FONT
+                                                      : "inherit",
+                                                }}
+                                              >
+                                                {optText}
+                                              </button>
+                                            );
+                                          })}
+                                        </div>
+                                      )}
+                                    </th>
+                                  );
+                                })}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {filteredTableRows.length === 0 ? (
+                                <tr>
+                                  <td
+                                    colSpan={10}
+                                    style={{
+                                      padding: "24px",
+                                      textAlign: "center",
+                                      color: "#80918B",
+                                      fontSize: lang === "ur" ? 16 : 13,
+                                      fontFamily:
+                                        lang === "ur"
+                                          ? URDU_FONT
+                                          : "inherit",
+                                    }}
+                                  >
+                                    {lang === "ur"
+                                      ? "کوئی ریکارڈ موجود نہیں ہے"
+                                      : "No matching rows"}
+                                  </td>
+                                </tr>
+                              ) : (
+                                filteredTableRows.map((r, i) => {
+                                  const trendIcon =
+                                    r.trend === "up"
+                                      ? "▲"
+                                      : r.trend === "down"
+                                        ? "▼"
+                                        : "–";
+                                  const trendColor =
+                                    r.trend === "up"
+                                      ? "#159447"
+                                      : r.trend === "down"
+                                        ? "#C94A43"
+                                        : "#80918B";
+                                  const rowQuality =
+                                    r.newOld || r.quality || dtQuality || attrNewOld || "—";
+                                  const rowSpec = r.spec || dtSpec || attrSpec || "—";
+                                  const rowCond =
+                                    r.condition || r.quality || dtCondition || attrCondition || "—";
+                                  const rtColor = RATE_COLORS[r.rateType] || "#075E4F";
+                                  const rowBg = i % 2 === 0 ? "#fff" : "#F1F7F4";
+
+                                  return (
+                                    <tr
+                                      key={i}
+                                      onClick={() => {
+                                        if (voiceEnabled) {
+                                          const cleanMandi = r.mandiName.replace(/\s*mandi$/i, "").replace(/\s*منڈی$/i, "");
+                                          const minVal = Math.round(r.min).toLocaleString("en-PK");
+                                          const maxVal = Math.round(r.max).toLocaleString("en-PK");
+                                          const rtUr = tr(r.rateType).replace(" ریٹ", "").replace(" Rate", "");
+                                          const spoken = lang === "ur"
+                                            ? `${tm(cleanMandi)} منڈی، ${rtUr}، ریٹ ${minVal} سے ${maxVal} روپے`
+                                            : `${cleanMandi} Mandi, ${r.rateType} rate, ${minVal} to ${maxVal} rupees`;
+                                          speakText(spoken);
+                                        }
+                                      }}
+                                      className="cursor-pointer transition hover:bg-[#EAF5F0]"
+                                      style={{
+                                        background: rowBg,
+                                        borderBottom: "1px solid #E6EFEB",
+                                      }}
+                                    >
+                                      {/* 1. Station */}
+                                      <td
                                         style={{
+                                          position: "sticky",
+                                          left: 0,
+                                          zIndex: 5,
+                                          background: rowBg,
+                                          padding: "7px 8px",
+                                          fontWeight: 700,
+                                          color: "#183B34",
+                                          whiteSpace: "nowrap",
+                                          fontSize: lang === "ur" ? 14 : 11,
+                                          borderRight: "1px solid #D5E2DD",
+                                          fontFamily:
+                                            lang === "ur"
+                                              ? URDU_FONT
+                                              : "inherit",
+                                        }}
+                                      >
+                                        {tm(r.mandiName.replace(" Mandi", ""))}
+                                      </td>
+
+                                      {/* 2. Min – Max */}
+                                      <td
+                                        style={{
+                                          padding: "7px 8px",
+                                          fontWeight: 700,
+                                          color: "#075E4F",
+                                          whiteSpace: "nowrap",
+                                          textAlign: "center",
+                                          fontSize: lang === "ur" ? 13 : 11,
+                                        }}
+                                      >
+                                        {fmt(r.min)} – {fmt(r.max)}
+                                      </td>
+
+                                      {/* 3. Price Type */}
+                                      <td
+                                        style={{
+                                          padding: "7px 8px",
+                                          textAlign: "center",
+                                          whiteSpace: "nowrap",
+                                        }}
+                                      >
+                                        <span
+                                          className="rounded-full px-1.5 py-0.5 font-semibold"
+                                          style={{
+                                            background: rtColor + "18",
+                                            color: rtColor,
+                                            fontSize: lang === "ur" ? 11 : 10,
+                                            fontFamily:
+                                              lang === "ur"
+                                                ? URDU_FONT
+                                                : "inherit",
+                                          }}
+                                        >
+                                          {tr(r.rateType)
+                                            .replace(" ریٹ", "")
+                                            .replace(" Rate", "")}
+                                        </span>
+                                      </td>
+
+                                      {/* 4. Trend */}
+                                      <td
+                                        style={{
+                                          padding: "7px 8px",
+                                          color: trendColor,
+                                          fontWeight: 700,
+                                          fontSize: 11,
+                                          textAlign: "center",
+                                          whiteSpace: "nowrap",
+                                        }}
+                                      >
+                                        {trendIcon}{" "}
+                                        {r.trendPct > 0 ? r.trendPct + "%" : ""}
+                                      </td>
+
+                                      {/* 5. Quality (New or Old) */}
+                                      <td
+                                        style={{
+                                          padding: "7px 8px",
+                                          textAlign: "center",
+                                          whiteSpace: "nowrap",
+                                        }}
+                                      >
+                                        <span
+                                          className="px-2 py-0.5 rounded-md font-bold text-[10px]"
+                                          style={{
+                                            background: rowQuality === "New" ? "#E4F4EC" : "#FFF4E6",
+                                            color: rowQuality === "New" ? "#0A7F5A" : "#B45309",
+                                            fontFamily:
+                                              lang === "ur"
+                                                ? URDU_FONT
+                                                : "inherit",
+                                          }}
+                                        >
+                                          {lang === "ur"
+                                            ? rowQuality === "New"
+                                              ? "نیا"
+                                              : "پرانا"
+                                            : rowQuality}
+                                        </span>
+                                      </td>
+
+                                      {/* 6. Arrival */}
+                                      <td
+                                        style={{
+                                          padding: "7px 8px",
+                                          color: "#2F4A43",
+                                          textAlign: "center",
+                                          whiteSpace: "nowrap",
+                                          fontSize: lang === "ur" ? 13 : 10.5,
+                                        }}
+                                      >
+                                        {r.arrival || "—"}
+                                      </td>
+
+                                      {/* 7. Color */}
+                                      <td
+                                        style={{
+                                          padding: "7px 8px",
+                                          color: "#2F4A43",
+                                          textAlign: "center",
                                           fontSize: lang === "ur" ? 13 : 10.5,
                                           fontFamily:
                                             lang === "ur"
@@ -15828,281 +16150,19 @@ function ProductRatesScreen({
                                               : "inherit",
                                         }}
                                       >
-                                        {displayVal ? (
-                                          <span
-                                            style={{
-                                              background:
-                                                "rgba(255,255,255,0.25)",
-                                              borderRadius: 4,
-                                              padding: "1px 4px",
-                                            }}
-                                          >
-                                            {displayVal}
-                                          </span>
-                                        ) : (
-                                          colTitle
-                                        )}
-                                        <span
-                                          style={{ fontSize: 8, opacity: 0.8 }}
-                                        >
-                                          ▾
-                                        </span>
-                                      </button>
-                                    ) : (
-                                      colTitle
-                                    )}
-                                    {/* Dropdown */}
-                                    {dtOpenCol === col && (
-                                      <div
-                                        onClick={(e) => e.stopPropagation()}
+                                        {lang === "ur"
+                                          ? t(r.color) || r.color || "—"
+                                          : r.color || "—"}
+                                      </td>
+
+                                      {/* 8. Variety */}
+                                      <td
                                         style={{
-                                          position: "absolute",
-                                          top: "100%",
-                                          left: lang === "ur" ? "auto" : 0,
-                                          right: lang === "ur" ? 0 : "auto",
-                                          zIndex: 100,
-                                          background: "#F4FAF7",
-                                          borderRadius: 10,
-                                          boxShadow:
-                                            "0 8px 24px rgba(0,0,0,0.18)",
-                                          minWidth: 140,
-                                          overflow: "hidden",
-                                          border: "1px solid #D5E2DD",
-                                        }}
-                                      >
-                                        <button
-                                          onClick={() => {
-                                            colSetter[col](null);
-                                            setDtOpenCol(null);
-                                          }}
-                                          className={`tap-target w-full ${lang === "ur" ? "text-right" : "text-left"} px-3 py-2 text-xs font-semibold`}
-                                          style={{
-                                            color:
-                                              !activeVal &&
-                                                !(
-                                                  col === "Price Type" &&
-                                                  dtPriceType
-                                                )
-                                                ? "#075E4F"
-                                                : "#2F4A43",
-                                            background:
-                                              !activeVal &&
-                                                !(
-                                                  col === "Price Type" &&
-                                                  dtPriceType
-                                                )
-                                                ? "#E4F2EC"
-                                                : "#fff",
-                                            fontSize: lang === "ur" ? 14 : 12,
-                                            fontFamily:
-                                              lang === "ur"
-                                                ? URDU_FONT
-                                                : "inherit",
-                                          }}
-                                        >
-                                          {lang === "ur" ? "تمام" : "All"}
-                                        </button>
-                                        {colOpts[col].map((opt) => {
-                                          const isActive =
-                                            col === "Price Type"
-                                              ? dtPriceType === opt + " Rate"
-                                              : activeVal === opt;
-                                          const optText =
-                                            col === "Price Type"
-                                              ? tr(opt + " Rate")
-                                                .replace(" ریٹ", "")
-                                                .replace(" Rate", "")
-                                              : t(opt);
-                                          return (
-                                            <button
-                                              key={opt}
-                                              onClick={() => {
-                                                colSetter[col](
-                                                  isActive ? null : opt,
-                                                );
-                                                setDtOpenCol(null);
-                                              }}
-                                              className={`tap-target w-full ${lang === "ur" ? "text-right" : "text-left"} px-3 py-2 text-xs font-semibold`}
-                                              style={{
-                                                color: isActive
-                                                  ? "#075E4F"
-                                                  : "#2F4A43",
-                                                background: isActive
-                                                  ? "#E4F2EC"
-                                                  : "#fff",
-                                                fontSize:
-                                                  lang === "ur" ? 14 : 12,
-                                                fontFamily:
-                                                  lang === "ur"
-                                                    ? URDU_FONT
-                                                    : "inherit",
-                                              }}
-                                            >
-                                              {optText}
-                                            </button>
-                                          );
-                                        })}
-                                      </div>
-                                    )}
-                                  </th>
-                                );
-                              })}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {filteredTableRows.length === 0 ? (
-                              <tr>
-                                <td
-                                  colSpan={10}
-                                  style={{
-                                    padding: "24px",
-                                    textAlign: "center",
-                                    color: "#80918B",
-                                    fontSize: lang === "ur" ? 16 : 13,
-                                    fontFamily:
-                                      lang === "ur"
-                                        ? URDU_FONT
-                                        : "inherit",
-                                  }}
-                                >
-                                  {lang === "ur"
-                                    ? "کوئی ریکارڈ موجود نہیں ہے"
-                                    : "No matching rows"}
-                                </td>
-                              </tr>
-                            ) : (
-                              filteredTableRows.map((r, i) => {
-                                const trendIcon =
-                                  r.trend === "up"
-                                    ? "▲"
-                                    : r.trend === "down"
-                                      ? "▼"
-                                      : "–";
-                                const trendColor =
-                                  r.trend === "up"
-                                    ? "#159447"
-                                    : r.trend === "down"
-                                      ? "#C94A43"
-                                      : "#80918B";
-                                const rowQuality =
-                                  r.newOld || r.quality || dtQuality || attrNewOld || "—";
-                                const rowSpec = r.spec || dtSpec || attrSpec || "—";
-                                const rowCond =
-                                  r.condition || r.quality || dtCondition || attrCondition || "—";
-                                const rtColor = RATE_COLORS[r.rateType] || "#075E4F";
-                                const rowBg = i % 2 === 0 ? "#fff" : "#F1F7F4";
-
-                                return (
-                                  <tr
-                                    key={i}
-                                    onClick={() => {
-                                      if (voiceEnabled) {
-                                        const cleanMandi = r.mandiName.replace(/\s*mandi$/i, "").replace(/\s*منڈی$/i, "");
-                                        const minVal = Math.round(r.min).toLocaleString("en-PK");
-                                        const maxVal = Math.round(r.max).toLocaleString("en-PK");
-                                        const rtUr = tr(r.rateType).replace(" ریٹ", "").replace(" Rate", "");
-                                        const spoken = lang === "ur"
-                                          ? `${tm(cleanMandi)} منڈی، ${rtUr}، ریٹ ${minVal} سے ${maxVal} روپے`
-                                          : `${cleanMandi} Mandi, ${r.rateType} rate, ${minVal} to ${maxVal} rupees`;
-                                        speakText(spoken);
-                                      }
-                                    }}
-                                    className="cursor-pointer transition hover:bg-[#EAF5F0]"
-                                    style={{
-                                      background: rowBg,
-                                      borderBottom: "1px solid #E6EFEB",
-                                    }}
-                                  >
-                                    {/* 1. Station */}
-                                    <td
-                                      style={{
-                                        position: "sticky",
-                                        left: 0,
-                                        zIndex: 5,
-                                        background: rowBg,
-                                        padding: "7px 8px",
-                                        fontWeight: 700,
-                                        color: "#183B34",
-                                        whiteSpace: "nowrap",
-                                        fontSize: lang === "ur" ? 14 : 11,
-                                        borderRight: "1px solid #D5E2DD",
-                                        fontFamily:
-                                          lang === "ur"
-                                            ? URDU_FONT
-                                            : "inherit",
-                                      }}
-                                    >
-                                      {tm(r.mandiName.replace(" Mandi", ""))}
-                                    </td>
-
-                                    {/* 2. Min – Max */}
-                                    <td
-                                      style={{
-                                        padding: "7px 8px",
-                                        fontWeight: 700,
-                                        color: "#075E4F",
-                                        whiteSpace: "nowrap",
-                                        textAlign: "center",
-                                        fontSize: lang === "ur" ? 13 : 11,
-                                      }}
-                                    >
-                                      {fmt(r.min)} – {fmt(r.max)}
-                                    </td>
-
-                                    {/* 3. Price Type */}
-                                    <td
-                                      style={{
-                                        padding: "7px 8px",
-                                        textAlign: "center",
-                                        whiteSpace: "nowrap",
-                                      }}
-                                    >
-                                      <span
-                                        className="rounded-full px-1.5 py-0.5 font-semibold"
-                                        style={{
-                                          background: rtColor + "18",
-                                          color: rtColor,
-                                          fontSize: lang === "ur" ? 11 : 10,
-                                          fontFamily:
-                                            lang === "ur"
-                                              ? URDU_FONT
-                                              : "inherit",
-                                        }}
-                                      >
-                                        {tr(r.rateType)
-                                          .replace(" ریٹ", "")
-                                          .replace(" Rate", "")}
-                                      </span>
-                                    </td>
-
-                                    {/* 4. Trend */}
-                                    <td
-                                      style={{
-                                        padding: "7px 8px",
-                                        color: trendColor,
-                                        fontWeight: 700,
-                                        fontSize: 11,
-                                        textAlign: "center",
-                                        whiteSpace: "nowrap",
-                                      }}
-                                    >
-                                      {trendIcon}{" "}
-                                      {r.trendPct > 0 ? r.trendPct + "%" : ""}
-                                    </td>
-
-                                    {/* 5. Quality (New or Old) */}
-                                    <td
-                                      style={{
-                                        padding: "7px 8px",
-                                        textAlign: "center",
-                                        whiteSpace: "nowrap",
-                                      }}
-                                    >
-                                      <span
-                                        className="px-2 py-0.5 rounded-md font-bold text-[10px]"
-                                        style={{
-                                          background: rowQuality === "New" ? "#E4F4EC" : "#FFF4E6",
-                                          color: rowQuality === "New" ? "#0A7F5A" : "#B45309",
+                                          padding: "7px 8px",
+                                          color: "#075E4F",
+                                          textAlign: "center",
+                                          fontWeight: 600,
+                                          fontSize: lang === "ur" ? 13 : 10.5,
                                           fontFamily:
                                             lang === "ur"
                                               ? URDU_FONT
@@ -16110,147 +16170,94 @@ function ProductRatesScreen({
                                         }}
                                       >
                                         {lang === "ur"
-                                          ? rowQuality === "New"
-                                            ? "نیا"
-                                            : "پرانا"
-                                          : rowQuality}
-                                      </span>
-                                    </td>
+                                          ? t(r.variety) || r.variety || "—"
+                                          : r.variety || "—"}
+                                      </td>
 
-                                    {/* 6. Arrival */}
-                                    <td
-                                      style={{
-                                        padding: "7px 8px",
-                                        color: "#2F4A43",
-                                        textAlign: "center",
-                                        whiteSpace: "nowrap",
-                                        fontSize: lang === "ur" ? 13 : 10.5,
-                                      }}
-                                    >
-                                      {r.arrival || "—"}
-                                    </td>
+                                      {/* 9. Condition */}
+                                      <td
+                                        style={{
+                                          padding: "7px 8px",
+                                          color: "#2F4A43",
+                                          textAlign: "center",
+                                          fontSize: lang === "ur" ? 13 : 10.5,
+                                          fontFamily:
+                                            lang === "ur"
+                                              ? URDU_FONT
+                                              : "inherit",
+                                        }}
+                                      >
+                                        {lang === "ur"
+                                          ? t(rowCond) || rowCond || "—"
+                                          : rowCond || "—"}
+                                      </td>
 
-                                    {/* 7. Color */}
-                                    <td
-                                      style={{
-                                        padding: "7px 8px",
-                                        color: "#2F4A43",
-                                        textAlign: "center",
-                                        fontSize: lang === "ur" ? 13 : 10.5,
-                                        fontFamily:
-                                          lang === "ur"
-                                            ? URDU_FONT
-                                            : "inherit",
-                                      }}
-                                    >
-                                      {lang === "ur"
-                                        ? t(r.color) || r.color || "—"
-                                        : r.color || "—"}
-                                    </td>
+                                      {/* 10. Specification */}
+                                      <td
+                                        style={{
+                                          padding: "7px 8px",
+                                          color: "#2F4A43",
+                                          textAlign: "center",
+                                          fontSize: lang === "ur" ? 13 : 10.5,
+                                          fontFamily:
+                                            lang === "ur"
+                                              ? URDU_FONT
+                                              : "inherit",
+                                        }}
+                                      >
+                                        {lang === "ur"
+                                          ? t(rowSpec) || rowSpec || "—"
+                                          : rowSpec || "—"}
+                                      </td>
+                                    </tr>
+                                  );
+                                })
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
 
-                                    {/* 8. Variety */}
-                                    <td
-                                      style={{
-                                        padding: "7px 8px",
-                                        color: "#075E4F",
-                                        textAlign: "center",
-                                        fontWeight: 600,
-                                        fontSize: lang === "ur" ? 13 : 10.5,
-                                        fontFamily:
-                                          lang === "ur"
-                                            ? URDU_FONT
-                                            : "inherit",
-                                      }}
-                                    >
-                                      {lang === "ur"
-                                        ? t(r.variety) || r.variety || "—"
-                                        : r.variety || "—"}
-                                    </td>
-
-                                    {/* 9. Condition */}
-                                    <td
-                                      style={{
-                                        padding: "7px 8px",
-                                        color: "#2F4A43",
-                                        textAlign: "center",
-                                        fontSize: lang === "ur" ? 13 : 10.5,
-                                        fontFamily:
-                                          lang === "ur"
-                                            ? URDU_FONT
-                                            : "inherit",
-                                      }}
-                                    >
-                                      {lang === "ur"
-                                        ? t(rowCond) || rowCond || "—"
-                                        : rowCond || "—"}
-                                    </td>
-
-                                    {/* 10. Specification */}
-                                    <td
-                                      style={{
-                                        padding: "7px 8px",
-                                        color: "#2F4A43",
-                                        textAlign: "center",
-                                        fontSize: lang === "ur" ? 13 : 10.5,
-                                        fontFamily:
-                                          lang === "ur"
-                                            ? URDU_FONT
-                                            : "inherit",
-                                      }}
-                                    >
-                                      {lang === "ur"
-                                        ? t(rowSpec) || rowSpec || "—"
-                                        : rowSpec || "—"}
-                                    </td>
-                                  </tr>
-                                );
-                              })
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-
-                      <div
-                        className="flex justify-between items-center px-4 py-2 flex-shrink-0"
-                        style={{
-                          borderTop: "1px solid #D5E2DD",
-                          background: "#F1F7F4",
-                        }}
-                      >
-                        <span
-                          className="text-[10px]"
+                        <div
+                          className="flex justify-between items-center px-4 py-2 flex-shrink-0"
                           style={{
-                            color: "#80918B",
-                            fontSize: lang === "ur" ? 13 : 10,
-                            fontFamily:
-                              lang === "ur"
-                                ? URDU_FONT
-                                : "inherit",
+                            borderTop: "1px solid #D5E2DD",
+                            background: "#F1F7F4",
                           }}
                         >
-                          {lang === "ur"
-                            ? "یونٹ = روپے · فی ۴۰ کلو"
-                            : "Unit = Rs. · Unit = (40 kg)"}
-                        </span>
-                        <button
-                          onClick={() => setDateTableOpen(false)}
-                          className="tap-target font-bold"
-                          style={{
-                            color: "#075E4F",
-                            fontSize: lang === "ur" ? 15 : 12,
-                            fontFamily:
-                              lang === "ur"
-                                ? URDU_FONT
-                                : "inherit",
-                          }}
-                        >
-                          {lang === "ur" ? "بند کریں" : "Close"}
-                        </button>
+                          <span
+                            className="text-[10px]"
+                            style={{
+                              color: "#80918B",
+                              fontSize: lang === "ur" ? 13 : 10,
+                              fontFamily:
+                                lang === "ur"
+                                  ? URDU_FONT
+                                  : "inherit",
+                            }}
+                          >
+                            {lang === "ur"
+                              ? "یونٹ = روپے · فی ۴۰ کلو"
+                              : "Unit = Rs. · Unit = (40 kg)"}
+                          </span>
+                          <button
+                            onClick={() => setDateTableOpen(false)}
+                            className="tap-target font-bold"
+                            style={{
+                              color: "#075E4F",
+                              fontSize: lang === "ur" ? 15 : 12,
+                              fontFamily:
+                                lang === "ur"
+                                  ? URDU_FONT
+                                  : "inherit",
+                            }}
+                          >
+                            {lang === "ur" ? "بند کریں" : "Close"}
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })()}
+                  );
+                })()}
             </>
           )}
         </div>
@@ -16267,981 +16274,554 @@ function ProductRatesScreen({
             overscrollBehaviorY: "contain",
           }}
         >
-            {/* Top Bar: Title on left, Location selector pill on right */}
-            <div className="flex items-center justify-between gap-2">
-              <p
-                className="text-xs font-bold uppercase tracking-wide"
+          {/* Top Bar: Title on left, Location selector pill on right */}
+          <div className="flex items-center justify-between gap-2">
+            <p
+              className="text-xs font-bold uppercase tracking-wide"
+              style={{
+                color: "#52635F",
+                fontSize: lang === "ur" ? 15 : 12,
+                fontFamily:
+                  lang === "ur"
+                    ? URDU_FONT
+                    : "inherit",
+              }}
+            >
+              {lang === "ur" ? "قیمتوں کے رجحانات" : "Price Trends"}
+            </p>
+
+            <div className="flex items-center gap-1.5">
+              {/* Location selector */}
+              <button
+                onClick={() => setLocSheet(true)}
+                className="tap-target flex items-center gap-1 rounded-xl font-bold text-xs px-2.5 py-1.5 transition active:scale-95"
                 style={{
-                  color: "#52635F",
-                  fontSize: lang === "ur" ? 15 : 12,
+                  background:
+                    locScope.kind === "mandi" ? "#087F63" : "#E4F2EC",
+                  color: locScope.kind === "mandi" ? "#fff" : "#075E4F",
+                  border:
+                    locScope.kind === "mandi" ? "none" : "1px solid #C7E8D8",
+                  fontSize: lang === "ur" ? 13 : 11,
                   fontFamily:
                     lang === "ur"
                       ? URDU_FONT
                       : "inherit",
                 }}
               >
-                {lang === "ur" ? "قیمتوں کے رجحانات" : "Price Trends"}
-              </p>
-
-              <div className="flex items-center gap-1.5">
-                {/* Location selector */}
-                <button
-                  onClick={() => setLocSheet(true)}
-                  className="tap-target flex items-center gap-1 rounded-xl font-bold text-xs px-2.5 py-1.5 transition active:scale-95"
-                  style={{
-                    background:
-                      locScope.kind === "mandi" ? "#087F63" : "#E4F2EC",
-                    color: locScope.kind === "mandi" ? "#fff" : "#075E4F",
-                    border:
-                      locScope.kind === "mandi" ? "none" : "1px solid #C7E8D8",
-                    fontSize: lang === "ur" ? 13 : 11,
-                    fontFamily:
-                      lang === "ur"
-                        ? URDU_FONT
-                        : "inherit",
-                  }}
-                >
-                  <span>
-                    {locScope.kind === "mandi"
-                      ? tm(locScope.label.replace(" Mandi", ""))
-                      : locScope.kind === "province"
+                <span>
+                  {locScope.kind === "mandi"
+                    ? tm(locScope.label.replace(" Mandi", ""))
+                    : locScope.kind === "province"
+                      ? tm(locScope.label)
+                      : locScope.kind === "district"
                         ? tm(locScope.label)
-                        : locScope.kind === "district"
-                          ? tm(locScope.label)
-                          : lang === "ur"
-                            ? "پاکستان"
-                            : "Pakistan"}
-                  </span>
-                  <span className="text-[9px] opacity-70">▾</span>
-                </button>
-              </div>
+                        : lang === "ur"
+                          ? "پاکستان"
+                          : "Pakistan"}
+                </span>
+                <span className="text-[9px] opacity-70">▾</span>
+              </button>
             </div>
+          </div>
 
-            {/* Segmented Switcher: Price Trend vs Arrival Trend */}
-            <div className="flex gap-2">
-              {(
+          {/* Segmented Switcher: Price Trend vs Arrival Trend */}
+          <div className="flex gap-2">
+            {(
+              [
+                ["price", lang === "ur" ? "قیمت کا رجحان" : "Price Trend"],
                 [
-                  ["price", lang === "ur" ? "قیمت کا رجحان" : "Price Trend"],
-                  [
-                    "arrival",
-                    lang === "ur" ? "آمد کا رجحان" : "Arrival Trend",
-                  ],
-                ] as ["price" | "arrival", string][]
-              ).map(([m, label]) => (
-                <button
-                  key={m}
-                  onClick={() => setTrendMode(m)}
-                  className="tap-target flex-1 rounded-xl font-bold text-xs transition"
-                  style={{
-                    height: 34,
-                    background: trendMode === m ? "#075E4F" : "#E8EFEC",
-                    color: trendMode === m ? "#fff" : "#183B34",
-                    fontSize: lang === "ur" ? 14 : 11.5,
-                    fontFamily:
-                      lang === "ur"
-                        ? URDU_FONT
-                        : "inherit",
-                  }}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+                  "arrival",
+                  lang === "ur" ? "آمد کا رجحان" : "Arrival Trend",
+                ],
+              ] as ["price" | "arrival", string][]
+            ).map(([m, label]) => (
+              <button
+                key={m}
+                onClick={() => setTrendMode(m)}
+                className="tap-target flex-1 rounded-xl font-bold text-xs transition"
+                style={{
+                  height: 34,
+                  background: trendMode === m ? "#075E4F" : "#E8EFEC",
+                  color: trendMode === m ? "#fff" : "#183B34",
+                  fontSize: lang === "ur" ? 14 : 11.5,
+                  fontFamily:
+                    lang === "ur"
+                      ? URDU_FONT
+                      : "inherit",
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
 
-            {trendMode === "price" ? (
-              <>
-                {/* Trends Price Card */}
-                <div
-                  className="rounded-2xl p-3.5 flex flex-col gap-3 shadow-sm"
-                  style={{
-                    background: "#FFFFFF",
-                    border: "1px solid #D5E2DD",
-                  }}
-                >
-                  {/* Top Bar: Financial Chart Controls & Granularity Filter */}
-                  <div className="flex items-center justify-between gap-1 pb-2 border-b border-[#E8EFEC] flex-wrap">
-                    {/* Granularity Pills: 1, 5, 15, 30, 1H, 5H, 1D, 1W, 1M */}
-                    <div className="flex items-center gap-1 overflow-x-auto py-0.5" style={{ scrollbarWidth: "none" }}>
-                      {["1", "5", "15", "30", "1H", "5H", "1D", "1W", "1M"].map((g) => {
-                        const isGActive = stockGranularity === g;
-                        return (
-                          <button
-                            key={g}
-                            onClick={() => setStockGranularity(g)}
-                            className={`px-1.5 py-0.5 rounded text-[10.5px] font-bold transition-colors ${
-                              isGActive
-                                ? "bg-[#087F63] text-white shadow-xs"
-                                : "text-[#52635F] hover:bg-[#F1F7F4] hover:text-[#143B33]"
+          {trendMode === "price" ? (
+            <>
+              {/* Trends Price Card */}
+              <div
+                className="rounded-2xl p-3.5 flex flex-col gap-3 shadow-sm"
+                style={{
+                  background: "#FFFFFF",
+                  border: "1px solid #D5E2DD",
+                }}
+              >
+                {/* Top Bar: Financial Chart Controls & Granularity Filter */}
+                <div className="flex items-center justify-between gap-1 pb-2 border-b border-[#E8EFEC] flex-wrap">
+                  {/* Granularity Pills: 1, 5, 15, 30, 1H, 5H, 1D, 1W, 1M */}
+                  <div className="flex items-center gap-1 overflow-x-auto py-0.5" style={{ scrollbarWidth: "none" }}>
+                    {["1", "5", "15", "30", "1H", "5H", "1D", "1W", "1M"].map((g) => {
+                      const isGActive = stockGranularity === g;
+                      return (
+                        <button
+                          key={g}
+                          onClick={() => setStockGranularity(g)}
+                          className={`px-1.5 py-0.5 rounded text-[10.5px] font-bold transition-colors ${isGActive
+                            ? "bg-[#087F63] text-white shadow-xs"
+                            : "text-[#52635F] hover:bg-[#F1F7F4] hover:text-[#143B33]"
                             }`}
-                          >
-                            {g}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {/* Compare Button & Mode Indicator */}
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={() => setCompareMode((prev) => !prev)}
-                        className="tap-target flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10.5px] font-bold transition-all active:scale-95"
-                        style={{
-                          background: compareMode ? "#087F63" : "#F1F7F4",
-                          color: compareMode ? "#FFFFFF" : "#52635F",
-                          border: `1px solid ${compareMode ? "#087F63" : "#D5E2DD"}`,
-                          fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                        }}
-                      >
-                        <span>+ {compareMode ? (lang === "ur" ? "اکیلا دیکھیں" : "Single") : (lang === "ur" ? "موازنہ کریں" : "Compare")}</span>
-                      </button>
-                    </div>
+                        >
+                          {g}
+                        </button>
+                      );
+                    })}
                   </div>
 
-                  {/* Agricultural Commodity Header */}
-                  {(() => {
-                    const mainSeries = activeSeries.find((s) => s.label === focusedType) || activeSeries[0] || priceSeries[0];
-                    const currentIdx = hoverIdx !== null ? hoverIdx : len - 1;
-                    const displayPrice = mainSeries?.data[currentIdx] || 0;
-                    const startPrice = mainSeries?.data[0] || displayPrice || 1;
-                    const changeAmt = displayPrice - startPrice;
-                    const absPct = Math.abs((changeAmt / (startPrice || 1)) * 100).toFixed(2);
-                    const isPositive = changeAmt > 0;
-                    const isFlat = changeAmt === 0;
-                    const seriesMax = mainSeries ? Math.max(...mainSeries.data) : displayPrice;
-                    const seriesMin = mainSeries ? Math.min(...mainSeries.data) : displayPrice;
-                    const seriesAvg = mainSeries ? Math.round(mainSeries.data.reduce((a, b) => a + b, 0) / mainSeries.data.length) : displayPrice;
+                  {/* Compare Button & Mode Indicator */}
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setCompareMode((prev) => !prev)}
+                      className="tap-target flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10.5px] font-bold transition-all active:scale-95"
+                      style={{
+                        background: compareMode ? "#087F63" : "#F1F7F4",
+                        color: compareMode ? "#FFFFFF" : "#52635F",
+                        border: `1px solid ${compareMode ? "#087F63" : "#D5E2DD"}`,
+                        fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                      }}
+                    >
+                      <span>+ {compareMode ? (lang === "ur" ? "اکیلا دیکھیں" : "Single") : (lang === "ur" ? "موازنہ کریں" : "Compare")}</span>
+                    </button>
+                  </div>
+                </div>
 
-                    return (
-                      <div className="flex flex-col gap-2 border-b border-[#E8EFEC] pb-2.5">
-                        {/* Title & Active Rate Type Badge */}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span
-                              className="text-xs sm:text-sm font-extrabold text-[#143B33]"
-                              style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                            >
-                              {byproduct ? `${tc(byproduct)}` : `${tc(product)}`} {lang === "ur" ? "مارکیٹ ریٹ انڈیکس" : "Market Rate Index"}
-                            </span>
-                            <span className="text-[10px] font-bold text-[#087F63] bg-[#E8F8F4] px-2 py-0.5 rounded-full border border-[#C2E8DB]">
-                              {tr(focusedType).replace(" ریٹ", "").replace(" Rate", "")}
-                            </span>
-                          </div>
-                          <span className="text-[10px] font-bold text-[#80918B]">
-                            {lang === "ur" ? "روپے فی ۴۰ کلو" : "PKR / 40kg"}
+                {/* Agricultural Commodity Header */}
+                {(() => {
+                  const mainSeries = activeSeries.find((s) => s.label === focusedType) || activeSeries[0] || priceSeries[0];
+                  const currentIdx = hoverIdx !== null ? hoverIdx : len - 1;
+                  const displayPrice = mainSeries?.data[currentIdx] || 0;
+                  const startPrice = mainSeries?.data[0] || displayPrice || 1;
+                  const changeAmt = displayPrice - startPrice;
+                  const absPct = Math.abs((changeAmt / (startPrice || 1)) * 100).toFixed(2);
+                  const isPositive = changeAmt > 0;
+                  const isFlat = changeAmt === 0;
+                  const seriesMax = mainSeries ? Math.max(...mainSeries.data) : displayPrice;
+                  const seriesMin = mainSeries ? Math.min(...mainSeries.data) : displayPrice;
+                  const seriesAvg = mainSeries ? Math.round(mainSeries.data.reduce((a, b) => a + b, 0) / mainSeries.data.length) : displayPrice;
+
+                  return (
+                    <div className="flex flex-col gap-2 border-b border-[#E8EFEC] pb-2.5">
+                      {/* Title & Active Rate Type Badge */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="text-xs sm:text-sm font-extrabold text-[#143B33]"
+                            style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                          >
+                            {byproduct ? `${tc(byproduct)}` : `${tc(product)}`} {lang === "ur" ? "مارکیٹ ریٹ انڈیکس" : "Market Rate Index"}
+                          </span>
+                          <span className="text-[10px] font-bold text-[#087F63] bg-[#E8F8F4] px-2 py-0.5 rounded-full border border-[#C2E8DB]">
+                            {tr(focusedType).replace(" ریٹ", "").replace(" Rate", "")}
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-bold text-[#80918B]">
+                          {lang === "ur" ? "روپے فی ۴۰ کلو" : "PKR / 40kg"}
+                        </span>
+                      </div>
+
+                      {/* Price & Change Display */}
+                      <div className="flex items-baseline justify-between flex-wrap gap-2">
+                        <div className="flex items-baseline gap-2.5">
+                          <span className="text-2xl sm:text-3xl font-black text-[#143B33] tracking-tight">
+                            {lang === "ur" ? `روپے ${toUrduDigits(displayPrice.toLocaleString())}` : `Rs. ${displayPrice.toLocaleString()}`}
+                          </span>
+                          <span
+                            className="text-xs font-bold px-2.5 py-0.5 rounded-md flex items-center gap-1"
+                            style={{
+                              background: isFlat ? "#F3F4F6" : isPositive ? "#DCFCE7" : "#FEE2E2",
+                              color: isFlat ? "#4B5563" : isPositive ? "#15803D" : "#B91C1C",
+                              border: `1px solid ${isFlat ? "#E5E7EB" : isPositive ? "#86EFAC" : "#FCA5A5"}`,
+                            }}
+                          >
+                            <span>{isFlat ? "—" : isPositive ? "▲" : "▼"}</span>
+                            <span>{absPct}%</span>
                           </span>
                         </div>
 
-                        {/* Price & Change Display */}
-                        <div className="flex items-baseline justify-between flex-wrap gap-2">
-                          <div className="flex items-baseline gap-2.5">
-                            <span className="text-2xl sm:text-3xl font-black text-[#143B33] tracking-tight">
-                              {lang === "ur" ? `روپے ${toUrduDigits(displayPrice.toLocaleString())}` : `Rs. ${displayPrice.toLocaleString()}`}
-                            </span>
-                            <span
-                              className="text-xs font-bold px-2.5 py-0.5 rounded-md flex items-center gap-1"
-                              style={{
-                                background: isFlat ? "#F3F4F6" : isPositive ? "#DCFCE7" : "#FEE2E2",
-                                color: isFlat ? "#4B5563" : isPositive ? "#15803D" : "#B91C1C",
-                                border: `1px solid ${isFlat ? "#E5E7EB" : isPositive ? "#86EFAC" : "#FCA5A5"}`,
-                              }}
-                            >
-                              <span>{isFlat ? "—" : isPositive ? "▲" : "▼"}</span>
-                              <span>{absPct}%</span>
-                            </span>
-                          </div>
-
-                          {/* Date / Scrub Indicator */}
-                          <div className="text-[11px] font-semibold text-[#52635F]">
-                            {fullDateLabels[currentIdx]?.fullDate || "14 Sep 2026"}
-                          </div>
-                        </div>
-
-                        {/* Stat Summary Bar (High, Low, Avg) */}
-                        <div className="grid grid-cols-3 gap-2 pt-1 text-[10px]">
-                          <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
-                            <span className="text-[#80918B] font-semibold">
-                              {lang === "ur" ? "زیادہ سے زیادہ" : "Period High"}
-                            </span>
-                            <span className="font-bold text-[#143B33] text-xs">
-                              {lang === "ur" ? `روپے ${toUrduDigits(seriesMax)}` : `Rs. ${seriesMax.toLocaleString()}`}
-                            </span>
-                          </div>
-                          <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
-                            <span className="text-[#80918B] font-semibold">
-                              {lang === "ur" ? "کم سے کم" : "Period Low"}
-                            </span>
-                            <span className="font-bold text-[#143B33] text-xs">
-                              {lang === "ur" ? `روپے ${toUrduDigits(seriesMin)}` : `Rs. ${seriesMin.toLocaleString()}`}
-                            </span>
-                          </div>
-                          <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
-                            <span className="text-[#80918B] font-semibold">
-                              {lang === "ur" ? "اوسط ریٹ" : "Period Avg"}
-                            </span>
-                            <span className="font-bold text-[#087F63] text-xs">
-                              {lang === "ur" ? `روپے ${toUrduDigits(seriesAvg)}` : `Rs. ${seriesAvg.toLocaleString()}`}
-                            </span>
-                          </div>
+                        {/* Date / Scrub Indicator */}
+                        <div className="text-[11px] font-semibold text-[#52635F]">
+                          {fullDateLabels[currentIdx]?.fullDate || "14 Sep 2026"}
                         </div>
                       </div>
-                    );
-                  })()}
 
-                  {/* SVG Chart Canvas (Price Trend with Volume Bars) */}
-                  {(() => {
-                    const mainSeries = activeSeries.find((s) => s.label === focusedType) || activeSeries[0] || priceSeries[0];
-                    const currentClose = mainSeries?.data[len - 1] || 0;
-                    const currentCloseY = yOf(currentClose, pMin, pMax);
+                      {/* Stat Summary Bar (High, Low, Avg) */}
+                      <div className="grid grid-cols-3 gap-2 pt-1 text-[10px]">
+                        <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
+                          <span className="text-[#80918B] font-semibold">
+                            {lang === "ur" ? "زیادہ سے زیادہ" : "Period High"}
+                          </span>
+                          <span className="font-bold text-[#143B33] text-xs">
+                            {lang === "ur" ? `روپے ${toUrduDigits(seriesMax)}` : `Rs. ${seriesMax.toLocaleString()}`}
+                          </span>
+                        </div>
+                        <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
+                          <span className="text-[#80918B] font-semibold">
+                            {lang === "ur" ? "کم سے کم" : "Period Low"}
+                          </span>
+                          <span className="font-bold text-[#143B33] text-xs">
+                            {lang === "ur" ? `روپے ${toUrduDigits(seriesMin)}` : `Rs. ${seriesMin.toLocaleString()}`}
+                          </span>
+                        </div>
+                        <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
+                          <span className="text-[#80918B] font-semibold">
+                            {lang === "ur" ? "اوسط ریٹ" : "Period Avg"}
+                          </span>
+                          <span className="font-bold text-[#087F63] text-xs">
+                            {lang === "ur" ? `روپے ${toUrduDigits(seriesAvg)}` : `Rs. ${seriesAvg.toLocaleString()}`}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
 
-                    // Arrival volume scaling
-                    const maxArr = Math.max(...arrivalData, 1);
-                    const volBaseY = CH - PB;
-                    const volMaxH = 24;
+                {/* SVG Chart Canvas (Price Trend with Volume Bars) */}
+                {(() => {
+                  const mainSeries = activeSeries.find((s) => s.label === focusedType) || activeSeries[0] || priceSeries[0];
+                  const currentClose = mainSeries?.data[len - 1] || 0;
+                  const currentCloseY = yOf(currentClose, pMin, pMax);
 
-                    return (
-                      <div className="relative w-full select-none bg-[#FCFDFD] rounded-xl border border-[#EDF4F1] p-1">
-                        <svg
-                          viewBox={`0 0 ${CW} ${CH}`}
-                          className="w-full"
-                          style={{ height: CH, display: "block" }}
-                          onMouseMove={(e) => {
-                            const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-                            const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
-                            const i = Math.round((relX / chartW) * (len - 1));
-                            setHoverIdx(Math.max(0, Math.min(len - 1, i)));
-                          }}
-                          onMouseLeave={() => setHoverIdx(null)}
-                          onTouchMove={(e) => {
-                            const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-                            const touch = e.touches[0];
-                            const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
-                            const i = Math.round((relX / chartW) * (len - 1));
-                            setHoverIdx(Math.max(0, Math.min(len - 1, i)));
-                          }}
-                          onTouchEnd={() => setHoverIdx(null)}
-                        >
-                          <defs>
-                            {activeSeries.map((s) => (
-                              <linearGradient
-                                key={`grad-${s.label}`}
-                                id={`areaGrad-${s.label.replace(/\s+/g, "_")}`}
-                                x1="0"
-                                y1="0"
-                                x2="0"
-                                y2="1"
-                              >
-                                <stop offset="0%" stopColor={s.color || "#087F63"} stopOpacity="0.22" />
-                                <stop offset="75%" stopColor={s.color || "#087F63"} stopOpacity="0.03" />
-                                <stop offset="100%" stopColor={s.color || "#087F63"} stopOpacity="0.00" />
-                              </linearGradient>
-                            ))}
-                          </defs>
+                  // Arrival volume scaling
+                  const maxArr = Math.max(...arrivalData, 1);
+                  const volBaseY = CH - PB;
+                  const volMaxH = 24;
 
-                          {/* Horizontal Gridlines + Left & Right Price Axis Labels */}
-                          {yPriceTicks.map((tick, ti) => {
-                            const y = yOf(tick, pMin, pMax);
-                            return (
-                              <g key={`yTick-${ti}`}>
-                                <line
-                                  x1={PL}
-                                  y1={y}
-                                  x2={CW - PR}
-                                  y2={y}
-                                  stroke="#E8EFEF"
-                                  strokeWidth="1"
-                                  strokeDasharray="3 3"
-                                />
-                                <text
-                                  x={PL - 5}
-                                  y={y + 3.5}
-                                  textAnchor="end"
-                                  fontSize="8.5"
-                                  fontWeight="600"
-                                  fill="#80918B"
-                                >
-                                  {tick >= 1000 ? `${(tick / 1000).toFixed(1)}k` : tick}
-                                </text>
-                                <text
-                                  x={CW - PR + 5}
-                                  y={y + 3.5}
-                                  textAnchor="start"
-                                  fontSize="8"
-                                  fontWeight="600"
-                                  fill="#9BAAA5"
-                                >
-                                  {tick}
-                                </text>
-                              </g>
-                            );
-                          })}
+                  return (
+                    <div className="relative w-full select-none bg-[#FCFDFD] rounded-xl border border-[#EDF4F1] p-1">
+                      <svg
+                        viewBox={`0 0 ${CW} ${CH}`}
+                        className="w-full"
+                        style={{ height: CH, display: "block" }}
+                        onMouseMove={(e) => {
+                          const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                          const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
+                          const i = Math.round((relX / chartW) * (len - 1));
+                          setHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                        }}
+                        onMouseLeave={() => setHoverIdx(null)}
+                        onTouchMove={(e) => {
+                          const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                          const touch = e.touches[0];
+                          const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
+                          const i = Math.round((relX / chartW) * (len - 1));
+                          setHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                        }}
+                        onTouchEnd={() => setHoverIdx(null)}
+                      >
+                        <defs>
+                          {activeSeries.map((s) => (
+                            <linearGradient
+                              key={`grad-${s.label}`}
+                              id={`areaGrad-${s.label.replace(/\s+/g, "_")}`}
+                              x1="0"
+                              y1="0"
+                              x2="0"
+                              y2="1"
+                            >
+                              <stop offset="0%" stopColor={s.color || "#087F63"} stopOpacity="0.22" />
+                              <stop offset="75%" stopColor={s.color || "#087F63"} stopOpacity="0.03" />
+                              <stop offset="100%" stopColor={s.color || "#087F63"} stopOpacity="0.00" />
+                            </linearGradient>
+                          ))}
+                        </defs>
 
-                          {/* Volume Baseline / X-Axis Baseline */}
-                          <line
-                            x1={PL}
-                            y1={volBaseY}
-                            x2={CW - PR}
-                            y2={volBaseY}
-                            stroke="#D5E2DD"
-                            strokeWidth="1.2"
-                          />
-
-                          {/* X-Axis Date Labels */}
-                          {xLabels.map((lbl, i) =>
-                            lbl ? (
+                        {/* Horizontal Gridlines + Left & Right Price Axis Labels */}
+                        {yPriceTicks.map((tick, ti) => {
+                          const y = yOf(tick, pMin, pMax);
+                          return (
+                            <g key={`yTick-${ti}`}>
+                              <line
+                                x1={PL}
+                                y1={y}
+                                x2={CW - PR}
+                                y2={y}
+                                stroke="#E8EFEF"
+                                strokeWidth="1"
+                                strokeDasharray="3 3"
+                              />
                               <text
-                                key={`xPriceTick-${i}`}
-                                x={xOf(i, len)}
-                                y={CH - 10}
-                                textAnchor="middle"
+                                x={PL - 5}
+                                y={y + 3.5}
+                                textAnchor="end"
                                 fontSize="8.5"
                                 fontWeight="600"
                                 fill="#80918B"
-                                fontFamily={lang === "ur" ? URDU_FONT : "inherit"}
                               >
-                                {lbl}
+                                {tick >= 1000 ? `${(tick / 1000).toFixed(1)}k` : tick}
                               </text>
-                            ) : null,
-                          )}
+                              <text
+                                x={CW - PR + 5}
+                                y={y + 3.5}
+                                textAnchor="start"
+                                fontSize="8"
+                                fontWeight="600"
+                                fill="#9BAAA5"
+                              >
+                                {tick}
+                              </text>
+                            </g>
+                          );
+                        })}
 
-                          {/* Mini Arrival Volume Bars along Bottom */}
-                          {arrivalData.map((arrVal, i) => {
-                            const barX = xOf(i, len);
-                            const barH = (arrVal / maxArr) * volMaxH;
-                            const prevP = i > 0 ? (mainSeries?.data[i - 1] || 0) : (mainSeries?.data[i] || 0);
-                            const curP = mainSeries?.data[i] || 0;
-                            const isUp = curP >= prevP;
-                            const barW = Math.max(2, Math.min(6, (chartW / len) * 0.55));
-                            const isHov = hoverIdx === i;
+                        {/* Volume Baseline / X-Axis Baseline */}
+                        <line
+                          x1={PL}
+                          y1={volBaseY}
+                          x2={CW - PR}
+                          y2={volBaseY}
+                          stroke="#D5E2DD"
+                          strokeWidth="1.2"
+                        />
 
-                            return (
-                              <rect
-                                key={`vol-${i}`}
-                                x={barX - barW / 2}
-                                y={volBaseY - barH}
-                                width={barW}
-                                height={barH}
-                                rx={1}
-                                fill={isUp ? "#10B981" : "#EF4444"}
-                                opacity={isHov ? 1 : 0.65}
+                        {/* X-Axis Date Labels */}
+                        {xLabels.map((lbl, i) =>
+                          lbl ? (
+                            <text
+                              key={`xPriceTick-${i}`}
+                              x={xOf(i, len)}
+                              y={CH - 10}
+                              textAnchor="middle"
+                              fontSize="8.5"
+                              fontWeight="600"
+                              fill="#80918B"
+                              fontFamily={lang === "ur" ? URDU_FONT : "inherit"}
+                            >
+                              {lbl}
+                            </text>
+                          ) : null,
+                        )}
+
+                        {/* Mini Arrival Volume Bars along Bottom */}
+                        {arrivalData.map((arrVal, i) => {
+                          const barX = xOf(i, len);
+                          const barH = (arrVal / maxArr) * volMaxH;
+                          const prevP = i > 0 ? (mainSeries?.data[i - 1] || 0) : (mainSeries?.data[i] || 0);
+                          const curP = mainSeries?.data[i] || 0;
+                          const isUp = curP >= prevP;
+                          const barW = Math.max(2, Math.min(6, (chartW / len) * 0.55));
+                          const isHov = hoverIdx === i;
+
+                          return (
+                            <rect
+                              key={`vol-${i}`}
+                              x={barX - barW / 2}
+                              y={volBaseY - barH}
+                              width={barW}
+                              height={barH}
+                              rx={1}
+                              fill={isUp ? "#10B981" : "#EF4444"}
+                              opacity={isHov ? 1 : 0.65}
+                            />
+                          );
+                        })}
+
+                        {/* Primary Focused Rate Type Line & Area Gradient Glow */}
+                        {(() => {
+                          const s = activeSeries.find((ser) => ser.label === focusedType) || activeSeries[0];
+                          if (!s) return null;
+                          const pts = s.data
+                            .map(
+                              (v, i) =>
+                                `${i === 0 ? "M" : "L"}${xOf(i, len).toFixed(1)},${yOf(v, pMin, pMax).toFixed(1)}`,
+                            )
+                            .join(" ");
+                          const areaPath = `${pts} L${xOf(len - 1, len).toFixed(1)},${volBaseY} L${PL},${volBaseY} Z`;
+
+                          return (
+                            <g key={`main-${s.label}`}>
+                              <path
+                                d={areaPath}
+                                fill={`url(#areaGrad-${s.label.replace(/\s+/g, "_")})`}
                               />
-                            );
-                          })}
-
-                          {/* Primary Focused Rate Type Line & Area Gradient Glow */}
-                          {(() => {
-                            const s = activeSeries.find((ser) => ser.label === focusedType) || activeSeries[0];
-                            if (!s) return null;
-                            const pts = s.data
-                              .map(
-                                (v, i) =>
-                                  `${i === 0 ? "M" : "L"}${xOf(i, len).toFixed(1)},${yOf(v, pMin, pMax).toFixed(1)}`,
-                              )
-                              .join(" ");
-                            const areaPath = `${pts} L${xOf(len - 1, len).toFixed(1)},${volBaseY} L${PL},${volBaseY} Z`;
-
-                            return (
-                              <g key={`main-${s.label}`}>
-                                <path
-                                  d={areaPath}
-                                  fill={`url(#areaGrad-${s.label.replace(/\s+/g, "_")})`}
-                                />
-                                <path
-                                  d={pts}
-                                  stroke={s.color || "#087F63"}
-                                  strokeWidth="2.5"
-                                  fill="none"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-
-                                {/* Dotted Horizontal Guideline for latest price */}
-                                <line
-                                  x1={PL}
-                                  y1={currentCloseY}
-                                  x2={CW - PR}
-                                  y2={currentCloseY}
-                                  stroke={s.color || "#087F63"}
-                                  strokeWidth="0.9"
-                                  strokeDasharray="3 3"
-                                  opacity="0.6"
-                                />
-                                {/* Latest Price Right-side Tag */}
-                                <g transform={`translate(${CW - PR + 2}, ${currentCloseY - 7})`}>
-                                  <rect
-                                    x={0}
-                                    y={0}
-                                    width={28}
-                                    height={14}
-                                    rx={3}
-                                    fill={s.color || "#087F63"}
-                                  />
-                                  <text
-                                    x={14}
-                                    y={10}
-                                    textAnchor="middle"
-                                    fontSize="8"
-                                    fontWeight="bold"
-                                    fill="#FFFFFF"
-                                  >
-                                    {currentClose >= 1000 ? `${(currentClose / 1000).toFixed(1)}k` : currentClose}
-                                  </text>
-                                </g>
-
-                                {/* Live Pulse Dot on Latest Value */}
-                                <circle
-                                  cx={xOf(len - 1, len)}
-                                  cy={currentCloseY}
-                                  r="4"
-                                  fill={s.color || "#087F63"}
-                                  stroke="#FFFFFF"
-                                  strokeWidth="2"
-                                />
-                              </g>
-                            );
-                          })()}
-
-                          {/* Compare Mode Secondary Lines */}
-                          {compareMode &&
-                            activeSeries
-                              .filter((s) => s.label !== focusedType)
-                              .map((s) => {
-                                const pts = s.data
-                                  .map(
-                                    (v, i) =>
-                                      `${i === 0 ? "M" : "L"}${xOf(i, len).toFixed(1)},${yOf(v, pMin, pMax).toFixed(1)}`,
-                                  )
-                                  .join(" ");
-                                return (
-                                  <path
-                                    key={`sec-${s.label}`}
-                                    d={pts}
-                                    stroke={s.color}
-                                    strokeWidth="1.8"
-                                    strokeDasharray="4 2"
-                                    fill="none"
-                                    strokeLinecap="round"
-                                    opacity="0.85"
-                                  />
-                                );
-                              })}
-
-                          {/* Interactive Hover Crosshair Lines */}
-                          {hoverIdx !== null && (
-                            <g>
-                              {/* Full-height vertical crosshair */}
-                              <line
-                                x1={xOf(hoverIdx, len)}
-                                y1={PT}
-                                x2={xOf(hoverIdx, len)}
-                                y2={volBaseY}
-                                stroke="#0284C7"
-                                strokeWidth="1.2"
-                                strokeDasharray="2 2"
+                              <path
+                                d={pts}
+                                stroke={s.color || "#087F63"}
+                                strokeWidth="2.5"
+                                fill="none"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
                               />
-                              {/* Horizontal crosshair */}
+
+                              {/* Dotted Horizontal Guideline for latest price */}
                               <line
                                 x1={PL}
-                                y1={yOf(mainSeries?.data[hoverIdx] || 0, pMin, pMax)}
+                                y1={currentCloseY}
                                 x2={CW - PR}
-                                y2={yOf(mainSeries?.data[hoverIdx] || 0, pMin, pMax)}
-                                stroke="#0284C7"
-                                strokeWidth="1"
-                                strokeDasharray="2 2"
-                                opacity="0.75"
+                                y2={currentCloseY}
+                                stroke={s.color || "#087F63"}
+                                strokeWidth="0.9"
+                                strokeDasharray="3 3"
+                                opacity="0.6"
                               />
+                              {/* Latest Price Right-side Tag */}
+                              <g transform={`translate(${CW - PR + 2}, ${currentCloseY - 7})`}>
+                                <rect
+                                  x={0}
+                                  y={0}
+                                  width={28}
+                                  height={14}
+                                  rx={3}
+                                  fill={s.color || "#087F63"}
+                                />
+                                <text
+                                  x={14}
+                                  y={10}
+                                  textAnchor="middle"
+                                  fontSize="8"
+                                  fontWeight="bold"
+                                  fill="#FFFFFF"
+                                >
+                                  {currentClose >= 1000 ? `${(currentClose / 1000).toFixed(1)}k` : currentClose}
+                                </text>
+                              </g>
+
+                              {/* Live Pulse Dot on Latest Value */}
                               <circle
-                                cx={xOf(hoverIdx, len)}
-                                cy={yOf(mainSeries?.data[hoverIdx] || 0, pMin, pMax)}
-                                r="5"
-                                fill="#0284C7"
+                                cx={xOf(len - 1, len)}
+                                cy={currentCloseY}
+                                r="4"
+                                fill={s.color || "#087F63"}
                                 stroke="#FFFFFF"
                                 strokeWidth="2"
                               />
                             </g>
-                          )}
-                        </svg>
-
-                        {/* Interactive Agricultural Hover Tooltip (Only Min Rate, Max Rate, Arrivals) */}
-                        {hoverIdx !== null && (() => {
-                          const curP = mainSeries?.data[hoverIdx] || 0;
-                          const minP = mainSeries?.mins?.[hoverIdx] || Math.max(0, curP - Math.round(curP * 0.008));
-                          const maxP = mainSeries?.maxs?.[hoverIdx] || (curP + Math.round(curP * 0.008));
-                          const volVal = arrivalData[hoverIdx] || 0;
-                          const dateStr = fullDateLabels[hoverIdx]?.fullDate || "14 Sep 2026";
-
-                          return (
-                            <div
-                              className="pointer-events-none absolute z-20 rounded-xl shadow-xl border p-2.5 flex flex-col gap-1 backdrop-blur-md transition-all duration-75"
-                              style={{
-                                left: `${Math.min(Math.max((xOf(hoverIdx, len) / CW) * 100, 24), 76)}%`,
-                                top: 12,
-                                transform: "translateX(-50%)",
-                                background: "rgba(255, 255, 255, 0.97)",
-                                borderColor: "#38BDF8",
-                                minWidth: 160,
-                                boxShadow: "0 8px 24px -4px rgba(2, 132, 199, 0.22)",
-                              }}
-                            >
-                              <div className="flex items-center justify-between text-[10px] font-bold text-[#0284C7] border-b border-[#E0F2FE] pb-1">
-                                <span>DT:</span>
-                                <span className="font-mono text-[#0F172A]">{dateStr}</span>
-                              </div>
-                              <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10.5px] font-semibold text-[#334155] pt-1">
-                                <span className="text-[#64748B]">
-                                  {lang === "ur" ? "کم سے کم ریٹ:" : "Min Rate:"}
-                                </span>
-                                <span className="font-mono font-bold text-right text-[#B91C1C]">
-                                  Rs. {minP.toLocaleString()}
-                                </span>
-
-                                <span className="text-[#64748B]">
-                                  {lang === "ur" ? "زیادہ سے زیادہ:" : "Max Rate:"}
-                                </span>
-                                <span className="font-mono font-bold text-right text-[#15803D]">
-                                  Rs. {maxP.toLocaleString()}
-                                </span>
-
-                                <span className="text-[#64748B]">
-                                  {lang === "ur" ? "آمد:" : "Arrivals:"}
-                                </span>
-                                <span className="font-mono font-bold text-right text-[#0284C7]">
-                                  {volVal > 0 ? `${volVal.toLocaleString()} bags` : "—"}
-                                </span>
-                              </div>
-                            </div>
                           );
                         })()}
-                      </div>
-                    );
-                  })()}
 
-                  {/* 1. Timeframe Filter: 1 Month, 3 Months, 6 Months, 1 Year */}
-                  <div className="pt-0.5">
-                    <div className="grid grid-cols-4 gap-1.5 border border-[#D5E2DD] rounded-xl p-1 bg-[#F9FBFA]">
-                      {[
-                        { id: "1M", labelEn: "1 Month", labelUr: "۱ مہینہ", r: "month" as const },
-                        { id: "3M", labelEn: "3 Months", labelUr: "۳ مہینے", r: "quarter" as const },
-                        { id: "6M", labelEn: "6 Months", labelUr: "۶ مہینے", r: "quarter" as const },
-                        { id: "1Y", labelEn: "1 Year", labelUr: "۱ سال", r: "quarter" as const },
-                      ].map((tf) => {
-                        const isTfActive = stockTimeframe === tf.id;
-                        return (
-                          <button
-                            key={tf.id}
-                            onClick={() => {
-                              setStockTimeframe(tf.id as any);
-                              setRange(tf.r);
-                            }}
-                            className={`flex items-center justify-center py-2 px-1 rounded-lg transition-all font-bold ${isTfActive
-                                ? "bg-[#087F63] text-white shadow-sm ring-1 ring-[#087F63]/30 scale-[1.01]"
-                                : "bg-white/80 text-[#52635F] hover:bg-white hover:text-[#183B34] border border-[#E8EFEC]"
-                              }`}
-                            style={{
-                              fontSize: lang === "ur" ? 13 : 11,
-                              fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                            }}
-                          >
-                            <span>{lang === "ur" ? tf.labelUr : tf.labelEn}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
+                        {/* Compare Mode Secondary Lines */}
+                        {compareMode &&
+                          activeSeries
+                            .filter((s) => s.label !== focusedType)
+                            .map((s) => {
+                              const pts = s.data
+                                .map(
+                                  (v, i) =>
+                                    `${i === 0 ? "M" : "L"}${xOf(i, len).toFixed(1)},${yOf(v, pMin, pMax).toFixed(1)}`,
+                                )
+                                .join(" ");
+                              return (
+                                <path
+                                  key={`sec-${s.label}`}
+                                  d={pts}
+                                  stroke={s.color}
+                                  strokeWidth="1.8"
+                                  strokeDasharray="4 2"
+                                  fill="none"
+                                  strokeLinecap="round"
+                                  opacity="0.85"
+                                />
+                              );
+                            })}
 
-                  {/* 2. Rate Types Selector (Selected Card Rate Type First, Remaining Next, All at the End) */}
-                  <div className="flex flex-col gap-1.5 pt-1">
-                    <div className="flex items-center justify-between">
-                      <span
-                        className="text-[11px] font-bold text-[#52635F]"
-                        style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                      >
-                        {lang === "ur" ? "نرخ منتخب کریں (ریٹ تبدیل کریں)" : "Select Rate Type"}
-                      </span>
-                      {compareMode && (
-                        <span className="text-[10px] font-semibold text-[#087F63] bg-[#E8F8F4] px-1.5 py-0.5 rounded">
-                          {activeSeries.length} {lang === "ur" ? "اقسام فعال ہیں" : "Active Types"}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex flex-wrap gap-1.5 items-center w-full" style={{ direction: "ltr" }}>
-                      {/* Individual Rate Types with Overview selection in the 1st position */}
-                      {orderedRateTypes.map((tRt) => {
-                        const isFocused = focusedType === tRt;
-                        const isCompared = activeTypes.includes(tRt);
-                        const isSelected = compareMode ? isCompared : isFocused;
-
-                        return (
-                          <button
-                            key={tRt}
-                            onClick={() => {
-                              if (compareMode) {
-                                // Switch from compare mode to single rate type focus
-                                setCompareMode(false);
-                                setFocusedType(tRt);
-                                setActiveTypes([tRt]);
-                              } else {
-                                setFocusedType(tRt);
-                                setActiveTypes([tRt]);
-                              }
-                            }}
-                            className="tap-target flex items-center gap-1.5 rounded-full font-bold transition-all active:scale-95 shadow-xs"
-                            style={{
-                              fontSize: lang === "ur" ? 13 : 11,
-                              padding: "5px 11px",
-                              background: isSelected ? RATE_COLORS[tRt] || "#087F63" : "#F4FAF7",
-                              border: `1.5px solid ${isSelected ? RATE_COLORS[tRt] || "#087F63" : "#D5E2DD"}`,
-                              color: isSelected ? "#FFFFFF" : "#52635F",
-                              fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                            }}
-                          >
-                            <span
-                              className="rounded-full flex-shrink-0"
-                              style={{
-                                width: 7,
-                                height: 7,
-                                background: isSelected ? "#FFFFFF" : RATE_COLORS[tRt] || "#087F63",
-                              }}
+                        {/* Interactive Hover Crosshair Lines */}
+                        {hoverIdx !== null && (
+                          <g>
+                            {/* Full-height vertical crosshair */}
+                            <line
+                              x1={xOf(hoverIdx, len)}
+                              y1={PT}
+                              x2={xOf(hoverIdx, len)}
+                              y2={volBaseY}
+                              stroke="#0284C7"
+                              strokeWidth="1.2"
+                              strokeDasharray="2 2"
                             />
-                            <span>{tr(tRt).replace(" ریٹ", "").replace(" Rate", "")}</span>
-                          </button>
-                        );
-                      })}
-
-                      {/* All / تمام نرخ Button at the Very End */}
-                      <button
-                        onClick={() => {
-                          if (compareMode && activeTypes.length === ALL_RATE_TYPES.length) {
-                            setCompareMode(false);
-                            setActiveTypes([focusedType]);
-                          } else {
-                            setCompareMode(true);
-                            setActiveTypes([...ALL_RATE_TYPES]);
-                          }
-                        }}
-                        className="tap-target flex items-center gap-1.5 rounded-full font-bold transition-all active:scale-95 shadow-xs"
-                        style={{
-                          fontSize: lang === "ur" ? 13 : 11,
-                          padding: "5px 12px",
-                          background:
-                            compareMode && activeTypes.length === ALL_RATE_TYPES.length
-                              ? "#087F63"
-                              : "#E8EFEC",
-                          border: `1.5px solid ${compareMode && activeTypes.length === ALL_RATE_TYPES.length
-                              ? "#087F63"
-                              : "#D5E2DD"
-                            }`,
-                          color:
-                            compareMode && activeTypes.length === ALL_RATE_TYPES.length
-                              ? "#FFFFFF"
-                              : "#183B34",
-                          fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                        }}
-                      >
-                        <span>{lang === "ur" ? "سب (All)" : "All"}</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Dedicated Scroll Buffer for Trends Screen */}
-                <div className="w-full h-36 flex-shrink-0" />
-              </>
-            ) : (
-              <div className="flex flex-col gap-3">
-                <div
-                  className="rounded-2xl p-3.5 flex flex-col gap-2.5 shadow-sm"
-                  style={{ background: "#FFFFFF", border: "1px solid #D5E2DD" }}
-                >
-                  {/* Top Bar: Granularity Filter for Arrival Trend */}
-                  <div className="flex items-center justify-between gap-1 pb-2 border-b border-[#E8EFEC]">
-                    <div className="flex items-center gap-1 overflow-x-auto py-0.5" style={{ scrollbarWidth: "none" }}>
-                      {["1", "5", "15", "30", "1H", "5H", "1D", "1W", "1M"].map((g) => {
-                        const isGActive = stockGranularity === g;
-                        return (
-                          <button
-                            key={g}
-                            onClick={() => setStockGranularity(g)}
-                            className={`px-1.5 py-0.5 rounded text-[10.5px] font-bold transition-colors flex-shrink-0 ${
-                              isGActive
-                                ? "bg-[#D97706] text-white shadow-xs"
-                                : "text-[#52635F] hover:bg-[#F1F7F4] hover:text-[#143B33]"
-                            }`}
-                          >
-                            {g}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Arrival Header HUD */}
-                  {(() => {
-                    const currentIdx = arrivalHoverIdx !== null ? arrivalHoverIdx : len - 1;
-                    const displayArr = arrivalData[currentIdx] || 0;
-                    const totalArrival = arrivalData.reduce((a, b) => a + b, 0);
-                    const peakArrival = Math.max(...arrivalData);
-                    const avgArrival = Math.round(totalArrival / arrivalData.length);
-
-                    return (
-                      <div className="flex flex-col gap-2 border-b border-[#E8EFEC] pb-2.5">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-1.5">
-                            <span className="w-2.5 h-2.5 rounded-full bg-[#D97706]" />
-                            <span
-                              className="text-xs font-bold text-[#143B33]"
-                              style={{
-                                fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                                fontSize: lang === "ur" ? 15 : 12,
-                              }}
-                            >
-                              {lang === "ur" ? "آمد کی مقدار (مارکیٹ رسد)" : "Arrival Volume Trend"}
-                            </span>
-                          </div>
-                          <span className="text-[10px] font-semibold text-[#92400E] bg-[#FEF3C7] px-2 py-0.5 rounded-md border border-[#FDE68A]">
-                            {lang === "ur" ? "تھیلے" : "Bags"}
-                          </span>
-                        </div>
-
-                        <div className="flex items-baseline justify-between flex-wrap gap-2">
-                          <div className="flex items-baseline gap-2">
-                            <span className="text-2xl font-black text-[#92400E]">
-                              {lang === "ur" ? `${toUrduDigits(displayArr.toLocaleString())} تھیلے` : `${displayArr.toLocaleString()} Bags`}
-                            </span>
-                          </div>
-                          <div className="text-[11px] font-semibold text-[#52635F]">
-                            {fullDateLabels[currentIdx]?.fullDate}
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-2 pt-1 text-[10px]">
-                          <div className="bg-[#FFFDF5] p-1.5 rounded-lg border border-[#FDE68A] flex flex-col">
-                            <span className="text-[#92400E] font-semibold">
-                              {lang === "ur" ? "کل آمد" : "Total Period"}
-                            </span>
-                            <span className="font-bold text-[#78350F] text-xs">
-                              {totalArrival.toLocaleString()} Bags
-                            </span>
-                          </div>
-                          <div className="bg-[#FFFDF5] p-1.5 rounded-lg border border-[#FDE68A] flex flex-col">
-                            <span className="text-[#92400E] font-semibold">
-                              {lang === "ur" ? "سب سے زیادہ" : "Peak Day"}
-                            </span>
-                            <span className="font-bold text-[#78350F] text-xs">
-                              {peakArrival.toLocaleString()} Bags
-                            </span>
-                          </div>
-                          <div className="bg-[#FFFDF5] p-1.5 rounded-lg border border-[#FDE68A] flex flex-col">
-                            <span className="text-[#92400E] font-semibold">
-                              {lang === "ur" ? "روزانہ اوسط" : "Daily Avg"}
-                            </span>
-                            <span className="font-bold text-[#92400E] text-xs">
-                              {avgArrival.toLocaleString()} Bags
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                  {/* SVG Arrival Canvas with both Arrival Line, Area Gradient AND Bottom Volume Bars */}
-                  <div className="relative w-full select-none">
-                    <svg
-                      viewBox={`0 0 ${CW} ${CH}`}
-                      className="w-full"
-                      style={{ height: CH, display: "block" }}
-                      onMouseMove={(e) => {
-                        const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-                        const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
-                        const i = Math.round((relX / chartW) * (len - 1));
-                        setArrivalHoverIdx(Math.max(0, Math.min(len - 1, i)));
-                      }}
-                      onMouseLeave={() => setArrivalHoverIdx(null)}
-                      onTouchMove={(e) => {
-                        const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-                        const touch = e.touches[0];
-                        const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
-                        const i = Math.round((relX / chartW) * (len - 1));
-                        setArrivalHoverIdx(Math.max(0, Math.min(len - 1, i)));
-                      }}
-                      onTouchEnd={() => setArrivalHoverIdx(null)}
-                    >
-                      <defs>
-                        <linearGradient id="arrivalGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#D97706" stopOpacity="0.32" />
-                          <stop offset="85%" stopColor="#D97706" stopOpacity="0.04" />
-                          <stop offset="100%" stopColor="#D97706" stopOpacity="0.00" />
-                        </linearGradient>
-                      </defs>
-
-                      {/* Horizontal Dashed Gridlines + Y Ticks */}
-                      {yArrivalTicks.map((tick, ti) => {
-                        const y = yOf(tick, aMin, aMax);
-                        return (
-                          <g key={`yArrTick-${ti}`}>
+                            {/* Horizontal crosshair */}
                             <line
                               x1={PL}
-                              y1={y}
+                              y1={yOf(mainSeries?.data[hoverIdx] || 0, pMin, pMax)}
                               x2={CW - PR}
-                              y2={y}
-                              stroke="#E5EAE8"
+                              y2={yOf(mainSeries?.data[hoverIdx] || 0, pMin, pMax)}
+                              stroke="#0284C7"
                               strokeWidth="1"
-                              strokeDasharray="4 4"
+                              strokeDasharray="2 2"
+                              opacity="0.75"
                             />
-                            <text
-                              x={PL - 6}
-                              y={y + 3.5}
-                              textAnchor="end"
-                              fontSize="9.5"
-                              fontWeight="600"
-                              fill="#80918B"
-                            >
-                              {tick >= 1000 ? `${(tick / 1000).toFixed(1)}k` : tick}
-                            </text>
+                            <circle
+                              cx={xOf(hoverIdx, len)}
+                              cy={yOf(mainSeries?.data[hoverIdx] || 0, pMin, pMax)}
+                              r="5"
+                              fill="#0284C7"
+                              stroke="#FFFFFF"
+                              strokeWidth="2"
+                            />
                           </g>
-                        );
-                      })}
+                        )}
+                      </svg>
 
-                      {/* X-Axis Baseline */}
-                      <line
-                        x1={PL}
-                        y1={CH - PB}
-                        x2={CW - PR}
-                        y2={CH - PB}
-                        stroke="#D5E2DD"
-                        strokeWidth="1.2"
-                      />
-
-                      {/* X-Axis Dates */}
-                      {xLabels.map((lbl, i) =>
-                        lbl ? (
-                          <text
-                            key={`xArrTick-${i}`}
-                            x={xOf(i, len)}
-                            y={CH - 10}
-                            textAnchor="middle"
-                            fontSize="9"
-                            fontWeight="600"
-                            fill="#80918B"
-                            fontFamily={lang === "ur" ? URDU_FONT : "inherit"}
-                          >
-                            {lbl}
-                          </text>
-                        ) : null,
-                      )}
-
-                      {/* Arrival Volume Bars along Bottom to Maintain Consistency */}
-                      {arrivalData.map((arrVal, i) => {
-                        const barX = xOf(i, len);
-                        const maxArr = Math.max(...arrivalData, 1);
-                        const volMaxH = 34;
-                        const volBaseY = CH - PB;
-                        const barH = (arrVal / maxArr) * volMaxH;
-                        const barW = Math.max(2, Math.min(6, (chartW / len) * 0.55));
-                        const isHov = arrivalHoverIdx === i;
+                      {/* Interactive Agricultural Hover Tooltip (Only Min Rate, Max Rate, Arrivals) */}
+                      {hoverIdx !== null && (() => {
+                        const curP = mainSeries?.data[hoverIdx] || 0;
+                        const minP = mainSeries?.mins?.[hoverIdx] || Math.max(0, curP - Math.round(curP * 0.008));
+                        const maxP = mainSeries?.maxs?.[hoverIdx] || (curP + Math.round(curP * 0.008));
+                        const volVal = arrivalData[hoverIdx] || 0;
+                        const dateStr = fullDateLabels[hoverIdx]?.fullDate || "14 Sep 2026";
 
                         return (
-                          <rect
-                            key={`arr-vol-bar-${i}`}
-                            x={barX - barW / 2}
-                            y={volBaseY - barH}
-                            width={barW}
-                            height={barH}
-                            rx={1}
-                            fill="#D97706"
-                            opacity={isHov ? 0.9 : 0.55}
-                          />
+                          <div
+                            className="pointer-events-none absolute z-20 rounded-xl shadow-xl border p-2.5 flex flex-col gap-1 backdrop-blur-md transition-all duration-75"
+                            style={{
+                              left: `${Math.min(Math.max((xOf(hoverIdx, len) / CW) * 100, 24), 76)}%`,
+                              top: 12,
+                              transform: "translateX(-50%)",
+                              background: "rgba(255, 255, 255, 0.97)",
+                              borderColor: "#38BDF8",
+                              minWidth: 160,
+                              boxShadow: "0 8px 24px -4px rgba(2, 132, 199, 0.22)",
+                            }}
+                          >
+                            <div className="flex items-center justify-between text-[10px] font-bold text-[#0284C7] border-b border-[#E0F2FE] pb-1">
+                              <span>DT:</span>
+                              <span className="font-mono text-[#0F172A]">{dateStr}</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10.5px] font-semibold text-[#334155] pt-1">
+                              <span className="text-[#64748B]">
+                                {lang === "ur" ? "کم سے کم ریٹ:" : "Min Rate:"}
+                              </span>
+                              <span className="font-mono font-bold text-right text-[#B91C1C]">
+                                Rs. {minP.toLocaleString()}
+                              </span>
+
+                              <span className="text-[#64748B]">
+                                {lang === "ur" ? "زیادہ سے زیادہ:" : "Max Rate:"}
+                              </span>
+                              <span className="font-mono font-bold text-right text-[#15803D]">
+                                Rs. {maxP.toLocaleString()}
+                              </span>
+
+                              <span className="text-[#64748B]">
+                                {lang === "ur" ? "آمد:" : "Arrivals:"}
+                              </span>
+                              <span className="font-mono font-bold text-right text-[#0284C7]">
+                                {volVal > 0 ? `${volVal.toLocaleString()} bags` : "—"}
+                              </span>
+                            </div>
+                          </div>
                         );
-                      })}
+                      })()}
+                    </div>
+                  );
+                })()}
 
-                      {/* Area Fill */}
-                      <path
-                        d={[
-                          ...arrivalData.map(
-                            (v, i) =>
-                              `${i === 0 ? "M" : "L"}${xOf(i, len).toFixed(1)},${yOf(v, aMin, aMax).toFixed(1)}`,
-                          ),
-                          `L${xOf(len - 1, len).toFixed(1)},${CH - PB}`,
-                          `L${PL},${CH - PB}`,
-                          "Z",
-                        ].join(" ")}
-                        fill="url(#arrivalGrad)"
-                      />
-
-                      {/* Main Line */}
-                      <path
-                        d={arrivalData
-                          .map(
-                            (v, i) =>
-                              `${i === 0 ? "M" : "L"}${xOf(i, len).toFixed(1)},${yOf(v, aMin, aMax).toFixed(1)}`,
-                          )
-                          .join(" ")}
-                        stroke="#D97706"
-                        strokeWidth="2.8"
-                        fill="none"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-
-                      {/* Hover Guide and Marker */}
-                      {arrivalHoverIdx !== null && (
-                        <g>
-                          <line
-                            x1={xOf(arrivalHoverIdx, len)}
-                            y1={PT}
-                            x2={xOf(arrivalHoverIdx, len)}
-                            y2={CH - PB}
-                            stroke="#92400E"
-                            strokeWidth="1.2"
-                            strokeDasharray="3 3"
-                          />
-                          <circle
-                            cx={xOf(arrivalHoverIdx, len)}
-                            cy={yOf(arrivalData[arrivalHoverIdx], aMin, aMax)}
-                            r="5.5"
-                            fill="#D97706"
-                            stroke="#FFFFFF"
-                            strokeWidth="2.5"
-                          />
-                        </g>
-                      )}
-                    </svg>
-
-                    {/* Arrival Hover Tooltip Overlay */}
-                    {arrivalHoverIdx !== null && (
-                      <div
-                        className="pointer-events-none absolute z-20 rounded-xl shadow-lg border p-2 flex flex-col gap-0.5 backdrop-blur-md transition-all duration-75"
-                        style={{
-                          left: `${Math.min(Math.max((xOf(arrivalHoverIdx, len) / CW) * 100, 18), 82)}%`,
-                          top: 8,
-                          transform: "translateX(-50%)",
-                          background: "rgba(120, 53, 15, 0.94)",
-                          borderColor: "rgba(255, 255, 255, 0.18)",
-                          minWidth: 120,
-                        }}
-                      >
-                        <span
-                          className="text-[10px] font-bold text-[#FDE68A] border-b border-white/10 pb-0.5"
-                          style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                        >
-                          {fullDateLabels[arrivalHoverIdx]?.fullDate}
-                        </span>
-                        <div className="flex items-center justify-between gap-2 pt-0.5 text-xs text-white">
-                          <span className="font-semibold opacity-90" style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}>
-                            {lang === "ur" ? "آمد" : "Arrival"}
-                          </span>
-                          <span className="font-black">
-                            {lang === "ur"
-                              ? `${toUrduDigits((arrivalData[arrivalHoverIdx] || 0).toLocaleString())} تھیلے`
-                              : `${(arrivalData[arrivalHoverIdx] || 0).toLocaleString()} Bags`}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* 1. Timeframe Filter for Arrival: 1 Month, 3 Months, 6 Months, 1 Year */}
+                {/* 1. Timeframe Filter: 1 Month, 3 Months, 6 Months, 1 Year */}
                 <div className="pt-0.5">
                   <div className="grid grid-cols-4 gap-1.5 border border-[#D5E2DD] rounded-xl p-1 bg-[#F9FBFA]">
                     {[
@@ -17259,8 +16839,8 @@ function ProductRatesScreen({
                             setRange(tf.r);
                           }}
                           className={`flex items-center justify-center py-2 px-1 rounded-lg transition-all font-bold ${isTfActive
-                              ? "bg-[#D97706] text-white shadow-sm ring-1 ring-[#D97706]/30 scale-[1.01]"
-                              : "bg-white/80 text-[#52635F] hover:bg-white hover:text-[#183B34] border border-[#E8EFEC]"
+                            ? "bg-[#087F63] text-white shadow-sm ring-1 ring-[#087F63]/30 scale-[1.01]"
+                            : "bg-white/80 text-[#52635F] hover:bg-white hover:text-[#183B34] border border-[#E8EFEC]"
                             }`}
                           style={{
                             fontSize: lang === "ur" ? 13 : 11,
@@ -17274,12 +16854,437 @@ function ProductRatesScreen({
                   </div>
                 </div>
 
-                {/* Dedicated Scroll Buffer for Arrival View */}
-                <div className="w-full h-36 flex-shrink-0" />
-              </div>
-            )}
+                {/* 2. Rate Types Selector (Selected Card Rate Type First, Remaining Next, All at the End) */}
+                <div className="flex flex-col gap-1.5 pt-1">
+                  <div className="flex items-center justify-between">
+                    <span
+                      className="text-[11px] font-bold text-[#52635F]"
+                      style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                    >
+                      {lang === "ur" ? "نرخ منتخب کریں (ریٹ تبدیل کریں)" : "Select Rate Type"}
+                    </span>
+                    {compareMode && (
+                      <span className="text-[10px] font-semibold text-[#087F63] bg-[#E8F8F4] px-1.5 py-0.5 rounded">
+                        {activeSeries.length} {lang === "ur" ? "اقسام فعال ہیں" : "Active Types"}
+                      </span>
+                    )}
+                  </div>
 
-            {/* <div
+                  <div className="flex flex-wrap gap-1.5 items-center w-full" style={{ direction: "ltr" }}>
+                    {/* Individual Rate Types with Overview selection in the 1st position */}
+                    {orderedRateTypes.map((tRt) => {
+                      const isFocused = focusedType === tRt;
+                      const isCompared = activeTypes.includes(tRt);
+                      const isSelected = compareMode ? isCompared : isFocused;
+
+                      return (
+                        <button
+                          key={tRt}
+                          onClick={() => {
+                            if (compareMode) {
+                              // Switch from compare mode to single rate type focus
+                              setCompareMode(false);
+                              setFocusedType(tRt);
+                              setActiveTypes([tRt]);
+                            } else {
+                              setFocusedType(tRt);
+                              setActiveTypes([tRt]);
+                            }
+                          }}
+                          className="tap-target flex items-center gap-1.5 rounded-full font-bold transition-all active:scale-95 shadow-xs"
+                          style={{
+                            fontSize: lang === "ur" ? 13 : 11,
+                            padding: "5px 11px",
+                            background: isSelected ? RATE_COLORS[tRt] || "#087F63" : "#F4FAF7",
+                            border: `1.5px solid ${isSelected ? RATE_COLORS[tRt] || "#087F63" : "#D5E2DD"}`,
+                            color: isSelected ? "#FFFFFF" : "#52635F",
+                            fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                          }}
+                        >
+                          <span
+                            className="rounded-full flex-shrink-0"
+                            style={{
+                              width: 7,
+                              height: 7,
+                              background: isSelected ? "#FFFFFF" : RATE_COLORS[tRt] || "#087F63",
+                            }}
+                          />
+                          <span>{tr(tRt).replace(" ریٹ", "").replace(" Rate", "")}</span>
+                        </button>
+                      );
+                    })}
+
+                    {/* All / تمام نرخ Button at the Very End */}
+                    <button
+                      onClick={() => {
+                        if (compareMode && activeTypes.length === ALL_RATE_TYPES.length) {
+                          setCompareMode(false);
+                          setActiveTypes([focusedType]);
+                        } else {
+                          setCompareMode(true);
+                          setActiveTypes([...ALL_RATE_TYPES]);
+                        }
+                      }}
+                      className="tap-target flex items-center gap-1.5 rounded-full font-bold transition-all active:scale-95 shadow-xs"
+                      style={{
+                        fontSize: lang === "ur" ? 13 : 11,
+                        padding: "5px 12px",
+                        background:
+                          compareMode && activeTypes.length === ALL_RATE_TYPES.length
+                            ? "#087F63"
+                            : "#E8EFEC",
+                        border: `1.5px solid ${compareMode && activeTypes.length === ALL_RATE_TYPES.length
+                          ? "#087F63"
+                          : "#D5E2DD"
+                          }`,
+                        color:
+                          compareMode && activeTypes.length === ALL_RATE_TYPES.length
+                            ? "#FFFFFF"
+                            : "#183B34",
+                        fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                      }}
+                    >
+                      <span>{lang === "ur" ? "سب (All)" : "All"}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dedicated Scroll Buffer for Trends Screen */}
+              <div className="w-full h-36 flex-shrink-0" />
+            </>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <div
+                className="rounded-2xl p-3.5 flex flex-col gap-2.5 shadow-sm"
+                style={{ background: "#FFFFFF", border: "1px solid #D5E2DD" }}
+              >
+                {/* Top Bar: Granularity Filter for Arrival Trend */}
+                <div className="flex items-center justify-between gap-1 pb-2 border-b border-[#E8EFEC]">
+                  <div className="flex items-center gap-1 overflow-x-auto py-0.5" style={{ scrollbarWidth: "none" }}>
+                    {["1", "5", "15", "30", "1H", "5H", "1D", "1W", "1M"].map((g) => {
+                      const isGActive = stockGranularity === g;
+                      return (
+                        <button
+                          key={g}
+                          onClick={() => setStockGranularity(g)}
+                          className={`px-1.5 py-0.5 rounded text-[10.5px] font-bold transition-colors flex-shrink-0 ${isGActive
+                            ? "bg-[#D97706] text-white shadow-xs"
+                            : "text-[#52635F] hover:bg-[#F1F7F4] hover:text-[#143B33]"
+                            }`}
+                        >
+                          {g}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Arrival Header HUD */}
+                {(() => {
+                  const currentIdx = arrivalHoverIdx !== null ? arrivalHoverIdx : len - 1;
+                  const displayArr = arrivalData[currentIdx] || 0;
+                  const totalArrival = arrivalData.reduce((a, b) => a + b, 0);
+                  const peakArrival = Math.max(...arrivalData);
+                  const avgArrival = Math.round(totalArrival / arrivalData.length);
+
+                  return (
+                    <div className="flex flex-col gap-2 border-b border-[#E8EFEC] pb-2.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-2.5 h-2.5 rounded-full bg-[#D97706]" />
+                          <span
+                            className="text-xs font-bold text-[#143B33]"
+                            style={{
+                              fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                              fontSize: lang === "ur" ? 15 : 12,
+                            }}
+                          >
+                            {lang === "ur" ? "آمد کی مقدار (مارکیٹ رسد)" : "Arrival Volume Trend"}
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-semibold text-[#92400E] bg-[#FEF3C7] px-2 py-0.5 rounded-md border border-[#FDE68A]">
+                          {lang === "ur" ? "تھیلے" : "Bags"}
+                        </span>
+                      </div>
+
+                      <div className="flex items-baseline justify-between flex-wrap gap-2">
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-2xl font-black text-[#92400E]">
+                            {lang === "ur" ? `${toUrduDigits(displayArr.toLocaleString())} تھیلے` : `${displayArr.toLocaleString()} Bags`}
+                          </span>
+                        </div>
+                        <div className="text-[11px] font-semibold text-[#52635F]">
+                          {fullDateLabels[currentIdx]?.fullDate}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2 pt-1 text-[10px]">
+                        <div className="bg-[#FFFDF5] p-1.5 rounded-lg border border-[#FDE68A] flex flex-col">
+                          <span className="text-[#92400E] font-semibold">
+                            {lang === "ur" ? "کل آمد" : "Total Period"}
+                          </span>
+                          <span className="font-bold text-[#78350F] text-xs">
+                            {totalArrival.toLocaleString()} Bags
+                          </span>
+                        </div>
+                        <div className="bg-[#FFFDF5] p-1.5 rounded-lg border border-[#FDE68A] flex flex-col">
+                          <span className="text-[#92400E] font-semibold">
+                            {lang === "ur" ? "سب سے زیادہ" : "Peak Day"}
+                          </span>
+                          <span className="font-bold text-[#78350F] text-xs">
+                            {peakArrival.toLocaleString()} Bags
+                          </span>
+                        </div>
+                        <div className="bg-[#FFFDF5] p-1.5 rounded-lg border border-[#FDE68A] flex flex-col">
+                          <span className="text-[#92400E] font-semibold">
+                            {lang === "ur" ? "روزانہ اوسط" : "Daily Avg"}
+                          </span>
+                          <span className="font-bold text-[#92400E] text-xs">
+                            {avgArrival.toLocaleString()} Bags
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* SVG Arrival Canvas with both Arrival Line, Area Gradient AND Bottom Volume Bars */}
+                <div className="relative w-full select-none">
+                  <svg
+                    viewBox={`0 0 ${CW} ${CH}`}
+                    className="w-full"
+                    style={{ height: CH, display: "block" }}
+                    onMouseMove={(e) => {
+                      const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                      const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
+                      const i = Math.round((relX / chartW) * (len - 1));
+                      setArrivalHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                    }}
+                    onMouseLeave={() => setArrivalHoverIdx(null)}
+                    onTouchMove={(e) => {
+                      const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                      const touch = e.touches[0];
+                      const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
+                      const i = Math.round((relX / chartW) * (len - 1));
+                      setArrivalHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                    }}
+                    onTouchEnd={() => setArrivalHoverIdx(null)}
+                  >
+                    <defs>
+                      <linearGradient id="arrivalGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#D97706" stopOpacity="0.32" />
+                        <stop offset="85%" stopColor="#D97706" stopOpacity="0.04" />
+                        <stop offset="100%" stopColor="#D97706" stopOpacity="0.00" />
+                      </linearGradient>
+                    </defs>
+
+                    {/* Horizontal Dashed Gridlines + Y Ticks */}
+                    {yArrivalTicks.map((tick, ti) => {
+                      const y = yOf(tick, aMin, aMax);
+                      return (
+                        <g key={`yArrTick-${ti}`}>
+                          <line
+                            x1={PL}
+                            y1={y}
+                            x2={CW - PR}
+                            y2={y}
+                            stroke="#E5EAE8"
+                            strokeWidth="1"
+                            strokeDasharray="4 4"
+                          />
+                          <text
+                            x={PL - 6}
+                            y={y + 3.5}
+                            textAnchor="end"
+                            fontSize="9.5"
+                            fontWeight="600"
+                            fill="#80918B"
+                          >
+                            {tick >= 1000 ? `${(tick / 1000).toFixed(1)}k` : tick}
+                          </text>
+                        </g>
+                      );
+                    })}
+
+                    {/* X-Axis Baseline */}
+                    <line
+                      x1={PL}
+                      y1={CH - PB}
+                      x2={CW - PR}
+                      y2={CH - PB}
+                      stroke="#D5E2DD"
+                      strokeWidth="1.2"
+                    />
+
+                    {/* X-Axis Dates */}
+                    {xLabels.map((lbl, i) =>
+                      lbl ? (
+                        <text
+                          key={`xArrTick-${i}`}
+                          x={xOf(i, len)}
+                          y={CH - 10}
+                          textAnchor="middle"
+                          fontSize="9"
+                          fontWeight="600"
+                          fill="#80918B"
+                          fontFamily={lang === "ur" ? URDU_FONT : "inherit"}
+                        >
+                          {lbl}
+                        </text>
+                      ) : null,
+                    )}
+
+                    {/* Arrival Volume Bars along Bottom to Maintain Consistency */}
+                    {arrivalData.map((arrVal, i) => {
+                      const barX = xOf(i, len);
+                      const maxArr = Math.max(...arrivalData, 1);
+                      const volMaxH = 34;
+                      const volBaseY = CH - PB;
+                      const barH = (arrVal / maxArr) * volMaxH;
+                      const barW = Math.max(2, Math.min(6, (chartW / len) * 0.55));
+                      const isHov = arrivalHoverIdx === i;
+
+                      return (
+                        <rect
+                          key={`arr-vol-bar-${i}`}
+                          x={barX - barW / 2}
+                          y={volBaseY - barH}
+                          width={barW}
+                          height={barH}
+                          rx={1}
+                          fill="#D97706"
+                          opacity={isHov ? 0.9 : 0.55}
+                        />
+                      );
+                    })}
+
+                    {/* Area Fill */}
+                    <path
+                      d={[
+                        ...arrivalData.map(
+                          (v, i) =>
+                            `${i === 0 ? "M" : "L"}${xOf(i, len).toFixed(1)},${yOf(v, aMin, aMax).toFixed(1)}`,
+                        ),
+                        `L${xOf(len - 1, len).toFixed(1)},${CH - PB}`,
+                        `L${PL},${CH - PB}`,
+                        "Z",
+                      ].join(" ")}
+                      fill="url(#arrivalGrad)"
+                    />
+
+                    {/* Main Line */}
+                    <path
+                      d={arrivalData
+                        .map(
+                          (v, i) =>
+                            `${i === 0 ? "M" : "L"}${xOf(i, len).toFixed(1)},${yOf(v, aMin, aMax).toFixed(1)}`,
+                        )
+                        .join(" ")}
+                      stroke="#D97706"
+                      strokeWidth="2.8"
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+
+                    {/* Hover Guide and Marker */}
+                    {arrivalHoverIdx !== null && (
+                      <g>
+                        <line
+                          x1={xOf(arrivalHoverIdx, len)}
+                          y1={PT}
+                          x2={xOf(arrivalHoverIdx, len)}
+                          y2={CH - PB}
+                          stroke="#92400E"
+                          strokeWidth="1.2"
+                          strokeDasharray="3 3"
+                        />
+                        <circle
+                          cx={xOf(arrivalHoverIdx, len)}
+                          cy={yOf(arrivalData[arrivalHoverIdx], aMin, aMax)}
+                          r="5.5"
+                          fill="#D97706"
+                          stroke="#FFFFFF"
+                          strokeWidth="2.5"
+                        />
+                      </g>
+                    )}
+                  </svg>
+
+                  {/* Arrival Hover Tooltip Overlay */}
+                  {arrivalHoverIdx !== null && (
+                    <div
+                      className="pointer-events-none absolute z-20 rounded-xl shadow-lg border p-2 flex flex-col gap-0.5 backdrop-blur-md transition-all duration-75"
+                      style={{
+                        left: `${Math.min(Math.max((xOf(arrivalHoverIdx, len) / CW) * 100, 18), 82)}%`,
+                        top: 8,
+                        transform: "translateX(-50%)",
+                        background: "rgba(120, 53, 15, 0.94)",
+                        borderColor: "rgba(255, 255, 255, 0.18)",
+                        minWidth: 120,
+                      }}
+                    >
+                      <span
+                        className="text-[10px] font-bold text-[#FDE68A] border-b border-white/10 pb-0.5"
+                        style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                      >
+                        {fullDateLabels[arrivalHoverIdx]?.fullDate}
+                      </span>
+                      <div className="flex items-center justify-between gap-2 pt-0.5 text-xs text-white">
+                        <span className="font-semibold opacity-90" style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}>
+                          {lang === "ur" ? "آمد" : "Arrival"}
+                        </span>
+                        <span className="font-black">
+                          {lang === "ur"
+                            ? `${toUrduDigits((arrivalData[arrivalHoverIdx] || 0).toLocaleString())} تھیلے`
+                            : `${(arrivalData[arrivalHoverIdx] || 0).toLocaleString()} Bags`}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 1. Timeframe Filter for Arrival: 1 Month, 3 Months, 6 Months, 1 Year */}
+              <div className="pt-0.5">
+                <div className="grid grid-cols-4 gap-1.5 border border-[#D5E2DD] rounded-xl p-1 bg-[#F9FBFA]">
+                  {[
+                    { id: "1M", labelEn: "1 Month", labelUr: "۱ مہینہ", r: "month" as const },
+                    { id: "3M", labelEn: "3 Months", labelUr: "۳ مہینے", r: "quarter" as const },
+                    { id: "6M", labelEn: "6 Months", labelUr: "۶ مہینے", r: "quarter" as const },
+                    { id: "1Y", labelEn: "1 Year", labelUr: "۱ سال", r: "quarter" as const },
+                  ].map((tf) => {
+                    const isTfActive = stockTimeframe === tf.id;
+                    return (
+                      <button
+                        key={tf.id}
+                        onClick={() => {
+                          setStockTimeframe(tf.id as any);
+                          setRange(tf.r);
+                        }}
+                        className={`flex items-center justify-center py-2 px-1 rounded-lg transition-all font-bold ${isTfActive
+                          ? "bg-[#D97706] text-white shadow-sm ring-1 ring-[#D97706]/30 scale-[1.01]"
+                          : "bg-white/80 text-[#52635F] hover:bg-white hover:text-[#183B34] border border-[#E8EFEC]"
+                          }`}
+                        style={{
+                          fontSize: lang === "ur" ? 13 : 11,
+                          fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                        }}
+                      >
+                        <span>{lang === "ur" ? tf.labelUr : tf.labelEn}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Dedicated Scroll Buffer for Arrival View */}
+              <div className="w-full h-36 flex-shrink-0" />
+            </div>
+          )}
+
+          {/* <div
                 className="rounded-2xl p-4 flex items-center gap-3"
                 style={{ background: "#F1F7F4", border: "1px dashed #C7E8D8" }}
               >
@@ -18468,8 +18473,8 @@ function AnalyticsScreen() {
                     key={tf.id}
                     onClick={() => setTimeRange(tf.r as any)}
                     className={`flex items-center justify-center py-2 px-1 rounded-lg transition-all font-bold ${active
-                        ? "bg-[#087F63] text-white shadow-sm ring-1 ring-[#087F63]/30 scale-[1.01]"
-                        : "bg-white/80 text-[#52635F] hover:bg-white hover:text-[#183B34] border border-[#E8EFEC]"
+                      ? "bg-[#087F63] text-white shadow-sm ring-1 ring-[#087F63]/30 scale-[1.01]"
+                      : "bg-white/80 text-[#52635F] hover:bg-white hover:text-[#183B34] border border-[#E8EFEC]"
                       }`}
                     style={{
                       fontSize: lang === "ur" ? 13 : 11,
@@ -18617,8 +18622,8 @@ function AnalyticsScreen() {
                     key={tf.id}
                     onClick={() => setTimeRange(tf.r as any)}
                     className={`flex items-center justify-center py-2 px-1 rounded-lg transition-all font-bold ${active
-                        ? "bg-[#087F63] text-white shadow-sm ring-1 ring-[#087F63]/30 scale-[1.01]"
-                        : "bg-white/80 text-[#52635F] hover:bg-white hover:text-[#183B34] border border-[#E8EFEC]"
+                      ? "bg-[#087F63] text-white shadow-sm ring-1 ring-[#087F63]/30 scale-[1.01]"
+                      : "bg-white/80 text-[#52635F] hover:bg-white hover:text-[#183B34] border border-[#E8EFEC]"
                       }`}
                     style={{
                       fontSize: lang === "ur" ? 13 : 11,
