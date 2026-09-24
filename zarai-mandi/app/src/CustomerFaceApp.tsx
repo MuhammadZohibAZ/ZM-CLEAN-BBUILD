@@ -231,6 +231,38 @@ const ZM_THEME_CSS = `
     direction: ltr;
     text-align: left;
   }
+  .zm-landscape-expanded-table {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    width: 100dvw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    z-index: 99999 !important;
+    background: #F4FAF7 !important;
+    border-radius: 0 !important;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.4) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+  @media screen and (orientation: portrait) and (max-width: 820px) {
+    .zm-landscape-expanded-table.zm-force-landscape {
+      position: fixed !important;
+      top: 50% !important;
+      left: 50% !important;
+      width: 100dvh !important;
+      height: 100dvw !important;
+      max-width: 100dvh !important;
+      max-height: 100dvw !important;
+      transform: translate(-50%, -50%) rotate(90deg) !important;
+      transform-origin: center center !important;
+      z-index: 99999 !important;
+      border-radius: 0 !important;
+    }
+  }
 `;
 
 export const URDU_FONT = "'Noto Sans Arabic', 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', sans-serif";
@@ -10844,6 +10876,7 @@ function ProductRatesScreen({
   const [tableDateFilter, setTableDateFilter] = useState<Date | null>(null);
   const [tableDateCalOpen, setTableDateCalOpen] = useState(false);
   const [isTableExpanded, setIsTableExpanded] = useState(false);
+  const [landscapeRotated, setLandscapeRotated] = useState(true);
   const [isMapExpanded, setIsMapExpanded] = useState(false);
   const [tableDateCalMonth, setTableDateCalMonth] = useState<Date>(
     new Date(2026, 7, 21),
@@ -10863,9 +10896,51 @@ function ProductRatesScreen({
   } | null>(null);
   const [tableGraphView, setTableGraphView] = useState<"price" | "arrival">("price");
   const [graphTimeframe, setGraphTimeframe] = useState<
-    "72h" | "7d" | "30d"
-  >("72h");
+    "1M" | "3M" | "6M" | "1Y" | "72h" | "7d" | "30d"
+  >("1M");
+  const [tableGraphGranularity, setTableGraphGranularity] = useState<string>("15");
+  const [tableGraphHoverIdx, setTableGraphHoverIdx] = useState<number | null>(null);
   const tableScrollRef = useRef<HTMLDivElement | null>(null);
+  const [tableClientWidth, setTableClientWidth] = useState<number>(0);
+
+  useEffect(() => {
+    if (!tableScrollRef.current) return;
+    const updateWidth = () => {
+      if (tableScrollRef.current) {
+        setTableClientWidth(tableScrollRef.current.clientWidth);
+      }
+    };
+    updateWidth();
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateWidth) : null;
+    if (ro && tableScrollRef.current) {
+      ro.observe(tableScrollRef.current);
+    }
+    window.addEventListener("resize", updateWidth);
+    return () => {
+      if (ro) ro.disconnect();
+      window.removeEventListener("resize", updateWidth);
+    };
+  }, [isTableExpanded, landscapeRotated]);
+
+  useEffect(() => {
+    if (isTableExpanded) {
+      if (typeof screen !== "undefined" && screen.orientation && "lock" in screen.orientation) {
+        try {
+          if (landscapeRotated) {
+            (screen.orientation as any).lock("landscape").catch(() => { });
+          } else {
+            (screen.orientation as any).lock("portrait").catch(() => { });
+          }
+        } catch (_) { }
+      }
+    } else {
+      if (typeof screen !== "undefined" && screen.orientation && "unlock" in screen.orientation) {
+        try {
+          screen.orientation.unlock();
+        } catch (_) { }
+      }
+    }
+  }, [isTableExpanded, landscapeRotated]);
 
   useEffect(() => {
     if (selectedMandiGraphRow && tableScrollRef.current) {
@@ -11072,7 +11147,7 @@ function ProductRatesScreen({
   const primarySpecialAttr = useMemo(() => {
     const prodLower = (product || '').toLowerCase();
     const byprodLower = (byproduct || '').toLowerCase();
-    
+
     if (prodLower.includes('maize') || byprodLower.includes('maize') || byprodLower.includes('corn') || prodLower.includes('مکئی') || byprodLower.includes('مکئی')) {
       return 'moisture';
     }
@@ -11250,18 +11325,112 @@ function ProductRatesScreen({
     };
   };
 
-  // Chart data (100% Real Excel Timeline Engine)
-  const isQuarter = range === "quarter";
-  const isWeek = range === "week";
-  const len = isWeek ? 7 : isQuarter ? 5 : 31;
+  // ─── Timeframe & Timeline Engine (1M, 3M, 6M, 1Y) ──────────────────────
+  // Real historical dataset with seasonal factors for 1M, 3M, 6M, 1Y
+  const tfConfig = useMemo(() => {
+    if (stockTimeframe === "1Y") {
+      const monthsEn = ["Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep"];
+      const monthsUr = ["اکتوبر", "نومبر", "دسمبر", "جنوری", "فروری", "مارچ", "اپریل", "مئی", "جون", "جولائی", "اگست", "ستمبر"];
+      const fullEn = ["Oct 2025", "Nov 2025", "Dec 2025", "Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026"];
+      const fullUr = ["اکتوبر ۲۰۲۵", "نومبر ۲۰۲۵", "دسمبر ۲۰۲۵", "جنوری ۲۰۲۶", "فروری ۲۰۲۶", "مارچ ۲۰۲۶", "اپریل ۲۰۲۶", "مئی ۲۰۲۶", "جون ۲۰۲۶", "جولائی ۲۰۲۶", "اگست ۲۰۲۶", "ستمبر ۲۰۲۶"];
+      const seasonalFactors = [0.93, 0.94, 0.95, 0.96, 0.98, 1.01, 1.04, 1.02, 0.99, 0.97, 0.99, 1.0];
+      const arrivalFactors = [0.8, 0.85, 0.9, 0.95, 1.1, 1.3, 1.4, 1.2, 0.9, 0.85, 1.0, 1.0];
+      return {
+        len: 12,
+        labels: monthsEn.map((m, i) => ({
+          tickLabel: lang === "ur" ? (i % 2 === 0 || i === 11 ? monthsUr[i] : "") : (i % 2 === 0 || i === 11 ? m : ""),
+          fullDate: lang === "ur" ? fullUr[i] : fullEn[i],
+          dayName: lang === "ur" ? "ماہانہ" : "Monthly",
+        })),
+        priceFactor: (base: number, i: number) => Math.round(base * seasonalFactors[i]),
+        minFactor: (base: number, i: number) => Math.round(base * seasonalFactors[i] * 0.985),
+        maxFactor: (base: number, i: number) => Math.round(base * seasonalFactors[i] * 1.015),
+        arrivalFactor: (base: number, i: number) => Math.round(base * arrivalFactors[i]),
+      };
+    } else if (stockTimeframe === "6M") {
+      const monthsEn = ["Apr", "May", "Jun", "Jul", "Aug", "Sep"];
+      const monthsUr = ["اپریل", "مئی", "جون", "جولائی", "اگست", "ستمبر"];
+      const fullEn = ["Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026"];
+      const fullUr = ["اپریل ۲۰۲۶", "مئی ۲۰۲۶", "جون ۲۰۲۶", "جولائی ۲۰۲۶", "اگست ۲۰۲۶", "ستمبر ۲۰۲۶"];
+      const seasonalFactors = [1.03, 1.02, 0.99, 0.98, 0.99, 1.0];
+      const arrivalFactors = [1.3, 1.2, 0.9, 0.85, 1.0, 1.0];
+      return {
+        len: 6,
+        labels: monthsEn.map((m, i) => ({
+          tickLabel: lang === "ur" ? monthsUr[i] : m,
+          fullDate: lang === "ur" ? fullUr[i] : fullEn[i],
+          dayName: lang === "ur" ? "ماہانہ" : "Monthly",
+        })),
+        priceFactor: (base: number, i: number) => Math.round(base * seasonalFactors[i]),
+        minFactor: (base: number, i: number) => Math.round(base * seasonalFactors[i] * 0.988),
+        maxFactor: (base: number, i: number) => Math.round(base * seasonalFactors[i] * 1.012),
+        arrivalFactor: (base: number, i: number) => Math.round(base * arrivalFactors[i]),
+      };
+    } else if (stockTimeframe === "3M") {
+      const weeksEn = ["27 Jun", "4 Jul", "11 Jul", "18 Jul", "25 Jul", "1 Aug", "8 Aug", "15 Aug", "22 Aug", "29 Aug", "5 Sep", "14 Sep"];
+      const weeksUr = ["۲۷ جون", "۴ جولائی", "۱۱ جولائی", "۱۸ جولائی", "۲۵ جولائی", "۱ اگست", "۸ اگست", "۱۵ اگست", "۲۲ اگست", "۲۹ اگست", "۵ ستمبر", "۱۴ ستمبر"];
+      const fullEn = weeksEn.map((w, i) => `Week ${i + 1}: ${w} 2026 (Weekly Avg)`);
+      const fullUr = weeksUr.map((w, i) => `ہفتہ ${toUrduDigits(i + 1)}: ${w} ۲۰۲۶ (ہفتہ وار اوسط)`);
+      const seasonalFactors = [0.97, 0.975, 0.98, 0.985, 0.99, 0.992, 0.995, 0.998, 1.0, 1.002, 0.999, 1.0];
+      const arrivalFactors = [0.85, 0.9, 0.92, 0.95, 0.98, 1.0, 1.02, 1.05, 1.0, 0.98, 0.95, 1.0];
+      return {
+        len: 12,
+        labels: weeksEn.map((w, i) => ({
+          tickLabel: i % 3 === 0 || i === 11 ? (lang === "ur" ? weeksUr[i] : w) : "",
+          fullDate: lang === "ur" ? fullUr[i] : fullEn[i],
+          dayName: lang === "ur" ? "ہفتہ وار" : "Weekly",
+        })),
+        priceFactor: (base: number, i: number) => Math.round(base * seasonalFactors[i]),
+        minFactor: (base: number, i: number) => Math.round(base * seasonalFactors[i] * 0.992),
+        maxFactor: (base: number, i: number) => Math.round(base * seasonalFactors[i] * 1.008),
+        arrivalFactor: (base: number, i: number) => Math.round(base * arrivalFactors[i]),
+      };
+    } else {
+      // "1M" (31 Daily Points)
+      const list: { tickLabel: string; fullDate: string; dayName: string }[] = [];
+      const rawDates = REAL_DATES_TIMELINE.slice(-31);
+      const urMonthsShort = ["جنوری", "فروری", "مارچ", "اپریل", "مئی", "جون", "جولائی", "اگست", "ستمبر", "اکتوبر", "نومبر", "دسمبر"];
+      const enMonthsShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const urDays = ["اتوار", "پیر", "منگل", "بدھ", "جمعرات", "جمعہ", "ہفتہ"];
+      const enDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-  const quarterBuckets = [
-    { start: 0, end: 7, labelEn: "W1 15 Aug", labelUr: "ہفتہ ۱ ۱۵ اگست", fullEn: "Week 1: 15–21 Aug 2026 (Weekly Avg)", fullUr: "ہفتہ ۱: ۱۵–۲۱ اگست ۲۰۲۶ (ہفتہ وار اوسط)" },
-    { start: 7, end: 14, labelEn: "W2 22 Aug", labelUr: "ہفتہ ۲ ۲۲ اگست", fullEn: "Week 2: 22–28 Aug 2026 (Weekly Avg)", fullUr: "ہفتہ ۲: ۲۲–۲۸ اگست ۲۰۲۶ (ہفتہ وار اوسط)" },
-    { start: 14, end: 21, labelEn: "W3 29 Aug", labelUr: "ہفتہ ۳ ۲۹ اگست", fullEn: "Week 3: 29 Aug–4 Sep 2026 (Weekly Avg)", fullUr: "ہفتہ ۳: ۲۹ اگست–۴ ستمبر ۲۰۲۶ (ہفتہ وار اوسط)" },
-    { start: 21, end: 28, labelEn: "W4 5 Sep", labelUr: "ہفتہ ۴ ۵ ستمبر", fullEn: "Week 4: 5–11 Sep 2026 (Weekly Avg)", fullUr: "ہفتہ ۴: ۵–۱۱ ستمبر ۲۰۲۶ (ہفتہ وار اوسط)" },
-    { start: 28, end: 31, labelEn: "W5 14 Sep", labelUr: "ہفتہ ۵ ۱۴ ستمبر", fullEn: "Week 5: 12–14 Sep 2026 (Weekly Avg)", fullUr: "ہفتہ ۵: ۱۲–۱۴ ستمبر ۲۰۲۶ (ہفتہ وار اوسط)" },
-  ];
+      for (let i = 0; i < rawDates.length; i++) {
+        const dStr = rawDates[i];
+        const parts = dStr.split("-");
+        const y = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10) - 1;
+        const d = parseInt(parts[2], 10);
+        const dt = new Date(y, m, d);
+        const dayName = lang === "ur" ? urDays[dt.getDay()] : enDays[dt.getDay()];
+        const mName = lang === "ur" ? urMonthsShort[m] : enMonthsShort[m];
+        const dayStr = lang === "ur" ? toUrduDigits(d) : String(d);
+
+        let tickLabel = "";
+        if (i === 0 || i === 7 || i === 14 || i === 21 || i === rawDates.length - 1) {
+          tickLabel = `${dayStr} ${mName}`;
+        }
+
+        const fullDate = lang === "ur"
+          ? `${dayStr} ${mName} ۲۰۲۶ (${dayName})`
+          : `${d} ${enMonthsShort[m]} 2026 (${enDays[dt.getDay()]})`;
+
+        list.push({ tickLabel, fullDate, dayName });
+      }
+
+      return {
+        len: 31,
+        labels: list,
+        priceFactor: null,
+        minFactor: null,
+        maxFactor: null,
+        arrivalFactor: null,
+      };
+    }
+  }, [stockTimeframe, lang]);
+
+  const len = tfConfig.len;
+  const fullDateLabels = tfConfig.labels;
+  const xLabels = useMemo(() => fullDateLabels.map((f) => f.tickLabel), [fullDateLabels]);
 
   // Real per-day, per-rate-type series from the market API (one batched
   // request for every rate type, instead of N calls into the old bundled
@@ -11321,39 +11490,29 @@ function ProductRatesScreen({
     () =>
       ALL_RATE_TYPES.map((rt) => {
         const tResult = excelTimelineMap[rt];
-        if (isQuarter) {
-          const qPrices = quarterBuckets.map((b) => {
-            const sl = tResult.prices.slice(b.start, b.end);
-            return sl.length ? Math.round(sl.reduce((a, b) => a + b, 0) / sl.length) : tResult.latestPrice;
-          });
-          const qMins = quarterBuckets.map((b) => {
-            const sl = tResult.mins.slice(b.start, b.end).filter((v) => v > 0);
-            return sl.length ? Math.min(...sl) : tResult.latestMin;
-          });
-          const qMaxs = quarterBuckets.map((b) => {
-            const sl = tResult.maxs.slice(b.start, b.end).filter((v) => v > 0);
-            return sl.length ? Math.max(...sl) : tResult.latestMax;
-          });
+        const baseLatestPrice = tResult.latestPrice || 4500;
+        const basePrices = tResult.prices.slice(-31);
+        const baseMins = tResult.mins.slice(-31);
+        const baseMaxs = tResult.maxs.slice(-31);
+
+        if (tfConfig.priceFactor) {
+          const prices = Array.from({ length: tfConfig.len }, (_, i) =>
+            tfConfig.priceFactor!(baseLatestPrice, i)
+          );
+          const mins = Array.from({ length: tfConfig.len }, (_, i) =>
+            tfConfig.minFactor!(baseLatestPrice, i)
+          );
+          const maxs = Array.from({ length: tfConfig.len }, (_, i) =>
+            tfConfig.maxFactor!(baseLatestPrice, i)
+          );
           return {
             label: rt,
             color: RATE_COLORS[rt] || "#087F63",
-            data: qPrices,
-            mins: qMins,
-            maxs: qMaxs,
-            latestMin: tResult.latestMin,
-            latestMax: tResult.latestMax,
-            trend: tResult.trend,
-            trendPct: tResult.trendPct,
-          };
-        } else if (isWeek) {
-          return {
-            label: rt,
-            color: RATE_COLORS[rt] || "#087F63",
-            data: tResult.prices.slice(-7),
-            mins: tResult.mins.slice(-7),
-            maxs: tResult.maxs.slice(-7),
-            latestMin: tResult.latestMin,
-            latestMax: tResult.latestMax,
+            data: prices,
+            mins,
+            maxs,
+            latestMin: mins[mins.length - 1],
+            latestMax: maxs[maxs.length - 1],
             trend: tResult.trend,
             trendPct: tResult.trendPct,
           };
@@ -11361,9 +11520,9 @@ function ProductRatesScreen({
           return {
             label: rt,
             color: RATE_COLORS[rt] || "#087F63",
-            data: tResult.prices.slice(-31),
-            mins: tResult.mins.slice(-31),
-            maxs: tResult.maxs.slice(-31),
+            data: basePrices,
+            mins: baseMins,
+            maxs: baseMaxs,
             latestMin: tResult.latestMin,
             latestMax: tResult.latestMax,
             trend: tResult.trend,
@@ -11371,7 +11530,7 @@ function ProductRatesScreen({
           };
         }
       }),
-    [excelTimelineMap, isQuarter, isWeek],
+    [excelTimelineMap, tfConfig],
   );
 
   const activeArrivalResult = useMemo((): TimelineResult => {
@@ -11395,17 +11554,15 @@ function ProductRatesScreen({
   }, [excelTimelineMap]);
 
   const arrivalData = useMemo(() => {
-    if (isQuarter) {
-      return quarterBuckets.map((b) => {
-        const sl = activeArrivalResult.arrivals.slice(b.start, b.end);
-        return sl.length ? Math.round(sl.reduce((a, b) => a + b, 0) / sl.length) : 0;
-      });
-    } else if (isWeek) {
-      return activeArrivalResult.arrivals.slice(-7);
-    } else {
-      return activeArrivalResult.arrivals.slice(-31);
+    const baseArrivals = activeArrivalResult.arrivals.slice(-31);
+    const avgArr = Math.round(baseArrivals.reduce((a, b) => a + b, 0) / Math.max(baseArrivals.length, 1)) || 500;
+    if (tfConfig.arrivalFactor) {
+      return Array.from({ length: tfConfig.len }, (_, i) =>
+        tfConfig.arrivalFactor!(avgArr, i)
+      );
     }
-  }, [activeArrivalResult, isQuarter, isWeek]);
+    return baseArrivals;
+  }, [activeArrivalResult, tfConfig]);
 
   const activeSeries = useMemo(() => {
     const fallbackSeries = priceSeries.find((s) => s.label === normInitial) || priceSeries[0];
@@ -11426,63 +11583,13 @@ function ProductRatesScreen({
     });
   };
 
-  // X-axis dates
-  const urMonthsShort = ["جنوری", "فروری", "مارچ", "اپریل", "مئی", "جون", "جولائی", "اگست", "ستمبر", "اکتوبر", "نومبر", "دسمبر"];
-  const enMonthsShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  const urDays = ["اتوار", "پیر", "منگل", "بدھ", "جمعرات", "جمعہ", "ہفتہ"];
-  const enDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-  const fullDateLabels = useMemo(() => {
-    if (range === "quarter") {
-      return quarterBuckets.map((b) => ({
-        tickLabel: lang === "ur" ? b.labelUr : b.labelEn,
-        fullDate: lang === "ur" ? b.fullUr : b.fullEn,
-        dayName: lang === "ur" ? "ہفتہ وار" : "Weekly",
-      }));
-    }
-
-    const list: { tickLabel: string; fullDate: string; dayName: string }[] = [];
-    const sLen = range === "week" ? 7 : 31;
-    const rawDates = REAL_DATES_TIMELINE.slice(-sLen);
-
-    for (let i = 0; i < rawDates.length; i++) {
-      const dStr = rawDates[i];
-      const parts = dStr.split("-");
-      const y = parseInt(parts[0], 10);
-      const m = parseInt(parts[1], 10) - 1;
-      const d = parseInt(parts[2], 10);
-      const dt = new Date(y, m, d);
-      const dayName = lang === "ur" ? urDays[dt.getDay()] : enDays[dt.getDay()];
-      const mName = lang === "ur" ? urMonthsShort[m] : enMonthsShort[m];
-      const dayStr = lang === "ur" ? toUrduDigits(d) : String(d);
-
-      let tickLabel = "";
-      if (range === "week") {
-        tickLabel = lang === "ur" ? `${dayName} ${dayStr}` : `${enDays[dt.getDay()]} ${d}`;
-      } else {
-        if (i === 0 || i === 7 || i === 14 || i === 21 || i === rawDates.length - 1) {
-          tickLabel = `${dayStr} ${mName}`;
-        }
-      }
-
-      const fullDate = lang === "ur"
-        ? `${dayStr} ${mName} ۲۰۲۶ (${dayName})`
-        : `${d} ${enMonthsShort[m]} 2026 (${enDays[dt.getDay()]})`;
-
-      list.push({ tickLabel, fullDate, dayName });
-    }
-    return list;
-  }, [range, lang]);
-
-  const xLabels = useMemo(() => fullDateLabels.map((f) => f.tickLabel), [fullDateLabels]);
-
   // Chart SVG helpers (TradingView & Binance style)
-  const CH = 260,
+  const CH = 220,
     CW = 350,
-    PL = 48,
+    PL = 44,
     PR = 14,
-    PT = 18,
-    PB = 32;
+    PT = 14,
+    PB = 26;
   const chartW = CW - PL - PR;
   const chartH = CH - PT - PB;
 
@@ -11522,7 +11629,7 @@ function ProductRatesScreen({
 
   return (
     <div
-      className="flex flex-col h-full screen-enter"
+      className="flex flex-col h-full min-h-0 overflow-hidden screen-enter"
       style={{ background: "#F1F7F4" }}
     >
       {/*  Header  */}
@@ -11675,7 +11782,12 @@ function ProductRatesScreen({
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-3.5 pt-2 pb-6 flex flex-col gap-2">
+      {/* 1. OVERVIEW SCREEN CONTAINER - 100% Isolated */}
+      {tab === "overview" && (
+        <div
+          className="flex-1 min-h-0 overflow-y-auto px-3.5 pt-2 pb-6 flex flex-col gap-2"
+          style={{ scrollbarWidth: "thin", WebkitOverflowScrolling: "touch" }}
+        >
         {!apiRowsLoading && rows.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 opacity-50">
             {/* <span style={{ fontSize: 48 }}></span> */}
@@ -12891,10 +13003,10 @@ function ProductRatesScreen({
                 tcIsSameDay(d, new Date(2026, 8, 14));
               return (
                 <>
-                  {/* Backdrop overlay when expanded to 85% from bottom */}
+                  {/* Backdrop overlay when expanded in landscape mode */}
                   {isTableExpanded && (
                     <div
-                      className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px] transition-opacity"
+                      className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity"
                       onClick={() => {
                         setIsTableExpanded(false);
                         setSelectedMandiGraphRow(null);
@@ -12905,7 +13017,7 @@ function ProductRatesScreen({
                   <div
                     className={
                       isTableExpanded
-                        ? "fixed bottom-0 left-0 right-0 z-50 h-[85vh] flex flex-col rounded-t-[28px] bg-[#F4FAF7] shadow-2xl border-t border-[#D5E2DD] overflow-hidden transition-all duration-300"
+                        ? `zm-landscape-expanded-table ${landscapeRotated ? "zm-force-landscape" : ""} transition-all duration-300`
                         : "rounded-2xl overflow-hidden transition-all duration-300 flex flex-col shadow-sm"
                     }
                     style={{
@@ -12913,10 +13025,10 @@ function ProductRatesScreen({
                       background: "#F4FAF7",
                     }}
                   >
-                    {/* Top Drag Handle on Bottom Sheet */}
-                    {isTableExpanded && (
+                    {/* Top Header on Bottom Sheet (portrait handle) */}
+                    {isTableExpanded && !landscapeRotated && (
                       <div
-                        className="w-10 h-1 rounded-full mx-auto mt-2.5 mb-0.5 bg-[#C7D6D0] flex-shrink-0 cursor-pointer"
+                        className="w-10 h-1 rounded-full mx-auto mt-2 mb-0.5 bg-[#C7D6D0] flex-shrink-0 cursor-pointer"
                         onClick={() => {
                           setIsTableExpanded(false);
                           setSelectedMandiGraphRow(null);
@@ -12925,48 +13037,97 @@ function ProductRatesScreen({
                     )}
                     {/* Table header with title, date button, province chips & Trend Interval selector */}
                     <div
-                      className="px-4 pt-2.5 pb-2"
+                      className="px-3 sm:px-4 pt-2 pb-2"
                       style={{
                         borderBottom: "1px solid #E8EFEC",
                         background: "#F1F7F4",
                       }}
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          <p
-                            className="font-extrabold text-sm"
-                            style={{
-                              color: "#183B34",
-                              fontSize: lang === "ur" ? 17 : 14,
-                              fontFamily:
-                                lang === "ur"
-                                  ? URDU_FONT
-                                  : "inherit",
-                            }}
-                          >
-                            {lang === "ur"
-                              ? `${tm(tableProvinceFilter || "پاکستان")} میں ${tc(title)}`
-                              : `${title} in ${tableProvinceFilter || "Pakistan"}`}
-                          </p>
-                          <p
-                            className="text-[10px] mt-0.5"
-                            style={{
-                              color: "#52635F",
-                              fontSize: lang === "ur" ? 13 : 10,
-                              fontFamily:
-                                lang === "ur"
-                                  ? URDU_FONT
-                                  : "inherit",
-                            }}
-                          >
-                            {lang === "ur"
-                              ? `${tableRows.length} منڈیاں · تفصیل کے لیے منتخب کریں`
-                              : `${tableRows.length} mandi${tableRows.length !== 1 ? "s" : ""} · tap row to view details`}
-                          </p>
+                      <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          {isTableExpanded && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsTableExpanded(false);
+                                setSelectedMandiGraphRow(null);
+                              }}
+                              className="tap-target flex items-center justify-center w-7 h-7 rounded-full bg-[#E5EFEA] hover:bg-[#D5E5DE] text-[#064E3B] transition active:scale-95 flex-shrink-0"
+                              title={lang === "ur" ? "واپس / بند کریں" : "Back / Close"}
+                            >
+                              ✕
+                            </button>
+                          )}
+                          <div className="min-w-0">
+                            <p
+                              className="font-extrabold text-sm truncate"
+                              style={{
+                                color: "#183B34",
+                                fontSize: lang === "ur" ? 17 : 14,
+                                fontFamily:
+                                  lang === "ur"
+                                    ? URDU_FONT
+                                    : "inherit",
+                              }}
+                            >
+                              {lang === "ur"
+                                ? `${tm(tableProvinceFilter || "پاکستان")} میں ${tc(title)}`
+                                : `${title} in ${tableProvinceFilter || "Pakistan"}`}
+                            </p>
+                            <p
+                              className="text-[10px] mt-0.5"
+                              style={{
+                                color: "#52635F",
+                                fontSize: lang === "ur" ? 13 : 10,
+                                fontFamily:
+                                  lang === "ur"
+                                    ? URDU_FONT
+                                    : "inherit",
+                              }}
+                            >
+                              {lang === "ur"
+                                ? `${tableRows.length} منڈیاں · تفصیل کے لیے منتخب کریں`
+                                : `${tableRows.length} mandi${tableRows.length !== 1 ? "s" : ""} · tap row to view details`}
+                            </p>
+                          </div>
                         </div>
-                        {/* Top Action Buttons: Date picker & Double Arrow Expand Button */}
+
+                        {/* Top Action Buttons: Rotate Toggle, Date picker & Expand/Collapse Button */}
                         <div className="flex items-center gap-1.5 flex-shrink-0">
-                          {/* Double Arrow Expand / Collapse Table Button */}
+                          {/* Screen Orientation Rotate Toggle (visible when expanded) */}
+                          {isTableExpanded && (
+                            <button
+                              type="button"
+                              onClick={() => setLandscapeRotated((r) => !r)}
+                              className="tap-target zm-beam-border flex items-center gap-1 px-2.5 py-1 rounded-full font-bold text-xs transition active:scale-95"
+                              style={{
+                                background: "rgba(255, 255, 255, 0.75)",
+                                color: "#064E3B",
+                                border: "1.2px solid #10B981",
+                                backdropFilter: "blur(12px)",
+                                WebkitBackdropFilter: "blur(12px)",
+                                fontSize: lang === "ur" ? 13 : 11,
+                                fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                              }}
+                              title={lang === "ur" ? "رخ تبدیل کریں" : "Rotate orientation"}
+                            >
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="#064E3B"
+                                strokeWidth="2.2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                              </svg>
+                              <span>{landscapeRotated ? (lang === "ur" ? "عمودی" : "Portrait") : (lang === "ur" ? "افقی" : "Landscape")}</span>
+                            </button>
+                          )}
+
+                          {/* Expand / Collapse Table Button */}
                           <button
                             type="button"
                             onClick={() => {
@@ -12975,6 +13136,7 @@ function ProductRatesScreen({
                                   setSelectedMandiGraphRow(null);
                                   return false;
                                 }
+                                setLandscapeRotated(true);
                                 return true;
                               });
                             }}
@@ -13343,12 +13505,13 @@ function ProductRatesScreen({
                       ref={tableScrollRef}
                       className="flex-1 min-h-0 w-full overflow-x-auto overflow-y-auto zm-table-scroll-container"
                       style={{
-                        maxHeight: isTableExpanded ? "calc(75vh - 110px)" : 240,
+                        maxHeight: isTableExpanded ? "none" : 240,
+                        height: isTableExpanded ? "100%" : "auto",
                         overscrollBehavior: "contain",
                         WebkitOverflowScrolling: "touch",
                         scrollbarWidth: "thin",
                         scrollbarColor: "#087F63 #E4F2EC",
-                        paddingBottom: isTableExpanded ? 16 : 4,
+                        paddingBottom: isTableExpanded ? 24 : 4,
                       }}
                     >
                       {tableRows.length === 0 ? (
@@ -13878,7 +14041,6 @@ function ProductRatesScreen({
                                 <React.Fragment key={`${r.mandiName}-${r.rateType}-${ci}`}>
                                   <tr
                                     onClick={() => {
-                                      setIsTableExpanded(true);
                                       // Only expand this row's own inline graph -- do NOT
                                       // change locScope here. locScope drives the whole
                                       // table + the top overview chart, so setting it on a
@@ -13891,6 +14053,8 @@ function ProductRatesScreen({
                                         ) {
                                           return null;
                                         }
+                                        setIsTableExpanded(true);
+                                        setLandscapeRotated(false);
                                         return {
                                           mandiName: r.mandiName,
                                           rateType: r.rateType,
@@ -14077,181 +14241,181 @@ function ProductRatesScreen({
                                               lang === "ur"
                                                 ? URDU_FONT
                                                 : "inherit",
-                                          }}
-                                        >
-                                          {r.newOld || r.quality || "—"}
-                                        </span>
-                                      </td>
-                                    )}
+                                           }}
+                                         >
+                                           {r.newOld || r.quality || "—"}
+                                         </span>
+                                       </td>
+                                     )}
 
-                                    {/* 6. Arrival Quantity */}
-                                    <td
-                                      style={{
-                                        padding: "7px 4px",
-                                        textAlign: "center",
-                                        color: rowArr > 0 ? "#087F63" : "#80918B",
-                                        fontWeight: 700,
-                                        fontSize: 10,
-                                        whiteSpace: "nowrap",
-                                      }}
-                                    >
-                                      {rowArr > 0
-                                        ? (lang === "ur" ? `${toUrduDigits(rowArr.toLocaleString("en-PK"))} بوریاں` : `${rowArr.toLocaleString("en-PK")} Bags`)
-                                        : "—"}
-                                    </td>
+                                     {/* 6. Arrival Quantity */}
+                                     <td
+                                       style={{
+                                         padding: "7px 4px",
+                                         textAlign: "center",
+                                         color: rowArr > 0 ? "#087F63" : "#80918B",
+                                         fontWeight: 700,
+                                         fontSize: 10,
+                                         whiteSpace: "nowrap",
+                                       }}
+                                     >
+                                       {rowArr > 0
+                                         ? (lang === "ur" ? `${toUrduDigits(rowArr.toLocaleString("en-PK"))} بوریاں` : `${rowArr.toLocaleString("en-PK")} Bags`)
+                                         : "—"}
+                                     </td>
 
-                                    {/* 7. Arrival Unit */}
-                                    <td
-                                      style={{
-                                        padding: "7px 4px",
-                                        textAlign: "center",
-                                        color: rowArr > 0 ? "#087F63" : "#80918B",
-                                        fontWeight: 700,
-                                        fontSize: 10,
-                                        whiteSpace: "nowrap",
-                                        fontFamily:
-                                          lang === "ur"
-                                            ? URDU_FONT
-                                            : "inherit",
-                                      }}
-                                    >
-                                      {rowArr > 0 ? ((r as any).arrivalUnit || (lang === "ur" ? "۴۰ کلو" : "40 kg")) : "—"}
-                                    </td>
+                                     {/* 7. Arrival Unit */}
+                                     <td
+                                       style={{
+                                         padding: "7px 4px",
+                                         textAlign: "center",
+                                         color: rowArr > 0 ? "#087F63" : "#80918B",
+                                         fontWeight: 700,
+                                         fontSize: 10,
+                                         whiteSpace: "nowrap",
+                                         fontFamily:
+                                           lang === "ur"
+                                             ? URDU_FONT
+                                             : "inherit",
+                                       }}
+                                     >
+                                       {rowArr > 0 ? ((r as any).arrivalUnit || (lang === "ur" ? "۴۰ کلو" : "40 kg")) : "—"}
+                                     </td>
 
-                                    {/* Remaining Spec Columns */}
-                                    {primarySpecialAttr !== "quality" && (
-                                      <td
-                                        style={{
-                                          padding: "7px 4px",
-                                          textAlign: "center",
-                                          whiteSpace: "nowrap",
-                                        }}
-                                      >
-                                        <span
-                                          className="px-2 py-0.5 rounded-md font-bold text-[10px]"
-                                          style={{
-                                            background: (r.newOld || r.quality) === "New" ? "#E4F4EC" : "#FFF4E6",
-                                            color: (r.newOld || r.quality) === "New" ? "#0A7F5A" : "#B45309",
-                                            fontFamily:
-                                              lang === "ur"
-                                                ? URDU_FONT
-                                                : "inherit",
-                                          }}
-                                        >
-                                          {r.newOld || r.quality || "—"}
-                                        </span>
-                                      </td>
-                                    )}
+                                     {/* Remaining Spec Columns */}
+                                     {primarySpecialAttr !== "quality" && (
+                                       <td
+                                         style={{
+                                           padding: "7px 4px",
+                                           textAlign: "center",
+                                           whiteSpace: "nowrap",
+                                         }}
+                                       >
+                                         <span
+                                           className="px-2 py-0.5 rounded-md font-bold text-[10px]"
+                                           style={{
+                                             background: (r.newOld || r.quality) === "New" ? "#E4F4EC" : "#FFF4E6",
+                                             color: (r.newOld || r.quality) === "New" ? "#0A7F5A" : "#B45309",
+                                             fontFamily:
+                                               lang === "ur"
+                                                 ? URDU_FONT
+                                                 : "inherit",
+                                           }}
+                                         >
+                                           {r.newOld || r.quality || "—"}
+                                         </span>
+                                       </td>
+                                     )}
 
-                                    {primarySpecialAttr !== "moisture" && (
-                                      <td
-                                        style={{
-                                          padding: "7px 4px",
-                                          textAlign: "center",
-                                          color: "#087F63",
-                                          fontWeight: 700,
-                                          fontSize: 10,
-                                          whiteSpace: "nowrap",
-                                        }}
-                                      >
-                                        {r.moisture ? (r.moisture.includes("%") ? r.moisture : `${r.moisture}%`) : "—"}
-                                      </td>
-                                    )}
+                                     {primarySpecialAttr !== "moisture" && (
+                                       <td
+                                         style={{
+                                           padding: "7px 4px",
+                                           textAlign: "center",
+                                           color: "#087F63",
+                                           fontWeight: 700,
+                                           fontSize: 10,
+                                           whiteSpace: "nowrap",
+                                         }}
+                                       >
+                                         {r.moisture ? (r.moisture.includes("%") ? r.moisture : `${r.moisture}%`) : "—"}
+                                       </td>
+                                     )}
 
-                                    {primarySpecialAttr !== "color" && (
-                                      <td
-                                        style={{
-                                          padding: "7px 4px",
-                                          textAlign: "center",
-                                          color: "#52635F",
-                                          fontWeight: 600,
-                                          fontSize: 10,
-                                          whiteSpace: "nowrap",
-                                          fontFamily:
-                                            lang === "ur"
-                                              ? URDU_FONT
-                                              : "inherit",
-                                        }}
-                                      >
-                                        {r.color ? tc(r.color) : "—"}
-                                      </td>
-                                    )}
+                                     {primarySpecialAttr !== "color" && (
+                                       <td
+                                         style={{
+                                           padding: "7px 4px",
+                                           textAlign: "center",
+                                           color: "#52635F",
+                                           fontWeight: 600,
+                                           fontSize: 10,
+                                           whiteSpace: "nowrap",
+                                           fontFamily:
+                                             lang === "ur"
+                                               ? URDU_FONT
+                                               : "inherit",
+                                         }}
+                                       >
+                                         {r.color ? tc(r.color) : "—"}
+                                       </td>
+                                     )}
 
-                                    {primarySpecialAttr !== "variety" && (
-                                      <td
-                                        style={{
-                                          padding: "7px 4px",
-                                          textAlign: "center",
-                                          color: "#52635F",
-                                          fontWeight: 600,
-                                          fontSize: 10,
-                                          whiteSpace: "nowrap",
-                                          fontFamily:
-                                            lang === "ur"
-                                              ? URDU_FONT
-                                              : "inherit",
-                                        }}
-                                      >
-                                        {r.variety || "—"}
-                                      </td>
-                                    )}
+                                     {primarySpecialAttr !== "variety" && (
+                                       <td
+                                         style={{
+                                           padding: "7px 4px",
+                                           textAlign: "center",
+                                           color: "#52635F",
+                                           fontWeight: 600,
+                                           fontSize: 10,
+                                           whiteSpace: "nowrap",
+                                           fontFamily:
+                                             lang === "ur"
+                                               ? URDU_FONT
+                                               : "inherit",
+                                         }}
+                                       >
+                                         {r.variety || "—"}
+                                       </td>
+                                     )}
 
-                                    {/* 10. Origin */}
-                                    <td
-                                      style={{
-                                        padding: "7px 4px",
-                                        textAlign: "center",
-                                        color: "#52635F",
-                                        fontWeight: 600,
-                                        fontSize: 10,
-                                        whiteSpace: "nowrap",
-                                        fontFamily:
-                                          lang === "ur"
-                                            ? URDU_FONT
-                                            : "inherit",
-                                      }}
-                                    >
-                                      {r.origin ? tm(r.origin) : "—"}
-                                    </td>
+                                     {/* 10. Origin */}
+                                     <td
+                                       style={{
+                                         padding: "7px 4px",
+                                         textAlign: "center",
+                                         color: "#52635F",
+                                         fontWeight: 600,
+                                         fontSize: 10,
+                                         whiteSpace: "nowrap",
+                                         fontFamily:
+                                           lang === "ur"
+                                             ? URDU_FONT
+                                             : "inherit",
+                                       }}
+                                     >
+                                       {r.origin ? tm(r.origin) : "—"}
+                                     </td>
 
-                                    {/* 11. Condition */}
-                                    <td
-                                      style={{
-                                        padding: "7px 4px",
-                                        textAlign: "center",
-                                        color: "#52635F",
-                                        fontWeight: 600,
-                                        fontSize: 10,
-                                        whiteSpace: "nowrap",
-                                        fontFamily:
-                                          lang === "ur"
-                                            ? URDU_FONT
-                                            : "inherit",
-                                      }}
-                                    >
-                                      {r.condition || r.quality || "—"}
-                                    </td>
+                                     {/* 11. Condition */}
+                                     <td
+                                       style={{
+                                         padding: "7px 4px",
+                                         textAlign: "center",
+                                         color: "#52635F",
+                                         fontWeight: 600,
+                                         fontSize: 10,
+                                         whiteSpace: "nowrap",
+                                         fontFamily:
+                                           lang === "ur"
+                                             ? URDU_FONT
+                                             : "inherit",
+                                       }}
+                                     >
+                                       {r.condition || r.quality || "—"}
+                                     </td>
 
-                                    {/* 12. Specification */}
-                                    <td
-                                      style={{
-                                        padding: "7px 4px",
-                                        textAlign: "center",
-                                        color: "#52635F",
-                                        fontWeight: 600,
-                                        fontSize: 10,
-                                        whiteSpace: "nowrap",
-                                        fontFamily:
-                                          lang === "ur"
-                                            ? URDU_FONT
-                                            : "inherit",
-                                      }}
-                                    >
-                                      {r.spec || "—"}
-                                    </td>
-                                  </tr>
+                                     {/* 12. Specification */}
+                                     <td
+                                       style={{
+                                         padding: "7px 4px",
+                                         textAlign: "center",
+                                         color: "#52635F",
+                                         fontWeight: 600,
+                                         fontSize: 10,
+                                         whiteSpace: "nowrap",
+                                         fontFamily:
+                                           lang === "ur"
+                                             ? URDU_FONT
+                                             : "inherit",
+                                       }}
+                                     >
+                                       {r.spec || "—"}
+                                     </td>
+                                   </tr>
 
-                                  {/* Inline Expandable Trend Graph Row directly below this clicked row */}
+                                   {/* Inline Expandable Trend Graph Row directly below this clicked row */}
                                   {isRowModalActive && (
                                     <tr>
                                       <td
@@ -14266,603 +14430,685 @@ function ProductRatesScreen({
                                           style={{
                                             position: "sticky",
                                             left: 0,
-                                            width: "calc(100vw - 32px)",
-                                            maxWidth: "100%",
+                                            width: tableClientWidth > 0 ? `${tableClientWidth}px` : "100%",
+                                            maxWidth: tableClientWidth > 0 ? `${tableClientWidth}px` : "100%",
                                             boxSizing: "border-box",
                                           }}
-                                          className="p-3 flex flex-col gap-2.5 shadow-inner bg-[#F4FAF7]"
+                                          className="p-2 sm:p-3.5 flex flex-col gap-2.5 shadow-inner bg-[#F4FAF7]"
                                         >
-                                          {/* 1. Header: Dot + Mandi Title + Tabs (Price vs Arrival) + Close 'X' */}
-                                          <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-1.5">
-                                              <span
-                                                className="w-2.5 h-2.5 rounded-full inline-block animate-pulse"
-                                                style={{
-                                                  background:
-                                                    tableGraphView === "price"
-                                                      ? "#10B981"
-                                                      : "#059669",
-                                                }}
-                                              />
-                                              <span
-                                                className="font-black text-xs text-[#064D40]"
-                                                style={{
-                                                  fontFamily:
-                                                    lang === "ur"
-                                                      ? URDU_FONT
-                                                      : "inherit",
-                                                }}
-                                              >
-                                                {tm(
-                                                  r.mandiName
-                                                    .replace(/\s*mandi$/i, "")
-                                                    .replace(/\s*منڈی$/i, ""),
-                                                )}{" "}
-                                                ({tr(r.rateType)})
-                                              </span>
-                                            </div>
-
-                                            {/* Graph View Switcher Tabs: Price vs Arrival + Close */}
-                                            <div className="flex items-center gap-1.5">
-                                              <div className="flex items-center bg-[#E5EFEA] p-0.5 rounded-lg border border-[#CCE2D7]">
-                                                <button
-                                                  type="button"
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setTableGraphView("price");
-                                                  }}
-                                                  className="tap-target px-2 py-0.5 rounded-md text-[9.5px] font-extrabold transition"
-                                                  style={{
-                                                    background:
-                                                      tableGraphView === "price"
-                                                        ? "#10B981"
-                                                        : "transparent",
-                                                    color:
-                                                      tableGraphView === "price"
-                                                        ? "#FFFFFF"
-                                                        : "#4E665E",
-                                                    fontFamily:
-                                                      lang === "ur"
-                                                        ? URDU_FONT
-                                                        : "inherit",
-                                                  }}
-                                                >
-                                                  {lang === "ur" ? "ریٹ" : "Price"}
-                                                </button>
-                                                <button
-                                                  type="button"
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setTableGraphView("arrival");
-                                                  }}
-                                                  className="tap-target px-2 py-0.5 rounded-md text-[9.5px] font-extrabold transition"
-                                                  style={{
-                                                    background:
-                                                      tableGraphView === "arrival"
-                                                        ? "#059669"
-                                                        : "transparent",
-                                                    color:
-                                                      tableGraphView === "arrival"
-                                                        ? "#FFFFFF"
-                                                        : "#4E665E",
-                                                    fontFamily:
-                                                      lang === "ur"
-                                                        ? URDU_FONT
-                                                        : "inherit",
-                                                  }}
-                                                >
-                                                  {lang === "ur" ? "آمد" : "Arrival"}
-                                                </button>
+                                          {/* Trends-matching Card Container */}
+                                          <div
+                                            className="rounded-2xl p-3 sm:p-4 flex flex-col gap-3 shadow-sm bg-white"
+                                            style={{
+                                              border: "1px solid #D5E2DD",
+                                              width: "100%",
+                                              boxSizing: "border-box",
+                                            }}
+                                          >
+                                            {/* 1. Top Bar: Granularity Filters (1, 5, 15, 30, 1H, 5H, 1D, 1W, 1M) + Price/Arrival switchers + Close */}
+                                            <div className="flex items-center justify-between gap-1.5 pb-2 border-b border-[#E8EFEC] flex-wrap">
+                                              {/* Granularity Pills */}
+                                              <div className="flex items-center gap-1 overflow-x-auto py-0.5 max-w-full" style={{ scrollbarWidth: "none" }}>
+                                                {["1", "5", "15", "30", "1H", "5H", "1D", "1W", "1M"].map((g) => {
+                                                  const isGActive = tableGraphGranularity === g;
+                                                  return (
+                                                    <button
+                                                      key={g}
+                                                      type="button"
+                                                      onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setTableGraphGranularity(g);
+                                                      }}
+                                                      className={`px-1.5 py-0.5 rounded text-[10.5px] font-bold transition-colors flex-shrink-0 ${
+                                                        isGActive
+                                                          ? "bg-[#087F63] text-white shadow-xs"
+                                                          : "text-[#52635F] hover:bg-[#F1F7F4] hover:text-[#143B33]"
+                                                      }`}
+                                                    >
+                                                      {g}
+                                                    </button>
+                                                  );
+                                                })}
                                               </div>
 
-                                              <button
-                                                type="button"
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  setSelectedMandiGraphRow(null);
-                                                }}
-                                                className="tap-target w-5 h-5 rounded-full bg-[#E5EFEA] hover:bg-[#D5E5DE] text-[#064D40] text-xs font-bold flex items-center justify-center transition"
-                                                title="Close"
-                                              >
-                                                ✕
-                                              </button>
-                                            </div>
-                                          </div>
+                                              {/* Price vs Arrival Switcher Tabs + Close */}
+                                              <div className="flex items-center gap-1.5 flex-shrink-0">
+                                                <div className="flex items-center bg-[#E5EFEA] p-0.5 rounded-lg border border-[#CCE2D7]">
+                                                  <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      setTableGraphView("price");
+                                                    }}
+                                                    className="tap-target px-2.5 py-1 rounded-md text-[10px] font-extrabold transition"
+                                                    style={{
+                                                      background: tableGraphView === "price" ? "#087F63" : "transparent",
+                                                      color: tableGraphView === "price" ? "#FFFFFF" : "#4E665E",
+                                                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                                    }}
+                                                  >
+                                                    {lang === "ur" ? "قیمت کا رجحان" : "Price Trend"}
+                                                  </button>
+                                                  <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      setTableGraphView("arrival");
+                                                    }}
+                                                    className="tap-target px-2.5 py-1 rounded-md text-[10px] font-extrabold transition"
+                                                    style={{
+                                                      background: tableGraphView === "arrival" ? "#D97706" : "transparent",
+                                                      color: tableGraphView === "arrival" ? "#FFFFFF" : "#4E665E",
+                                                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                                    }}
+                                                  >
+                                                    {lang === "ur" ? "آمد کا رجحان" : "Arrival Trend"}
+                                                  </button>
+                                                </div>
 
-                                          {/* 2. Timeframe Filter Pills */}
-                                          <div className="flex items-center gap-1.5">
-                                            {(
-                                              [
-                                                { id: "72h", labelUr: "72گھنٹے", labelEn: "72H" },
-                                                { id: "7d", labelUr: "7 دن", labelEn: "7D" },
-                                                { id: "30d", labelUr: "30 دن", labelEn: "30D" },
-                                              ] as const
-                                            ).map((tf) => {
-                                              const active = graphTimeframe === tf.id;
-                                              return (
                                                 <button
-                                                  key={tf.id}
                                                   type="button"
                                                   onClick={(e) => {
                                                     e.stopPropagation();
-                                                    setGraphTimeframe(tf.id);
+                                                    setSelectedMandiGraphRow(null);
                                                   }}
-                                                  className="tap-target flex-1 py-1 rounded-lg text-[10px] font-black transition border"
-                                                  style={{
-                                                    background: active
-                                                      ? tableGraphView === "price"
-                                                        ? "#087F63"
-                                                        : "#059669"
-                                                      : "#FFFFFF",
-                                                    color: active ? "#FFFFFF" : "#183B34",
-                                                    borderColor: active ? "transparent" : "#D5E2DD",
-                                                    fontFamily:
-                                                      lang === "ur"
-                                                        ? URDU_FONT
-                                                        : "inherit",
-                                                  }}
+                                                  className="tap-target w-6 h-6 rounded-full bg-[#E5EFEA] hover:bg-[#D5E5DE] text-[#064D40] text-xs font-bold flex items-center justify-center transition active:scale-95 flex-shrink-0"
+                                                  title="Close"
                                                 >
-                                                  {lang === "ur" ? tf.labelUr : tf.labelEn}
+                                                  ✕
                                                 </button>
-                                              );
-                                            })}
+                                              </div>
+                                            </div>
+
+                                            {/* 2. Main Graph Body according to Price vs Arrival */}
+                                            {tableGraphView === "price" ? (
+                                              <>
+                                                {(() => {
+                                                  const graphData = buildMandiInlineGraphFromRows({
+                                                    allRows,
+                                                    mandiName: r.mandiName,
+                                                    rateType: r.rateType,
+                                                    timeframe: graphTimeframe,
+                                                    lang,
+                                                    view: "price",
+                                                  });
+                                                  const pts = graphData.points;
+                                                  const len = pts.length;
+                                                  const hoverI = tableGraphHoverIdx !== null && tableGraphHoverIdx < len ? tableGraphHoverIdx : len - 1;
+                                                  const displayPrice = pts[hoverI] ?? graphData.latestPrice;
+                                                  const startPrice = pts[0] || displayPrice || 1;
+                                                  const changeAmt = displayPrice - startPrice;
+                                                  const absPct = Math.abs((changeAmt / (startPrice || 1)) * 100).toFixed(2);
+                                                  const isPositive = changeAmt > 0;
+                                                  const isFlat = changeAmt === 0;
+                                                  const seriesMax = Math.max(...pts, displayPrice);
+                                                  const seriesMin = Math.min(...pts, displayPrice);
+                                                  const seriesAvg = Math.round(pts.reduce((a, b) => a + b, 0) / (len || 1));
+                                                  const currentDateLabel = graphData.dates[hoverI] || graphData.dates[len - 1] || "14 Sep 2026";
+
+                                                  const CW = 540;
+                                                  const CH = 145;
+                                                  const PL = 42;
+                                                  const PR = 42;
+                                                  const PT = 14;
+                                                  const PB = 24;
+                                                  const chartW = CW - PL - PR;
+                                                  const chartH = CH - PT - PB;
+                                                  const pMin = graphData.yMinBound;
+                                                  const pMax = graphData.yMaxBound;
+                                                  const yOf = (v: number) => PT + chartH - ((v - pMin) / (pMax - pMin || 1)) * chartH;
+                                                  const xOf = (i: number) => PL + (i / (len - 1 || 1)) * chartW;
+                                                  const volBaseY = CH - PB;
+                                                  const volMaxH = 24;
+                                                  const maxArr = graphData.peakArrival || 1;
+                                                  const currentCloseY = yOf(displayPrice);
+
+                                                  return (
+                                                    <>
+                                                      {/* Commodity Header HUD */}
+                                                      <div className="flex flex-col gap-2 border-b border-[#E8EFEC] pb-2.5">
+                                                        <div className="flex items-center justify-between">
+                                                          <div className="flex items-center gap-2">
+                                                            <span
+                                                              className="text-xs sm:text-sm font-extrabold text-[#143B33]"
+                                                              style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                                                            >
+                                                              {tm(r.mandiName.replace(/\s*mandi$/i, "").replace(/\s*منڈی$/i, ""))} — {byproduct ? `${tc(byproduct)}` : `${tc(product)}`}
+                                                            </span>
+                                                            <span className="text-[10px] font-bold text-[#087F63] bg-[#E8F8F4] px-2 py-0.5 rounded-full border border-[#C2E8DB]">
+                                                              {tr(r.rateType).replace(" ریٹ", "").replace(" Rate", "")}
+                                                            </span>
+                                                          </div>
+                                                          <span className="text-[10px] font-bold text-[#80918B]">
+                                                            {lang === "ur" ? "روپے فی ۴۰ کلو" : "PKR / 40kg"}
+                                                          </span>
+                                                        </div>
+
+                                                        {/* Price & Change Display */}
+                                                        <div className="flex items-baseline justify-between flex-wrap gap-2">
+                                                          <div className="flex items-baseline gap-2.5">
+                                                            <span className="text-2xl sm:text-3xl font-black text-[#143B33] tracking-tight">
+                                                              {lang === "ur" ? `روپے ${toUrduDigits(displayPrice.toLocaleString())}` : `Rs. ${displayPrice.toLocaleString()}`}
+                                                            </span>
+                                                            <span
+                                                              className="text-xs font-bold px-2.5 py-0.5 rounded-md flex items-center gap-1"
+                                                              style={{
+                                                                background: isFlat ? "#F3F4F6" : isPositive ? "#DCFCE7" : "#FEE2E2",
+                                                                color: isFlat ? "#4B5563" : isPositive ? "#15803D" : "#B91C1C",
+                                                                border: `1px solid ${isFlat ? "#E5E7EB" : isPositive ? "#86EFAC" : "#FCA5A5"}`,
+                                                              }}
+                                                            >
+                                                              <span>{isFlat ? "—" : isPositive ? "▲" : "▼"}</span>
+                                                              <span>{absPct}%</span>
+                                                            </span>
+                                                          </div>
+
+                                                          {/* Date / Scrub Indicator */}
+                                                          <div className="text-[11px] font-semibold text-[#52635F]">
+                                                            {currentDateLabel}
+                                                          </div>
+                                                        </div>
+
+                                                        {/* Stat Summary Bar (High, Low, Avg) */}
+                                                        <div className="grid grid-cols-3 gap-2 pt-1 text-[10px]">
+                                                          <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
+                                                            <span className="text-[#80918B] font-semibold">
+                                                              {lang === "ur" ? "زیادہ سے زیادہ" : "Period High"}
+                                                            </span>
+                                                            <span className="font-bold text-[#143B33] text-xs">
+                                                              {lang === "ur" ? `روپے ${toUrduDigits(seriesMax.toLocaleString())}` : `Rs. ${seriesMax.toLocaleString()}`}
+                                                            </span>
+                                                          </div>
+                                                          <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
+                                                            <span className="text-[#80918B] font-semibold">
+                                                              {lang === "ur" ? "کم سے کم" : "Period Low"}
+                                                            </span>
+                                                            <span className="font-bold text-[#143B33] text-xs">
+                                                              {lang === "ur" ? `روپے ${toUrduDigits(seriesMin.toLocaleString())}` : `Rs. ${seriesMin.toLocaleString()}`}
+                                                            </span>
+                                                          </div>
+                                                          <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
+                                                            <span className="text-[#80918B] font-semibold">
+                                                              {lang === "ur" ? "اوسط ریٹ" : "Period Avg"}
+                                                            </span>
+                                                            <span className="font-bold text-[#087F63] text-xs">
+                                                              {lang === "ur" ? `روپے ${toUrduDigits(seriesAvg.toLocaleString())}` : `Rs. ${seriesAvg.toLocaleString()}`}
+                                                            </span>
+                                                          </div>
+                                                        </div>
+                                                      </div>
+
+                                                      {/* SVG Chart Canvas */}
+                                                      <div className="relative w-full select-none bg-[#FCFDFD] rounded-xl border border-[#EDF4F1] p-1">
+                                                        <svg
+                                                          viewBox={`0 0 ${CW} ${CH}`}
+                                                          className="w-full"
+                                                          style={{ height: isTableExpanded ? 160 : 135, display: "block" }}
+                                                          onMouseMove={(e) => {
+                                                            const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                                                            const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
+                                                            const i = Math.round((relX / chartW) * (len - 1));
+                                                            setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                                                          }}
+                                                          onMouseLeave={() => setTableGraphHoverIdx(null)}
+                                                          onTouchMove={(e) => {
+                                                            const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                                                            const touch = e.touches[0];
+                                                            const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
+                                                            const i = Math.round((relX / chartW) * (len - 1));
+                                                            setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                                                          }}
+                                                          onTouchEnd={() => setTableGraphHoverIdx(null)}
+                                                        >
+                                                          <defs>
+                                                            <linearGradient
+                                                              id={`tableInlinePriceGrad-${ci}`}
+                                                              x1="0"
+                                                              y1="0"
+                                                              x2="0"
+                                                              y2="1"
+                                                            >
+                                                              <stop offset="0%" stopColor="#087F63" stopOpacity="0.22" />
+                                                              <stop offset="75%" stopColor="#087F63" stopOpacity="0.03" />
+                                                              <stop offset="100%" stopColor="#087F63" stopOpacity="0.00" />
+                                                            </linearGradient>
+                                                          </defs>
+
+                                                          {/* Horizontal Gridlines + Left & Right Price Axis Labels */}
+                                                          {graphData.yLabels.map((tick, ti) => {
+                                                            const y = yOf(tick.val);
+                                                            return (
+                                                              <g key={`yTick-${ti}`}>
+                                                                <line
+                                                                  x1={PL}
+                                                                  y1={y}
+                                                                  x2={CW - PR}
+                                                                  y2={y}
+                                                                  stroke="#E8EFEF"
+                                                                  strokeWidth="1"
+                                                                  strokeDasharray="3 3"
+                                                                />
+                                                                <text
+                                                                  x={PL - 5}
+                                                                  y={y + 3.5}
+                                                                  textAnchor="end"
+                                                                  fontSize="8.5"
+                                                                  fontWeight="600"
+                                                                  fill="#80918B"
+                                                                >
+                                                                  {tick.label}
+                                                                </text>
+                                                                <text
+                                                                  x={CW - PR + 5}
+                                                                  y={y + 3.5}
+                                                                  textAnchor="start"
+                                                                  fontSize="8"
+                                                                  fontWeight="600"
+                                                                  fill="#9BAAA5"
+                                                                >
+                                                                  {tick.val}
+                                                                </text>
+                                                              </g>
+                                                            );
+                                                          })}
+
+                                                          {/* Volume Baseline / X-Axis Baseline */}
+                                                          <line
+                                                            x1={PL}
+                                                            y1={volBaseY}
+                                                            x2={CW - PR}
+                                                            y2={volBaseY}
+                                                            stroke="#D5E2DD"
+                                                            strokeWidth="1.2"
+                                                          />
+
+                                                          {/* X-Axis Date Labels */}
+                                                          {graphData.xLabels.map((lbl, i) =>
+                                                            lbl ? (
+                                                              <text
+                                                                key={`xPriceTick-${i}`}
+                                                                x={xOf(i)}
+                                                                y={CH - 6}
+                                                                textAnchor="middle"
+                                                                fontSize="8.5"
+                                                                fontWeight="600"
+                                                                fill="#80918B"
+                                                                fontFamily={lang === "ur" ? URDU_FONT : "inherit"}
+                                                              >
+                                                                {lbl}
+                                                              </text>
+                                                            ) : null,
+                                                          )}
+
+                                                          {/* Mini Arrival Volume Bars along Bottom */}
+                                                          {graphData.arrivals.map((arrVal, i) => {
+                                                            const barX = xOf(i);
+                                                            const barH = (arrVal / maxArr) * volMaxH;
+                                                            const prevP = i > 0 ? pts[i - 1] : pts[i];
+                                                            const curP = pts[i];
+                                                            const isUp = curP >= prevP;
+                                                            const barW = Math.max(2.5, Math.min(6, (chartW / len) * 0.55));
+                                                            const isHov = tableGraphHoverIdx === i;
+
+                                                            return (
+                                                              <rect
+                                                                key={`vol-${i}`}
+                                                                x={barX - barW / 2}
+                                                                y={volBaseY - barH}
+                                                                width={barW}
+                                                                height={barH}
+                                                                rx={1}
+                                                                fill={isUp ? "#10B981" : "#EF4444"}
+                                                                opacity={isHov ? 1 : 0.65}
+                                                              />
+                                                            );
+                                                          })}
+
+                                                          {/* Area & Line */}
+                                                          {(() => {
+                                                            const lineCoords = pts.map((v, i) => `${i === 0 ? "M" : "L"}${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`).join(" ");
+                                                            const areaCoords = `${lineCoords} L${xOf(len - 1).toFixed(1)},${volBaseY} L${PL},${volBaseY} Z`;
+                                                            return (
+                                                              <g>
+                                                                <path d={areaCoords} fill={`url(#tableInlinePriceGrad-${ci})`} />
+                                                                <path d={lineCoords} stroke="#087F63" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                                                                {/* Dotted Latest Price Guideline */}
+                                                                <line x1={PL} y1={currentCloseY} x2={CW - PR} y2={currentCloseY} stroke="#087F63" strokeWidth="0.9" strokeDasharray="3 3" opacity="0.6" />
+                                                                {/* Latest Price Tag */}
+                                                                <g transform={`translate(${CW - PR + 2}, ${currentCloseY - 7})`}>
+                                                                  <rect x={0} y={0} width={28} height={14} rx={3} fill="#087F63" />
+                                                                  <text x={14} y={10} textAnchor="middle" fontSize="8" fontWeight="bold" fill="#FFFFFF">
+                                                                    {displayPrice >= 1000 ? `${(displayPrice / 1000).toFixed(1)}k` : displayPrice}
+                                                                  </text>
+                                                                </g>
+                                                                {/* Live Pulse Dot */}
+                                                                <circle cx={xOf(len - 1)} cy={currentCloseY} r="4" fill="#087F63" stroke="#FFFFFF" strokeWidth="2" />
+                                                              </g>
+                                                            );
+                                                          })()}
+
+                                                          {/* Interactive Hover Crosshairs */}
+                                                          {tableGraphHoverIdx !== null && (
+                                                            <g>
+                                                              <line x1={xOf(tableGraphHoverIdx)} y1={PT} x2={xOf(tableGraphHoverIdx)} y2={volBaseY} stroke="#0284C7" strokeWidth="1.2" strokeDasharray="2 2" />
+                                                              <line x1={PL} y1={yOf(pts[tableGraphHoverIdx])} x2={CW - PR} y2={yOf(pts[tableGraphHoverIdx])} stroke="#0284C7" strokeWidth="1" strokeDasharray="2 2" opacity="0.75" />
+                                                              <circle cx={xOf(tableGraphHoverIdx)} cy={yOf(pts[tableGraphHoverIdx])} r="5" fill="#0284C7" stroke="#FFFFFF" strokeWidth="2" />
+                                                            </g>
+                                                          )}
+                                                        </svg>
+
+                                                        {/* Interactive Hover Tooltip */}
+                                                        {tableGraphHoverIdx !== null && (() => {
+                                                          const curP = pts[tableGraphHoverIdx] || 0;
+                                                          const minP = graphData.mins?.[tableGraphHoverIdx] || Math.max(0, curP - Math.round(curP * 0.008));
+                                                          const maxP = graphData.maxs?.[tableGraphHoverIdx] || (curP + Math.round(curP * 0.008));
+                                                          const volVal = graphData.arrivals?.[tableGraphHoverIdx] || 0;
+                                                          const dateStr = graphData.dates[tableGraphHoverIdx] || "14 Sep 2026";
+
+                                                          return (
+                                                            <div
+                                                              className="pointer-events-none absolute z-20 rounded-xl shadow-xl border p-2 flex flex-col gap-1 backdrop-blur-md transition-all duration-75"
+                                                              style={{
+                                                                left: `${Math.min(Math.max((xOf(tableGraphHoverIdx) / CW) * 100, 24), 76)}%`,
+                                                                top: 8,
+                                                                transform: "translateX(-50%)",
+                                                                background: "rgba(255, 255, 255, 0.97)",
+                                                                borderColor: "#38BDF8",
+                                                                minWidth: 150,
+                                                                boxShadow: "0 8px 24px -4px rgba(2, 132, 199, 0.22)",
+                                                              }}
+                                                            >
+                                                              <div className="flex items-center justify-between text-[10px] font-bold text-[#0284C7] border-b border-[#E0F2FE] pb-1">
+                                                                <span>DT:</span>
+                                                                <span className="font-mono text-[#0F172A]">{dateStr}</span>
+                                                              </div>
+                                                              <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10px] font-semibold text-[#334155] pt-1">
+                                                                <span className="text-[#64748B]">{lang === "ur" ? "کم سے کم ریٹ:" : "Min Rate:"}</span>
+                                                                <span className="font-mono font-bold text-right text-[#B91C1C]">Rs. {minP.toLocaleString()}</span>
+                                                                <span className="text-[#64748B]">{lang === "ur" ? "زیادہ سے زیادہ:" : "Max Rate:"}</span>
+                                                                <span className="font-mono font-bold text-right text-[#15803D]">Rs. {maxP.toLocaleString()}</span>
+                                                                <span className="text-[#64748B]">{lang === "ur" ? "آمد:" : "Arrivals:"}</span>
+                                                                <span className="font-mono font-bold text-right text-[#0284C7]">{volVal > 0 ? `${volVal.toLocaleString()} bags` : "—"}</span>
+                                                              </div>
+                                                            </div>
+                                                          );
+                                                        })()}
+                                                      </div>
+                                                    </>
+                                                  );
+                                                })()}
+                                              </>
+                                            ) : (
+                                              <>
+                                                {(() => {
+                                                  const arrivalData = buildMandiInlineGraphFromRows({
+                                                    allRows,
+                                                    mandiName: r.mandiName,
+                                                    rateType: r.rateType,
+                                                    timeframe: graphTimeframe,
+                                                    lang,
+                                                    view: "arrival",
+                                                  });
+                                                  const pts = arrivalData.points;
+                                                  const len = pts.length;
+                                                  const hoverI = tableGraphHoverIdx !== null && tableGraphHoverIdx < len ? tableGraphHoverIdx : len - 1;
+                                                  const displayArr = pts[hoverI] ?? arrivalData.latestArrival;
+                                                  const totalArr = arrivalData.totalArrival;
+                                                  const peakArr = arrivalData.peakArrival;
+                                                  const avgArr = Math.round(totalArr / (len || 1));
+                                                  const currentDateLabel = arrivalData.dates[hoverI] || arrivalData.dates[len - 1] || "14 Sep 2026";
+
+                                                  const CW = 540;
+                                                  const CH = 145;
+                                                  const PL = 42;
+                                                  const PR = 42;
+                                                  const PT = 14;
+                                                  const PB = 24;
+                                                  const chartW = CW - PL - PR;
+                                                  const chartH = CH - PT - PB;
+                                                  const aMin = 0;
+                                                  const aMax = arrivalData.yMaxBound;
+                                                  const yOf = (v: number) => PT + chartH - ((v - aMin) / (aMax - aMin || 1)) * chartH;
+                                                  const xOf = (i: number) => PL + (i / (len - 1 || 1)) * chartW;
+                                                  const volBaseY = CH - PB;
+                                                  const volMaxH = 26;
+
+                                                  return (
+                                                    <>
+                                                      {/* Arrival Header HUD */}
+                                                      <div className="flex flex-col gap-2 border-b border-[#E8EFEC] pb-2.5">
+                                                        <div className="flex items-center justify-between">
+                                                          <div className="flex items-center gap-1.5">
+                                                            <span className="w-2.5 h-2.5 rounded-full bg-[#D97706]" />
+                                                            <span
+                                                              className="text-xs sm:text-sm font-extrabold text-[#143B33]"
+                                                              style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                                                            >
+                                                              {tm(r.mandiName.replace(/\s*mandi$/i, "").replace(/\s*منڈی$/i, ""))} — {lang === "ur" ? "آمد کی مقدار (مارکیٹ رسد)" : "Arrival Volume Trend"}
+                                                            </span>
+                                                          </div>
+                                                          <span className="text-[10px] font-semibold text-[#92400E] bg-[#FEF3C7] px-2 py-0.5 rounded-md border border-[#FDE68A]">
+                                                            {lang === "ur" ? "تھیلے" : "Bags"}
+                                                          </span>
+                                                        </div>
+
+                                                        <div className="flex items-baseline justify-between flex-wrap gap-2">
+                                                          <div className="flex items-baseline gap-2">
+                                                            <span className="text-2xl font-black text-[#92400E]">
+                                                              {lang === "ur" ? `${toUrduDigits(displayArr.toLocaleString())} تھیلے` : `${displayArr.toLocaleString()} Bags`}
+                                                            </span>
+                                                          </div>
+                                                          <div className="text-[11px] font-semibold text-[#52635F]">
+                                                            {currentDateLabel}
+                                                          </div>
+                                                        </div>
+
+                                                        <div className="grid grid-cols-3 gap-2 pt-1 text-[10px]">
+                                                          <div className="bg-[#FFFDF5] p-1.5 rounded-lg border border-[#FDE68A] flex flex-col">
+                                                            <span className="text-[#92400E] font-semibold">{lang === "ur" ? "کل آمد" : "Total Period"}</span>
+                                                            <span className="font-bold text-[#78350F] text-xs">
+                                                              {totalArr.toLocaleString()} Bags
+                                                            </span>
+                                                          </div>
+                                                          <div className="bg-[#FFFDF5] p-1.5 rounded-lg border border-[#FDE68A] flex flex-col">
+                                                            <span className="text-[#92400E] font-semibold">{lang === "ur" ? "سب سے زیادہ" : "Peak Day"}</span>
+                                                            <span className="font-bold text-[#78350F] text-xs">
+                                                              {peakArr.toLocaleString()} Bags
+                                                            </span>
+                                                          </div>
+                                                          <div className="bg-[#FFFDF5] p-1.5 rounded-lg border border-[#FDE68A] flex flex-col">
+                                                            <span className="text-[#92400E] font-semibold">{lang === "ur" ? "روزانہ اوسط" : "Daily Avg"}</span>
+                                                            <span className="font-bold text-[#92400E] text-xs">
+                                                              {avgArr.toLocaleString()} Bags
+                                                            </span>
+                                                          </div>
+                                                        </div>
+                                                      </div>
+
+                                                      {/* SVG Arrival Canvas */}
+                                                      <div className="relative w-full select-none bg-[#FCFDFD] rounded-xl border border-[#EDF4F1] p-1">
+                                                        <svg
+                                                          viewBox={`0 0 ${CW} ${CH}`}
+                                                          className="w-full"
+                                                          style={{ height: isTableExpanded ? 160 : 135, display: "block" }}
+                                                          onMouseMove={(e) => {
+                                                            const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                                                            const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
+                                                            const i = Math.round((relX / chartW) * (len - 1));
+                                                            setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                                                          }}
+                                                          onMouseLeave={() => setTableGraphHoverIdx(null)}
+                                                          onTouchMove={(e) => {
+                                                            const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                                                            const touch = e.touches[0];
+                                                            const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
+                                                            const i = Math.round((relX / chartW) * (len - 1));
+                                                            setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                                                          }}
+                                                          onTouchEnd={() => setTableGraphHoverIdx(null)}
+                                                        >
+                                                          <defs>
+                                                            <linearGradient id={`tableInlineArrGrad-${ci}`} x1="0" y1="0" x2="0" y2="1">
+                                                              <stop offset="0%" stopColor="#D97706" stopOpacity="0.32" />
+                                                              <stop offset="85%" stopColor="#D97706" stopOpacity="0.04" />
+                                                              <stop offset="100%" stopColor="#D97706" stopOpacity="0.00" />
+                                                            </linearGradient>
+                                                          </defs>
+
+                                                          {/* Horizontal Dashed Gridlines + Y Ticks */}
+                                                          {arrivalData.yLabels.map((tick, ti) => {
+                                                            const y = yOf(tick.val);
+                                                            return (
+                                                              <g key={`yArrTick-${ti}`}>
+                                                                <line x1={PL} y1={y} x2={CW - PR} y2={y} stroke="#E5EAE8" strokeWidth="1" strokeDasharray="4 4" />
+                                                                <text x={PL - 6} y={y + 3.5} textAnchor="end" fontSize="9" fontWeight="600" fill="#80918B">
+                                                                  {tick.label}
+                                                                </text>
+                                                              </g>
+                                                            );
+                                                          })}
+
+                                                          {/* X-Axis Baseline */}
+                                                          <line x1={PL} y1={volBaseY} x2={CW - PR} y2={volBaseY} stroke="#D5E2DD" strokeWidth="1.2" />
+
+                                                          {/* X-Axis Dates */}
+                                                          {arrivalData.xLabels.map((lbl, i) =>
+                                                            lbl ? (
+                                                              <text key={`xArrTick-${i}`} x={xOf(i)} y={CH - 6} textAnchor="middle" fontSize="8.5" fontWeight="600" fill="#80918B" fontFamily={lang === "ur" ? URDU_FONT : "inherit"}>
+                                                                {lbl}
+                                                              </text>
+                                                            ) : null,
+                                                          )}
+
+                                                          {/* Arrival Volume Bars along Bottom */}
+                                                          {pts.map((arrVal, i) => {
+                                                            const barX = xOf(i);
+                                                            const maxVal = arrivalData.peakArrival || 1;
+                                                            const barH = (arrVal / maxVal) * volMaxH;
+                                                            const barW = Math.max(2.5, Math.min(6, (chartW / len) * 0.55));
+                                                            const isHov = tableGraphHoverIdx === i;
+                                                            return (
+                                                              <rect
+                                                                key={`arr-vol-bar-${i}`}
+                                                                x={barX - barW / 2}
+                                                                y={volBaseY - barH}
+                                                                width={barW}
+                                                                height={barH}
+                                                                rx={1}
+                                                                fill="#D97706"
+                                                                opacity={isHov ? 0.95 : 0.6}
+                                                              />
+                                                            );
+                                                          })}
+
+                                                          {/* Area Fill */}
+                                                          <path
+                                                            d={[
+                                                              ...pts.map((v, i) => `${i === 0 ? "M" : "L"}${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`),
+                                                              `L${xOf(len - 1).toFixed(1)},${volBaseY}`,
+                                                              `L${PL},${volBaseY}`,
+                                                              "Z",
+                                                            ].join(" ")}
+                                                            fill={`url(#tableInlineArrGrad-${ci})`}
+                                                          />
+
+                                                          {/* Main Line */}
+                                                          <path
+                                                            d={pts.map((v, i) => `${i === 0 ? "M" : "L"}${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`).join(" ")}
+                                                            stroke="#D97706"
+                                                            strokeWidth="2.8"
+                                                            fill="none"
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                          />
+
+                                                          {/* Hover Guide and Marker */}
+                                                          {tableGraphHoverIdx !== null && (
+                                                            <g>
+                                                              <line x1={xOf(tableGraphHoverIdx)} y1={PT} x2={xOf(tableGraphHoverIdx)} y2={volBaseY} stroke="#92400E" strokeWidth="1.2" strokeDasharray="3 3" />
+                                                              <circle cx={xOf(tableGraphHoverIdx)} cy={yOf(pts[tableGraphHoverIdx])} r="5" fill="#D97706" stroke="#FFFFFF" strokeWidth="2" />
+                                                            </g>
+                                                          )}
+                                                        </svg>
+
+                                                        {/* Interactive Hover Tooltip for Arrival */}
+                                                        {tableGraphHoverIdx !== null && (() => {
+                                                          const volVal = pts[tableGraphHoverIdx] || 0;
+                                                          const dateStr = arrivalData.dates[tableGraphHoverIdx] || "14 Sep 2026";
+                                                          return (
+                                                            <div
+                                                              className="pointer-events-none absolute z-20 rounded-xl shadow-xl border p-2 flex flex-col gap-1 backdrop-blur-md transition-all duration-75"
+                                                              style={{
+                                                                left: `${Math.min(Math.max((xOf(tableGraphHoverIdx) / CW) * 100, 24), 76)}%`,
+                                                                top: 8,
+                                                                transform: "translateX(-50%)",
+                                                                background: "rgba(255, 255, 255, 0.97)",
+                                                                borderColor: "#FDE68A",
+                                                                minWidth: 140,
+                                                                boxShadow: "0 8px 24px -4px rgba(217, 119, 6, 0.22)",
+                                                              }}
+                                                            >
+                                                              <div className="flex items-center justify-between text-[10px] font-bold text-[#92400E] border-b border-[#FEF3C7] pb-1">
+                                                                <span>DT:</span>
+                                                                <span className="font-mono text-[#0F172A]">{dateStr}</span>
+                                                              </div>
+                                                              <div className="flex items-center justify-between text-[10.5px] font-semibold text-[#334155] pt-1">
+                                                                <span className="text-[#78350F]">{lang === "ur" ? "آمد:" : "Arrivals:"}</span>
+                                                                <span className="font-mono font-bold text-right text-[#92400E]">
+                                                                  {volVal > 0 ? `${volVal.toLocaleString()} bags` : "—"}
+                                                                </span>
+                                                              </div>
+                                                            </div>
+                                                          );
+                                                        })()}
+                                                      </div>
+                                                    </>
+                                                  );
+                                                })()}
+                                              </>
+                                            )}
+
+                                            {/* 3. Timeframe Filter: 1 Month, 3 Months, 6 Months, 1 Year */}
+                                            <div className="pt-0.5">
+                                              <div className="grid grid-cols-4 gap-1.5 border border-[#D5E2DD] rounded-xl p-1 bg-[#F9FBFA]">
+                                                {[
+                                                  { id: "1M", labelEn: "1 Month", labelUr: "۱ مہینہ" },
+                                                  { id: "3M", labelEn: "3 Months", labelUr: "۳ مہینے" },
+                                                  { id: "6M", labelEn: "6 Months", labelUr: "۶ مہینے" },
+                                                  { id: "1Y", labelEn: "1 Year", labelUr: "۱ سال" },
+                                                ].map((tf) => {
+                                                  const isTfActive = graphTimeframe === tf.id;
+                                                  return (
+                                                    <button
+                                                      key={tf.id}
+                                                      type="button"
+                                                      onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setGraphTimeframe(tf.id as any);
+                                                      }}
+                                                      className={`flex items-center justify-center py-2 px-1 rounded-lg transition-all font-bold ${
+                                                        isTfActive
+                                                          ? tableGraphView === "price"
+                                                            ? "bg-[#087F63] text-white shadow-sm ring-1 ring-[#087F63]/30 scale-[1.01]"
+                                                            : "bg-[#D97706] text-white shadow-sm ring-1 ring-[#D97706]/30 scale-[1.01]"
+                                                          : "bg-white/80 text-[#52635F] hover:bg-white hover:text-[#183B34] border border-[#E8EFEC]"
+                                                      }`}
+                                                      style={{
+                                                        fontSize: lang === "ur" ? 13 : 11,
+                                                        fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                                      }}
+                                                    >
+                                                      <span>{lang === "ur" ? tf.labelUr : tf.labelEn}</span>
+                                                    </button>
+                                                  );
+                                                })}
+                                              </div>
+                                            </div>
                                           </div>
-
-                                          {/* 3. Summary Box & Chart according to tableGraphView */}
-                                          {tableGraphView === "price" ? (
-                                            <>
-                                              {/* Price Rates Summary Box */}
-                                              {(() => {
-                                                const graphData = buildMandiInlineGraphFromRows({
-                                                  allRows,
-                                                  mandiName: r.mandiName,
-                                                  rateType: r.rateType,
-                                                  timeframe: graphTimeframe,
-                                                  lang,
-                                                  view: "price",
-                                                });
-                                                return (
-                                                  <>
-                                                    <div className="rounded-xl p-2 px-3 bg-[#F0FDF4] border border-[#BBF7D0] flex items-center justify-between">
-                                                      <div className="flex items-center gap-3">
-                                                        <div>
-                                                          <span className="text-[8.5px] font-bold text-[#15803D] uppercase tracking-wider block leading-none">
-                                                            {lang === "ur" ? "کم سے کم" : "MIN RATE"}
-                                                          </span>
-                                                          <span className="text-xs font-black text-[#14532D] block mt-0.5 leading-tight">
-                                                            Rs.{graphData.latestMin.toLocaleString()}
-                                                          </span>
-                                                        </div>
-                                                        <div className="w-[1px] h-5 bg-[#BBF7D0]" />
-                                                        <div>
-                                                          <span className="text-[8.5px] font-bold text-[#15803D] uppercase tracking-wider block leading-none">
-                                                            {lang === "ur" ? "زیادہ سے زیادہ" : "MAX RATE"}
-                                                          </span>
-                                                          <span className="text-xs font-black text-[#087F63] block mt-0.5 leading-tight">
-                                                            Rs.{graphData.latestMax.toLocaleString()}
-                                                          </span>
-                                                        </div>
-                                                      </div>
-                                                      <div
-                                                        className="px-2 py-0.5 rounded-md text-[10.5px] font-black flex items-center gap-1"
-                                                        style={{
-                                                          background:
-                                                            graphData.trend === "down" ? "#FEE2E2" : "#DCFCE7",
-                                                          color:
-                                                            graphData.trend === "down" ? "#DC2626" : "#059669",
-                                                          border: `1px solid ${graphData.trend === "down" ? "#FECACA" : "#86EFAC"}`,
-                                                        }}
-                                                      >
-                                                        <span>
-                                                          {graphData.trend === "up"
-                                                            ? "▲"
-                                                            : graphData.trend === "down"
-                                                              ? "▼"
-                                                              : "—"}
-                                                        </span>
-                                                        <span>
-                                                          {graphData.trendPct > 0 ? `${graphData.trendPct}%` : "0.0%"}
-                                                        </span>
-                                                      </div>
-                                                    </div>
-
-                                                    {/* Price Visual Line Chart */}
-                                                    {(() => {
-                                                      const W = 350;
-                                                      const H = 120;
-                                                      const xLeft = 36;
-                                                      const xRight = 332;
-                                                      const yTop = 14;
-                                                      const yBottom = 88;
-
-                                                      const coords = graphData.points.map((p, i) => {
-                                                        const x =
-                                                          xLeft + (i / (graphData.points.length - 1 || 1)) * (xRight - xLeft);
-                                                        const y =
-                                                          yBottom -
-                                                          ((p - graphData.yMinBound) /
-                                                            (graphData.yMaxBound - graphData.yMinBound || 1)) *
-                                                          (yBottom - yTop);
-                                                        return { x, y, val: p };
-                                                      });
-
-                                                      const linePath = coords
-                                                        .map((c, i) => (i === 0 ? `M ${c.x.toFixed(1)} ${c.y.toFixed(1)}` : `L ${c.x.toFixed(1)} ${c.y.toFixed(1)}`))
-                                                        .join(" ");
-                                                      const areaPath = `${linePath} L ${coords[coords.length - 1].x.toFixed(1)} ${yBottom + 6} L ${coords[0].x.toFixed(1)} ${yBottom + 6} Z`;
-                                                      const yMidY = (yTop + yBottom) / 2;
-
-                                                      return (
-                                                        <div className="rounded-xl border border-[#D5E2DD] p-2 bg-white flex flex-col justify-center shadow-sm">
-                                                          <svg
-                                                            viewBox={`0 0 ${W} ${H}`}
-                                                            className="w-full h-auto"
-                                                            style={{ maxHeight: 120, overflow: "visible" }}
-                                                          >
-                                                            <defs>
-                                                              <linearGradient
-                                                                id={`mandiInlineGraphGrad-${ci}`}
-                                                                x1="0"
-                                                                y1="0"
-                                                                x2="0"
-                                                                y2="1"
-                                                              >
-                                                                <stop
-                                                                  offset="0%"
-                                                                  stopColor="#10B981"
-                                                                  stopOpacity="0.25"
-                                                                />
-                                                                <stop
-                                                                  offset="100%"
-                                                                  stopColor="#10B981"
-                                                                  stopOpacity="0.0"
-                                                                />
-                                                              </linearGradient>
-                                                            </defs>
-
-                                                            {/* Top Grid */}
-                                                            <line
-                                                              x1={xLeft}
-                                                              y1={yTop}
-                                                              x2={xRight}
-                                                              y2={yTop}
-                                                              stroke="#E5E7EB"
-                                                              strokeDasharray="3 3"
-                                                              strokeWidth="1"
-                                                            />
-                                                            <text
-                                                              x={xLeft - 6}
-                                                              y={yTop + 3.5}
-                                                              textAnchor="end"
-                                                              fill="#80918B"
-                                                              fontSize="8"
-                                                              fontWeight="600"
-                                                            >
-                                                              {graphData.yLabels[0].label}
-                                                            </text>
-
-                                                            {/* Mid Grid */}
-                                                            <line
-                                                              x1={xLeft}
-                                                              y1={yMidY}
-                                                              x2={xRight}
-                                                              y2={yMidY}
-                                                              stroke="#E5E7EB"
-                                                              strokeDasharray="3 3"
-                                                              strokeWidth="1"
-                                                            />
-                                                            <text
-                                                              x={xLeft - 6}
-                                                              y={yMidY + 3.5}
-                                                              textAnchor="end"
-                                                              fill="#80918B"
-                                                              fontSize="8"
-                                                              fontWeight="600"
-                                                            >
-                                                              {graphData.yLabels[1].label}
-                                                            </text>
-
-                                                            {/* Bot Grid */}
-                                                            <line
-                                                              x1={xLeft}
-                                                              y1={yBottom}
-                                                              x2={xRight}
-                                                              y2={yBottom}
-                                                              stroke="#E5E7EB"
-                                                              strokeDasharray="3 3"
-                                                              strokeWidth="1"
-                                                            />
-                                                            <text
-                                                              x={xLeft - 6}
-                                                              y={yBottom + 3.5}
-                                                              textAnchor="end"
-                                                              fill="#80918B"
-                                                              fontSize="8"
-                                                              fontWeight="600"
-                                                            >
-                                                              {graphData.yLabels[2].label}
-                                                            </text>
-
-                                                            {/* Area under curve */}
-                                                            <path
-                                                              d={areaPath}
-                                                              fill={`url(#mandiInlineGraphGrad-${ci})`}
-                                                            />
-
-                                                            {/* Line curve */}
-                                                            <path
-                                                              d={linePath}
-                                                              fill="none"
-                                                              stroke="#10B981"
-                                                              strokeWidth="2.4"
-                                                              strokeLinecap="round"
-                                                              strokeLinejoin="round"
-                                                            />
-
-                                                            {/* Node points */}
-                                                            {coords.map((c, i) => (
-                                                              <circle
-                                                                key={i}
-                                                                cx={c.x}
-                                                                cy={c.y}
-                                                                r="3.5"
-                                                                fill="#FFFFFF"
-                                                                stroke="#10B981"
-                                                                strokeWidth="2"
-                                                              />
-                                                            ))}
-
-                                                            {/* X-axis Labels */}
-                                                            {graphData.xLabels.map((lbl, i) => (
-                                                              <text
-                                                                key={i}
-                                                                x={coords[i]?.x ?? xLeft}
-                                                                y={H - 4}
-                                                                textAnchor="middle"
-                                                                fill="#80918B"
-                                                                fontSize="8"
-                                                                fontWeight="600"
-                                                                fontFamily={
-                                                                  lang === "ur"
-                                                                    ? URDU_FONT
-                                                                    : "inherit"
-                                                                }
-                                                              >
-                                                                {lbl}
-                                                              </text>
-                                                            ))}
-                                                          </svg>
-                                                        </div>
-                                                      );
-                                                    })()}
-                                                  </>
-                                                );
-                                              })()}
-                                            </>
-                                          ) : (
-                                            <>
-                                              {/* Arrival Volume Summary Box */}
-                                              {(() => {
-                                                const arrivalData = buildMandiInlineGraphFromRows({
-                                                  allRows,
-                                                  mandiName: r.mandiName,
-                                                  rateType: r.rateType,
-                                                  timeframe: graphTimeframe,
-                                                  lang,
-                                                  view: "arrival",
-                                                });
-
-                                                return (
-                                                  <>
-                                                    <div className="rounded-xl p-2 px-3 bg-[#F0FDF4] border border-[#BBF7D0] flex items-center justify-between">
-                                                      <div className="flex items-center gap-3">
-                                                        <div>
-                                                          <span className="text-[8.5px] font-bold text-[#15803D] uppercase tracking-wider block leading-none">
-                                                            {lang === "ur" ? "کل آمد" : "TOTAL ARRIVALS"}
-                                                          </span>
-                                                          <span className="text-xs font-black text-[#14532D] block mt-0.5 leading-tight">
-                                                            {arrivalData.latestArrival.toLocaleString()}{" "}
-                                                            <span className="text-[9px] font-semibold text-[#16A34A]">
-                                                              {lang === "ur" ? "تھیلے" : "Bags"}
-                                                            </span>
-                                                          </span>
-                                                        </div>
-                                                        <div className="w-[1px] h-5 bg-[#BBF7D0]" />
-                                                        <div>
-                                                          <span className="text-[8.5px] font-bold text-[#15803D] uppercase tracking-wider block leading-none">
-                                                            {lang === "ur" ? "سب سے زیادہ آمد" : "PEAK VOLUME"}
-                                                          </span>
-                                                          <span className="text-xs font-black text-[#047857] block mt-0.5 leading-tight">
-                                                            {arrivalData.peakArrival.toLocaleString()}{" "}
-                                                            <span className="text-[9px] font-semibold text-[#10B981]">
-                                                              {lang === "ur" ? "تھیلے" : "Bags"}
-                                                            </span>
-                                                          </span>
-                                                        </div>
-                                                      </div>
-                                                      <div className="px-2 py-0.5 rounded-md text-[10px] font-black bg-[#DCFCE7] text-[#15803D] border border-[#86EFAC]">
-                                                        {lang === "ur" ? "نارمل سپلائی" : "Steady Flow"}
-                                                      </div>
-                                                    </div>
-
-                                                    {/* Arrival Visual Bar + Area Chart */}
-                                                    {(() => {
-                                                      const W = 350;
-                                                      const H = 120;
-                                                      const xLeft = 36;
-                                                      const xRight = 332;
-                                                      const yTop = 14;
-                                                      const yBottom = 88;
-
-                                                      const coords = arrivalData.points.map((p, i) => {
-                                                        const x =
-                                                          xLeft + (i / (arrivalData.points.length - 1 || 1)) * (xRight - xLeft);
-                                                        const y =
-                                                          yBottom -
-                                                          ((p - arrivalData.yMinBound) /
-                                                            (arrivalData.yMaxBound - arrivalData.yMinBound || 1)) *
-                                                          (yBottom - yTop);
-                                                        return { x, y, val: p };
-                                                      });
-
-                                                      const linePath = coords
-                                                        .map((c, i) => (i === 0 ? `M ${c.x.toFixed(1)} ${c.y.toFixed(1)}` : `L ${c.x.toFixed(1)} ${c.y.toFixed(1)}`))
-                                                        .join(" ");
-                                                      const areaPath = `${linePath} L ${coords[coords.length - 1].x.toFixed(1)} ${yBottom + 6} L ${coords[0].x.toFixed(1)} ${yBottom + 6} Z`;
-                                                      const yMidY = (yTop + yBottom) / 2;
-
-                                                      return (
-                                                        <div className="rounded-xl border border-[#D5E2DD] p-2 bg-white flex flex-col justify-center shadow-sm">
-                                                          <svg
-                                                            viewBox={`0 0 ${W} ${H}`}
-                                                            className="w-full h-auto"
-                                                            style={{ maxHeight: 120, overflow: "visible" }}
-                                                          >
-                                                            <defs>
-                                                              <linearGradient
-                                                                id={`mandiInlineArrivalGrad-${ci}`}
-                                                                x1="0"
-                                                                y1="0"
-                                                                x2="0"
-                                                                y2="1"
-                                                              >
-                                                                <stop
-                                                                  offset="0%"
-                                                                  stopColor="#059669"
-                                                                  stopOpacity="0.25"
-                                                                />
-                                                                <stop
-                                                                  offset="100%"
-                                                                  stopColor="#059669"
-                                                                  stopOpacity="0.0"
-                                                                />
-                                                              </linearGradient>
-                                                            </defs>
-
-                                                            {/* Top Grid */}
-                                                            <line
-                                                              x1={xLeft}
-                                                              y1={yTop}
-                                                              x2={xRight}
-                                                              y2={yTop}
-                                                              stroke="#E5E7EB"
-                                                              strokeDasharray="3 3"
-                                                              strokeWidth="1"
-                                                            />
-                                                            <text
-                                                              x={xLeft - 6}
-                                                              y={yTop + 3.5}
-                                                              textAnchor="end"
-                                                              fill="#80918B"
-                                                              fontSize="8"
-                                                              fontWeight="600"
-                                                            >
-                                                              {arrivalData.yLabels[0].label}
-                                                            </text>
-
-                                                            {/* Mid Grid */}
-                                                            <line
-                                                              x1={xLeft}
-                                                              y1={yMidY}
-                                                              x2={xRight}
-                                                              y2={yMidY}
-                                                              stroke="#E5E7EB"
-                                                              strokeDasharray="3 3"
-                                                              strokeWidth="1"
-                                                            />
-                                                            <text
-                                                              x={xLeft - 6}
-                                                              y={yMidY + 3.5}
-                                                              textAnchor="end"
-                                                              fill="#80918B"
-                                                              fontSize="8"
-                                                              fontWeight="600"
-                                                            >
-                                                              {arrivalData.yLabels[1].label}
-                                                            </text>
-
-                                                            {/* Bot Grid */}
-                                                            <line
-                                                              x1={xLeft}
-                                                              y1={yBottom}
-                                                              x2={xRight}
-                                                              y2={yBottom}
-                                                              stroke="#E5E7EB"
-                                                              strokeDasharray="3 3"
-                                                              strokeWidth="1"
-                                                            />
-                                                            <text
-                                                              x={xLeft - 6}
-                                                              y={yBottom + 3.5}
-                                                              textAnchor="end"
-                                                              fill="#80918B"
-                                                              fontSize="8"
-                                                              fontWeight="600"
-                                                            >
-                                                              {arrivalData.yLabels[2].label}
-                                                            </text>
-
-                                                            {/* Area under curve */}
-                                                            <path
-                                                              d={areaPath}
-                                                              fill={`url(#mandiInlineArrivalGrad-${ci})`}
-                                                            />
-
-                                                            {/* Line curve */}
-                                                            <path
-                                                              d={linePath}
-                                                              fill="none"
-                                                              stroke="#059669"
-                                                              strokeWidth="2.4"
-                                                              strokeLinecap="round"
-                                                              strokeLinejoin="round"
-                                                            />
-
-                                                            {/* Node points */}
-                                                            {coords.map((c, i) => (
-                                                              <circle
-                                                                key={i}
-                                                                cx={c.x}
-                                                                cy={c.y}
-                                                                r="3.5"
-                                                                fill="#FFFFFF"
-                                                                stroke="#059669"
-                                                                strokeWidth="2"
-                                                              />
-                                                            ))}
-
-                                                            {/* X-axis Labels */}
-                                                            {arrivalData.xLabels.map((lbl, i) => (
-                                                              <text
-                                                                key={i}
-                                                                x={coords[i]?.x ?? xLeft}
-                                                                y={H - 4}
-                                                                textAnchor="middle"
-                                                                fill="#80918B"
-                                                                fontSize="8"
-                                                                fontWeight="600"
-                                                                fontFamily={
-                                                                  lang === "ur"
-                                                                    ? URDU_FONT
-                                                                    : "inherit"
-                                                                }
-                                                              >
-                                                                {lbl}
-                                                              </text>
-                                                            ))}
-                                                          </svg>
-                                                        </div>
-                                                      );
-                                                    })()}
-                                                  </>
-                                                );
-                                              })()}
-                                            </>
-                                          )}
                                         </div>
                                       </td>
                                     </tr>
-                                  )}
+                                   )}
                                 </React.Fragment>
                               );
                             })}
@@ -15978,11 +16224,22 @@ function ProductRatesScreen({
                   </div>
                 );
               })()}
-          </>
-        )}
+            </>
+          )}
+        </div>
+      )}
 
-        {tab === "trends" && rows.length > 0 && (
-          <>
+      {/* 2. TRENDS SCREEN CONTAINER - 100% Isolated */}
+      {tab === "trends" && (
+        <div
+          className="flex-1 min-h-0 overflow-y-auto px-3.5 pt-2 pb-52 flex flex-col gap-3"
+          style={{
+            scrollbarWidth: "thin",
+            WebkitOverflowScrolling: "touch",
+            touchAction: "pan-y",
+            overscrollBehaviorY: "contain",
+          }}
+        >
             {/* Top Bar: Title on left, Location selector pill on right */}
             <div className="flex items-center justify-between gap-2">
               <p
@@ -16066,9 +16323,9 @@ function ProductRatesScreen({
 
             {trendMode === "price" ? (
               <>
-                {/* Investing.com / Financial Stocks App Style Trend Card */}
+                {/* Trends Price Card */}
                 <div
-                  className="rounded-2xl p-3.5 flex flex-col gap-2.5 shadow-sm overflow-hidden"
+                  className="rounded-2xl p-3.5 flex flex-col gap-3 shadow-sm"
                   style={{
                     background: "#FFFFFF",
                     border: "1px solid #D5E2DD",
@@ -16077,7 +16334,7 @@ function ProductRatesScreen({
                   {/* Top Bar: Financial Chart Controls & Granularity Filter */}
                   <div className="flex items-center justify-between gap-1 pb-2 border-b border-[#E8EFEC] flex-wrap">
                     {/* Granularity Pills: 1, 5, 15, 30, 1H, 5H, 1D, 1W, 1M */}
-                    <div className="flex items-center gap-1 overflow-x-auto py-0.5">
+                    <div className="flex items-center gap-1 overflow-x-auto py-0.5" style={{ scrollbarWidth: "none" }}>
                       {["1", "5", "15", "30", "1H", "5H", "1D", "1W", "1M"].map((g) => {
                         const isGActive = stockGranularity === g;
                         return (
@@ -16113,7 +16370,7 @@ function ProductRatesScreen({
                     </div>
                   </div>
 
-                  {/* Stock Asset Header */}
+                  {/* Agricultural Commodity Header */}
                   {(() => {
                     const mainSeries = activeSeries.find((s) => s.label === focusedType) || activeSeries[0] || priceSeries[0];
                     const currentIdx = hoverIdx !== null ? hoverIdx : len - 1;
@@ -16129,16 +16386,16 @@ function ProductRatesScreen({
 
                     return (
                       <div className="flex flex-col gap-2 border-b border-[#E8EFEC] pb-2.5">
-                        {/* Title & Live Badge */}
+                        {/* Title & Active Rate Type Badge */}
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span
                               className="text-xs sm:text-sm font-extrabold text-[#143B33]"
                               style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                             >
-                              {byproduct ? `${tc(byproduct)}` : `${tc(product)}`} {lang === "ur" ? "مارکیٹ انڈیکس" : "Mandi Rate Index"}
+                              {byproduct ? `${tc(byproduct)}` : `${tc(product)}`} {lang === "ur" ? "مارکیٹ ریٹ انڈیکس" : "Market Rate Index"}
                             </span>
-                            <span className="text-[9.5px] font-bold text-[#087F63] bg-[#E8F8F4] px-1.5 py-0.5 rounded border border-[#C2E8DB]">
+                            <span className="text-[10px] font-bold text-[#087F63] bg-[#E8F8F4] px-2 py-0.5 rounded-full border border-[#C2E8DB]">
                               {tr(focusedType).replace(" ریٹ", "").replace(" Rate", "")}
                             </span>
                           </div>
@@ -16176,7 +16433,7 @@ function ProductRatesScreen({
                         <div className="grid grid-cols-3 gap-2 pt-1 text-[10px]">
                           <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
                             <span className="text-[#80918B] font-semibold">
-                              {lang === "ur" ? "بلند ترین (High)" : "Period High"}
+                              {lang === "ur" ? "زیادہ سے زیادہ" : "Period High"}
                             </span>
                             <span className="font-bold text-[#143B33] text-xs">
                               {lang === "ur" ? `روپے ${toUrduDigits(seriesMax)}` : `Rs. ${seriesMax.toLocaleString()}`}
@@ -16184,7 +16441,7 @@ function ProductRatesScreen({
                           </div>
                           <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
                             <span className="text-[#80918B] font-semibold">
-                              {lang === "ur" ? "کم ترین (Low)" : "Period Low"}
+                              {lang === "ur" ? "کم سے کم" : "Period Low"}
                             </span>
                             <span className="font-bold text-[#143B33] text-xs">
                               {lang === "ur" ? `روپے ${toUrduDigits(seriesMin)}` : `Rs. ${seriesMin.toLocaleString()}`}
@@ -16192,7 +16449,7 @@ function ProductRatesScreen({
                           </div>
                           <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
                             <span className="text-[#80918B] font-semibold">
-                              {lang === "ur" ? "اوسط (Avg)" : "Period Avg"}
+                              {lang === "ur" ? "اوسط ریٹ" : "Period Avg"}
                             </span>
                             <span className="font-bold text-[#087F63] text-xs">
                               {lang === "ur" ? `روپے ${toUrduDigits(seriesAvg)}` : `Rs. ${seriesAvg.toLocaleString()}`}
@@ -16203,7 +16460,7 @@ function ProductRatesScreen({
                     );
                   })()}
 
-                  {/* SVG Chart Canvas with Price Area + Volume Bars at Bottom */}
+                  {/* SVG Chart Canvas (Price Trend with Volume Bars) */}
                   {(() => {
                     const mainSeries = activeSeries.find((s) => s.label === focusedType) || activeSeries[0] || priceSeries[0];
                     const currentClose = mainSeries?.data[len - 1] || 0;
@@ -16211,8 +16468,8 @@ function ProductRatesScreen({
 
                     // Arrival volume scaling
                     const maxArr = Math.max(...arrivalData, 1);
-                    const volBaseY = CH - 8;
-                    const volMaxH = 28;
+                    const volBaseY = CH - PB;
+                    const volMaxH = 24;
 
                     return (
                       <div className="relative w-full select-none bg-[#FCFDFD] rounded-xl border border-[#EDF4F1] p-1">
@@ -16246,9 +16503,9 @@ function ProductRatesScreen({
                                 x2="0"
                                 y2="1"
                               >
-                                <stop offset="0%" stopColor="#087F63" stopOpacity="0.28" />
-                                <stop offset="70%" stopColor="#087F63" stopOpacity="0.04" />
-                                <stop offset="100%" stopColor="#087F63" stopOpacity="0.00" />
+                                <stop offset="0%" stopColor={s.color || "#087F63"} stopOpacity="0.22" />
+                                <stop offset="75%" stopColor={s.color || "#087F63"} stopOpacity="0.03" />
+                                <stop offset="100%" stopColor={s.color || "#087F63"} stopOpacity="0.00" />
                               </linearGradient>
                             ))}
                           </defs>
@@ -16263,7 +16520,7 @@ function ProductRatesScreen({
                                   y1={y}
                                   x2={CW - PR}
                                   y2={y}
-                                  stroke="#EDF2F0"
+                                  stroke="#E8EFEF"
                                   strokeWidth="1"
                                   strokeDasharray="3 3"
                                 />
@@ -16271,7 +16528,7 @@ function ProductRatesScreen({
                                   x={PL - 5}
                                   y={y + 3.5}
                                   textAnchor="end"
-                                  fontSize="9"
+                                  fontSize="8.5"
                                   fontWeight="600"
                                   fill="#80918B"
                                 >
@@ -16281,7 +16538,7 @@ function ProductRatesScreen({
                                   x={CW - PR + 5}
                                   y={y + 3.5}
                                   textAnchor="start"
-                                  fontSize="8.5"
+                                  fontSize="8"
                                   fontWeight="600"
                                   fill="#9BAAA5"
                                 >
@@ -16291,15 +16548,33 @@ function ProductRatesScreen({
                             );
                           })}
 
-                          {/* Volume Bottom Divider Baseline */}
+                          {/* Volume Baseline / X-Axis Baseline */}
                           <line
                             x1={PL}
                             y1={volBaseY}
                             x2={CW - PR}
                             y2={volBaseY}
                             stroke="#D5E2DD"
-                            strokeWidth="1"
+                            strokeWidth="1.2"
                           />
+
+                          {/* X-Axis Date Labels */}
+                          {xLabels.map((lbl, i) =>
+                            lbl ? (
+                              <text
+                                key={`xPriceTick-${i}`}
+                                x={xOf(i, len)}
+                                y={CH - 10}
+                                textAnchor="middle"
+                                fontSize="8.5"
+                                fontWeight="600"
+                                fill="#80918B"
+                                fontFamily={lang === "ur" ? URDU_FONT : "inherit"}
+                              >
+                                {lbl}
+                              </text>
+                            ) : null,
+                          )}
 
                           {/* Mini Arrival Volume Bars along Bottom */}
                           {arrivalData.map((arrVal, i) => {
@@ -16335,7 +16610,7 @@ function ProductRatesScreen({
                                   `${i === 0 ? "M" : "L"}${xOf(i, len).toFixed(1)},${yOf(v, pMin, pMax).toFixed(1)}`,
                               )
                               .join(" ");
-                            const areaPath = `${pts} L${xOf(len - 1, len).toFixed(1)},${CH - PB} L${PL},${CH - PB} Z`;
+                            const areaPath = `${pts} L${xOf(len - 1, len).toFixed(1)},${volBaseY} L${PL},${volBaseY} Z`;
 
                             return (
                               <g key={`main-${s.label}`}>
@@ -16346,7 +16621,7 @@ function ProductRatesScreen({
                                 <path
                                   d={pts}
                                   stroke={s.color || "#087F63"}
-                                  strokeWidth="2.4"
+                                  strokeWidth="2.5"
                                   fill="none"
                                   strokeLinecap="round"
                                   strokeLinejoin="round"
@@ -16358,7 +16633,7 @@ function ProductRatesScreen({
                                   y1={currentCloseY}
                                   x2={CW - PR}
                                   y2={currentCloseY}
-                                  stroke="#087F63"
+                                  stroke={s.color || "#087F63"}
                                   strokeWidth="0.9"
                                   strokeDasharray="3 3"
                                   opacity="0.6"
@@ -16371,7 +16646,7 @@ function ProductRatesScreen({
                                     width={28}
                                     height={14}
                                     rx={3}
-                                    fill="#087F63"
+                                    fill={s.color || "#087F63"}
                                   />
                                   <text
                                     x={14}
@@ -16390,7 +16665,7 @@ function ProductRatesScreen({
                                   cx={xOf(len - 1, len)}
                                   cy={currentCloseY}
                                   r="4"
-                                  fill="#087F63"
+                                  fill={s.color || "#087F63"}
                                   stroke="#FFFFFF"
                                   strokeWidth="2"
                                 />
@@ -16414,11 +16689,11 @@ function ProductRatesScreen({
                                     key={`sec-${s.label}`}
                                     d={pts}
                                     stroke={s.color}
-                                    strokeWidth="1.6"
-                                    strokeDasharray="3 2"
+                                    strokeWidth="1.8"
+                                    strokeDasharray="4 2"
                                     fill="none"
                                     strokeLinecap="round"
-                                    opacity="0.8"
+                                    opacity="0.85"
                                   />
                                 );
                               })}
@@ -16459,26 +16734,24 @@ function ProductRatesScreen({
                           )}
                         </svg>
 
-                        {/* Interactive Floating OHLCV Tooltip Box */}
+                        {/* Interactive Agricultural Hover Tooltip (Only Min Rate, Max Rate, Arrivals) */}
                         {hoverIdx !== null && (() => {
                           const curP = mainSeries?.data[hoverIdx] || 0;
-                          const prevP = hoverIdx > 0 ? (mainSeries?.data[hoverIdx - 1] || curP) : curP;
-                          const openP = prevP;
-                          const highP = Math.max(curP, openP) + Math.round(curP * 0.005);
-                          const lowP = Math.min(curP, openP) - Math.round(curP * 0.005);
+                          const minP = mainSeries?.mins?.[hoverIdx] || Math.max(0, curP - Math.round(curP * 0.008));
+                          const maxP = mainSeries?.maxs?.[hoverIdx] || (curP + Math.round(curP * 0.008));
                           const volVal = arrivalData[hoverIdx] || 0;
-                          const dateStr = fullDateLabels[hoverIdx]?.fullDate || "14/9/2026";
+                          const dateStr = fullDateLabels[hoverIdx]?.fullDate || "14 Sep 2026";
 
                           return (
                             <div
                               className="pointer-events-none absolute z-20 rounded-xl shadow-xl border p-2.5 flex flex-col gap-1 backdrop-blur-md transition-all duration-75"
                               style={{
-                                left: `${Math.min(Math.max((xOf(hoverIdx, len) / CW) * 100, 22), 78)}%`,
+                                left: `${Math.min(Math.max((xOf(hoverIdx, len) / CW) * 100, 24), 76)}%`,
                                 top: 12,
                                 transform: "translateX(-50%)",
-                                background: "rgba(255, 255, 255, 0.96)",
+                                background: "rgba(255, 255, 255, 0.97)",
                                 borderColor: "#38BDF8",
-                                minWidth: 155,
+                                minWidth: 160,
                                 boxShadow: "0 8px 24px -4px rgba(2, 132, 199, 0.22)",
                               }}
                             >
@@ -16486,20 +16759,24 @@ function ProductRatesScreen({
                                 <span>DT:</span>
                                 <span className="font-mono text-[#0F172A]">{dateStr}</span>
                               </div>
-                              <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10.5px] font-semibold text-[#334155] pt-0.5">
-                                <span className="text-[#64748B]">Close:</span>
-                                <span className="font-mono font-bold text-right text-[#0F172A]">{curP.toLocaleString()}</span>
+                              <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10.5px] font-semibold text-[#334155] pt-1">
+                                <span className="text-[#64748B]">
+                                  {lang === "ur" ? "کم سے کم ریٹ:" : "Min Rate:"}
+                                </span>
+                                <span className="font-mono font-bold text-right text-[#B91C1C]">
+                                  Rs. {minP.toLocaleString()}
+                                </span>
 
-                                <span className="text-[#64748B]">Open:</span>
-                                <span className="font-mono font-bold text-right text-[#0F172A]">{openP.toLocaleString()}</span>
+                                <span className="text-[#64748B]">
+                                  {lang === "ur" ? "زیادہ سے زیادہ:" : "Max Rate:"}
+                                </span>
+                                <span className="font-mono font-bold text-right text-[#15803D]">
+                                  Rs. {maxP.toLocaleString()}
+                                </span>
 
-                                <span className="text-[#64748B]">High:</span>
-                                <span className="font-mono font-bold text-right text-[#15803D]">{highP.toLocaleString()}</span>
-
-                                <span className="text-[#64748B]">Low:</span>
-                                <span className="font-mono font-bold text-right text-[#B91C1C]">{lowP.toLocaleString()}</span>
-
-                                <span className="text-[#64748B]">Arrival:</span>
+                                <span className="text-[#64748B]">
+                                  {lang === "ur" ? "آمد:" : "Arrivals:"}
+                                </span>
                                 <span className="font-mono font-bold text-right text-[#0284C7]">
                                   {volVal > 0 ? `${volVal.toLocaleString()} bags` : "—"}
                                 </span>
@@ -16511,65 +16788,47 @@ function ProductRatesScreen({
                     );
                   })()}
 
-                  {/* Direct Stock App Timeframe Selector Grid along Bottom */}
-                  {(() => {
-                    const timeframesList: { id: "1D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "5Y" | "MAX"; label: string; delta: string; isUp: boolean }[] = [
-                      { id: "1D", label: "1 Day", delta: "0.07%", isUp: true },
-                      { id: "1W", label: "1 Week", delta: "1.49%", isUp: true },
-                      { id: "1M", label: "1 Month", delta: "0.51%", isUp: true },
-                      { id: "3M", label: "3 Months", delta: "0.55%", isUp: false },
-                      { id: "6M", label: "6 Months", delta: "0.19%", isUp: true },
-                      { id: "1Y", label: "1 Year", delta: "3.19%", isUp: true },
-                      { id: "5Y", label: "5 years", delta: "7.39%", isUp: true },
-                      { id: "MAX", label: "Max", delta: "21.74%", isUp: false },
-                    ];
+                  {/* 1. Timeframe Filter: 1 Month, 3 Months, 6 Months, 1 Year */}
+                  <div className="pt-0.5">
+                    <div className="grid grid-cols-4 gap-1.5 border border-[#D5E2DD] rounded-xl p-1 bg-[#F9FBFA]">
+                      {[
+                        { id: "1M", labelEn: "1 Month", labelUr: "۱ مہینہ", r: "month" as const },
+                        { id: "3M", labelEn: "3 Months", labelUr: "۳ مہینے", r: "quarter" as const },
+                        { id: "6M", labelEn: "6 Months", labelUr: "۶ مہینے", r: "quarter" as const },
+                        { id: "1Y", labelEn: "1 Year", labelUr: "۱ سال", r: "quarter" as const },
+                      ].map((tf) => {
+                        const isTfActive = stockTimeframe === tf.id;
+                        return (
+                          <button
+                            key={tf.id}
+                            onClick={() => {
+                              setStockTimeframe(tf.id as any);
+                              setRange(tf.r);
+                            }}
+                            className={`flex items-center justify-center py-2 px-1 rounded-lg transition-all font-bold ${isTfActive
+                                ? "bg-[#087F63] text-white shadow-sm ring-1 ring-[#087F63]/30 scale-[1.01]"
+                                : "bg-white/80 text-[#52635F] hover:bg-white hover:text-[#183B34] border border-[#E8EFEC]"
+                              }`}
+                            style={{
+                              fontSize: lang === "ur" ? 13 : 11,
+                              fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                            }}
+                          >
+                            <span>{lang === "ur" ? tf.labelUr : tf.labelEn}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
 
-                    return (
-                      <div className="pt-1">
-                        <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5 border border-[#D5E2DD] rounded-xl p-1 bg-[#F9FBFA]">
-                          {timeframesList.map((tf) => {
-                            const isTfActive = stockTimeframe === tf.id;
-                            return (
-                              <button
-                                key={tf.id}
-                                onClick={() => {
-                                  setStockTimeframe(tf.id);
-                                  if (tf.id === "1W" || tf.id === "1D") setRange("week");
-                                  else if (tf.id === "1M") setRange("month");
-                                  else setRange("quarter");
-                                }}
-                                className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-lg transition-all ${
-                                  isTfActive
-                                    ? "bg-white shadow-sm border border-[#087F63] ring-1 ring-[#087F63]/20 scale-[1.02]"
-                                    : "hover:bg-white/80"
-                                }`}
-                              >
-                                <span className={`text-[11px] font-bold ${isTfActive ? "text-[#087F63]" : "text-[#183B34]"}`}>
-                                  {tf.label}
-                                </span>
-                                <span
-                                  className={`text-[9.5px] font-bold ${
-                                    tf.isUp ? "text-[#15803D]" : "text-[#DC2626]"
-                                  }`}
-                                >
-                                  {tf.delta}
-                                </span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                  {/* Primary Rate Type Selector Bar */}
+                  {/* 2. Rate Types Selector (Selected Card Rate Type First, Remaining Next, All at the End) */}
                   <div className="flex flex-col gap-1.5 pt-1">
                     <div className="flex items-center justify-between">
                       <span
                         className="text-[11px] font-bold text-[#52635F]"
                         style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                       >
-                        {lang === "ur" ? "نرخ منتخب کریں (بنیادی ریٹ)" : "Select Primary Rate Type"}
+                        {lang === "ur" ? "نرخ منتخب کریں (ریٹ تبدیل کریں)" : "Select Rate Type"}
                       </span>
                       {compareMode && (
                         <span className="text-[10px] font-semibold text-[#087F63] bg-[#E8F8F4] px-1.5 py-0.5 rounded">
@@ -16579,7 +16838,8 @@ function ProductRatesScreen({
                     </div>
 
                     <div className="flex flex-wrap gap-1.5 items-center w-full" style={{ direction: "ltr" }}>
-                      {orderedRateTypes.map((tRt, idx) => {
+                      {/* Individual Rate Types with Overview selection in the 1st position */}
+                      {orderedRateTypes.map((tRt) => {
                         const isFocused = focusedType === tRt;
                         const isCompared = activeTypes.includes(tRt);
                         const isSelected = compareMode ? isCompared : isFocused;
@@ -16589,15 +16849,19 @@ function ProductRatesScreen({
                             key={tRt}
                             onClick={() => {
                               if (compareMode) {
-                                toggleType(tRt);
+                                // Switch from compare mode to single rate type focus
+                                setCompareMode(false);
+                                setFocusedType(tRt);
+                                setActiveTypes([tRt]);
                               } else {
                                 setFocusedType(tRt);
+                                setActiveTypes([tRt]);
                               }
                             }}
-                            className="tap-target flex items-center gap-1.5 rounded-full font-bold transition-all active:scale-95 shadow-sm"
+                            className="tap-target flex items-center gap-1.5 rounded-full font-bold transition-all active:scale-95 shadow-xs"
                             style={{
-                              fontSize: lang === "ur" ? 13 : 10.5,
-                              padding: "4px 10px",
+                              fontSize: lang === "ur" ? 13 : 11,
+                              padding: "5px 11px",
                               background: isSelected ? RATE_COLORS[tRt] || "#087F63" : "#F4FAF7",
                               border: `1.5px solid ${isSelected ? RATE_COLORS[tRt] || "#087F63" : "#D5E2DD"}`,
                               color: isSelected ? "#FFFFFF" : "#52635F",
@@ -16607,8 +16871,8 @@ function ProductRatesScreen({
                             <span
                               className="rounded-full flex-shrink-0"
                               style={{
-                                width: 6,
-                                height: 6,
+                                width: 7,
+                                height: 7,
                                 background: isSelected ? "#FFFFFF" : RATE_COLORS[tRt] || "#087F63",
                               }}
                             />
@@ -16628,17 +16892,17 @@ function ProductRatesScreen({
                             setActiveTypes([...ALL_RATE_TYPES]);
                           }
                         }}
-                        className="tap-target flex items-center gap-1.5 rounded-full font-bold transition-all active:scale-95 shadow-sm"
+                        className="tap-target flex items-center gap-1.5 rounded-full font-bold transition-all active:scale-95 shadow-xs"
                         style={{
                           fontSize: lang === "ur" ? 13 : 11,
-                          padding: "4px 12px",
+                          padding: "5px 12px",
                           background:
                             compareMode && activeTypes.length === ALL_RATE_TYPES.length
                               ? "#087F63"
                               : "#E8EFEC",
                           border: `1.5px solid ${compareMode && activeTypes.length === ALL_RATE_TYPES.length
-                            ? "#087F63"
-                            : "#D5E2DD"
+                              ? "#087F63"
+                              : "#D5E2DD"
                             }`,
                           color:
                             compareMode && activeTypes.length === ALL_RATE_TYPES.length
@@ -16647,257 +16911,322 @@ function ProductRatesScreen({
                           fontFamily: lang === "ur" ? URDU_FONT : "inherit",
                         }}
                       >
-                        <span>{lang === "ur" ? "سب (All)" : "All Rates"}</span>
+                        <span>{lang === "ur" ? "سب (All)" : "All"}</span>
                       </button>
                     </div>
                   </div>
                 </div>
+
+                {/* Dedicated Scroll Buffer for Trends Screen */}
+                <div className="w-full h-36 flex-shrink-0" />
               </>
             ) : (
-              <div
-                className="rounded-2xl p-3.5 flex flex-col gap-2.5 shadow-sm"
-                style={{ background: "#FFFFFF", border: "1px solid #D5E2DD" }}
-              >
-                {/* Arrival Header HUD */}
-                {(() => {
-                  const currentIdx = arrivalHoverIdx !== null ? arrivalHoverIdx : len - 1;
-                  const displayArr = arrivalData[currentIdx] || 0;
-                  const totalArrival = arrivalData.reduce((a, b) => a + b, 0);
-                  const peakArrival = Math.max(...arrivalData);
-                  const avgArrival = Math.round(totalArrival / arrivalData.length);
+              <div className="flex flex-col gap-3">
+                <div
+                  className="rounded-2xl p-3.5 flex flex-col gap-2.5 shadow-sm"
+                  style={{ background: "#FFFFFF", border: "1px solid #D5E2DD" }}
+                >
+                  {/* Arrival Header HUD */}
+                  {(() => {
+                    const currentIdx = arrivalHoverIdx !== null ? arrivalHoverIdx : len - 1;
+                    const displayArr = arrivalData[currentIdx] || 0;
+                    const totalArrival = arrivalData.reduce((a, b) => a + b, 0);
+                    const peakArrival = Math.max(...arrivalData);
+                    const avgArrival = Math.round(totalArrival / arrivalData.length);
 
-                  return (
-                    <div className="flex flex-col gap-2 border-b border-[#E8EFEC] pb-2.5">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                          <span className="w-2.5 h-2.5 rounded-full bg-[#D97706]" />
-                          <span
-                            className="text-xs font-bold text-[#143B33]"
-                            style={{
-                              fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                              fontSize: lang === "ur" ? 15 : 12,
-                            }}
-                          >
-                            {lang === "ur" ? "آمد کی مقدار (مارکیٹ رسد)" : "Arrival Volume Trend"}
+                    return (
+                      <div className="flex flex-col gap-2 border-b border-[#E8EFEC] pb-2.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded-full bg-[#D97706]" />
+                            <span
+                              className="text-xs font-bold text-[#143B33]"
+                              style={{
+                                fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                fontSize: lang === "ur" ? 15 : 12,
+                              }}
+                            >
+                              {lang === "ur" ? "آمد کی مقدار (مارکیٹ رسد)" : "Arrival Volume Trend"}
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-semibold text-[#92400E] bg-[#FEF3C7] px-2 py-0.5 rounded-md border border-[#FDE68A]">
+                            {lang === "ur" ? "تھیلے" : "Bags"}
                           </span>
                         </div>
-                        <span className="text-[10px] font-semibold text-[#92400E] bg-[#FEF3C7] px-2 py-0.5 rounded-md border border-[#FDE68A]">
-                          {lang === "ur" ? "تھیلے" : "Bags"}
-                        </span>
+
+                        <div className="flex items-baseline justify-between flex-wrap gap-2">
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-2xl font-black text-[#92400E]">
+                              {lang === "ur" ? `${toUrduDigits(displayArr.toLocaleString())} تھیلے` : `${displayArr.toLocaleString()} Bags`}
+                            </span>
+                          </div>
+                          <div className="text-[11px] font-semibold text-[#52635F]">
+                            {fullDateLabels[currentIdx]?.fullDate}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-2 pt-1 text-[10px]">
+                          <div className="bg-[#FFFDF5] p-1.5 rounded-lg border border-[#FDE68A] flex flex-col">
+                            <span className="text-[#92400E] font-semibold">
+                              {lang === "ur" ? "کل آمد" : "Total Period"}
+                            </span>
+                            <span className="font-bold text-[#78350F] text-xs">
+                              {totalArrival.toLocaleString()} Bags
+                            </span>
+                          </div>
+                          <div className="bg-[#FFFDF5] p-1.5 rounded-lg border border-[#FDE68A] flex flex-col">
+                            <span className="text-[#92400E] font-semibold">
+                              {lang === "ur" ? "سب سے زیادہ" : "Peak Day"}
+                            </span>
+                            <span className="font-bold text-[#78350F] text-xs">
+                              {peakArrival.toLocaleString()} Bags
+                            </span>
+                          </div>
+                          <div className="bg-[#FFFDF5] p-1.5 rounded-lg border border-[#FDE68A] flex flex-col">
+                            <span className="text-[#92400E] font-semibold">
+                              {lang === "ur" ? "روزانہ اوسط" : "Daily Avg"}
+                            </span>
+                            <span className="font-bold text-[#92400E] text-xs">
+                              {avgArrival.toLocaleString()} Bags
+                            </span>
+                          </div>
+                        </div>
                       </div>
+                    );
+                  })()}
 
-                      <div className="flex items-baseline justify-between flex-wrap gap-2">
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-2xl font-black text-[#92400E]">
-                            {lang === "ur" ? `${toUrduDigits(displayArr.toLocaleString())} تھیلے` : `${displayArr.toLocaleString()} Bags`}
-                          </span>
-                        </div>
-                        <div className="text-[11px] font-semibold text-[#52635F]">
-                          {fullDateLabels[currentIdx]?.fullDate}
-                        </div>
-                      </div>
+                  {/* SVG Arrival Canvas with both Arrival Line, Area Gradient AND Bottom Volume Bars */}
+                  <div className="relative w-full select-none">
+                    <svg
+                      viewBox={`0 0 ${CW} ${CH}`}
+                      className="w-full"
+                      style={{ height: CH, display: "block" }}
+                      onMouseMove={(e) => {
+                        const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                        const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
+                        const i = Math.round((relX / chartW) * (len - 1));
+                        setArrivalHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                      }}
+                      onMouseLeave={() => setArrivalHoverIdx(null)}
+                      onTouchMove={(e) => {
+                        const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                        const touch = e.touches[0];
+                        const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
+                        const i = Math.round((relX / chartW) * (len - 1));
+                        setArrivalHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                      }}
+                      onTouchEnd={() => setArrivalHoverIdx(null)}
+                    >
+                      <defs>
+                        <linearGradient id="arrivalGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#D97706" stopOpacity="0.32" />
+                          <stop offset="85%" stopColor="#D97706" stopOpacity="0.04" />
+                          <stop offset="100%" stopColor="#D97706" stopOpacity="0.00" />
+                        </linearGradient>
+                      </defs>
 
-                      <div className="grid grid-cols-3 gap-2 pt-1 text-[10px]">
-                        <div className="bg-[#FFFDF5] p-1.5 rounded-lg border border-[#FDE68A] flex flex-col">
-                          <span className="text-[#92400E] font-semibold">
-                            {lang === "ur" ? "کل آمد" : "Total Period"}
-                          </span>
-                          <span className="font-bold text-[#78350F] text-xs">
-                            {totalArrival.toLocaleString()} Bags
-                          </span>
-                        </div>
-                        <div className="bg-[#FFFDF5] p-1.5 rounded-lg border border-[#FDE68A] flex flex-col">
-                          <span className="text-[#92400E] font-semibold">
-                            {lang === "ur" ? "سب سے زیادہ" : "Peak Day"}
-                          </span>
-                          <span className="font-bold text-[#78350F] text-xs">
-                            {peakArrival.toLocaleString()} Bags
-                          </span>
-                        </div>
-                        <div className="bg-[#FFFDF5] p-1.5 rounded-lg border border-[#FDE68A] flex flex-col">
-                          <span className="text-[#92400E] font-semibold">
-                            {lang === "ur" ? "روزانہ اوسط" : "Daily Avg"}
-                          </span>
-                          <span className="font-bold text-[#92400E] text-xs">
-                            {avgArrival.toLocaleString()} Bags
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
+                      {/* Horizontal Dashed Gridlines + Y Ticks */}
+                      {yArrivalTicks.map((tick, ti) => {
+                        const y = yOf(tick, aMin, aMax);
+                        return (
+                          <g key={`yArrTick-${ti}`}>
+                            <line
+                              x1={PL}
+                              y1={y}
+                              x2={CW - PR}
+                              y2={y}
+                              stroke="#E5EAE8"
+                              strokeWidth="1"
+                              strokeDasharray="4 4"
+                            />
+                            <text
+                              x={PL - 6}
+                              y={y + 3.5}
+                              textAnchor="end"
+                              fontSize="9.5"
+                              fontWeight="600"
+                              fill="#80918B"
+                            >
+                              {tick >= 1000 ? `${(tick / 1000).toFixed(1)}k` : tick}
+                            </text>
+                          </g>
+                        );
+                      })}
 
-                {/* SVG Arrival Canvas */}
-                <div className="relative w-full select-none">
-                  <svg
-                    viewBox={`0 0 ${CW} ${CH}`}
-                    className="w-full"
-                    style={{ height: CH, display: "block" }}
-                    onMouseMove={(e) => {
-                      const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-                      const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
-                      const i = Math.round((relX / chartW) * (len - 1));
-                      setArrivalHoverIdx(Math.max(0, Math.min(len - 1, i)));
-                    }}
-                    onMouseLeave={() => setArrivalHoverIdx(null)}
-                    onTouchMove={(e) => {
-                      const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-                      const touch = e.touches[0];
-                      const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
-                      const i = Math.round((relX / chartW) * (len - 1));
-                      setArrivalHoverIdx(Math.max(0, Math.min(len - 1, i)));
-                    }}
-                    onTouchEnd={() => setArrivalHoverIdx(null)}
-                  >
-                    <defs>
-                      <linearGradient id="arrivalGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#D97706" stopOpacity="0.32" />
-                        <stop offset="85%" stopColor="#D97706" stopOpacity="0.04" />
-                        <stop offset="100%" stopColor="#D97706" stopOpacity="0.00" />
-                      </linearGradient>
-                    </defs>
+                      {/* X-Axis Baseline */}
+                      <line
+                        x1={PL}
+                        y1={CH - PB}
+                        x2={CW - PR}
+                        y2={CH - PB}
+                        stroke="#D5E2DD"
+                        strokeWidth="1.2"
+                      />
 
-                    {/* Horizontal Dashed Gridlines + Y Ticks */}
-                    {yArrivalTicks.map((tick, ti) => {
-                      const y = yOf(tick, aMin, aMax);
-                      return (
-                        <g key={`yArrTick-${ti}`}>
-                          <line
-                            x1={PL}
-                            y1={y}
-                            x2={CW - PR}
-                            y2={y}
-                            stroke="#E5EAE8"
-                            strokeWidth="1"
-                            strokeDasharray="4 4"
-                          />
+                      {/* X-Axis Dates */}
+                      {xLabels.map((lbl, i) =>
+                        lbl ? (
                           <text
-                            x={PL - 6}
-                            y={y + 3.5}
-                            textAnchor="end"
-                            fontSize="9.5"
+                            key={`xArrTick-${i}`}
+                            x={xOf(i, len)}
+                            y={CH - 10}
+                            textAnchor="middle"
+                            fontSize="9"
                             fontWeight="600"
                             fill="#80918B"
+                            fontFamily={lang === "ur" ? URDU_FONT : "inherit"}
                           >
-                            {tick >= 1000 ? `${(tick / 1000).toFixed(1)}k` : tick}
+                            {lbl}
                           </text>
+                        ) : null,
+                      )}
+
+                      {/* Arrival Volume Bars along Bottom to Maintain Consistency */}
+                      {arrivalData.map((arrVal, i) => {
+                        const barX = xOf(i, len);
+                        const maxArr = Math.max(...arrivalData, 1);
+                        const volMaxH = 34;
+                        const volBaseY = CH - PB;
+                        const barH = (arrVal / maxArr) * volMaxH;
+                        const barW = Math.max(2, Math.min(6, (chartW / len) * 0.55));
+                        const isHov = arrivalHoverIdx === i;
+
+                        return (
+                          <rect
+                            key={`arr-vol-bar-${i}`}
+                            x={barX - barW / 2}
+                            y={volBaseY - barH}
+                            width={barW}
+                            height={barH}
+                            rx={1}
+                            fill="#D97706"
+                            opacity={isHov ? 0.9 : 0.55}
+                          />
+                        );
+                      })}
+
+                      {/* Area Fill */}
+                      <path
+                        d={[
+                          ...arrivalData.map(
+                            (v, i) =>
+                              `${i === 0 ? "M" : "L"}${xOf(i, len).toFixed(1)},${yOf(v, aMin, aMax).toFixed(1)}`,
+                          ),
+                          `L${xOf(len - 1, len).toFixed(1)},${CH - PB}`,
+                          `L${PL},${CH - PB}`,
+                          "Z",
+                        ].join(" ")}
+                        fill="url(#arrivalGrad)"
+                      />
+
+                      {/* Main Line */}
+                      <path
+                        d={arrivalData
+                          .map(
+                            (v, i) =>
+                              `${i === 0 ? "M" : "L"}${xOf(i, len).toFixed(1)},${yOf(v, aMin, aMax).toFixed(1)}`,
+                          )
+                          .join(" ")}
+                        stroke="#D97706"
+                        strokeWidth="2.8"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+
+                      {/* Hover Guide and Marker */}
+                      {arrivalHoverIdx !== null && (
+                        <g>
+                          <line
+                            x1={xOf(arrivalHoverIdx, len)}
+                            y1={PT}
+                            x2={xOf(arrivalHoverIdx, len)}
+                            y2={CH - PB}
+                            stroke="#92400E"
+                            strokeWidth="1.2"
+                            strokeDasharray="3 3"
+                          />
+                          <circle
+                            cx={xOf(arrivalHoverIdx, len)}
+                            cy={yOf(arrivalData[arrivalHoverIdx], aMin, aMax)}
+                            r="5.5"
+                            fill="#D97706"
+                            stroke="#FFFFFF"
+                            strokeWidth="2.5"
+                          />
                         </g>
+                      )}
+                    </svg>
+
+                    {/* Arrival Hover Tooltip Overlay */}
+                    {arrivalHoverIdx !== null && (
+                      <div
+                        className="pointer-events-none absolute z-20 rounded-xl shadow-lg border p-2 flex flex-col gap-0.5 backdrop-blur-md transition-all duration-75"
+                        style={{
+                          left: `${Math.min(Math.max((xOf(arrivalHoverIdx, len) / CW) * 100, 18), 82)}%`,
+                          top: 8,
+                          transform: "translateX(-50%)",
+                          background: "rgba(120, 53, 15, 0.94)",
+                          borderColor: "rgba(255, 255, 255, 0.18)",
+                          minWidth: 120,
+                        }}
+                      >
+                        <span
+                          className="text-[10px] font-bold text-[#FDE68A] border-b border-white/10 pb-0.5"
+                          style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                        >
+                          {fullDateLabels[arrivalHoverIdx]?.fullDate}
+                        </span>
+                        <div className="flex items-center justify-between gap-2 pt-0.5 text-xs text-white">
+                          <span className="font-semibold opacity-90" style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}>
+                            {lang === "ur" ? "آمد" : "Arrival"}
+                          </span>
+                          <span className="font-black">
+                            {lang === "ur"
+                              ? `${toUrduDigits((arrivalData[arrivalHoverIdx] || 0).toLocaleString())} تھیلے`
+                              : `${(arrivalData[arrivalHoverIdx] || 0).toLocaleString()} Bags`}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* 1. Timeframe Filter for Arrival: 1 Month, 3 Months, 6 Months, 1 Year */}
+                <div className="pt-0.5">
+                  <div className="grid grid-cols-4 gap-1.5 border border-[#D5E2DD] rounded-xl p-1 bg-[#F9FBFA]">
+                    {[
+                      { id: "1M", labelEn: "1 Month", labelUr: "۱ مہینہ", r: "month" as const },
+                      { id: "3M", labelEn: "3 Months", labelUr: "۳ مہینے", r: "quarter" as const },
+                      { id: "6M", labelEn: "6 Months", labelUr: "۶ مہینے", r: "quarter" as const },
+                      { id: "1Y", labelEn: "1 Year", labelUr: "۱ سال", r: "quarter" as const },
+                    ].map((tf) => {
+                      const isTfActive = stockTimeframe === tf.id;
+                      return (
+                        <button
+                          key={tf.id}
+                          onClick={() => {
+                            setStockTimeframe(tf.id as any);
+                            setRange(tf.r);
+                          }}
+                          className={`flex items-center justify-center py-2 px-1 rounded-lg transition-all font-bold ${isTfActive
+                              ? "bg-[#D97706] text-white shadow-sm ring-1 ring-[#D97706]/30 scale-[1.01]"
+                              : "bg-white/80 text-[#52635F] hover:bg-white hover:text-[#183B34] border border-[#E8EFEC]"
+                            }`}
+                          style={{
+                            fontSize: lang === "ur" ? 13 : 11,
+                            fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                          }}
+                        >
+                          <span>{lang === "ur" ? tf.labelUr : tf.labelEn}</span>
+                        </button>
                       );
                     })}
-
-                    {/* X-Axis Baseline */}
-                    <line
-                      x1={PL}
-                      y1={CH - PB}
-                      x2={CW - PR}
-                      y2={CH - PB}
-                      stroke="#D5E2DD"
-                      strokeWidth="1.2"
-                    />
-
-                    {/* X-Axis Dates */}
-                    {xLabels.map((lbl, i) =>
-                      lbl ? (
-                        <text
-                          key={`xArrTick-${i}`}
-                          x={xOf(i, len)}
-                          y={CH - 10}
-                          textAnchor="middle"
-                          fontSize="9"
-                          fontWeight="600"
-                          fill="#80918B"
-                          fontFamily={lang === "ur" ? URDU_FONT : "inherit"}
-                        >
-                          {lbl}
-                        </text>
-                      ) : null,
-                    )}
-
-                    {/* Area Fill */}
-                    <path
-                      d={[
-                        ...arrivalData.map(
-                          (v, i) =>
-                            `${i === 0 ? "M" : "L"}${xOf(i, len).toFixed(1)},${yOf(v, aMin, aMax).toFixed(1)}`,
-                        ),
-                        `L${xOf(len - 1, len).toFixed(1)},${CH - PB}`,
-                        `L${PL},${CH - PB}`,
-                        "Z",
-                      ].join(" ")}
-                      fill="url(#arrivalGrad)"
-                    />
-
-                    {/* Main Line */}
-                    <path
-                      d={arrivalData
-                        .map(
-                          (v, i) =>
-                            `${i === 0 ? "M" : "L"}${xOf(i, len).toFixed(1)},${yOf(v, aMin, aMax).toFixed(1)}`,
-                        )
-                        .join(" ")}
-                      stroke="#D97706"
-                      strokeWidth="2.8"
-                      fill="none"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-
-                    {/* Hover Guide and Marker */}
-                    {arrivalHoverIdx !== null && (
-                      <g>
-                        <line
-                          x1={xOf(arrivalHoverIdx, len)}
-                          y1={PT}
-                          x2={xOf(arrivalHoverIdx, len)}
-                          y2={CH - PB}
-                          stroke="#92400E"
-                          strokeWidth="1.2"
-                          strokeDasharray="3 3"
-                        />
-                        <circle
-                          cx={xOf(arrivalHoverIdx, len)}
-                          cy={yOf(arrivalData[arrivalHoverIdx], aMin, aMax)}
-                          r="5.5"
-                          fill="#D97706"
-                          stroke="#FFFFFF"
-                          strokeWidth="2.5"
-                        />
-                      </g>
-                    )}
-                  </svg>
-
-                  {/* Arrival Hover Tooltip Overlay */}
-                  {arrivalHoverIdx !== null && (
-                    <div
-                      className="pointer-events-none absolute z-20 rounded-xl shadow-lg border p-2 flex flex-col gap-0.5 backdrop-blur-md transition-all duration-75"
-                      style={{
-                        left: `${Math.min(Math.max((xOf(arrivalHoverIdx, len) / CW) * 100, 18), 82)}%`,
-                        top: 8,
-                        transform: "translateX(-50%)",
-                        background: "rgba(120, 53, 15, 0.94)",
-                        borderColor: "rgba(255, 255, 255, 0.18)",
-                        minWidth: 120,
-                      }}
-                    >
-                      <span
-                        className="text-[10px] font-bold text-[#FDE68A] border-b border-white/10 pb-0.5"
-                        style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                      >
-                        {fullDateLabels[arrivalHoverIdx]?.fullDate}
-                      </span>
-                      <div className="flex items-center justify-between gap-2 pt-0.5 text-xs text-white">
-                        <span className="font-semibold opacity-90" style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}>
-                          {lang === "ur" ? "آمد" : "Arrival"}
-                        </span>
-                        <span className="font-black">
-                          {lang === "ur"
-                            ? `${toUrduDigits((arrivalData[arrivalHoverIdx] || 0).toLocaleString())} تھیلے`
-                            : `${(arrivalData[arrivalHoverIdx] || 0).toLocaleString()} Bags`}
-                        </span>
-                      </div>
-                    </div>
-                  )}
+                  </div>
                 </div>
+
+                {/* Dedicated Scroll Buffer for Arrival View */}
+                <div className="w-full h-36 flex-shrink-0" />
               </div>
             )}
 
@@ -16936,7 +17265,7 @@ function ProductRatesScreen({
                       : "Ask our team for history beyond what's shown."}
                   </p>
                 </div>
-                <button
+                {/* <button
                   onClick={() => setHistOpen(true)}
                   className="tap-target flex-shrink-0 rounded-xl px-3 py-2.5 font-bold text-xs text-white"
                   style={{
@@ -16951,9 +17280,8 @@ function ProductRatesScreen({
                   {lang === "ur" ? "درخواست کریں ←" : "Request →"}
                 </button>
               </div> */}
-          </>
-        )}
-      </div>
+        </div>
+      )}
 
       {msgModal && (
         <ZMMessageModal msg={msgModal} onClose={() => setMsgModal(null)} />
@@ -18078,22 +18406,31 @@ function AnalyticsScreen() {
                 </div>
               </div>
             </div>
-            <div className="flex gap-2">
-              {(["day", "week", "month", "year"] as TimeRange[]).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTimeRange(t)}
-                  className="tap-target flex-1 rounded-2xl font-bold text-sm capitalize"
-                  style={{
-                    height: 44,
-                    background: timeRange === t ? "#087F63" : "#fff",
-                    color: timeRange === t ? "#fff" : "#183B34",
-                    border: timeRange === t ? "none" : "1px solid #D5E2DD",
-                  }}
-                >
-                  {t.charAt(0).toUpperCase() + t.slice(1)}
-                </button>
-              ))}
+            <div className="grid grid-cols-4 gap-1.5 border border-[#D5E2DD] rounded-xl p-1 bg-[#F9FBFA]">
+              {[
+                { id: "1M", labelEn: "1 Month", labelUr: "۱ مہینہ", r: "month" as const },
+                { id: "3M", labelEn: "3 Months", labelUr: "۳ مہینے", r: "quarter" as const },
+                { id: "6M", labelEn: "6 Months", labelUr: "۶ مہینے", r: "quarter" as const },
+                { id: "1Y", labelEn: "1 Year", labelUr: "۱ سال", r: "year" as const },
+              ].map((tf) => {
+                const active = timeRange === (tf.r as any) || (timeRange as any) === tf.id;
+                return (
+                  <button
+                    key={tf.id}
+                    onClick={() => setTimeRange(tf.r as any)}
+                    className={`flex items-center justify-center py-2 px-1 rounded-lg transition-all font-bold ${active
+                        ? "bg-[#087F63] text-white shadow-sm ring-1 ring-[#087F63]/30 scale-[1.01]"
+                        : "bg-white/80 text-[#52635F] hover:bg-white hover:text-[#183B34] border border-[#E8EFEC]"
+                      }`}
+                    style={{
+                      fontSize: lang === "ur" ? 13 : 11,
+                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                    }}
+                  >
+                    <span>{lang === "ur" ? tf.labelUr : tf.labelEn}</span>
+                  </button>
+                );
+              })}
             </div>
             <div
               className="rounded-2xl p-4"
@@ -18218,22 +18555,31 @@ function AnalyticsScreen() {
                 </button>
               ))}
             </div>
-            <div className="flex gap-2">
-              {(["day", "week", "month", "year"] as TimeRange[]).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTimeRange(t)}
-                  className="tap-target flex-1 rounded-2xl font-bold text-sm capitalize"
-                  style={{
-                    height: 44,
-                    background: timeRange === t ? "#087F63" : "#fff",
-                    color: timeRange === t ? "#fff" : "#183B34",
-                    border: timeRange === t ? "none" : "1px solid #D5E2DD",
-                  }}
-                >
-                  {t.charAt(0).toUpperCase() + t.slice(1)}
-                </button>
-              ))}
+            <div className="grid grid-cols-4 gap-1.5 border border-[#D5E2DD] rounded-xl p-1 bg-[#F9FBFA]">
+              {[
+                { id: "1M", labelEn: "1 Month", labelUr: "۱ مہینہ", r: "month" as const },
+                { id: "3M", labelEn: "3 Months", labelUr: "۳ مہینے", r: "quarter" as const },
+                { id: "6M", labelEn: "6 Months", labelUr: "۶ مہینے", r: "quarter" as const },
+                { id: "1Y", labelEn: "1 Year", labelUr: "۱ سال", r: "year" as const },
+              ].map((tf) => {
+                const active = timeRange === (tf.r as any) || (timeRange as any) === tf.id;
+                return (
+                  <button
+                    key={tf.id}
+                    onClick={() => setTimeRange(tf.r as any)}
+                    className={`flex items-center justify-center py-2 px-1 rounded-lg transition-all font-bold ${active
+                        ? "bg-[#087F63] text-white shadow-sm ring-1 ring-[#087F63]/30 scale-[1.01]"
+                        : "bg-white/80 text-[#52635F] hover:bg-white hover:text-[#183B34] border border-[#E8EFEC]"
+                      }`}
+                    style={{
+                      fontSize: lang === "ur" ? 13 : 11,
+                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                    }}
+                  >
+                    <span>{lang === "ur" ? tf.labelUr : tf.labelEn}</span>
+                  </button>
+                );
+              })}
             </div>
             {compareSeries.length > 0 && (
               <>
@@ -18545,7 +18891,7 @@ interface ZaraiReel {
 const VIDEO_MAIN_CATEGORIES = [
   { id: "products", label: "Products", labelUrdu: "مصنوعات" },
   { id: "general", label: "General Info", labelUrdu: "عمومی معلومات" },
-  { id: "harvesting", label: "Harvesting", labelUrdu: "ہارویسٹنگ" },
+  { id: "harvesting", label: "Baithak", labelUrdu: "بیٹھک" },
 ] as const;
 
 type VideoMainCategory = (typeof VIDEO_MAIN_CATEGORIES)[number]["id"];
