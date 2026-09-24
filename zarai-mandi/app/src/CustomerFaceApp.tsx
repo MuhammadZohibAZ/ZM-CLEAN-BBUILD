@@ -7160,16 +7160,16 @@ function AnimatedCounter({
 // ─── REVAMPED FIGMA BY-PRODUCT NATIONAL CARD COMPONENT (2*2 GRID) ───────────
 
 const CARD_UPDATED_PRESETS = [
-  { mins: 1, en: '1m ago - 14 Sep', ur: '۱ منٹ پہلے - ۱۴ ستمبر' },
-  { mins: 4, en: '4m ago - 14 Sep', ur: '۴ منٹ پہلے - ۱۴ ستمبر' },
-  { mins: 7, en: '7m ago - 14 Sep', ur: '۷ منٹ پہلے - ۱۴ ستمبر' },
-  { mins: 10, en: '10m ago - 14 Sep', ur: '۱۰ منٹ پہلے - ۱۴ ستمبر' },
-  { mins: 15, en: '15m ago - 14 Sep', ur: '۱۵ منٹ پہلے - ۱۴ ستمبر' },
-  { mins: 22, en: '22m ago - 14 Sep', ur: '۲۲ منٹ پہلے - ۱۴ ستمبر' },
-  { mins: 35, en: '35m ago - 14 Sep', ur: '۳۵ منٹ پہلے - ۱۴ ستمبر' },
-  { mins: 45, en: '45m ago - 14 Sep', ur: '۴۵ منٹ پہلے - ۱۴ ستمبر' },
-  { mins: 60, en: '1hr ago - 14 Sep', ur: '۱ گھنٹہ پہلے - ۱۴ ستمبر' },
-  { mins: 120, en: '2hr ago - 14 Sep', ur: '۲ گھنٹے پہلے - ۱۴ ستمبر' },
+  { mins: 1, en: '1m ago', ur: '۱ منٹ پہلے' },
+  { mins: 4, en: '4m ago', ur: '۴ منٹ پہلے' },
+  { mins: 7, en: '7m ago', ur: '۷ منٹ پہلے' },
+  { mins: 10, en: '10m ago', ur: '۱۰ منٹ پہلے' },
+  { mins: 15, en: '15m ago', ur: '۱۵ منٹ پہلے' },
+  { mins: 22, en: '22m ago', ur: '۲۲ منٹ پہلے' },
+  { mins: 35, en: '35m ago', ur: '۳۵ منٹ پہلے' },
+  { mins: 45, en: '45m ago', ur: '۴۵ منٹ پہلے' },
+  { mins: 60, en: '1hr ago', ur: '۱ گھنٹہ پہلے' },
+  { mins: 120, en: '2hr ago', ur: '۲ گھنٹے پہلے' },
 ];
 
 function getCardUpdatedPreset(seed: string | number | undefined) {
@@ -7280,211 +7280,6 @@ function LocationStatCell({
   );
 }
 
-function ByProductNationalCard({
-  stats,
-  product,
-  vertical,
-  onClick,
-  onMorePriceTypesClick,
-}: {
-  stats: ByproductNationalStats;
-  product?: string;
-  vertical?: string;
-  onClick: () => void;
-  onMorePriceTypesClick?: () => void;
-}) {
-  const { lang, tc, tr } = useLang();
-  const iconSrc = getproductIconSrc(stats.byproduct, product || vertical);
-  // Policy: any by-product with arrival reported at all (totalArrival > 0)
-  // shows Total Arrival on the card. Only a by-product with arrival absent
-  // in every row falls back to showing the contributing-location count.
-  const hasArrival = stats.hasData && stats.totalArrival > 0;
-  const hasSpecialAttr = Boolean(
-    stats.specialAttr &&
-    (stats.specialAttr.valueEn || stats.specialAttr.valueUr)
-  );
-
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={onClick}
-      onKeyDown={(e) => e.key === 'Enter' && onClick()}
-      className="relative w-full rounded-[22px] overflow-hidden transition-all duration-200 active:scale-[0.98] cursor-pointer shadow-[0_5px_18px_rgba(6,77,64,0.08)] hover:shadow-[0_8px_24px_rgba(6,77,64,0.13)] select-none flex flex-col p-2.5 sm:p-3"
-      style={{
-        background: '#FFFFFF',
-        border: '1.5px solid #D1E5DC',
-      }}
-    >
-      {/* Subtle Concentric Rings Motif in bottom-right corner */}
-      <div
-        className="absolute -bottom-7 -right-7 pointer-events-none rounded-full"
-        style={{
-          width: 148,
-          height: 148,
-          border: '1.5px solid rgba(16, 185, 129, 0.14)',
-          boxShadow:
-            'inset 0 0 0 16px rgba(16, 185, 129, 0.045), inset 0 0 0 36px rgba(16, 185, 129, 0.02)',
-          zIndex: 0,
-        }}
-      />
-
-      {/* Top Header: Full Width Title & Rate Type */}
-      <div className="relative z-10 w-full mb-2">
-        <h3
-          className="text-[15.5px] sm:text-[17px] font-black text-[#143B33] leading-tight tracking-tight truncate"
-          style={{
-            fontFamily: lang === 'ur' ? URDU_FONT : "'Inter', sans-serif",
-          }}
-          title={tc(stats.byproduct)}
-        >
-          {tc(stats.byproduct)}
-        </h3>
-        <p
-          className="text-[11px] sm:text-[11.5px] font-bold text-[#087F63] mt-0.5 leading-none truncate"
-          style={{ fontFamily: lang === 'ur' ? URDU_FONT : 'inherit' }}
-        >
-          {tr(stats.mostOccurringRateType)}
-        </p>
-      </div>
-
-      {/* Metric rows: thin dividers between/under cells instead of boxed tiles */}
-      <div className="relative z-10 w-full">
-        {/* Row 1: Avg min | Avg max */}
-        <div className="flex w-full">
-          <CardStatCell
-            label={lang === 'ur' ? 'اوسط کم' : 'Avg min'}
-            value={
-              stats.hasData && stats.avgMin > 0
-                ? lang === 'ur'
-                  ? `روپے\u00A0${toUrduDigits(Math.round(stats.avgMin).toLocaleString())}`
-                  : `Rs\u00A0${Math.round(stats.avgMin).toLocaleString()}`
-                : '—'
-            }
-            caption={lang === 'ur' ? 'فی ۴۰ کلو' : 'per 40 kg'}
-          />
-          <CardStatCell
-            divider
-            label={lang === 'ur' ? 'اوسط زیادہ' : 'Avg max'}
-            value={
-              stats.hasData && stats.avgMax > 0
-                ? lang === 'ur'
-                  ? `روپے\u00A0${toUrduDigits(Math.round(stats.avgMax).toLocaleString())}`
-                  : `Rs\u00A0${Math.round(stats.avgMax).toLocaleString()}`
-                : '—'
-            }
-            caption={lang === 'ur' ? 'فی ۴۰ کلو' : 'per 40 kg'}
-          />
-        </div>
-
-        <div className="h-px w-full my-2" style={{ background: '#E7F0EB' }} />
-
-        {/* Row 2: (Total arrival if reported & >=80% covered, else Locations) | (special attribute, else Locations) */}
-        <div className="flex w-full">
-          {hasArrival ? (
-            <CardStatCell
-              label={lang === 'ur' ? 'کل آمد' : 'Total arrival'}
-              value={
-                lang === 'ur'
-                  ? `${toUrduDigits(stats.totalArrival.toLocaleString())}\u00A0تھیلے`
-                  : `${stats.totalArrival.toLocaleString()}\u00A0Bags`
-              }
-              caption={lang === 'ur' ? 'فی ۴۰ کلو' : 'per 40 kg'}
-            />
-          ) : (
-            <LocationStatCell
-              marketCount={stats.markets}
-              lang={lang}
-            />
-          )}
-
-          {hasSpecialAttr && stats.specialAttr ? (
-            <CardStatCell
-              divider
-              label={lang === 'ur' ? stats.specialAttr.labelUr : stats.specialAttr.labelEn}
-              value={lang === 'ur' ? stats.specialAttr.valueUr : stats.specialAttr.valueEn}
-              valueColor="#ff7b00ff"
-            />
-          ) : hasArrival ? (
-            <LocationStatCell
-              divider
-              marketCount={stats.markets}
-              lang={lang}
-            />
-          ) : (
-            <div className="flex-1 min-w-0" />
-          )}
-        </div>
-
-        {/* Row 3: Locations (only when arrival AND a special attribute both already took row 2) */}
-        {hasArrival && hasSpecialAttr && (
-          <>
-            <div className="h-px w-full my-2" style={{ background: '#E7F0EB' }} />
-            <div className="flex w-full">
-              <LocationStatCell
-                fullWidth
-                marketCount={stats.markets}
-                lang={lang}
-              />
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* Bottom Row: Realistic Timestamp on Left + Crisp Crop Illustration on Right */}
-      <div className="h-px w-full mt-auto" style={{ background: '#E7F0EB' }} />
-      <div className="relative z-10 flex items-end justify-between pt-1.5 min-h-[50px]">
-        <div className="flex items-center gap-1.5 text-[9.5px] sm:text-[10px] font-bold text-[#52635F] pb-1.5">
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#087F63"
-            strokeWidth="2.4"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="flex-shrink-0"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <polyline points="12 6 12 12 16 14" />
-          </svg>
-          <span className="truncate">
-            {getCardUpdatedAgo(stats.catalogId || stats.byproduct, lang)}
-          </span>
-        </div>
-
-        {/* Large Crisp Crop Illustration */}
-        <div className="relative -mb-2.5 -mr-2.5 pointer-events-none flex-shrink-0 flex items-center justify-center">
-          <img
-            src={iconSrc}
-            alt={stats.byproduct}
-            className="w-[82px] h-[82px] sm:w-[94px] sm:h-[94px] max-w-[94px] max-h-[94px] object-contain drop-shadow-[0_6px_14px_rgba(0,0,0,0.16)] transition-transform duration-200"
-            loading="lazy"
-          />
-        </div>
-      </div>
-
-      {/* No Data Overlay if hasData is false */}
-      {!stats.hasData && (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-2 rounded-[22px] bg-white/90 backdrop-blur-[2px] pointer-events-none">
-          <div className="px-3 py-1.5 rounded-xl bg-[#F1F7F4] border border-[#D1E5DC] text-center shadow-sm">
-            <span
-              className="text-xs font-bold text-[#143B33]"
-              style={{ fontFamily: lang === 'ur' ? URDU_FONT : 'inherit' }}
-            >
-              {lang === 'ur' ? 'ڈیٹا دستیاب نہیں ہے' : 'No Data Available'}
-            </span>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-
-// ─── REAL MARKET-API DATA -> EXISTING CARD SHAPE ADAPTERS ──────────────────
-
 const SPECIAL_ATTR_META: Record<CardSpecialAttr["type"], { labelEn: string; labelUr: string; dotColor: string }> = {
   moisture: { labelEn: "Moisture", labelUr: "نمی", dotColor: "#38BDF8" },
   newOld: { labelEn: "Type", labelUr: "معیار", dotColor: "#F59E0B" },
@@ -7531,6 +7326,206 @@ function apiSpecialAttrToUi(attr: CardSpecialAttr | null): SpecialAttrInfo | nul
     valueUr,
     dotColor: meta.dotColor,
   };
+}
+
+function ByProductNationalCard({
+  stats,
+  product,
+  vertical,
+  onClick,
+  onMorePriceTypesClick,
+}: {
+  stats: ByproductNationalStats;
+  product?: string;
+  vertical?: string;
+  onClick: () => void;
+  onMorePriceTypesClick?: () => void;
+}) {
+  const { lang, tc, tr } = useLang();
+  const iconSrc = getproductIconSrc(stats.byproduct, product || vertical);
+
+  // Resolve special attribute label and value
+  const attrType = stats.specialAttr?.type || getProductSpecialAttrType(stats.byproduct, product || vertical || stats.product);
+  const attrMeta = attrType ? SPECIAL_ATTR_META[attrType] : { labelEn: "Type", labelUr: "معیار", dotColor: "#F59E0B" };
+  const specialAttrLabel = lang === 'ur'
+    ? (stats.specialAttr?.labelUr || attrMeta?.labelUr || 'معیار')
+    : (stats.specialAttr?.labelEn || attrMeta?.labelEn || 'Type');
+  const hasAttrValue = Boolean(stats.specialAttr && (stats.specialAttr.valueEn || stats.specialAttr.valueUr));
+  const specialAttrValue = hasAttrValue
+    ? (lang === 'ur' ? stats.specialAttr!.valueUr : stats.specialAttr!.valueEn)
+    : '—';
+  const specialAttrColor = hasAttrValue ? '#ff7b00ff' : undefined;
+
+  // Arrival value: show bags count if > 0, otherwise show '—'
+  const hasArrival = stats.hasData && stats.totalArrival > 0;
+  const arrivalValue = hasArrival
+    ? (lang === 'ur'
+        ? `${toUrduDigits(stats.totalArrival.toLocaleString())}\u00A0تھیلے`
+        : `${stats.totalArrival.toLocaleString()}\u00A0Bags`)
+    : '—';
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => e.key === 'Enter' && onClick()}
+      className="relative w-full rounded-[22px] overflow-hidden transition-all duration-200 active:scale-[0.98] cursor-pointer shadow-[0_5px_18px_rgba(6,77,64,0.08)] hover:shadow-[0_8px_24px_rgba(6,77,64,0.13)] select-none flex flex-col p-2.5 sm:p-3"
+      style={{
+        background: '#FFFFFF',
+        border: '1.5px solid #D1E5DC',
+      }}
+    >
+      {/* Subtle Concentric Rings Motif in bottom-right corner */}
+      <div
+        className="absolute -bottom-7 -right-7 pointer-events-none rounded-full"
+        style={{
+          width: 148,
+          height: 148,
+          border: '1.5px solid rgba(16, 185, 129, 0.14)',
+          boxShadow:
+            'inset 0 0 0 16px rgba(16, 185, 129, 0.045), inset 0 0 0 36px rgba(16, 185, 129, 0.02)',
+          zIndex: 0,
+        }}
+      />
+
+      {/* Top Header: Full Width Title & Rate Type */}
+      <div className="relative z-10 w-full mb-2">
+        <h3
+          className="text-[15.5px] sm:text-[17px] font-black text-[#143B33] leading-tight tracking-tight truncate"
+          style={{
+            fontFamily: lang === 'ur' ? URDU_FONT : "'Inter', sans-serif",
+          }}
+          title={tc(stats.byproduct)}
+        >
+          {tc(stats.byproduct)}
+        </h3>
+        <p
+          className="text-[11px] sm:text-[11.5px] font-bold text-[#087F63] mt-0.5 leading-none truncate"
+          style={{ fontFamily: lang === 'ur' ? URDU_FONT : 'inherit' }}
+        >
+          {tr(stats.mostOccurringRateType)}
+        </p>
+      </div>
+
+      {/* Metric rows: exactly 3 rows across every card for 100% uniform height and structure */}
+      <div className="relative z-10 w-full">
+        {/* Row 1: Avg min | Avg max */}
+        <div className="flex w-full">
+          <CardStatCell
+            label={lang === 'ur' ? 'اوسط کم' : 'Avg min'}
+            value={
+              stats.hasData && stats.avgMin > 0
+                ? lang === 'ur'
+                  ? `روپے\u00A0${toUrduDigits(Math.round(stats.avgMin).toLocaleString())}`
+                  : `Rs\u00A0${Math.round(stats.avgMin).toLocaleString()}`
+                : '—'
+            }
+            caption={lang === 'ur' ? 'فی ۴۰ کلو' : 'per 40 kg'}
+          />
+          <CardStatCell
+            divider
+            label={lang === 'ur' ? 'اوسط زیادہ' : 'Avg max'}
+            value={
+              stats.hasData && stats.avgMax > 0
+                ? lang === 'ur'
+                  ? `روپے\u00A0${toUrduDigits(Math.round(stats.avgMax).toLocaleString())}`
+                  : `Rs\u00A0${Math.round(stats.avgMax).toLocaleString()}`
+                : '—'
+            }
+            caption={lang === 'ur' ? 'فی ۴۰ کلو' : 'per 40 kg'}
+          />
+        </div>
+
+        <div className="h-px w-full my-2" style={{ background: '#E7F0EB' }} />
+
+        {/* Row 2: Total arrival | Special Attribute */}
+        <div className="flex w-full">
+          <CardStatCell
+            label={lang === 'ur' ? 'کل آمد' : 'Total arrival'}
+            value={arrivalValue}
+            caption={lang === 'ur' ? 'فی ۴۰ کلو' : 'per 40 kg'}
+          />
+          <CardStatCell
+            divider
+            label={specialAttrLabel}
+            value={specialAttrValue}
+            valueColor={specialAttrColor}
+          />
+        </div>
+
+        <div className="h-px w-full my-2" style={{ background: '#E7F0EB' }} />
+
+        {/* Row 3: Locations (always full-width on row 3 for 100% consistent structure) */}
+        <div className="flex w-full">
+          <LocationStatCell
+            fullWidth
+            marketCount={stats.markets}
+            lang={lang}
+          />
+        </div>
+      </div>
+
+      {/* Bottom Row: Realistic Timestamp on Left + Crisp Crop Illustration on Right */}
+      <div className="h-px w-full mt-auto" style={{ background: '#E7F0EB' }} />
+      <div className="relative z-10 flex items-end justify-between pt-1.5 min-h-[50px]">
+        <div className="flex flex-col items-start gap-0.5 pb-1 max-w-[62%] min-w-0">
+          <span
+            className="text-[10px] sm:text-[10.5px] font-black text-[#143B33] leading-tight whitespace-nowrap"
+            style={{ fontFamily: lang === "ur" ? URDU_FONT : "'Inter', sans-serif" }}
+          >
+            {lang === "ur" ? "۱۴ ستمبر" : "14 September"}
+          </span>
+          <div
+            className="flex items-center gap-1 text-[8.5px] sm:text-[9px] font-bold text-[#065F46] bg-[#E8F8F3] border border-[#BCE8D8] py-0.5 px-1.5 rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.03)]"
+            style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+          >
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#087F63"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="flex-shrink-0"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            <span className="truncate">
+              {getCardUpdatedAgo(stats.catalogId || stats.byproduct, lang)}
+            </span>
+          </div>
+        </div>
+
+        {/* Large Crisp Crop Illustration */}
+        <div className="relative -mb-2.5 -mr-2.5 pointer-events-none flex-shrink-0 flex items-center justify-center">
+          <img
+            src={iconSrc}
+            alt={stats.byproduct}
+            className="w-[82px] h-[82px] sm:w-[94px] sm:h-[94px] max-w-[94px] max-h-[94px] object-contain drop-shadow-[0_6px_14px_rgba(0,0,0,0.16)] transition-transform duration-200"
+            loading="lazy"
+          />
+        </div>
+      </div>
+
+      {/* No Data Overlay if hasData is false */}
+      {!stats.hasData && (
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-2 rounded-[22px] bg-white/90 backdrop-blur-[2px] pointer-events-none">
+          <div className="px-3 py-1.5 rounded-xl bg-[#F1F7F4] border border-[#D1E5DC] text-center shadow-sm">
+            <span
+              className="text-xs font-bold text-[#143B33]"
+              style={{ fontFamily: lang === 'ur' ? URDU_FONT : 'inherit' }}
+            >
+              {lang === 'ur' ? 'ڈیٹا دستیاب نہیں ہے' : 'No Data Available'}
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function apiCardStatsToUi(raw: CardStats): ByproductNationalStats {
@@ -12122,7 +12117,7 @@ function ProductRatesScreen({
 
                 return (
                   <div
-                    className="w-full rounded-[28px] overflow-hidden mb-2 relative shadow-md flex-shrink-0"
+                    className="w-full rounded-[28px] mb-2 relative shadow-md flex-shrink-0"
                     style={{
                       background: pTheme.gradientH,
                       border: `2px solid ${pTheme.borderColor}`,
@@ -12131,7 +12126,7 @@ function ProductRatesScreen({
                     }}
                   >
                     {/* Traditional Cultural Background Pattern Overlay */}
-                    <div className="absolute inset-0 pointer-events-none z-0">
+                    <div className="absolute inset-0 pointer-events-none z-0 rounded-[26px] overflow-hidden">
                       <ProvincePatternSvg pattern={pTheme.pattern} opacity={0.32} />
                     </div>
 
@@ -12322,250 +12317,220 @@ function ProductRatesScreen({
                         background: "#FFFFFF",
                       }}
                     >
-                      {/* TOP SECTION: Left Spotlight & Right Details */}
-                      <div className="flex items-center gap-2.5">
-                        {/* LEFT: Product image in circular spotlight */}
-                        <div
-                          className="relative flex items-center justify-center flex-shrink-0"
+                      {/* TOP SECTION: Full-width Location dropdown (left) & Date Picker Badge (right) */}
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        {/* Location Dropdown Pill */}
+                        <button
+                          onClick={() => {
+                            setLocSheet(true);
+                            if (voiceEnabled) {
+                              speakText(lang === "ur" ? "مقام کا انتخاب" : "Select location");
+                            }
+                          }}
+                          className="tap-target flex items-center gap-2 py-1.5 px-3 rounded-2xl transition active:scale-95 text-left group min-w-0 flex-1"
                           style={{
-                            width: 72,
-                            height: 72,
-                            borderRadius: "50%",
-                            background: "radial-gradient(circle, #E8F5EE 0%, #D6EFE3 100%)",
+                            background: "#E8F5EE",
+                            border: "1.2px solid #A7F3D0",
+                            maxWidth: "fit-content",
                           }}
                         >
-                          <img
-                            src={getproductIconSrc(byproduct || product, vertical)}
-                            alt={byproduct || product}
+                          <div
+                            className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0"
+                            style={{ background: "#087F63", color: "#FFFFFF" }}
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M3 21h18" />
+                              <path d="M5 21V7l7-4 7 4v14" />
+                              <path d="M9 10a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v11H9V10z" />
+                            </svg>
+                          </div>
+                          <span
+                            className="font-extrabold text-[13px] sm:text-[14px] text-[#143B33] leading-none truncate max-w-[140px] sm:max-w-[200px]"
                             style={{
-                              width: 52,
-                              height: 52,
-                              objectFit: "contain",
-                              filter: "drop-shadow(0 3px 6px rgba(0,0,0,0.1))",
+                              fontFamily:
+                                lang === "ur"
+                                  ? URDU_FONT
+                                  : "inherit",
                             }}
-                          />
+                          >
+                            {locationButtonLabel}
+                          </span>
+                          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#087F63" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 opacity-80">
+                            <polyline points="6 9 12 15 18 9" />
+                          </svg>
+                        </button>
+
+                        {/* Compact date chip — opens calendar (fixed overlay, below) */}
+                        <button
+                          onClick={() => setStatDateCalOpen((o) => !o)}
+                          className="tap-target flex-shrink-0 overflow-hidden flex items-stretch rounded-xl shadow-sm transition active:scale-95"
+                          style={{
+                            border: "1.2px solid #A7F3D0",
+                          }}
+                        >
+                          <div
+                            style={{
+                              background: "#087F63",
+                              padding: "4px 8px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <span
+                              style={{
+                                color: "#fff",
+                                fontSize: lang === "ur" ? 11 : 10,
+                                fontWeight: 800,
+                                letterSpacing: 0.5,
+                                fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                              }}
+                            >
+                              {statDateFilter
+                                ? (lang === "ur"
+                                  ? ["جنوری", "فروری", "مارچ", "اپریل", "مئی", "جون", "جولائی", "اگست", "ستمبر", "اکتوبر", "نومبر", "دسمبر"][statDateFilter.getMonth()]
+                                  : ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][statDateFilter.getMonth()])
+                                : (lang === "ur" ? "ستمبر" : "Sep")}
+                            </span>
+                          </div>
+                          <div
+                            style={{
+                              background: "#FFFFFF",
+                              padding: "4px 9px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              borderLeft: "1px solid #D5E2DD",
+                            }}
+                          >
+                            <span style={{ color: "#143B33", fontSize: 13.5, fontWeight: 900, lineHeight: 1 }}>
+                              {statDateFilter ? statDateFilter.getDate() : 14}
+                            </span>
+                          </div>
+                        </button>
+                      </div>
+
+                      {/* MIDDLE SECTION: 3 Metrics Grid (MAX PRICE, MIN PRICE, ARRIVAL) */}
+                      <div
+                        className="grid grid-cols-3 gap-2 py-2 my-1"
+                        style={{
+                          borderTop: "1px solid #EEF3F0",
+                          borderBottom: "1px solid #EEF3F0",
+                        }}
+                      >
+                        {/* Max Price */}
+                        <div className="flex flex-col">
+                          <span
+                            className="font-bold text-[9px] text-[#64748B] uppercase tracking-wider leading-tight"
+                            style={{
+                              fontFamily:
+                                lang === "ur"
+                                  ? URDU_FONT
+                                  : "inherit",
+                            }}
+                          >
+                            {lang === "ur" ? "زیادہ قیمت" : "MAX PRICE"}
+                          </span>
+                          <span
+                            className="font-black text-[15px] sm:text-[17px] leading-tight text-[#087F63] mt-0.5 truncate"
+                            style={{
+                              fontFamily:
+                                lang === "ur"
+                                  ? URDU_FONT
+                                  : "inherit",
+                            }}
+                          >
+                            {statMax > 0
+                              ? (lang === "ur" ? `روپے\u00A0${toUrduDigits(statMax.toLocaleString("en-PK"))}` : `Rs.${statMax.toLocaleString("en-PK")}`)
+                              : "—"}
+                          </span>
+                          <span className="text-[8.5px] font-semibold text-[#80918B] leading-none mt-0.5">
+                            {statMax > 0 ? (lang === "ur" ? "(۴۰ کلو)" : "(40 KG)") : ""}
+                          </span>
                         </div>
 
-                        {/* RIGHT: Location Dropdown + 3 Metrics (Max, Min, Arrival) */}
-                        <div className="flex-1 min-w-0 flex flex-col justify-between py-0">
-                          {/* Location dropdown header + date chip row */}
-                          <div className="flex items-center gap-2 mb-1">
-                            <button
-                              onClick={() => {
-                                setLocSheet(true);
-                                if (voiceEnabled) {
-                                  speakText(lang === "ur" ? "مقام کا انتخاب" : "Select location");
-                                }
-                              }}
-                              className="tap-target flex items-center gap-1.5 text-left group flex-1 min-w-0"
-                              style={{ background: "none", border: "none", padding: 0 }}
-                            >
-                              <div
-                                className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
-                                style={{ background: "#E8F5EE", color: "#087F63" }}
-                              >
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M3 21h18" />
-                                  <path d="M5 21V7l7-4 7 4v14" />
-                                  <path d="M9 10a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v11H9V10z" />
-                                </svg>
-                              </div>
-                              <div className="flex items-center gap-1 min-w-0 flex-1">
-                                <span
-                                  className="font-extrabold truncate text-[13.5px] leading-tight text-[#183B34] group-hover:text-[#087F63] transition-colors"
-                                  style={{
-                                    fontFamily:
-                                      lang === "ur"
-                                        ? URDU_FONT
-                                        : "inherit",
-                                  }}
-                                >
-                                  {locationButtonLabel}
-                                </span>
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#087F63" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
-                                  <polyline points="6 9 12 15 18 9" />
-                                </svg>
-                              </div>
-                            </button>
-
-                            {/* Compact date chip — opens calendar (fixed overlay, below) */}
-                            <button
-                              onClick={() => setStatDateCalOpen((o) => !o)}
-                              className="tap-target flex-shrink-0 overflow-hidden"
-                              style={{
-                                display: "flex",
-                                borderRadius: 6,
-                                boxShadow: "0 1px 6px rgba(0,0,0,0.12)",
-                                border: "1px solid #C7E8D8",
-                                padding: 0,
-                              }}
-                            >
-                              <div
-                                style={{
-                                  background: "#087F63",
-                                  padding: "3px 6px",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                }}
-                              >
-                                <span
-                                  style={{
-                                    color: "#fff",
-                                    fontSize: lang === "ur" ? 9 : 8,
-                                    fontWeight: 800,
-                                    letterSpacing: 0.5,
-                                    fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                                  }}
-                                >
-                                  {statDateFilter
-                                    ? (lang === "ur"
-                                      ? ["جنوری", "فروری", "مارچ", "اپریل", "مئی", "جون", "جولائی", "اگست", "ستمبر", "اکتوبر", "نومبر", "دسمبر"][statDateFilter.getMonth()]
-                                      : ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][statDateFilter.getMonth()])
-                                    : (lang === "ur" ? "ستمبر" : "Sep")}
-                                </span>
-                              </div>
-                              <div
-                                style={{
-                                  background: "#F4FAF7",
-                                  padding: "3px 7px",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  borderLeft: "1px solid #D5E2DD",
-                                }}
-                              >
-                                <span style={{ color: "#183B34", fontSize: 13, fontWeight: 900, lineHeight: 1 }}>
-                                  {statDateFilter ? statDateFilter.getDate() : 14}
-                                </span>
-                              </div>
-                            </button>
-                          </div>
-
-
-                          <div
-                            className="grid grid-cols-3 gap-1 pt-1 mt-0.5"
-                            style={{ borderTop: "1px solid #EEF3F0" }}
+                        {/* Min Price */}
+                        <div
+                          className="flex flex-col pl-2 sm:pl-3"
+                          style={{ borderLeft: "1px solid #EEF3F0" }}
+                        >
+                          <span
+                            className="font-bold text-[9px] text-[#64748B] uppercase tracking-wider leading-tight"
+                            style={{
+                              fontFamily:
+                                lang === "ur"
+                                  ? URDU_FONT
+                                  : "inherit",
+                            }}
                           >
-                            {/* Max */}
-                            <div className="flex flex-col">
-                              <span
-                                className="font-semibold text-[8px] text-[#64748B] uppercase tracking-wide leading-tight"
-                                style={{
-                                  fontFamily:
-                                    lang === "ur"
-                                      ? URDU_FONT
-                                      : "inherit",
-                                }}
-                              >
-                                {lang === "ur" ? "زیادہ قیمت" : "Max Price"}
-                              </span>
-                              <span
-                                className="font-extrabold text-[12px] leading-tight text-[#087F63] mt-0.5 break-words"
-                                style={{
-                                  fontFamily:
-                                    lang === "ur"
-                                      ? URDU_FONT
-                                      : "inherit",
-                                }}
-                              >
-                                {statMax > 0
-                                  ? (lang === "ur" ? `${toUrduDigits(statMax.toLocaleString("en-PK"))} روپے` : fmt(statMax))
-                                  : "—"}
-                              </span>
-                              <span className="text-[7.5px] text-[#80918B] leading-none mt-0.5">
-                                {statMax > 0 ? (lang === "ur" ? "فی ۴۰ کلو" : "(40 KG)") : ""}
-                              </span>
-                            </div>
+                            {lang === "ur" ? "کم قیمت" : "MIN PRICE"}
+                          </span>
+                          <span
+                            className="font-black text-[15px] sm:text-[17px] leading-tight text-[#B45309] mt-0.5 truncate"
+                            style={{
+                              fontFamily:
+                                lang === "ur"
+                                  ? URDU_FONT
+                                  : "inherit",
+                            }}
+                          >
+                            {statMin > 0
+                              ? (lang === "ur" ? `روپے\u00A0${toUrduDigits(statMin.toLocaleString("en-PK"))}` : `Rs.${statMin.toLocaleString("en-PK")}`)
+                              : "—"}
+                          </span>
+                          <span className="text-[8.5px] font-semibold text-[#80918B] leading-none mt-0.5">
+                            {statMin > 0 ? (lang === "ur" ? "(۴۰ کلو)" : "(40 KG)") : ""}
+                          </span>
+                        </div>
 
-                            {/* Min */}
-                            <div
-                              className="flex flex-col pl-1"
-                              style={{ borderLeft: "1px solid #EEF3F0" }}
-                            >
-                              <span
-                                className="font-semibold text-[8px] text-[#64748B] uppercase tracking-wide leading-tight"
-                                style={{
-                                  fontFamily:
-                                    lang === "ur"
-                                      ? URDU_FONT
-                                      : "inherit",
-                                }}
-                              >
-                                {lang === "ur" ? "کم قیمت" : "Min Price"}
-                              </span>
-                              <span
-                                className="font-extrabold text-[12px] leading-tight text-[#B45309] mt-0.5 break-words"
-                                style={{
-                                  fontFamily:
-                                    lang === "ur"
-                                      ? URDU_FONT
-                                      : "inherit",
-                                }}
-                              >
-                                {statMin > 0
-                                  ? (lang === "ur" ? `${toUrduDigits(statMin.toLocaleString("en-PK"))} روپے` : fmt(statMin))
-                                  : "—"}
-                              </span>
-                              <span className="text-[7.5px] text-[#80918B] leading-none mt-0.5">
-                                {statMin > 0 ? (lang === "ur" ? "فی ۴۰ کلو" : "(40 KG)") : ""}
-                              </span>
-                            </div>
-
-                            {/* Arrival */}
-                            <div
-                              className="flex flex-col pl-1"
-                              style={{ borderLeft: "1px solid #EEF3F0" }}
-                            >
-                              <span
-                                className="font-semibold text-[8px] text-[#64748B] uppercase tracking-wide leading-tight"
-                                style={{
-                                  fontFamily:
-                                    lang === "ur"
-                                      ? URDU_FONT
-                                      : "inherit",
-                                }}
-                              >
-                                {lang === "ur" ? "آمد" : "Arrival"}
-                              </span>
-                              <span
-                                className="font-extrabold text-[12px] leading-tight text-[#0E7465] mt-0.5 break-words"
-                                style={{
-                                  fontFamily:
-                                    lang === "ur"
-                                      ? URDU_FONT
-                                      : "inherit",
-                                }}
-                              >
-                                {statArrival > 0
-                                  ? (lang === "ur"
-                                    ? `${toUrduDigits(statArrival.toLocaleString())} تھیلے`
-                                    : `${statArrival.toLocaleString()} Bags`)
-                                  : "—"}
-                              </span>
-                              <span className="text-[7.5px] text-[#80918B] leading-none mt-0.5">
-                                {statArrival > 0 ? (lang === "ur" ? "فی ۴۰ کلو" : "(40 KG)") : ""}
-                              </span>
-                            </div>
-                          </div>
+                        {/* Arrival */}
+                        <div
+                          className="flex flex-col pl-2 sm:pl-3"
+                          style={{ borderLeft: "1px solid #EEF3F0" }}
+                        >
+                          <span
+                            className="font-bold text-[9px] text-[#64748B] uppercase tracking-wider leading-tight"
+                            style={{
+                              fontFamily:
+                                lang === "ur"
+                                  ? URDU_FONT
+                                  : "inherit",
+                            }}
+                          >
+                            {lang === "ur" ? "آمد" : "ARRIVAL"}
+                          </span>
+                          <span
+                            className="font-black text-[15px] sm:text-[17px] leading-tight text-[#087F63] mt-0.5 truncate"
+                            style={{
+                              fontFamily:
+                                lang === "ur"
+                                  ? URDU_FONT
+                                  : "inherit",
+                            }}
+                          >
+                            {statArrival > 0
+                              ? (lang === "ur"
+                                ? `${toUrduDigits(statArrival.toLocaleString())}\u00A0تھیلے`
+                                : `${statArrival.toLocaleString()}\u00A0Bags`)
+                              : "—"}
+                          </span>
+                          <span className="text-[8.5px] font-semibold text-[#80918B] leading-none mt-0.5">
+                            {statArrival > 0 ? (lang === "ur" ? "(۴۰ کلو)" : "(40 KG)") : ""}
+                          </span>
                         </div>
                       </div>
 
-                      {/* HORIZONTAL DIVIDER & COLLAPSIBLE ATTRIBUTES STRIP */}
-                      <div className="w-full my-1.5" style={{ height: 1, background: "#EEF3F0" }} />
-
-                      {/* Attributes Bar: Consistent Rate Type Button + 5 More Attributes Toggle */}
-                      <div className="w-full flex items-center justify-between gap-2 py-0.5 px-0.5">
+                      {/* BOTTOM SECTION: Rate Type Pill & +5 More Specs Pill */}
+                      <div className="relative w-full flex items-center justify-between gap-2 pt-1">
                         {/* 1. EXPOSED RATE TYPE (Clean pill with icon, label & value) */}
                         <button
                           type="button"
-                          onClick={() => setAttrSheet("ratetype")}
-                          className="tap-target flex items-center gap-1.5 py-1 px-2.5 rounded-xl border transition-all duration-150 active:scale-95 hover:border-[#087F63] min-w-0"
-                          style={{
-                            background: "linear-gradient(135deg, #F0FAF5 0%, #E6F7F0 100%)",
-                            borderColor: "#A7F3D0",
-                            boxShadow: "0 1px 3px rgba(8,127,99,0.06)",
-                          }}
+                          onClick={() => setAttrSheet(attrSheet === "ratetype" ? null : "ratetype")}
+                          className={`tap-target flex items-center gap-2 py-1.5 px-3 rounded-2xl border transition-all duration-150 active:scale-95 min-w-0 ${
+                            attrSheet === "ratetype"
+                              ? "bg-[#E8F8F3] border-[#087F63] shadow-sm ring-1 ring-[#087F63]"
+                              : "bg-[#E8F5EE] border-[#A7F3D0]"
+                          }`}
                           title={lang === "ur" ? "نرخ کی قسم تبدیل کریں" : "Change Rate Type"}
                         >
                           <div
@@ -12578,13 +12543,13 @@ function ProductRatesScreen({
                           </div>
                           <div className="flex items-center gap-1.5 min-w-0">
                             <span
-                              className="text-[9px] font-semibold text-[#065F46] whitespace-nowrap"
+                              className="text-[11px] font-semibold text-[#065F46] whitespace-nowrap"
                               style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                             >
                               {lang === "ur" ? "نرخ:" : "Rate:"}
                             </span>
                             <span
-                              className="text-[11px] font-extrabold text-[#064E3B] truncate"
+                              className="text-[12px] font-black text-[#064E3B] truncate"
                               style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                             >
                               {attrRateType ? tr(attrRateType) : (lang === "ur" ? "منڈی ریٹ" : "Mandi Rate")}
@@ -12598,7 +12563,9 @@ function ProductRatesScreen({
                               strokeWidth="2.5"
                               strokeLinecap="round"
                               strokeLinejoin="round"
-                              className="flex-shrink-0"
+                              className={`flex-shrink-0 transition-transform duration-200 ${
+                                attrSheet === "ratetype" ? "rotate-180" : ""
+                              }`}
                             >
                               <polyline points="6 9 12 15 18 9" />
                             </svg>
@@ -12609,26 +12576,25 @@ function ProductRatesScreen({
                         <button
                           type="button"
                           onClick={() => setIsAttrPanelOpen(!isAttrPanelOpen)}
-                          className="tap-target flex items-center gap-1.5 py-1 px-2.5 rounded-xl border transition-all duration-150 active:scale-95 flex-shrink-0"
+                          className="tap-target flex items-center gap-2 py-1.5 px-3 rounded-2xl border transition-all duration-150 active:scale-95 flex-shrink-0"
                           style={{
-                            background: isAttrPanelOpen ? "#F0F8F4" : "#F9FAFB",
-                            borderColor: isAttrPanelOpen ? "#A7F3D0" : "#E5E7EB",
-                            boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                            background: isAttrPanelOpen ? "#F0F8F4" : "#FFFFFF",
+                            borderColor: isAttrPanelOpen ? "#A7F3D0" : "#D5E2DD",
                           }}
                         >
                           <div
-                            className="w-4 h-4 rounded-md flex items-center justify-center flex-shrink-0"
+                            className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0"
                             style={{
                               background: isAttrPanelOpen ? "#E8F5EE" : "#F3F4F6",
                               color: isAttrPanelOpen ? "#087F63" : "#4B5563",
                             }}
                           >
-                            <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
                               <path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z" />
                             </svg>
                           </div>
                           <span
-                            className="text-[9.5px] font-bold"
+                            className="text-[11px] font-extrabold"
                             style={{
                               color: isAttrPanelOpen ? "#087F63" : "#374151",
                               fontFamily: lang === "ur" ? URDU_FONT : "inherit",
@@ -12652,235 +12618,524 @@ function ProductRatesScreen({
                             <polyline points="6 9 12 15 18 9" />
                           </svg>
                         </button>
-                      </div>
 
-                      {/* BOTTOM SECTION: 5 Attributes (Balanced 50/50 column grid with aligned rows & chevrons) */}
-                      {isAttrPanelOpen && (() => {
-                        const hasMoistureData = allRows.some((r) => r.moisture && r.moisture.trim().length > 0) || (attrMoisture !== null);
-                        return (
-                          <div className="grid grid-cols-2 divide-x divide-[#EEF3F0] pt-2 animate-fadeIn">
-                            {/* LEFT COLUMN: Color, Spec, Variety */}
-                            <div className="flex flex-col gap-y-1.5 pr-2.5">
-                              {/* ROW 1: COLOR */}
-                              <button
-                                type="button"
-                                onClick={() => setAttrSheet("color")}
-                                className="tap-target w-full h-[36px] flex items-center justify-between py-1 px-1 rounded-lg transition active:scale-[0.98] hover:bg-[#F8FAF9] group"
+                        {/* FLOATING RATE TYPE POPOVER CARD */}
+                        {attrSheet === "ratetype" && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-40 bg-transparent"
+                              onClick={() => setAttrSheet(null)}
+                            />
+                            <div
+                              className="absolute z-50 top-[40px] left-0 w-[58%] min-w-[185px] bg-white rounded-2xl p-3.5 shadow-2xl border border-[#E2E8F0] flex flex-col gap-2 animate-fadeIn"
+                              style={{
+                                boxShadow: "0 16px 40px rgba(0,0,0,0.22)",
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {/* Upward Pointer Notch */}
+                              <div className="absolute -top-1.5 left-6 w-3 h-3 bg-white border-t border-l border-[#E2E8F0] rotate-45" />
+
+                              {/* Header Title */}
+                              <div className="font-bold text-[13px] text-[#183B34] pb-1 border-b border-[#F1F5F9]">
+                                {lang === "ur" ? "نرخ کی قسم" : "Rate Type"}
+                              </div>
+
+                              {/* Single-Select Radio Options List */}
+                              <div
+                                className="flex flex-col gap-1.5 py-0.5 max-h-[155px] overflow-y-auto pr-1 zm-popover-scrollbar"
+                                style={{
+                                  scrollbarWidth: "thin",
+                                  scrollbarColor: "#087F63 #F1F5F9",
+                                  WebkitOverflowScrolling: "touch",
+                                }}
                               >
-                                <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                                  <div
-                                    className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                                    style={{ background: "#E6F8F3", color: "#059669" }}
-                                  >
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-                                      <path d="M12 3a9 9 0 0 0 0 18c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
-                                    </svg>
-                                  </div>
-                                  <div className="min-w-0 flex-1 text-left">
-                                    <span
-                                      className="text-[8.5px] text-[#6B7280] font-medium block leading-none truncate"
-                                      style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                                {ALL_RATE_TYPES.map((rt) => {
+                                  const isSelected = (attrRateType || "Mandi Rate") === rt;
+                                  return (
+                                    <button
+                                      key={rt}
+                                      type="button"
+                                      onClick={() => {
+                                        setAttrRateType(rt);
+                                      }}
+                                      className="tap-target flex items-center gap-2.5 py-1 px-1 rounded-lg hover:bg-[#F8FAF9] transition text-left cursor-pointer active:scale-98"
                                     >
-                                      {lang === "ur" ? "رنگ" : "Color"}
-                                    </span>
-                                    <span
-                                      className="font-bold text-[11.5px] leading-tight truncate block mt-0.5 text-[#059669]"
-                                      style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                                    >
-                                      {attrColor ? t(attrColor) : "—"}
-                                    </span>
-                                  </div>
-                                </div>
-                                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 opacity-70 group-hover:opacity-100">
-                                  <polyline points="6 9 12 15 18 9" />
-                                </svg>
-                              </button>
+                                      <div
+                                        className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                                          isSelected ? "border-[#087F63]" : "border-[#9CA3AF]"
+                                        }`}
+                                      >
+                                        {isSelected && (
+                                          <div className="w-2 h-2 rounded-full bg-[#087F63]" />
+                                        )}
+                                      </div>
+                                      <span
+                                        className={`text-[12.5px] truncate ${
+                                          isSelected ? "font-bold text-[#087F63]" : "font-medium text-[#374151]"
+                                        }`}
+                                        style={{
+                                          fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                        }}
+                                      >
+                                        {tr(rt)}
+                                      </span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
 
-                              {/* ROW 2: SPEC */}
-                              <button
-                                type="button"
-                                onClick={() => setAttrSheet("spec")}
-                                className="tap-target w-full h-[36px] flex items-center justify-between py-1 px-1 rounded-lg transition active:scale-[0.98] hover:bg-[#F8FAF9] group"
-                              >
-                                <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                                  <div
-                                    className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                                    style={{ background: "#FEF3C7", color: "#D97706" }}
-                                  >
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-                                      <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
-                                    </svg>
-                                  </div>
-                                  <div className="min-w-0 flex-1 text-left">
-                                    <span
-                                      className="text-[8.5px] text-[#6B7280] font-medium block leading-none truncate"
-                                      style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                                    >
-                                      {lang === "ur" ? "خصوصیت" : "Spec"}
-                                    </span>
-                                    <span
-                                      className="font-bold text-[11.5px] leading-tight truncate block mt-0.5 text-[#92400E]"
-                                      style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                                    >
-                                      {attrSpec ? t(attrSpec) : "—"}
-                                    </span>
-                                  </div>
-                                </div>
-                                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 opacity-70 group-hover:opacity-100">
-                                  <polyline points="6 9 12 15 18 9" />
-                                </svg>
-                              </button>
-
-                              {/* ROW 3: VARIETY */}
-                              <button
-                                type="button"
-                                onClick={() => setAttrSheet("variety")}
-                                className="tap-target w-full h-[36px] flex items-center justify-between py-1 px-1 rounded-lg transition active:scale-[0.98] hover:bg-[#F8FAF9] group"
-                              >
-                                <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                                  <div
-                                    className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                                    style={{ background: "#F3E8FF", color: "#7C3AED" }}
-                                  >
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-                                      <path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3 8 0 12-7 12-12zm-3.5 6.5C11 15 9 17 8 19c2.5-3 5-4.5 5.5-4.5z" />
-                                    </svg>
-                                  </div>
-                                  <div className="min-w-0 flex-1 text-left">
-                                    <span
-                                      className="text-[8.5px] text-[#6B7280] font-medium block leading-none truncate"
-                                      style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                                    >
-                                      {lang === "ur" ? "قسم" : "Variety"}
-                                    </span>
-                                    <span
-                                      className="font-bold text-[11.5px] leading-tight truncate block mt-0.5 text-[#6D28D9]"
-                                      style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                                    >
-                                      {attrVariety ? tc(attrVariety) : "—"}
-                                    </span>
-                                  </div>
-                                </div>
-                                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 opacity-70 group-hover:opacity-100">
-                                  <polyline points="6 9 12 15 18 9" />
-                                </svg>
-                              </button>
-                            </div>
-
-                            {/* RIGHT COLUMN: Quality, Condition, Moisture */}
-                            <div className="flex flex-col gap-y-1.5 pl-2.5">
-                              {/* ROW 1: QUALITY (NEW / OLD) */}
-                              <button
-                                type="button"
-                                onClick={() => setAttrSheet("newold")}
-                                className="tap-target w-full h-[36px] flex items-center justify-between py-1 px-1 rounded-lg transition active:scale-[0.98] hover:bg-[#F8FAF9] group"
-                              >
-                                <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                                  <div
-                                    className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                                    style={{ background: "#FFEDD5", color: "#EA580C" }}
-                                  >
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-                                      <path d="M12 2l2.4 2.8 3.7-.4 1.4 3.4 3.4 1.5-.5 3.7 2.6 2.6-2.6 2.6.5 3.7-3.4 1.5-1.4 3.4-3.7-.4L12 22l-2.4-2.8-3.7.4-1.4-3.4-3.4-1.5.5-3.7L-1 8.4l2.6-2.6-.5-3.7 3.4-1.5 1.4-3.4 3.7.4L12 2z" transform="scale(0.85) translate(2, 2)" />
-                                      <path d="M9.5 10.5h1.2l1.3 2.5V10.5h1v4h-1.1l-1.4-2.7v2.7h-1v-4z" fill="#fff" />
-                                    </svg>
-                                  </div>
-                                  <div className="min-w-0 flex-1 text-left">
-                                    <span
-                                      className="text-[8.5px] text-[#6B7280] font-medium block leading-none truncate"
-                                      style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                                    >
-                                      {lang === "ur" ? "معیار" : "Quality"}
-                                    </span>
-                                    <span
-                                      className="font-bold text-[11.5px] leading-tight truncate block mt-0.5 text-[#C2410C]"
-                                      style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                                    >
-                                      {attrNewOld ? t(attrNewOld) : "—"}
-                                    </span>
-                                  </div>
-                                </div>
-                                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#EA580C" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 opacity-70 group-hover:opacity-100">
-                                  <polyline points="6 9 12 15 18 9" />
-                                </svg>
-                              </button>
-
-                              {/* ROW 2: CONDITION */}
-                              <button
-                                type="button"
-                                onClick={() => setAttrSheet("condition")}
-                                className="tap-target w-full h-[36px] flex items-center justify-between py-1 px-1 rounded-lg transition active:scale-[0.98] hover:bg-[#F8FAF9] group"
-                              >
-                                <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                                  <div
-                                    className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                                    style={{ background: "#CCFBF1", color: "#0D9488" }}
-                                  >
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-                                      <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
-                                    </svg>
-                                  </div>
-                                  <div className="min-w-0 flex-1 text-left">
-                                    <span
-                                      className="text-[8.5px] text-[#6B7280] font-medium block leading-none truncate"
-                                      style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                                    >
-                                      {lang === "ur" ? "حالت" : "Condition"}
-                                    </span>
-                                    <span
-                                      className="font-bold text-[11.5px] leading-tight truncate block mt-0.5 text-[#065F46]"
-                                      style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                                    >
-                                      {attrCondition ? t(attrCondition) : "—"}
-                                    </span>
-                                  </div>
-                                </div>
-                                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#0D9488" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 opacity-70 group-hover:opacity-100">
-                                  <polyline points="6 9 12 15 18 9" />
-                                </svg>
-                              </button>
-
-                              {/* ROW 3: MOISTURE (rendered if moisture data exists) */}
-                              {hasMoistureData && (
+                              {/* Done Button */}
+                              <div className="flex justify-end pt-1">
                                 <button
                                   type="button"
-                                  onClick={() => setAttrSheet("moisture")}
-                                  className="tap-target w-full h-[36px] flex items-center justify-between py-1 px-1 rounded-lg transition active:scale-[0.98] hover:bg-[#F8FAF9] group"
+                                  onClick={() => setAttrSheet(null)}
+                                  className="px-3.5 py-1 bg-[#087F63] text-white rounded-lg text-[11.5px] font-bold hover:bg-[#066A52] active:scale-95 transition shadow-sm"
+                                  style={{
+                                    fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                  }}
                                 >
-                                  <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                                    <div
-                                      className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                                      style={{ background: "#E0F2FE", color: "#0284C7" }}
-                                    >
-                                      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
-                                      </svg>
-                                    </div>
-                                    <div className="min-w-0 flex-1 text-left">
-                                      <span
-                                        className="text-[8.5px] text-[#6B7280] font-medium block leading-none truncate"
-                                        style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                                      >
-                                        {lang === "ur" ? "نمی" : "Moisture"}
-                                      </span>
-                                      <span
-                                        className="font-bold text-[11.5px] leading-tight truncate block mt-0.5 text-[#0369A1]"
-                                        style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                                      >
-                                        {attrMoisture
-                                          ? (lang === "ur"
-                                            ? `${toUrduDigits(attrMoisture)}${attrMoisture.includes("٪") || attrMoisture.includes("%") ? "" : "٪"}`
-                                            : `${attrMoisture}${attrMoisture.includes("%") ? "" : "%"}`)
-                                          : "—"}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#0284C7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 opacity-70 group-hover:opacity-100">
-                                    <polyline points="6 9 12 15 18 9" />
-                                  </svg>
+                                  {lang === "ur" ? "ہو گیا" : "Done"}
                                 </button>
-                              )}
+                              </div>
                             </div>
+                          </>
+                        )}
+                      </div>
+
+                      {/* BOTTOM SECTION: 6 Attributes (2-column cards matching user design) */}
+                      {isAttrPanelOpen && (() => {
+                        const specKeysLeft = [
+                          {
+                            key: "color",
+                            label: lang === "ur" ? "رنگ" : "Color",
+                            val: attrColor ? t(attrColor) : "--",
+                            rawVal: attrColor,
+                            icon: (
+                              <div
+                                className="w-5 h-5 rounded-full flex-shrink-0 shadow-sm"
+                                style={{
+                                  background: "radial-gradient(circle at 35% 35%, #FDE047, #CA8A04, #854D0E)",
+                                }}
+                              />
+                            ),
+                          },
+                          {
+                            key: "spec",
+                            label: lang === "ur" ? "خصوصیت" : "Spec",
+                            val: attrSpec ? t(attrSpec) : "--",
+                            rawVal: attrSpec,
+                            icon: (
+                              <svg
+                                width="15"
+                                height="15"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="#087F63"
+                                strokeWidth="2.2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="flex-shrink-0"
+                              >
+                                <line x1="8" y1="6" x2="21" y2="6" />
+                                <line x1="8" y1="12" x2="21" y2="12" />
+                                <line x1="8" y1="18" x2="21" y2="18" />
+                                <circle cx="3.5" cy="6" r="1" fill="#087F63" />
+                                <circle cx="3.5" cy="12" r="1" fill="#087F63" />
+                                <circle cx="3.5" cy="18" r="1" fill="#087F63" />
+                              </svg>
+                            ),
+                          },
+                          {
+                            key: "variety",
+                            label: lang === "ur" ? "قسم" : "Variety",
+                            val: attrVariety ? tc(attrVariety) : "--",
+                            rawVal: attrVariety,
+                            icon: (
+                              <svg
+                                width="15"
+                                height="15"
+                                viewBox="0 0 24 24"
+                                fill="#087F63"
+                                className="flex-shrink-0"
+                              >
+                                <path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3 8 0 12-7 12-12zm-3.5 6.5C11 15 9 17 8 19c2.5-3 5-4.5 5.5-4.5z" />
+                              </svg>
+                            ),
+                          },
+                        ];
+
+                        const specKeysRight = [
+                          {
+                            key: "newold",
+                            label: lang === "ur" ? "معیار" : "Quality",
+                            val: attrNewOld ? t(attrNewOld) : "--",
+                            rawVal: attrNewOld,
+                            icon: (
+                              <svg
+                                width="15"
+                                height="15"
+                                viewBox="0 0 24 24"
+                                fill="#087F63"
+                                className="flex-shrink-0"
+                              >
+                                <path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3 8 0 12-7 12-12zm-3.5 6.5C11 15 9 17 8 19c2.5-3 5-4.5 5.5-4.5z" />
+                              </svg>
+                            ),
+                          },
+                          {
+                            key: "condition",
+                            label: lang === "ur" ? "حالت" : "Condition",
+                            val: attrCondition ? t(attrCondition) : "--",
+                            rawVal: attrCondition,
+                            icon: (
+                              <svg
+                                width="15"
+                                height="15"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="#087F63"
+                                strokeWidth="2.2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="flex-shrink-0"
+                              >
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                              </svg>
+                            ),
+                          },
+                          {
+                            key: "moisture",
+                            label: lang === "ur" ? "نمی" : "Moisture",
+                            val: attrMoisture
+                              ? (lang === "ur"
+                                ? `${toUrduDigits(attrMoisture)}${attrMoisture.includes("٪") || attrMoisture.includes("%") ? "" : "٪"}`
+                                : `${attrMoisture}${attrMoisture.includes("%") ? "" : "%"}`)
+                              : "--",
+                            rawVal: attrMoisture,
+                            icon: (
+                              <svg
+                                width="15"
+                                height="15"
+                                viewBox="0 0 24 24"
+                                fill="#087F63"
+                                className="flex-shrink-0"
+                              >
+                                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+                              </svg>
+                            ),
+                          },
+                        ];
+
+                        const isRightColActive =
+                          attrSheet === "newold" ||
+                          attrSheet === "condition" ||
+                          attrSheet === "moisture";
+                        const isLeftColActive =
+                          attrSheet === "color" ||
+                          attrSheet === "spec" ||
+                          attrSheet === "variety";
+
+                        const popoverTop =
+                          attrSheet === "color" || attrSheet === "newold"
+                            ? "46px"
+                            : attrSheet === "spec" || attrSheet === "condition"
+                              ? "94px"
+                              : "142px";
+
+                        // Build single-choice options for active filter
+                        const getSpecOptions = (k: string): string[] => {
+                          if (k === "newold") return ["New", "Old"];
+                          if (k === "moisture") return ["10-14%", "14-16%", "16-18%", "18-20%"];
+                          if (k === "color") return ["Golden", "White", "Brown", "Yellow", "Red", "Green", "Black"];
+                          if (k === "spec") return ["Dry", "Fresh", "Standard", "Special"];
+                          if (k === "condition") return ["Fine", "Fair", "FAQ", "Average"];
+                          if (k === "variety") {
+                            const disc = Array.from(
+                              new Set(
+                                allRows
+                                  .map((r) => r.variety)
+                                  .filter((v): v is string => Boolean(v && v.trim()))
+                              )
+                            ).sort();
+                            return disc.length > 0 ? disc : ["Super Karnal", "Kainat 1121", "Basmati 515", "Super Kernel", "Basmati 386", "IRRI 6", "IRRI 9"];
+                          }
+                          return [];
+                        };
+
+                        const activeOpts = attrSheet ? getSpecOptions(attrSheet) : [];
+                        const activeTitle =
+                          attrSheet === "newold"
+                            ? (lang === "ur" ? "معیار" : "Quality")
+                            : attrSheet === "moisture"
+                              ? (lang === "ur" ? "نمی" : "Moisture")
+                              : attrSheet === "color"
+                                ? (lang === "ur" ? "رنگ" : "Color")
+                                : attrSheet === "spec"
+                                  ? (lang === "ur" ? "خصوصیت" : "Spec")
+                                  : attrSheet === "variety"
+                                    ? (lang === "ur" ? "قسم" : "Variety")
+                                    : attrSheet === "condition"
+                                      ? (lang === "ur" ? "حالت" : "Condition")
+                                      : "";
+
+                        const activeCurrVal =
+                          attrSheet === "newold"
+                            ? attrNewOld
+                            : attrSheet === "moisture"
+                              ? attrMoisture
+                              : attrSheet === "color"
+                                ? attrColor
+                                : attrSheet === "spec"
+                                  ? attrSpec
+                                  : attrSheet === "variety"
+                                    ? attrVariety
+                                    : attrSheet === "condition"
+                                      ? attrCondition
+                                      : null;
+
+                        const setSpecVal = (v: string) => {
+                          if (attrSheet === "newold") setAttrNewOld(v);
+                          else if (attrSheet === "moisture") setAttrMoisture(v);
+                          else if (attrSheet === "color") setAttrColor(v);
+                          else if (attrSheet === "spec") setAttrSpec(v);
+                          else if (attrSheet === "variety") setAttrVariety(v);
+                          else if (attrSheet === "condition") setAttrCondition(v);
+                        };
+
+                        const formatOptLabel = (k: string, opt: string) => {
+                          if (k === "variety") return tc(opt);
+                          if (k === "moisture") {
+                            return lang === "ur"
+                              ? `${toUrduDigits(opt)}${opt.includes("٪") || opt.includes("%") ? "" : "٪"}`
+                              : `${opt}${opt.includes("%") ? "" : "%"}`;
+                          }
+                          return t(opt);
+                        };
+
+                        return (
+                          <div className="relative pt-2 animate-fadeIn">
+                            {/* Backdrop when floating popup is active */}
+                            {(isLeftColActive || isRightColActive) && (
+                              <div
+                                className="fixed inset-0 z-30 bg-transparent"
+                                onClick={() => setAttrSheet(null)}
+                              />
+                            )}
+
+                            {/* 2-COLUMN TILES GRID */}
+                            <div className="grid grid-cols-2 gap-2">
+                              {/* LEFT COLUMN */}
+                              <div className="flex flex-col gap-1.5">
+                                {specKeysLeft.map((item) => {
+                                  const isActive = attrSheet === item.key;
+                                  return (
+                                    <button
+                                      key={item.key}
+                                      type="button"
+                                      onClick={() =>
+                                        setAttrSheet(isActive ? null : item.key)
+                                      }
+                                      className={`tap-target w-full h-[42px] flex items-center justify-between px-2.5 py-1 rounded-xl border transition-all text-left active:scale-[0.98] ${
+                                        isActive
+                                          ? "bg-[#E8F8F3] border-[#087F63] shadow-sm ring-1 ring-[#087F63]"
+                                          : "bg-white border-[#E5E7EB] hover:bg-[#F9FBFA]"
+                                      }`}
+                                    >
+                                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                                        {item.icon}
+                                        <div className="min-w-0 flex-1 flex flex-col justify-center leading-tight">
+                                          <span
+                                            className="text-[9.5px] font-bold text-[#6B7280] block truncate"
+                                            style={{
+                                              fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                            }}
+                                          >
+                                            {item.label}
+                                          </span>
+                                          <span
+                                            className={`text-[12px] font-bold block truncate mt-0.5 ${
+                                              isActive ? "text-[#087F63]" : "text-[#1F2937]"
+                                            }`}
+                                            style={{
+                                              fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                            }}
+                                          >
+                                            {item.val}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <svg
+                                        width="12"
+                                        height="12"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke={isActive ? "#087F63" : "#9CA3AF"}
+                                        strokeWidth="2.5"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        className="flex-shrink-0 transition-transform"
+                                      >
+                                        {isActive ? (
+                                          <polyline points="18 15 12 9 6 15" />
+                                        ) : (
+                                          <polyline points="9 18 15 12 9 6" />
+                                        )}
+                                      </svg>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+
+                              {/* RIGHT COLUMN */}
+                              <div className="flex flex-col gap-1.5">
+                                {specKeysRight.map((item) => {
+                                  const isActive = attrSheet === item.key;
+                                  return (
+                                    <button
+                                      key={item.key}
+                                      type="button"
+                                      onClick={() =>
+                                        setAttrSheet(isActive ? null : item.key)
+                                      }
+                                      className={`tap-target w-full h-[42px] flex items-center justify-between px-2.5 py-1 rounded-xl border transition-all text-left active:scale-[0.98] ${
+                                        isActive
+                                          ? "bg-[#E8F8F3] border-[#087F63] shadow-sm ring-1 ring-[#087F63]"
+                                          : "bg-white border-[#E5E7EB] hover:bg-[#F9FBFA]"
+                                      }`}
+                                    >
+                                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                                        {item.icon}
+                                        <div className="min-w-0 flex-1 flex flex-col justify-center leading-tight">
+                                          <span
+                                            className="text-[9.5px] font-bold text-[#6B7280] block truncate"
+                                            style={{
+                                              fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                            }}
+                                          >
+                                            {item.label}
+                                          </span>
+                                          <span
+                                            className={`text-[12px] font-bold block truncate mt-0.5 ${
+                                              isActive ? "text-[#087F63]" : "text-[#1F2937]"
+                                            }`}
+                                            style={{
+                                              fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                            }}
+                                          >
+                                            {item.val}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <svg
+                                        width="12"
+                                        height="12"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke={isActive ? "#087F63" : "#9CA3AF"}
+                                        strokeWidth="2.5"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        className="flex-shrink-0 transition-transform"
+                                      >
+                                        {isActive ? (
+                                          <polyline points="18 15 12 9 6 15" />
+                                        ) : (
+                                          <polyline points="9 18 15 12 9 6" />
+                                        )}
+                                      </svg>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+
+                            {/* FLOATING DROPDOWN POPOVER CARD */}
+                            {(isLeftColActive || isRightColActive) && (
+                              <div
+                                className={`absolute z-40 bg-white rounded-2xl p-3.5 shadow-2xl border border-[#E2E8F0] flex flex-col gap-2 animate-fadeIn ${
+                                  isRightColActive
+                                    ? "right-0 w-[54%] min-w-[175px]"
+                                    : "left-0 w-[54%] min-w-[175px]"
+                                }`}
+                                style={{
+                                  top: popoverTop,
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {/* Upward Pointer Notch */}
+                                <div
+                                  className={`absolute -top-1.5 w-3 h-3 bg-white border-t border-l border-[#E2E8F0] rotate-45 ${
+                                    isRightColActive ? "right-8" : "left-8"
+                                  }`}
+                                />
+
+                                {/* Header Title */}
+                                <div className="font-bold text-[13px] text-[#183B34] pb-1 border-b border-[#F1F5F9]">
+                                  {activeTitle}
+                                </div>
+
+                                {/* Single-Select Radio Options List */}
+                                <div
+                                  className="flex flex-col gap-1.5 py-0.5 max-h-[140px] overflow-y-auto pr-1 zm-popover-scrollbar"
+                                  style={{
+                                    scrollbarWidth: "thin",
+                                    scrollbarColor: "#087F63 #F1F5F9",
+                                    WebkitOverflowScrolling: "touch",
+                                  }}
+                                >
+                                  {activeOpts.map((opt) => {
+                                    const isSelected = activeCurrVal === opt;
+                                    return (
+                                      <button
+                                        key={opt}
+                                        type="button"
+                                        onClick={() => setSpecVal(opt)}
+                                        className="tap-target flex items-center gap-2.5 py-1 px-1 rounded-lg hover:bg-[#F8FAF9] transition text-left cursor-pointer active:scale-98"
+                                      >
+                                        <div
+                                          className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                                            isSelected
+                                              ? "border-[#087F63]"
+                                              : "border-[#9CA3AF]"
+                                          }`}
+                                        >
+                                          {isSelected && (
+                                            <div className="w-2 h-2 rounded-full bg-[#087F63]" />
+                                          )}
+                                        </div>
+                                        <span
+                                          className={`text-[12.5px] truncate ${
+                                            isSelected
+                                              ? "font-bold text-[#087F63]"
+                                              : "font-medium text-[#374151]"
+                                          }`}
+                                          style={{
+                                            fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                          }}
+                                        >
+                                          {formatOptLabel(attrSheet!, opt)}
+                                        </span>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+
+                                {/* Done Button */}
+                                <div className="flex justify-end pt-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => setAttrSheet(null)}
+                                    className="px-3.5 py-1 bg-[#087F63] text-white rounded-lg text-[11.5px] font-bold hover:bg-[#066A52] active:scale-95 transition shadow-sm"
+                                    style={{
+                                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                    }}
+                                  >
+                                    {lang === "ur" ? "ہو گیا" : "Done"}
+                                  </button>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         );
                       })()}
@@ -15256,305 +15511,6 @@ function ProductRatesScreen({
                   </>
                 );
               })()}
-
-              {/*  Attribute picker sheet  */}
-              {attrSheet &&
-                (() => {
-                  // Dynamically collect available options from allRows for this commodity
-                  const discoveredVarieties = Array.from(
-                    new Set(
-                      allRows
-                        .map((r) => r.variety)
-                        .filter((v): v is string => Boolean(v && v.trim()))
-                    )
-                  ).sort();
-                  const defaultVarieties = [
-                    "Sona Moti",
-                    "TD-1",
-                    "SurSabz",
-                    "Akbar",
-                    "Anaj",
-                    "Ujala",
-                    "Galaxy",
-                    "Dilkush",
-                    "Arooj",
-                    "Subham",
-                  ];
-
-                  const discoveredColors = Array.from(
-                    new Set(
-                      allRows
-                        .map((r) => r.color)
-                        .filter((v): v is string => Boolean(v && v.trim()))
-                    )
-                  ).sort();
-                  const defaultColors = ["Golden", "White", "Yellow", "Brown", "Black", "Red"];
-
-                  const discoveredSpecs = Array.from(
-                    new Set(
-                      allRows
-                        .map((r) => r.spec)
-                        .filter((v): v is string => Boolean(v && v.trim()))
-                    )
-                  ).sort();
-                  const defaultSpecs = ["Seed Quality", "Retail", "Damage", "Standard"];
-
-                  const discoveredConditions = Array.from(
-                    new Set(
-                      allRows
-                        .map((r) => r.condition)
-                        .filter((v): v is string => Boolean(v && v.trim()))
-                    )
-                  ).sort();
-                  const defaultConditions = ["Wet", "Dry", "Mix"];
-
-                  const discoveredNewOld = Array.from(
-                    new Set(
-                      allRows
-                        .map((r) => r.newOld)
-                        .filter((v): v is string => Boolean(v && v.trim()))
-                    )
-                  ).sort();
-                  const defaultNewOld = ["New", "Old"];
-
-                  const discoveredMoistures = Array.from(
-                    new Set(
-                      allRows
-                        .map((r) => r.moisture)
-                        .filter((v): v is string => Boolean(v && v.trim()))
-                    )
-                  ).sort((a, b) => {
-                    const numA = parseFloat(a.replace(/[^0-9.]/g, "")) || 0;
-                    const numB = parseFloat(b.replace(/[^0-9.]/g, "")) || 0;
-                    return numA - numB;
-                  });
-                  const defaultMoistures = ["10-12%", "11-14%", "12-16%", "14-18%", "15-20%", "18-22%"];
-
-                  const opts: Record<string, string[]> = {
-                    variety: discoveredVarieties.length > 0 ? discoveredVarieties : defaultVarieties,
-                    newold: discoveredNewOld.length > 0 ? discoveredNewOld : defaultNewOld,
-                    color: discoveredColors.length > 0 ? discoveredColors : defaultColors,
-                    spec: discoveredSpecs.length > 0 ? discoveredSpecs : defaultSpecs,
-                    condition: discoveredConditions.length > 0 ? discoveredConditions : defaultConditions,
-                    moisture: discoveredMoistures.length > 0 ? discoveredMoistures : defaultMoistures,
-                    ratetype: ALL_RATE_TYPES,
-                  };
-                  const labels: Record<string, string> = {
-                    variety: lang === "ur" ? "قسم منتخب کریں" : "Select Variety",
-                    newold:
-                      lang === "ur" ? "معیار منتخب کریں" : "Select Quality",
-                    color: lang === "ur" ? "رنگ منتخب کریں" : "Select Color",
-                    spec: lang === "ur" ? "خصوصیت منتخب کریں" : "Select Specifications",
-                    condition: lang === "ur" ? "حالت منتخب کریں" : "Select Condition",
-                    moisture: lang === "ur" ? "نمی منتخب کریں" : "Select Moisture",
-                    ratetype:
-                      lang === "ur" ? "نرخ کی قسم منتخب کریں" : "Select Rate Type",
-                  };
-                  const currVal =
-                    attrSheet === "variety"
-                      ? attrVariety
-                      : attrSheet === "newold"
-                        ? attrNewOld
-                        : attrSheet === "color"
-                          ? attrColor
-                          : attrSheet === "spec"
-                            ? attrSpec
-                            : attrSheet === "ratetype"
-                              ? attrRateType
-                              : attrSheet === "moisture"
-                                ? attrMoisture
-                                : attrCondition;
-                  const setter = (v: string | null) => {
-                    if (attrSheet === "variety") setAttrVariety(v);
-                    else if (attrSheet === "newold") setAttrNewOld(v);
-                    else if (attrSheet === "color") setAttrColor(v);
-                    else if (attrSheet === "spec") setAttrSpec(v);
-                    else if (attrSheet === "ratetype") setAttrRateType(v);
-                    else if (attrSheet === "moisture") setAttrMoisture(v);
-                    else setAttrCondition(v);
-                    setAttrSheet(null);
-                  };
-                  const sheetOpts = (attrSheet && opts[attrSheet]) ? opts[attrSheet] : [];
-                  return (
-                    <div
-                      className="zm-sheet-overlay"
-                      style={{ zIndex: 250 }}
-                      onClick={() => setAttrSheet(null)}
-                    >
-                      <div
-                        className="zm-sheet"
-                        style={{
-                          maxHeight: "60vh",
-                          display: "flex",
-                          flexDirection: "column",
-                          background: "#F8FCFA",
-                          borderTopLeftRadius: 24,
-                          borderTopRightRadius: 24,
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <div className="px-5 pt-3 pb-2.5 border-b border-[#DCE8E3] flex-shrink-0">
-                          <div className="w-10 h-1 rounded-full mx-auto mb-2 bg-[#C7D6D0]" />
-                          <p
-                            className="font-extrabold text-center"
-                            style={{
-                              color: "#183B34",
-                              fontSize: lang === "ur" ? 19 : 16,
-                              fontFamily:
-                                lang === "ur"
-                                  ? URDU_FONT
-                                  : "inherit",
-                            }}
-                          >
-                            {labels[attrSheet] || ""}
-                          </p>
-                        </div>
-                        <div
-                          className="p-3.5 flex flex-col gap-2 overflow-y-auto flex-1"
-                          style={{ minHeight: 0 }}
-                        >
-                          {currVal && (
-                            <button
-                              onClick={() => setter(null)}
-                              className="tap-target rounded-xl px-4 flex items-center justify-center transition active:scale-[0.98]"
-                              style={{
-                                background: "#FFF1F2",
-                                border: "1.5px solid #FDA4AF",
-                                minHeight: 44,
-                              }}
-                            >
-                              <span
-                                className="font-bold text-sm text-[#BE123C]"
-                                style={{
-                                  fontSize: lang === "ur" ? 15 : 13.5,
-                                  fontFamily:
-                                    lang === "ur"
-                                      ? URDU_FONT
-                                      : "inherit",
-                                }}
-                              >
-                                {lang === "ur"
-                                  ? "انتخاب ہٹائیں"
-                                  : "Clear selection"}
-                              </span>
-                            </button>
-                          )}
-                          {sheetOpts.length === 0 ? (
-                            <div className="py-8 text-center text-[#80918B]">
-                              <p
-                                className="font-semibold text-sm"
-                                style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                              >
-                                {lang === "ur"
-                                  ? "اس کے لیے کوئی ڈیٹا دستیاب نہیں ہے"
-                                  : "No data available for this"}
-                              </p>
-                            </div>
-                          ) : (
-                            sheetOpts.map((opt) => {
-                              // Check if this attribute option is available in selected mandi
-                              const mandiAttrs =
-                                locScope.kind === "mandi"
-                                  ? MANDI_ATTR_AVAILABLE[locScope.label]
-                                  : null;
-                              const attrKey =
-                                attrSheet === "newold"
-                                  ? "newold"
-                                  : (attrSheet as
-                                    | "color"
-                                    | "variety"
-                                    | "spec"
-                                    | "condition"
-                                    | "newold");
-                              const available =
-                                !mandiAttrs ||
-                                !mandiAttrs[attrKey] ||
-                                mandiAttrs[attrKey].includes(opt);
-                              const optLabel =
-                                attrSheet === "variety"
-                                  ? tc(opt)
-                                  : attrSheet === "ratetype"
-                                    ? tr(opt)
-                                    : attrSheet === "moisture"
-                                      ? (lang === "ur"
-                                        ? `${toUrduDigits(opt)}${opt.includes("٪") || opt.includes("%") ? "" : "٪"}`
-                                        : `${opt}${opt.includes("%") ? "" : "%"}`)
-                                      : t(opt);
-                              const isSelected = currVal === opt;
-                              return (
-                                <button
-                                  key={opt}
-                                  onClick={() =>
-                                    available ? setter(opt) : undefined
-                                  }
-                                  className="tap-target rounded-xl px-4 flex items-center justify-between transition active:scale-[0.98]"
-                                  style={{
-                                    background: !available
-                                      ? "#F4FAF7"
-                                      : isSelected
-                                        ? "#E8F5EE"
-                                        : "#FFFFFF",
-                                    border: !available
-                                      ? "1px dashed #D5E2DD"
-                                      : isSelected
-                                        ? "1.5px solid #087F63"
-                                        : "1px solid #E2EBE7",
-                                    minHeight: 44,
-                                    opacity: available ? 1 : 0.45,
-                                    boxShadow: isSelected
-                                      ? "0 2px 8px rgba(8,127,99,0.12)"
-                                      : "0 1px 3px rgba(0,0,0,0.02)",
-                                  }}
-                                >
-                                  <span
-                                    className={`${lang === "ur" ? "text-right" : "text-left"} font-bold text-sm`}
-                                    style={{
-                                      color: !available
-                                        ? "#80918B"
-                                        : isSelected
-                                          ? "#064D40"
-                                          : "#183B34",
-                                      fontSize: lang === "ur" ? 16 : 13.5,
-                                      fontFamily:
-                                        lang === "ur"
-                                          ? URDU_FONT
-                                          : "inherit",
-                                    }}
-                                  >
-                                    {optLabel}
-                                  </span>
-                                  {!available && (
-                                    <span
-                                      style={{
-                                        fontSize: lang === "ur" ? 12 : 10,
-                                        color: "#80918B",
-                                        fontFamily:
-                                          lang === "ur"
-                                            ? URDU_FONT
-                                            : "inherit",
-                                      }}
-                                    >
-                                      {lang === "ur"
-                                        ? "منڈی میں نہیں"
-                                        : "Not in mandi"}
-                                    </span>
-                                  )}
-                                  {available && isSelected && (
-                                    <span
-                                      style={{ color: "#087F63", fontWeight: 900, fontSize: 15 }}
-                                    >
-                                      ✓
-                                    </span>
-                                  )}
-                                </button>
-                              );
-                            })
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
 
               {/* Date table sheet */}
               {dateTableOpen &&

@@ -1400,3 +1400,24 @@ body {
   ) !important;
   animation: zmAngleSpin 4s linear infinite;
 }
+
+/* ── Custom Scrollbar for Popups & Filter Panels ── */
+.zm-popover-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #087F63 #F1F5F9;
+}
+.zm-popover-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  display: block;
+}
+.zm-popover-scrollbar::-webkit-scrollbar-track {
+  background: #F1F5F9;
+  border-radius: 6px;
+}
+.zm-popover-scrollbar::-webkit-scrollbar-thumb {
+  background: #087F63;
+  border-radius: 6px;
+}
+.zm-popover-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #065F46;
+}
