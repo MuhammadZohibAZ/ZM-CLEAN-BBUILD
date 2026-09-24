@@ -1,0 +1,34 @@
+﻿# Dependencies
+node_modules/
+**/node_modules/
+
+# Production Builds
+dist/
+**/dist/
+build/
+**/build/
+
+# Python Virtual Environments & Cache
+.venv/
+**/__pycache__/
+*.py[cod]
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+
+# Operating System & Editor Files
+.DS_Store
+Thumbs.db
+*.tmp
+*.log
+.vscode/
+.idea/
+
+# SQLite Database Temporary Lock Files (keeps main .sqlite intact)
+*.sqlite-wal
+*.sqlite-shm
+*.db-wal
+*.db-shm
