@@ -14053,8 +14053,10 @@ function ProductRatesScreen({
                                         ) {
                                           return null;
                                         }
-                                        setIsTableExpanded(true);
-                                        setLandscapeRotated(false);
+                                        if (!isTableExpanded) {
+                                          setIsTableExpanded(true);
+                                          setLandscapeRotated(false);
+                                        }
                                         return {
                                           mandiName: r.mandiName,
                                           rateType: r.rateType,
@@ -14445,79 +14447,78 @@ function ProductRatesScreen({
                                               boxSizing: "border-box",
                                             }}
                                           >
-                                            {/* 1. Top Bar: Granularity Filters (1, 5, 15, 30, 1H, 5H, 1D, 1W, 1M) + Price/Arrival switchers + Close */}
-                                            <div className="flex items-center justify-between gap-1.5 pb-2 border-b border-[#E8EFEC] flex-wrap">
-                                              {/* Granularity Pills */}
-                                              <div className="flex items-center gap-1 overflow-x-auto py-0.5 max-w-full" style={{ scrollbarWidth: "none" }}>
-                                                {["1", "5", "15", "30", "1H", "5H", "1D", "1W", "1M"].map((g) => {
-                                                  const isGActive = tableGraphGranularity === g;
-                                                  return (
-                                                    <button
-                                                      key={g}
-                                                      type="button"
-                                                      onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setTableGraphGranularity(g);
-                                                      }}
-                                                      className={`px-1.5 py-0.5 rounded text-[10.5px] font-bold transition-colors flex-shrink-0 ${
-                                                        isGActive
-                                                          ? "bg-[#087F63] text-white shadow-xs"
-                                                          : "text-[#52635F] hover:bg-[#F1F7F4] hover:text-[#143B33]"
-                                                      }`}
-                                                    >
-                                                      {g}
-                                                    </button>
-                                                  );
-                                                })}
-                                              </div>
-
-                                              {/* Price vs Arrival Switcher Tabs + Close */}
-                                              <div className="flex items-center gap-1.5 flex-shrink-0">
-                                                <div className="flex items-center bg-[#E5EFEA] p-0.5 rounded-lg border border-[#CCE2D7]">
-                                                  <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                      e.stopPropagation();
-                                                      setTableGraphView("price");
-                                                    }}
-                                                    className="tap-target px-2.5 py-1 rounded-md text-[10px] font-extrabold transition"
-                                                    style={{
-                                                      background: tableGraphView === "price" ? "#087F63" : "transparent",
-                                                      color: tableGraphView === "price" ? "#FFFFFF" : "#4E665E",
-                                                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                                                    }}
-                                                  >
-                                                    {lang === "ur" ? "قیمت کا رجحان" : "Price Trend"}
-                                                  </button>
-                                                  <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                      e.stopPropagation();
-                                                      setTableGraphView("arrival");
-                                                    }}
-                                                    className="tap-target px-2.5 py-1 rounded-md text-[10px] font-extrabold transition"
-                                                    style={{
-                                                      background: tableGraphView === "arrival" ? "#D97706" : "transparent",
-                                                      color: tableGraphView === "arrival" ? "#FFFFFF" : "#4E665E",
-                                                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                                                    }}
-                                                  >
-                                                    {lang === "ur" ? "آمد کا رجحان" : "Arrival Trend"}
-                                                  </button>
-                                                </div>
-
+                                            {/* 1. Top Row: Price vs Arrival Switcher Tabs + Close Button */}
+                                            <div className="flex items-center justify-between gap-2 pb-2 border-b border-[#E8EFEC]">
+                                              <div className="flex items-center bg-[#E5EFEA] p-0.5 rounded-lg border border-[#CCE2D7]">
                                                 <button
                                                   type="button"
                                                   onClick={(e) => {
                                                     e.stopPropagation();
-                                                    setSelectedMandiGraphRow(null);
+                                                    setTableGraphView("price");
                                                   }}
-                                                  className="tap-target w-6 h-6 rounded-full bg-[#E5EFEA] hover:bg-[#D5E5DE] text-[#064D40] text-xs font-bold flex items-center justify-center transition active:scale-95 flex-shrink-0"
-                                                  title="Close"
+                                                  className="tap-target px-3 py-1 rounded-md text-[10.5px] font-extrabold transition"
+                                                  style={{
+                                                    background: tableGraphView === "price" ? "#087F63" : "transparent",
+                                                    color: tableGraphView === "price" ? "#FFFFFF" : "#4E665E",
+                                                    fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                                  }}
                                                 >
-                                                  ✕
+                                                  {lang === "ur" ? "قیمت کا رجحان" : "Price Trend"}
+                                                </button>
+                                                <button
+                                                  type="button"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setTableGraphView("arrival");
+                                                  }}
+                                                  className="tap-target px-3 py-1 rounded-md text-[10.5px] font-extrabold transition"
+                                                  style={{
+                                                    background: tableGraphView === "arrival" ? "#D97706" : "transparent",
+                                                    color: tableGraphView === "arrival" ? "#FFFFFF" : "#4E665E",
+                                                    fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                                  }}
+                                                >
+                                                  {lang === "ur" ? "آمد کا رجحان" : "Arrival Trend"}
                                                 </button>
                                               </div>
+
+                                              <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  setSelectedMandiGraphRow(null);
+                                                }}
+                                                className="tap-target w-7 h-7 rounded-full bg-[#E5EFEA] hover:bg-[#D5E5DE] text-[#064D40] text-xs font-bold flex items-center justify-center transition active:scale-95 flex-shrink-0"
+                                                title={lang === "ur" ? "بند کریں" : "Close"}
+                                              >
+                                                ✕
+                                              </button>
+                                            </div>
+
+                                            {/* 2. Second Row: Granularity Filters (1, 5, 15, 30, 1H, 5H, 1D, 1W, 1M) */}
+                                            <div className="flex items-center gap-1 overflow-x-auto py-1 border-b border-[#E8EFEC]" style={{ scrollbarWidth: "none" }}>
+                                              {["1", "5", "15", "30", "1H", "5H", "1D", "1W", "1M"].map((g) => {
+                                                const isGActive = tableGraphGranularity === g;
+                                                return (
+                                                  <button
+                                                    key={g}
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      setTableGraphGranularity(g);
+                                                    }}
+                                                    className={`px-2 py-0.5 rounded text-[10.5px] font-bold transition-colors flex-shrink-0 ${
+                                                      isGActive
+                                                        ? tableGraphView === "price"
+                                                          ? "bg-[#087F63] text-white shadow-xs"
+                                                          : "bg-[#D97706] text-white shadow-xs"
+                                                        : "text-[#52635F] hover:bg-[#F1F7F4] hover:text-[#143B33]"
+                                                    }`}
+                                                  >
+                                                    {g}
+                                                  </button>
+                                                );
+                                              })}
                                             </div>
 
                                             {/* 2. Main Graph Body according to Price vs Arrival */}
@@ -16926,6 +16927,28 @@ function ProductRatesScreen({
                   className="rounded-2xl p-3.5 flex flex-col gap-2.5 shadow-sm"
                   style={{ background: "#FFFFFF", border: "1px solid #D5E2DD" }}
                 >
+                  {/* Top Bar: Granularity Filter for Arrival Trend */}
+                  <div className="flex items-center justify-between gap-1 pb-2 border-b border-[#E8EFEC]">
+                    <div className="flex items-center gap-1 overflow-x-auto py-0.5" style={{ scrollbarWidth: "none" }}>
+                      {["1", "5", "15", "30", "1H", "5H", "1D", "1W", "1M"].map((g) => {
+                        const isGActive = stockGranularity === g;
+                        return (
+                          <button
+                            key={g}
+                            onClick={() => setStockGranularity(g)}
+                            className={`px-1.5 py-0.5 rounded text-[10.5px] font-bold transition-colors flex-shrink-0 ${
+                              isGActive
+                                ? "bg-[#D97706] text-white shadow-xs"
+                                : "text-[#52635F] hover:bg-[#F1F7F4] hover:text-[#143B33]"
+                            }`}
+                          >
+                            {g}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
                   {/* Arrival Header HUD */}
                   {(() => {
                     const currentIdx = arrivalHoverIdx !== null ? arrivalHoverIdx : len - 1;
