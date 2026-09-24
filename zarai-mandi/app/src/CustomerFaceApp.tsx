@@ -7169,49 +7169,28 @@ function LocationStatCell({
 
   return (
     <div
-      className={`flex-1 min-w-0 flex flex-col justify-center py-0.5 ${divider ? 'pl-2 ml-1 border-l border-[#D9E7E1]' : 'pr-1'} ${fullWidth ? 'w-full' : ''}`}
+      className={`flex-1 min-w-0 flex flex-col justify-center py-0.5 ${divider ? 'pl-2 ml-1 border-l' : 'pr-1'} ${fullWidth ? 'w-full' : ''}`}
       style={divider ? { borderColor: '#D9E7E1' } : undefined}
     >
       <span className="block text-[10px] font-bold text-[#52635F] leading-tight truncate">
-        {lang === 'ur' ? 'فعال منڈیاں' : 'Active Mandis'}
+        {lang === 'ur' ? 'منڈیاں' : 'Mandis'}
       </span>
 
-      <div className="inline-flex items-center my-0.5 max-w-full">
+      <div className="flex items-center gap-1.5 my-0.5 whitespace-nowrap">
+        <span className="w-2 h-2 rounded-full bg-[#10B981] ring-2 ring-[#10B981]/25 animate-pulse flex-shrink-0" />
         <span
-          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md transition-all font-black text-[#065F46] leading-none whitespace-nowrap"
-          style={{
-            background: 'linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)',
-            border: '1px solid #A7F3D0',
-            boxShadow: '0 1px 2px rgba(6, 95, 70, 0.06)',
-            fontSize: 'clamp(10.5px, 3.1vw, 12px)',
-          }}
+          className="font-black tracking-tight text-[#087F63] leading-none"
+          style={{ fontSize: 'clamp(11.5px, 3.2vw, 13px)' }}
         >
-          <svg
-            width="10"
-            height="10"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#059669"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="flex-shrink-0"
-          >
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-            <circle cx="12" cy="10" r="3" fill="#059669" />
-          </svg>
-          <span>{countDisplay}</span>
-          <span className="text-[9px] font-bold text-[#059669]">
-            {lang === 'ur' ? 'منڈیاں' : 'Mandis'}
-          </span>
-          <span className="text-[9px] font-black text-[#059669] opacity-70">
-            ›
+          {countDisplay}{' '}
+          <span className="text-[10px] font-bold text-[#075E4F]">
+            {lang === 'ur' ? 'فعال' : 'Active'}
           </span>
         </span>
       </div>
 
-      <span className="block text-[8.5px] font-extrabold text-[#087F63] leading-none truncate">
-        {lang === 'ur' ? 'تمام ریٹس دیکھیں ›' : 'View all rates ›'}
+      <span className="block text-[8.5px] font-bold text-[#087F63] leading-none truncate">
+        {lang === 'ur' ? 'ملک بھر سے' : 'Nationwide'}
       </span>
     </div>
   );
