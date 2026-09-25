@@ -12,6 +12,7 @@ import {
   getTrendAllRateTypes,
   getVerticalCardStats,
 } from "./aggregate.js";
+import { registerCompareRoutes } from "./compare.js";
 
 const app = express();
 app.use(cors());
@@ -141,6 +142,8 @@ app.get("/api/by-products/:id/trend-all", async (req, res) => {
   if (!result) return res.status(404).json({ error: "not_found" });
   res.json(result);
 });
+
+registerCompareRoutes(app);
 
 const PORT = process.env.PORT || 8090;
 app.listen(PORT, "0.0.0.0", () => {

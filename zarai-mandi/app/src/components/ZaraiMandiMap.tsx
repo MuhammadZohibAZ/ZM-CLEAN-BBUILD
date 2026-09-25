@@ -837,15 +837,15 @@ export default function ZaraiMandiMap({
 
       {/* ── Vector Map Area ── */}
       <div className="relative flex-1 min-h-0 bg-[#E8F5EE]/40 overflow-hidden">
-        {/* Floating Active Mandis Sidebar on the Left Area */}
+        {/* Floating Nearby Mandis Collapsible Sidebar on the Left Area */}
         <div
-          className={`absolute left-2.5 top-2.5 bottom-2.5 z-20 flex flex-col transition-all duration-300 pointer-events-auto ${
-            sidebarOpen ? "w-[170px] sm:w-[215px]" : "w-9"
-          }`}
+          className={`absolute left-2.5 top-2.5 ${
+            sidebarOpen ? "bottom-2.5 z-20 flex flex-col w-[180px] sm:w-[225px]" : "z-20 w-auto"
+          } transition-all duration-300 pointer-events-auto`}
         >
           {sidebarOpen ? (
             <div className="w-full h-full bg-white/95 backdrop-blur-md rounded-2xl border border-emerald-200/90 shadow-xl flex flex-col overflow-hidden">
-              {/* Header */}
+              {/* Header with Title and explicit Collapse button */}
               <div className="p-2.5 pb-2 border-b border-emerald-100 flex items-center justify-between bg-[#F0FAF5] flex-shrink-0">
                 <div className="flex items-center gap-1.5 min-w-0">
                   <div className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse flex-shrink-0" />
@@ -853,18 +853,20 @@ export default function ZaraiMandiMap({
                     className="text-[11px] sm:text-xs font-black text-emerald-950 truncate"
                     style={{ fontFamily: lang === "ur" ? urduFont : "inherit" }}
                   >
-                    {lang === "ur" ? "فعال منڈیاں" : "Active Mandis"}
+                    {lang === "ur" ? "قریبی منڈیاں" : "Nearby Mandis"}
                   </p>
                   <span className="text-[9.5px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-700 text-white flex-shrink-0">
                     {visibleCropMandis.length}
                   </span>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setSidebarOpen(false)}
-                  className="w-5 h-5 rounded-md hover:bg-emerald-100 flex items-center justify-center text-emerald-800 transition"
-                  title="Minimize"
+                  className="flex items-center gap-1 px-1.5 py-0.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-900 text-[10px] font-bold transition shadow-xs flex-shrink-0"
+                  title={lang === "ur" ? "لسٹ چھپائیں" : "Collapse list"}
                 >
-                  <ChevronLeft size={13} />
+                  <ChevronLeft size={13} strokeWidth={2.5} />
+                  <span>{lang === "ur" ? "چھپائیں" : "Hide"}</span>
                 </button>
               </div>
 
@@ -943,11 +945,18 @@ export default function ZaraiMandiMap({
             </div>
           ) : (
             <button
+              type="button"
               onClick={() => setSidebarOpen(true)}
-              className="w-9 h-9 rounded-2xl bg-white/95 backdrop-blur-md border border-emerald-200 shadow-lg flex items-center justify-center text-emerald-800 hover:bg-emerald-50 transition"
-              title={lang === "ur" ? "منڈیاں دکھائیں" : "Show active mandis list"}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/95 backdrop-blur-md border border-emerald-300 shadow-xl text-emerald-900 hover:bg-emerald-50 transition active:scale-95 whitespace-nowrap group"
+              title={lang === "ur" ? "قریبی منڈیاں دیکھیں" : "Expand Nearby Mandis list"}
             >
-              <ChevronRight size={16} />
+              <ChevronRight size={15} strokeWidth={2.5} className="text-emerald-700 group-hover:translate-x-0.5 transition-transform" />
+              <span className="text-xs font-black text-emerald-950" style={{ fontFamily: lang === "ur" ? urduFont : "inherit" }}>
+                {lang === "ur" ? "قریبی منڈیاں" : "Nearby Mandis"}
+              </span>
+              <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-emerald-700 text-white">
+                {visibleCropMandis.length}
+              </span>
             </button>
           )}
         </div>
@@ -1235,7 +1244,7 @@ export default function ZaraiMandiMap({
         const maxVal = graphData.latestMax;
         const trend = graphData.trend;
         const trendPct = graphData.trendPct;
-        const arrival = arrData.latestArrival.toLocaleString();
+        const arrival = arrData.latestArrival?.toLocaleString() ?? "—";
         const arrPointsValid = arrData.points.filter((p) => p > 0);
         const arrMinVal = arrPointsValid.length ? Math.min(...arrPointsValid) : 0;
         const arrMaxVal = arrPointsValid.length ? Math.max(...arrPointsValid) : 0;
@@ -1262,14 +1271,17 @@ export default function ZaraiMandiMap({
         const distinctMandiCount = new Set(records.map((r) => normStation(r.mandiName))).size;
         const historyRows = [...mandiRecords].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 
-        const W = 540;
-        const H = 145;
-        const PL = 42;
-        const PR = 42;
-        const PT = 14;
-        const PB = 24;
+        const W = 560;
+        const H = 180;
+        const PL = 46;
+        const PR = 46;
+        const PT = 16;
+        const PB = 28;
         const chartW = W - PL - PR;
-        const chartH = H - PT - PB;
+        const volBaseY = H - PB;
+        const volMaxH = 24;
+        const separatorY = volBaseY - volMaxH - 8;
+        const lineChartH = separatorY - PT;
 
         const isArrival = graphMode === "arrival";
         const currentData = isArrival ? arrData : graphData;
@@ -1295,18 +1307,16 @@ export default function ZaraiMandiMap({
 
         const pMin = isArrival ? 0 : graphData.yMinBound;
         const pMax = isArrival ? arrData.yMaxBound : graphData.yMaxBound;
-        const yOf = (v: number) => PT + chartH - ((v - pMin) / (pMax - pMin || 1)) * chartH;
+        const yOf = (v: number) => PT + lineChartH - ((v - pMin) / (pMax - pMin || 1)) * lineChartH;
         const xOf = (i: number) => PL + (i / (len - 1 || 1)) * chartW;
-        const volBaseY = H - PB;
-        const volMaxH = 24;
         const maxArr = graphData.peakArrival || 1;
         const currentCloseY = yOf(isArrival ? displayArr : displayPrice);
 
         return (
-          <div className="relative z-30 bg-white rounded-t-3xl border-t border-emerald-100 shadow-2xl transition-all duration-300 flex flex-col max-h-[64vh] overflow-y-auto">
+          <div className="relative z-30 bg-white rounded-t-3xl border-t border-emerald-100 shadow-2xl transition-all duration-300 flex flex-col max-h-[75vh] overflow-y-auto">
             {/* Sheet Expansion Handle */}
-            <div className="w-full pt-2 pb-1 flex items-center justify-center pointer-events-none">
-              <div className="w-10 h-1 rounded-full bg-emerald-200" />
+            <div className="w-full pt-2.5 pb-1.5 flex items-center justify-center pointer-events-none">
+              <div className="w-12 h-1.5 rounded-full bg-emerald-200" />
             </div>
 
             {/* 1. SINGLE HORIZONTALLY SCROLLABLE TABLE CONTAINER (HEADERS & DATA SCROLL TOGETHER) */}
@@ -1319,83 +1329,83 @@ export default function ZaraiMandiMap({
             >
               <div className="min-w-max flex flex-col">
                 {/* Column Header Titles */}
-                <div className="bg-[#D8ECE2] border-b border-[#C6DDD1] px-3.5 py-1.5 flex items-center gap-4 text-[9.5px] font-extrabold text-[#325E52] uppercase tracking-wider">
-                  <div className="sticky left-0 bg-[#D8ECE2] pr-2 z-10 flex-shrink-0 min-w-[75px]">
+                <div className="bg-[#D8ECE2] border-b border-[#C6DDD1] px-4 py-2 flex items-center gap-5 text-[10.5px] font-black text-[#264E43] uppercase tracking-wider">
+                  <div className="sticky left-0 bg-[#D8ECE2] pr-2.5 z-10 flex-shrink-0 min-w-[85px]">
                     {lang === "ur" ? "منڈی / شہر" : "Mandi / City"}
                   </div>
-                  <div className="flex-shrink-0 whitespace-nowrap min-w-[130px]">
+                  <div className="flex-shrink-0 whitespace-nowrap min-w-[145px]">
                     {lang === "ur" ? "قیمت کی حد" : "Price Range"}
                   </div>
-                  <div className="flex-shrink-0 whitespace-nowrap min-w-[65px]">
+                  <div className="flex-shrink-0 whitespace-nowrap min-w-[75px]">
                     {lang === "ur" ? "نرخ کی قسم" : "Rate Type"}
                   </div>
-                  <div className="flex-shrink-0 whitespace-nowrap min-w-[50px]">
+                  <div className="flex-shrink-0 whitespace-nowrap min-w-[55px]">
                     {lang === "ur" ? "رجحان" : "Trend"}
                   </div>
-                  <div className="flex-shrink-0 whitespace-nowrap min-w-[50px]">
+                  <div className="flex-shrink-0 whitespace-nowrap min-w-[55px]">
                     {lang === "ur" ? "معیار" : "Condition"}
                   </div>
-                  <div className="flex-shrink-0 whitespace-nowrap min-w-[60px]">
+                  <div className="flex-shrink-0 whitespace-nowrap min-w-[65px]">
                     {lang === "ur" ? "آمد (بوریاں)" : "Arrival"}
                   </div>
                   {variety && (
-                    <div className="flex-shrink-0 whitespace-nowrap min-w-[60px]">
+                    <div className="flex-shrink-0 whitespace-nowrap min-w-[65px]">
                       {lang === "ur" ? "قسم" : "Variety"}
                     </div>
                   )}
                   {color && (
-                    <div className="flex-shrink-0 whitespace-nowrap min-w-[60px]">
+                    <div className="flex-shrink-0 whitespace-nowrap min-w-[65px]">
                       {lang === "ur" ? "رنگ" : "Color"}
                     </div>
                   )}
                 </div>
 
                 {/* Data Row Values */}
-                <div className="bg-[#E4F2EC] px-3.5 py-2.5 flex items-center gap-4 text-xs font-semibold">
+                <div className="bg-[#E4F2EC] px-4 py-3 flex items-center gap-5 text-xs font-semibold">
                   {/* Sticky Station column */}
-                  <div className="sticky left-0 bg-[#E4F2EC] pr-2 z-10 flex-shrink-0 flex items-center gap-1.5 min-w-[75px]">
-                    <span className="font-extrabold text-[#183B34] text-[13.5px]">
+                  <div className="sticky left-0 bg-[#E4F2EC] pr-2.5 z-10 flex-shrink-0 flex items-center gap-1.5 min-w-[85px]">
+                    <span className="font-black text-[#143B33] text-[14.5px]">
                       {stationName}
                     </span>
                   </div>
 
                   {/* Min – Max Price */}
-                  <div className="flex-shrink-0 font-extrabold text-[#087F63] text-[13px] whitespace-nowrap min-w-[130px]">
+                  <div className="flex-shrink-0 font-black text-[#087F63] text-[14px] whitespace-nowrap min-w-[145px]">
                     Rs.{minVal.toLocaleString()} – Rs.{maxVal.toLocaleString()}
                   </div>
 
                   {/* Price Type Badge */}
-                  <div className="flex-shrink-0 min-w-[65px]">
-                    <span className="px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-[#52635F]/10 text-[#52635F] border border-[#52635F]/20">
+                  <div className="flex-shrink-0 min-w-[75px]">
+                    <span className="px-3 py-1 rounded-full text-[11px] font-black bg-[#52635F]/10 text-[#2F4A43] border border-[#52635F]/20">
                       {rateType}
                     </span>
                   </div>
 
                   {/* Trend */}
-                  <div className="flex-shrink-0 font-extrabold text-[#059669] text-xs flex items-center gap-0.5 whitespace-nowrap min-w-[50px]">
+                  <div className="flex-shrink-0 font-black text-[#059669] text-[13px] flex items-center gap-0.5 whitespace-nowrap min-w-[55px]">
                     <span>{trend === "down" ? "▼" : trend === "up" ? "▲" : "—"}</span>
                     <span>{trendPct}%</span>
                   </div>
 
                   {/* Quality Badge */}
-                  <div className="flex-shrink-0 min-w-[50px]">
-                    <span className="px-2 py-0.5 rounded-md font-bold text-[10.5px] bg-[#E4F4EC] text-[#0A7F5A]">
+                  <div className="flex-shrink-0 min-w-[55px]">
+                    <span className="px-2.5 py-1 rounded-md font-black text-[11px] bg-[#E4F4EC] text-[#0A7F5A]">
                       {quality}
                     </span>
                   </div>
 
                   {/* Arrival */}
-                  <div className="flex-shrink-0 text-[#2F4A43] font-semibold text-xs whitespace-nowrap min-w-[60px]">
+                  <div className="flex-shrink-0 text-[#183B34] font-bold text-[13px] whitespace-nowrap min-w-[65px]">
                     {arrival}
                   </div>
 
                   {variety && (
-                    <div className="flex-shrink-0 text-[#075E4F] font-bold text-[11px] whitespace-nowrap min-w-[60px]">
+                    <div className="flex-shrink-0 text-[#075E4F] font-bold text-xs whitespace-nowrap min-w-[65px]">
                       {variety}
                     </div>
                   )}
                   {color && (
-                    <div className="flex-shrink-0 text-[#2F4A43] font-medium text-[11px] whitespace-nowrap min-w-[60px]">
+                    <div className="flex-shrink-0 text-[#2F4A43] font-semibold text-xs whitespace-nowrap min-w-[65px]">
                       {color}
                     </div>
                   )}
@@ -1559,20 +1569,20 @@ export default function ZaraiMandiMap({
                 ) : (
                   <>
                     {/* Commodity Header HUD */}
-                    <div className="flex flex-col gap-2 border-b border-[#E8EFEC] pb-2.5">
+                    <div className="flex flex-col gap-2.5 border-b border-[#E8EFEC] pb-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span
-                            className="text-xs sm:text-sm font-extrabold text-[#143B33]"
+                            className="text-sm sm:text-base font-black text-[#143B33]"
                             style={{ fontFamily: lang === "ur" ? urduFont : "inherit" }}
                           >
                             {stationName} — {activeCommodity}
                           </span>
-                          <span className="text-[10px] font-bold text-[#087F63] bg-[#E8F8F4] px-2 py-0.5 rounded-full border border-[#C2E8DB]">
+                          <span className="text-[11px] font-black text-[#087F63] bg-[#E8F8F4] px-2.5 py-0.5 rounded-full border border-[#C2E8DB]">
                             {dominantRateType || (lang === "ur" ? "منڈی" : "Mandi")}
                           </span>
                         </div>
-                        <span className="text-[10px] font-bold text-[#80918B]">
+                        <span className="text-[11px] font-bold text-[#627771]">
                           {graphMode === "price"
                             ? (lang === "ur" ? "روپے فی ۴۰ کلو" : "PKR / 40kg")
                             : (lang === "ur" ? "تھیلے (۴۰ کلو)" : "Bags (40kg)")}
@@ -1581,14 +1591,14 @@ export default function ZaraiMandiMap({
 
                       {/* Value & Change Display */}
                       <div className="flex items-baseline justify-between flex-wrap gap-2">
-                        <div className="flex items-baseline gap-2.5">
-                          <span className="text-2xl sm:text-3xl font-black text-[#143B33] tracking-tight">
+                        <div className="flex items-baseline gap-3">
+                          <span className="text-3xl sm:text-4xl font-black text-[#143B33] tracking-tight">
                             {graphMode === "price"
                               ? (lang === "ur" ? `روپے ${toUrduDigits(displayPrice.toLocaleString())}` : `Rs. ${displayPrice.toLocaleString()}`)
                               : (lang === "ur" ? `${toUrduDigits(displayArr.toLocaleString())} تھیلے` : `${displayArr.toLocaleString()} Bags`)}
                           </span>
                           <span
-                            className="text-xs font-bold px-2.5 py-0.5 rounded-md flex items-center gap-1"
+                            className="text-xs sm:text-[13px] font-black px-3 py-1 rounded-md flex items-center gap-1"
                             style={{
                               background: isFlat ? "#F3F4F6" : isPositive ? "#DCFCE7" : "#FEE2E2",
                               color: isFlat ? "#4B5563" : isPositive ? "#15803D" : "#B91C1C",
@@ -1601,45 +1611,45 @@ export default function ZaraiMandiMap({
                         </div>
 
                         {/* Date / Scrub Indicator */}
-                        <div className="text-[11px] font-semibold text-[#52635F]">
+                        <div className="text-xs font-bold text-[#52635F]">
                           {currentDateLabel}
                         </div>
                       </div>
 
                       {/* Stat Summary Bar (High, Low, Avg) */}
-                      <div className="grid grid-cols-3 gap-2 pt-1 text-[10px]">
-                        <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
-                          <span className="text-[#80918B] font-semibold">
+                      <div className="grid grid-cols-3 gap-2.5 pt-1 text-[11px]">
+                        <div className="bg-[#F8FBFA] p-2 sm:p-2.5 rounded-xl border border-[#DCE8E3] flex flex-col">
+                          <span className="text-[#52635F] font-bold">
                             {graphMode === "price"
                               ? (lang === "ur" ? "زیادہ سے زیادہ" : "Period High")
                               : (lang === "ur" ? "کل آمد" : "Total Period")}
                           </span>
-                          <span className="font-bold text-[#143B33] text-xs">
+                          <span className="font-black text-[#143B33] text-sm sm:text-[15px] mt-0.5">
                             {graphMode === "price"
                               ? (lang === "ur" ? `روپے ${toUrduDigits(seriesMax.toLocaleString())}` : `Rs. ${seriesMax.toLocaleString()}`)
                               : `${totalArr.toLocaleString()} Bags`}
                           </span>
                         </div>
-                        <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
-                          <span className="text-[#80918B] font-semibold">
+                        <div className="bg-[#F8FBFA] p-2 sm:p-2.5 rounded-xl border border-[#DCE8E3] flex flex-col">
+                          <span className="text-[#52635F] font-bold">
                             {graphMode === "price"
                               ? (lang === "ur" ? "کم سے کم" : "Period Low")
                               : (lang === "ur" ? "سب سے زیادہ" : "Peak Day")}
                           </span>
-                          <span className="font-bold text-[#143B33] text-xs">
+                          <span className="font-black text-[#143B33] text-sm sm:text-[15px] mt-0.5">
                             {graphMode === "price"
                               ? (lang === "ur" ? `روپے ${toUrduDigits(seriesMin.toLocaleString())}` : `Rs. ${seriesMin.toLocaleString()}`)
                               : `${peakArr.toLocaleString()} Bags`}
                           </span>
                         </div>
-                        <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
-                          <span className="text-[#80918B] font-semibold">
+                        <div className="bg-[#F8FBFA] p-2 sm:p-2.5 rounded-xl border border-[#DCE8E3] flex flex-col">
+                          <span className="text-[#52635F] font-bold">
                             {graphMode === "price"
                               ? (lang === "ur" ? "اوسط ریٹ" : "Period Avg")
                               : (lang === "ur" ? "روزانہ اوسط" : "Daily Avg")}
                           </span>
                           <span
-                            className="font-bold text-xs"
+                            className="font-black text-sm sm:text-[15px] mt-0.5"
                             style={{ color: graphMode === "price" ? "#087F63" : "#D97706" }}
                           >
                             {graphMode === "price"
@@ -1655,7 +1665,7 @@ export default function ZaraiMandiMap({
                       <svg
                         viewBox={`0 0 ${W} ${H}`}
                         className="w-full select-none"
-                        style={{ height: 135, display: "block", touchAction: "none" }}
+                        style={{ height: 180, display: "block", touchAction: "none" }}
                         onMouseDown={(e) => {
                           const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
                           const relX = ((e.clientX - rect.left) / rect.width) * W - PL;
@@ -1733,28 +1743,59 @@ export default function ZaraiMandiMap({
                                 strokeDasharray="3 3"
                               />
                               <text
-                                x={PL - 5}
+                                x={PL - 6}
                                 y={y + 3.5}
                                 textAnchor="end"
-                                fontSize="8.5"
-                                fontWeight="600"
-                                fill="#80918B"
+                                fontSize="10"
+                                fontWeight="700"
+                                fill="#52635F"
                               >
                                 {tick.label}
                               </text>
                               <text
-                                x={W - PR + 5}
+                                x={W - PR + 6}
                                 y={y + 3.5}
                                 textAnchor="start"
-                                fontSize="8"
-                                fontWeight="600"
-                                fill="#9BAAA5"
+                                fontSize="9"
+                                fontWeight="700"
+                                fill="#80918B"
                               >
                                 {tick.val}
                               </text>
                             </g>
                           );
                         })}
+
+                        {/* Pane Separator Line (Line Graph vs Bar Graph) */}
+                        <line
+                          x1={PL}
+                          y1={separatorY}
+                          x2={W - PR}
+                          y2={separatorY}
+                          stroke="#CBD5E1"
+                          strokeWidth="1.2"
+                          strokeDasharray="4 3"
+                        />
+                        <text
+                          x={PL - 6}
+                          y={separatorY + 3.5}
+                          textAnchor="end"
+                          fontSize="9"
+                          fontWeight="700"
+                          fill="#94A3B8"
+                        >
+                          0
+                        </text>
+                        <text
+                          x={W - PR + 6}
+                          y={separatorY + 3.5}
+                          textAnchor="start"
+                          fontSize="8"
+                          fontWeight="700"
+                          fill="#94A3B8"
+                        >
+                          VOL
+                        </text>
 
                         {/* Volume Baseline */}
                         <line
@@ -1763,7 +1804,7 @@ export default function ZaraiMandiMap({
                           x2={W - PR}
                           y2={volBaseY}
                           stroke="#D5E2DD"
-                          strokeWidth="1.2"
+                          strokeWidth="1.5"
                         />
 
                         {/* X-Axis Date Labels */}
@@ -1772,11 +1813,11 @@ export default function ZaraiMandiMap({
                             <text
                               key={`xTick-${i}`}
                               x={xOf(i)}
-                              y={H - 6}
+                              y={H - 8}
                               textAnchor="middle"
-                              fontSize="8.5"
-                              fontWeight="600"
-                              fill="#80918B"
+                              fontSize="9.5"
+                              fontWeight="700"
+                              fill="#52635F"
                               fontFamily={lang === "ur" ? urduFont : "inherit"}
                             >
                               {lbl}
@@ -1791,7 +1832,7 @@ export default function ZaraiMandiMap({
                           const prevP = i > 0 ? pts[i - 1] : pts[i];
                           const curP = pts[i];
                           const isUp = curP >= prevP;
-                          const barW = Math.max(2.5, Math.min(6, (chartW / len) * 0.55));
+                          const barW = Math.max(3, Math.min(7, (chartW / len) * 0.55));
                           const isHov = graphHoverIdx === i;
 
                           return (
@@ -1801,7 +1842,7 @@ export default function ZaraiMandiMap({
                               y={volBaseY - barH}
                               width={barW}
                               height={barH}
-                              rx={1}
+                              rx={1.5}
                               fill={graphMode === "price" ? (isUp ? "#10B981" : "#EF4444") : "#D97706"}
                               opacity={isHov ? 1 : 0.65}
                             />
@@ -1811,27 +1852,27 @@ export default function ZaraiMandiMap({
                         {/* Area & Line */}
                         {(() => {
                           const lineCoords = pts.map((v, i) => `${i === 0 ? "M" : "L"}${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`).join(" ");
-                          const areaCoords = `${lineCoords} L${xOf(len - 1).toFixed(1)},${volBaseY} L${PL},${volBaseY} Z`;
+                          const areaCoords = `${lineCoords} L${xOf(len - 1).toFixed(1)},${separatorY} L${PL},${separatorY} Z`;
                           const strokeColor = graphMode === "price" ? "#087F63" : "#D97706";
                           const gradId = graphMode === "price" ? "mandiMapChartGradPrice" : "mandiMapChartGradArr";
 
                           return (
                             <g>
                               <path d={areaCoords} fill={`url(#${gradId})`} />
-                              <path d={lineCoords} stroke={strokeColor} strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                              <path d={lineCoords} stroke={strokeColor} strokeWidth="3.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
                               {/* Dotted Latest Price Guideline */}
-                              <line x1={PL} y1={currentCloseY} x2={W - PR} y2={currentCloseY} stroke={strokeColor} strokeWidth="0.9" strokeDasharray="3 3" opacity="0.6" />
+                              <line x1={PL} y1={currentCloseY} x2={W - PR} y2={currentCloseY} stroke={strokeColor} strokeWidth="1.1" strokeDasharray="3 3" opacity="0.65" />
                               {/* Latest Price Tag */}
-                              <g transform={`translate(${W - PR + 2}, ${currentCloseY - 7})`}>
-                                <rect x={0} y={0} width={28} height={14} rx={3} fill={strokeColor} />
-                                <text x={14} y={10} textAnchor="middle" fontSize="8" fontWeight="bold" fill="#FFFFFF">
+                              <g transform={`translate(${W - PR + 2}, ${currentCloseY - 8.5})`}>
+                                <rect x={0} y={0} width={36} height={17} rx={3.5} fill={strokeColor} />
+                                <text x={18} y={12} textAnchor="middle" fontSize="9.5" fontWeight="bold" fill="#FFFFFF">
                                   {graphMode === "price"
                                     ? (displayPrice >= 1000 ? `${(displayPrice / 1000).toFixed(1)}k` : displayPrice)
                                     : (displayArr >= 1000 ? `${(displayArr / 1000).toFixed(1)}k` : displayArr)}
                                 </text>
                               </g>
                               {/* Live Pulse Dot */}
-                              <circle cx={xOf(len - 1)} cy={currentCloseY} r="4" fill={strokeColor} stroke="#FFFFFF" strokeWidth="2" />
+                              <circle cx={xOf(len - 1)} cy={currentCloseY} r="5.5" fill={strokeColor} stroke="#FFFFFF" strokeWidth="2.5" />
                             </g>
                           );
                         })()}
@@ -1839,9 +1880,9 @@ export default function ZaraiMandiMap({
                         {/* Interactive Hover Crosshairs */}
                         {graphHoverIdx !== null && (
                           <g>
-                            <line x1={xOf(graphHoverIdx)} y1={PT} x2={xOf(graphHoverIdx)} y2={volBaseY} stroke="#0284C7" strokeWidth="1.2" strokeDasharray="2 2" />
-                            <line x1={PL} y1={yOf(pts[graphHoverIdx])} x2={W - PR} y2={yOf(pts[graphHoverIdx])} stroke="#0284C7" strokeWidth="1" strokeDasharray="2 2" opacity="0.75" />
-                            <circle cx={xOf(graphHoverIdx)} cy={yOf(pts[graphHoverIdx])} r="5" fill="#0284C7" stroke="#FFFFFF" strokeWidth="2" />
+                            <line x1={xOf(graphHoverIdx)} y1={PT} x2={xOf(graphHoverIdx)} y2={volBaseY} stroke="#0284C7" strokeWidth="1.4" strokeDasharray="2 2" />
+                            <line x1={PL} y1={yOf(pts[graphHoverIdx])} x2={W - PR} y2={yOf(pts[graphHoverIdx])} stroke="#0284C7" strokeWidth="1.2" strokeDasharray="2 2" opacity="0.8" />
+                            <circle cx={xOf(graphHoverIdx)} cy={yOf(pts[graphHoverIdx])} r="6" fill="#0284C7" stroke="#FFFFFF" strokeWidth="2.5" />
                           </g>
                         )}
                       </svg>
@@ -1898,7 +1939,7 @@ export default function ZaraiMandiMap({
                             key={tf.id}
                             type="button"
                             onClick={() => setTimeframe(tf.id as any)}
-                            className={`py-1.5 rounded-xl text-xs font-bold transition active:scale-95 text-center ${
+                            className={`py-2 rounded-xl text-xs sm:text-[13px] font-bold transition active:scale-95 text-center ${
                               isTfActive
                                 ? graphMode === "price"
                                   ? "bg-[#087F63] text-white shadow-sm font-black"

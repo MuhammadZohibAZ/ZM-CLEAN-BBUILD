@@ -13,11 +13,17 @@ export const pool = {
     let sql = text;
     // Strip Postgres typecasts like ::numeric, ::text, etc.
     sql = sql.replace(/::[a-zA-Z_]+/g, "");
-    // Replace $1, $2 with ?1, ?2
-    sql = sql.replace(/\$(\d+)/g, "?$1");
 
+    const orderedParams = [];
+    sql = sql.replace(/\$(\d+)/g, (_, idx) => {
+      const paramIndex = parseInt(idx, 10) - 1;
+      orderedParams.push(params[paramIndex]);
+      return "?";
+    });
+
+    const finalParams = orderedParams.length > 0 ? orderedParams : params;
     const stmt = sqliteDb.prepare(sql);
-    const rows = stmt.all(...params);
+    const rows = stmt.all(...finalParams);
     return { rows };
   }
 };

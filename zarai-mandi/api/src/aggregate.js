@@ -218,7 +218,7 @@ export async function getArrivalSummary(byProductId, filters = {}) {
       group by province, district, station
     ),
     price_locations as (
-      select count(distinct (province, district, station)) as n
+      select count(distinct (province || char(31) || district || char(31) || station)) as n
       from price_records
       where product = $1 and by_product = $2 and price_valid
         and province is not null and district is not null and station is not null
@@ -226,7 +226,7 @@ export async function getArrivalSummary(byProductId, filters = {}) {
     )
     select
       coalesce(sum(mt.market_kg), 0) as total_kg,
-      count(mt.*) as arrival_market_count,
+      count(*) as arrival_market_count,
       (select n from price_locations) as price_location_count
     from market_total mt
   `;
@@ -865,7 +865,7 @@ const SPECIAL_PRODUCT_ATTRIBUTES = {
   "sufighee": null,
 };
 
-const ATTR_TYPE_TO_COL = {
+export const ATTR_TYPE_TO_COL = {
   newOld: "new_old",
   color: "color",
   variety: "variety",

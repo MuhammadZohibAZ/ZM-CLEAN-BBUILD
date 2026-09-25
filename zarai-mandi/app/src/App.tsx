@@ -117,7 +117,7 @@ export default function App() {
 
       {/* Responsive Mobile Container — fits any screen width/height */}
       <div
-        className="w-full h-full flex flex-col mx-auto relative overflow-hidden"
+        className="zm-shell w-full h-full flex flex-col mx-auto relative overflow-hidden"
         style={{
           width: "100%",
           maxWidth: "480px",

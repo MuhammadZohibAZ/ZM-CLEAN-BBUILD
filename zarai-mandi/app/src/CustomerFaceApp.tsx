@@ -1,4 +1,6 @@
 import React, {
+  lazy,
+  Suspense,
   useState,
   useRef,
   useEffect,
@@ -20,6 +22,7 @@ import pakistanFlagImg from "./assets/pakistan_flag.png";
 import { AnimatedTabBar, type TabItem } from "./components/ui/animated-tab-bar";
 import ZaraiMandiMap from "./components/ZaraiMandiMap";
 import ExpandableMandiMapCard from "./components/ExpandableMandiMapCard";
+import { PageCurtain, usePageCurtain } from "./components/ui/page-curtain";
 import { type MapByProductRecord } from "./components/ZaraiMandiMap";
 import { VoiceAssistant, VoiceButton, speakUrdu } from "./components/VoiceAssistant";
 import {
@@ -46,6 +49,7 @@ import {
   type TrendPoint,
 } from "./lib/api";
 import { buildMandiInlineGraphFromRows } from "./lib/mandiGraph";
+import { requestDeviceOrientation, inDevicePreview } from "./lib/device-orientation";
 import {
   getPackagesForMonth,
   getVarietyIcon,
@@ -565,8 +569,6 @@ const AUTO_URDU_DICT: Record<string, string> = {
   Semolina: "سوجی",
   Straw: "بھوسہ",
   "Wheat Straw": "گندم کا بھوسہ",
-  Sorghum: "جوار",
-  Barley: "جَو",
   "Special Flour": "اسپیشل آٹا",
   "Special-Flour": "اسپیشل آٹا",
   "Maize Grain": "مکئی دانہ",
@@ -697,7 +699,6 @@ const AUTO_URDU_DICT: Record<string, string> = {
   Dilkush: "دلکش",
   Arooj: "عروج",
   Subham: "سبھم",
-  "Special Flour": "خصوصی آٹا",
   "All Provinces": "تمام صوبے",
   "Clear (Today)": "ہٹائیں (آج)",
   "Clear date": "تاریخ ہٹائیں",
@@ -724,7 +725,6 @@ const AUTO_URDU_DICT: Record<string, string> = {
   "Unit = Rs. · Unit = (40 kg)": "اکائی = روپے · وزن = (۴۰ کلو)",
   Days: "دن",
   "Price (Rs/40kg)": "قیمت (روپے / ۴۰ کلو)",
-  "Arrivals": "آمد)",
   Jan: "جنوری",
   Feb: "فروری",
   Mar: "مارچ",
@@ -833,7 +833,6 @@ const AUTO_URDU_DICT: Record<string, string> = {
   "SEARCH ANY MANDI OR DISTRICT": "منڈی یا ضلع تلاش کریں",
   "Search Any Mandi or District": "منڈی یا ضلع تلاش کریں",
   "e.g. Badami Bagh, Faisalabad, Multan...": "مثال: بادامی باغ، فیصل آباد، ملتان...",
-  "All Pakistan": "پورا پاکستان",
   "All Pakistan (National)": "پورا پاکستان (قومی)",
   "SELECT PROVINCE (TRADITION & REGION)": "صوبہ اور روایت منتخب کریں",
   "Select Province (Tradition & Region)": "صوبہ اور روایت منتخب کریں",
@@ -857,29 +856,15 @@ const AUTO_URDU_DICT: Record<string, string> = {
 
   // Deep View, Rates & Quality Metrics
   "TODAY'S OVERVIEW": "آج کا جائزہ",
-  "Today's Overview": "آج کا جائزہ",
   "MAX PRICE": "زیادہ قیمت",
   "Max Price": "زیادہ قیمت",
   "MIN PRICE": "کم قیمت",
   "Min Price": "کم قیمت",
   "ARRIVAL": "آمد",
-  "Arrival": "آمد",
   "TOTAL BAGS": "کل بوریاں",
   "Total Bags": "کل بوریاں",
   "(40 KG)": "(۴۰ کلو)",
   "(40 kg)": "(۴۰ کلو)",
-  "RATE TYPE": "ریٹ کی قسم",
-  "Rate Type": "ریٹ کی قسم",
-  "VARIETY": "ورائٹی / قسم",
-  "Variety": "ورائٹی / قسم",
-  "COLOR": "رنگ",
-  "Color": "رنگ",
-  "QUALITY": "معیار",
-  "Quality": "معیار",
-  "SPEC": "پیکنگ / تفصیل",
-  "Spec": "پیکنگ / تفصیل",
-  "CONDITION": "حالت",
-  "Condition": "حالت",
   "Complete Profile to Unlock Rate": "ریٹ دیکھنے کے لیے پروفائل مکمل کریں",
   "Complete your profile to unlock historical price data.": "پچھلے ریکارڈ دیکھنے کے لیے پروفائل مکمل کریں۔",
   "Unlock ➔": "انلاک کریں ➔",
@@ -892,16 +877,15 @@ const AUTO_URDU_DICT: Record<string, string> = {
   "Skip to Customer App": "کسٹمر ایپ پر جائیں",
   "TODAY": "آج",
   "YESTERDAY": "گزشتہ کل",
-  "All": "تمام",
   "ALL": "تمام",
 };
 
 const TRANS: Record<string, { en: string; ur: string }> = {
   // Navigation
   "nav.home": { en: "Home", ur: "ہوم" },
-  "nav.analytics": { en: "Analytics", ur: "تجزیات" },
+  "nav.compare": { en: "Compare", ur: "موازنہ" },
   "nav.news": { en: "Reels", ur: "ویڈیوز" },
-  "nav.voice": { en: "Voice", ur: "آواز" },
+
 
   // Common
   "common.all": { en: "All", ur: "سب" },
@@ -1028,7 +1012,7 @@ const TRANS: Record<string, { en: string; ur: string }> = {
   // Misc screens
   "screen.search.title": { en: "Search", ur: "تلاش" },
   "screen.mandi.title": { en: "Mandi", ur: "منڈی" },
-  "screen.analytics.title": { en: "Analytics", ur: "تجزیات" },
+  "screen.compare.title": { en: "Compare", ur: "موازنہ" },
   "screen.news.title": { en: "Market Updates", ur: "مارکیٹ اپڈیٹس" },
 };
 
@@ -1185,7 +1169,7 @@ type Screen =
     initialMoisture?: string;
     initialStatDate?: string;
   }
-  | { id: "analytics" }
+  | { id: "compare" }
   | { id: "news" }
   | {
     id: "live-market";
@@ -1201,9 +1185,18 @@ type LocationScope = {
   label: string;
 };
 
-type NavTab = "home" | "analytics" | "news" | "voice";
+type NavTab = "home" | "compare" | "news" | "voice";
+
+// Compare (with its live-data adapter) is split out of the main bundle.
+const CompareScreen = lazy(() => import("./components/compare/CompareScreen"));
+
+const NAV_ORDER: Record<NavTab, number> = { home: 0, compare: 1, news: 2, voice: 3 };
+const NAV_CURTAIN: Partial<Record<NavTab, { en: string; ur: string; color: string }>> = {
+  home: { en: "Home", ur: "ہوم", color: "#087F63" },
+  compare: { en: "Compare", ur: "موازنہ", color: "#07332F" },
+  news: { en: "Reels", ur: "ویڈیوز", color: "#B9822E" },
+};
 type TimeRange = "day" | "week" | "month" | "year";
-type AnalyticsTab = "trends" | "allrates" | "compare" | "regional";
 
 type FeedMsg = {
   id: number;
@@ -2656,7 +2649,6 @@ const ICON_PATHS: Record<string, string> = {
   "Garlic-Chinese": `${BYPRODUCTS_PATH}/vegetables/Garlic-Chinese.png`,
   Ginger: `${BYPRODUCTS_PATH}/vegetables/Ginger.png`,
   Spinach: `${BYPRODUCTS_PATH}/vegetables/Spinach.png`,
-  "Green-Chilli": `${BYPRODUCTS_PATH}/vegetables/Green-Chilli.png`,
   // Potato variants
   "Potato-Goli": `${BYPRODUCTS_PATH}/vegetables/Potato-Goli.png`,
   "Potato-Santa": `${BYPRODUCTS_PATH}/vegetables/Potato-Santa.png`,
@@ -2985,8 +2977,6 @@ const product_SPRITE_KEY: Record<string, string> = {
   Tilapia: "fisheries",
   Alfalfa: "alfalfa",
   "Rhode Grass": "rhode-grass",
-  "Wheat Bran": "Bran",
-  "Wheat Straw": "Straw",
   "Canola Meal Feed": "Canola-Meal",
   "Mustard Seed Cake": "Mustard-Cake",
   "Cotton Seed Cake Feed": "Cotton-Seed-Cake",
@@ -7289,7 +7279,8 @@ function LocationStatCell({
   );
 }
 
-const SPECIAL_ATTR_META: Record<CardSpecialAttr["type"], { labelEn: string; labelUr: string; dotColor: string }> = {
+const SPECIAL_ATTR_META: Record<string, { labelEn: string; labelUr: string; dotColor: string }> = {
+  multi: { labelEn: "Attributes", labelUr: "اوصاف", dotColor: "#10B981" },
   moisture: { labelEn: "Moisture", labelUr: "نمی", dotColor: "#38BDF8" },
   newOld: { labelEn: "Type", labelUr: "معیار", dotColor: "#F59E0B" },
   color: { labelEn: "Color", labelUr: "رنگ", dotColor: "#FBBF24" },
@@ -7369,8 +7360,8 @@ function ByProductNationalCard({
   const hasArrival = stats.hasData && stats.totalArrival > 0;
   const arrivalValue = hasArrival
     ? (lang === 'ur'
-        ? `${toUrduDigits(stats.totalArrival.toLocaleString())}\u00A0تھیلے`
-        : `${stats.totalArrival.toLocaleString()}\u00A0Bags`)
+      ? `${toUrduDigits(stats.totalArrival.toLocaleString())}\u00A0تھیلے`
+      : `${stats.totalArrival.toLocaleString()}\u00A0Bags`)
     : '—';
 
   return (
@@ -7398,33 +7389,23 @@ function ByProductNationalCard({
         }}
       />
 
-      {/* Top Header: Title & Rate Type on Left + Date on Right */}
-      <div className="relative z-10 w-full mb-2 flex items-start justify-between gap-1.5">
-        <div className="flex-1 min-w-0">
-          <h3
-            className="text-[15px] sm:text-[16.5px] font-black text-[#143B33] leading-tight tracking-tight truncate"
-            style={{
-              fontFamily: lang === 'ur' ? URDU_FONT : "'Inter', sans-serif",
-            }}
-            title={tc(stats.byproduct)}
-          >
-            {tc(stats.byproduct)}
-          </h3>
-          <p
-            className="text-[11px] sm:text-[11.5px] font-bold text-[#087F63] mt-0.5 leading-none truncate"
-            style={{ fontFamily: lang === 'ur' ? URDU_FONT : 'inherit' }}
-          >
-            {tr(stats.mostOccurringRateType)}
-          </p>
-        </div>
-
-        {/* Date on Top Right */}
-        <span
-          className="text-[10px] sm:text-[10.5px] font-extrabold text-[#52635F] whitespace-nowrap pt-0.5 flex-shrink-0"
-          style={{ fontFamily: lang === 'ur' ? URDU_FONT : "'Inter', sans-serif" }}
+      {/* Top Header: Title & Rate Type (Dates removed, full title width) */}
+      <div className="relative z-10 w-full mb-2">
+        <h3
+          className="text-[15px] sm:text-[16.5px] font-black text-[#143B33] leading-tight tracking-tight"
+          style={{
+            fontFamily: lang === 'ur' ? URDU_FONT : "'Inter', sans-serif",
+          }}
+          title={tc(stats.byproduct)}
         >
-          {lang === 'ur' ? '۱۴ ستمبر' : '14 September'}
-        </span>
+          {tc(stats.byproduct)}
+        </h3>
+        <p
+          className="text-[11px] sm:text-[11.5px] font-bold text-[#087F63] mt-0.5 leading-none truncate"
+          style={{ fontFamily: lang === 'ur' ? URDU_FONT : 'inherit' }}
+        >
+          {tr(stats.mostOccurringRateType)}
+        </p>
       </div>
 
       {/* Metric rows: exactly 3 rows across every card for 100% uniform height and structure */}
@@ -8181,12 +8162,15 @@ function MultiLocSheet({
   onApply,
   onClose,
   singleSelect = false,
+  multiProvince = false,
   dataMandiNames,
 }: {
   selected: { kind: LocationScope["kind"]; label: string }[];
   onApply: (locs: { kind: LocationScope["kind"]; label: string }[]) => void;
   onClose: () => void;
   singleSelect?: boolean;
+  /** Several provinces can be selected together (used by Compare). */
+  multiProvince?: boolean;
   // Real mandi/district names (lowercased) that have data for whatever
   // by-product this picker was opened from. When provided, locations with
   // data are listed first and ones without are pushed down and marked --
@@ -8257,6 +8241,17 @@ function MultiLocSheet({
     const isAlready = draft.some(
       (x) => x.kind === "province" && x.label === p,
     );
+    if (multiProvince) {
+      const next = isAlready
+        ? draft.filter((x) => !(x.kind === "province" && x.label === p))
+        : [...draft.filter((x) => x.kind !== "pakistan"), { kind: "province" as const, label: p }];
+      setDraft(next.length ? next : [{ kind: "pakistan", label: "All Pakistan" }]);
+      if (voiceEnabled) {
+        speakText(lang === "ur" ? `صوبہ ${tmL(p)}` : `${p} Province ${isAlready ? "removed" : "added"}`);
+      }
+      setSelectedProvince(p);
+      return;
+    }
     if (isAlready) {
       setDraft([{ kind: "pakistan", label: "All Pakistan" }]);
       if (voiceEnabled) {
@@ -9400,6 +9395,12 @@ type RichRow = {
   spec?: string;
   condition?: string;
   newOld?: string;
+  quality?: string;
+  moisture?: string;
+  origin?: string;
+  area?: string;
+  date?: string;
+  arrivalUnit?: string;
 };
 
 // ─── Islamic / Lunar Calendar Helper ──────────────────────────
@@ -10351,7 +10352,7 @@ function DeepViewLocationSheet({
   onClose: () => void;
   validMandis?: string[];
 }) {
-  const { tm } = useLang();
+  const { tm, lang } = useLang();
   const USER_DISTRICT = "Sahiwal";
   const USER_PROVINCE = "Punjab";
 
@@ -10659,11 +10660,12 @@ function DeepViewLocationSheet({
                 {provinces.map((p) => {
                   const isSelected = current.kind === "province" && current.label === p;
                   const pConfig: Record<string, {
-                    pattern: "phulkari" | "ajrak" | "khyber" | "baloch";
-                    traditionUr: string;
-                    traditionEn: string;
+                    pattern?: "phulkari" | "ajrak" | "khyber" | "baloch";
+                    traditionUr?: string;
+                    traditionEn?: string;
                     cardBg: string;
                     borderColor: string;
+                    accentColor: string;
                   }> = {
                     Punjab: {
                       cardBg: PROVINCE_CARD_BG.Punjab,
@@ -10984,7 +10986,7 @@ function ProductRatesScreen({
   );
   const [isAttrPanelOpen, setIsAttrPanelOpen] = useState(false);
   const [attrSheet, setAttrSheet] = useState<
-    "variety" | "newold" | "color" | "spec" | "condition" | "moisture" | "ratetype" | null
+    "variety" | "newold" | "color" | "spec" | "condition" | "moisture" | "ratetype" | string | null
   >(null);
   // Overview stat date filter — pre-filled when navigating from a historical card
   const [statDateFilter, setStatDateFilter] = useState<Date | null>(
@@ -11049,6 +11051,9 @@ function ProductRatesScreen({
 
   useEffect(() => {
     if (isTableExpanded) {
+      if (inDevicePreview()) {
+        requestDeviceOrientation(landscapeRotated ? "landscape" : "portrait");
+      }
       if (typeof screen !== "undefined" && screen.orientation && "lock" in screen.orientation) {
         try {
           if (landscapeRotated) {
@@ -11059,6 +11064,9 @@ function ProductRatesScreen({
         } catch (_) { }
       }
     } else {
+      if (inDevicePreview()) {
+        requestDeviceOrientation("portrait");
+      }
       if (typeof screen !== "undefined" && screen.orientation && "unlock" in screen.orientation) {
         try {
           screen.orientation.unlock();
@@ -11066,6 +11074,15 @@ function ProductRatesScreen({
       }
     }
   }, [isTableExpanded, landscapeRotated]);
+
+  // Restore portrait orientation when unmounting or leaving ProductRatesScreen
+  useEffect(() => {
+    return () => {
+      if (inDevicePreview()) {
+        requestDeviceOrientation("portrait");
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (selectedMandiGraphRow && tableScrollRef.current) {
@@ -11695,11 +11712,19 @@ function ProductRatesScreen({
     PT = 14,
     PB = 26;
   const chartW = CW - PL - PR;
-  const chartH = CH - PT - PB;
+  const volBaseY = CH - PB;
+  const volMaxH = 26;
+  const separatorY = compareMode ? volBaseY : volBaseY - volMaxH - 8;
+  const lineChartH = separatorY - PT;
+
+  const arrSeparatorY = volBaseY - volMaxH - 8;
+  const arrLineChartH = arrSeparatorY - PT;
 
   const xOf = (i: number, total: number) => PL + (i / Math.max(total - 1, 1)) * chartW;
   const yOf = (v: number, mn: number, mx: number) =>
-    PT + ((mx - v) / Math.max(mx - mn, 1)) * chartH;
+    PT + ((mx - v) / Math.max(mx - mn, 1)) * lineChartH;
+  const yOfArr = (v: number, mn: number, mx: number) =>
+    PT + ((mx - v) / Math.max(mx - mn, 1)) * arrLineChartH;
 
   const priceFlat = activeSeries.flatMap((s) => s.data);
   const rawPMin = priceFlat.length ? Math.min(...priceFlat) : 2500;
@@ -12519,11 +12544,10 @@ function ProductRatesScreen({
                         <button
                           type="button"
                           onClick={() => setAttrSheet(attrSheet === "ratetype" ? null : "ratetype")}
-                          className={`tap-target flex items-center gap-2 py-1.5 px-3 rounded-2xl border transition-all duration-150 active:scale-95 min-w-0 ${
-                            attrSheet === "ratetype"
-                              ? "bg-[#E8F8F3] border-[#087F63] shadow-sm ring-1 ring-[#087F63]"
-                              : "bg-[#E8F5EE] border-[#A7F3D0]"
-                          }`}
+                          className={`tap-target flex items-center gap-2 py-1.5 px-3 rounded-2xl border transition-all duration-150 active:scale-95 min-w-0 ${attrSheet === "ratetype"
+                            ? "bg-[#E8F8F3] border-[#087F63] shadow-sm ring-1 ring-[#087F63]"
+                            : "bg-[#E8F5EE] border-[#A7F3D0]"
+                            }`}
                           title={lang === "ur" ? "نرخ کی قسم تبدیل کریں" : "Change Rate Type"}
                         >
                           <div
@@ -12556,9 +12580,8 @@ function ProductRatesScreen({
                               strokeWidth="2.5"
                               strokeLinecap="round"
                               strokeLinejoin="round"
-                              className={`flex-shrink-0 transition-transform duration-200 ${
-                                attrSheet === "ratetype" ? "rotate-180" : ""
-                              }`}
+                              className={`flex-shrink-0 transition-transform duration-200 ${attrSheet === "ratetype" ? "rotate-180" : ""
+                                }`}
                             >
                               <polyline points="6 9 12 15 18 9" />
                             </svg>
@@ -12656,18 +12679,16 @@ function ProductRatesScreen({
                                       className="tap-target flex items-center gap-2.5 py-1 px-1 rounded-lg hover:bg-[#F8FAF9] transition text-left cursor-pointer active:scale-98"
                                     >
                                       <div
-                                        className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                                          isSelected ? "border-[#087F63]" : "border-[#9CA3AF]"
-                                        }`}
+                                        className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? "border-[#087F63]" : "border-[#9CA3AF]"
+                                          }`}
                                       >
                                         {isSelected && (
                                           <div className="w-2 h-2 rounded-full bg-[#087F63]" />
                                         )}
                                       </div>
                                       <span
-                                        className={`text-[12.5px] truncate ${
-                                          isSelected ? "font-bold text-[#087F63]" : "font-medium text-[#374151]"
-                                        }`}
+                                        className={`text-[12.5px] truncate ${isSelected ? "font-bold text-[#087F63]" : "font-medium text-[#374151]"
+                                          }`}
                                         style={{
                                           fontFamily: lang === "ur" ? URDU_FONT : "inherit",
                                         }}
@@ -12930,11 +12951,10 @@ function ProductRatesScreen({
                                       onClick={() =>
                                         setAttrSheet(isActive ? null : item.key)
                                       }
-                                      className={`tap-target w-full h-[42px] flex items-center justify-between px-2.5 py-1 rounded-xl border transition-all text-left active:scale-[0.98] ${
-                                        isActive
-                                          ? "bg-[#E8F8F3] border-[#087F63] shadow-sm ring-1 ring-[#087F63]"
-                                          : "bg-white border-[#E5E7EB] hover:bg-[#F9FBFA]"
-                                      }`}
+                                      className={`tap-target w-full h-[42px] flex items-center justify-between px-2.5 py-1 rounded-xl border transition-all text-left active:scale-[0.98] ${isActive
+                                        ? "bg-[#E8F8F3] border-[#087F63] shadow-sm ring-1 ring-[#087F63]"
+                                        : "bg-white border-[#E5E7EB] hover:bg-[#F9FBFA]"
+                                        }`}
                                     >
                                       <div className="flex items-center gap-2 min-w-0 flex-1">
                                         {item.icon}
@@ -12948,9 +12968,8 @@ function ProductRatesScreen({
                                             {item.label}
                                           </span>
                                           <span
-                                            className={`text-[12px] font-bold block truncate mt-0.5 ${
-                                              isActive ? "text-[#087F63]" : "text-[#1F2937]"
-                                            }`}
+                                            className={`text-[12px] font-bold block truncate mt-0.5 ${isActive ? "text-[#087F63]" : "text-[#1F2937]"
+                                              }`}
                                             style={{
                                               fontFamily: lang === "ur" ? URDU_FONT : "inherit",
                                             }}
@@ -12992,11 +13011,10 @@ function ProductRatesScreen({
                                       onClick={() =>
                                         setAttrSheet(isActive ? null : item.key)
                                       }
-                                      className={`tap-target w-full h-[42px] flex items-center justify-between px-2.5 py-1 rounded-xl border transition-all text-left active:scale-[0.98] ${
-                                        isActive
-                                          ? "bg-[#E8F8F3] border-[#087F63] shadow-sm ring-1 ring-[#087F63]"
-                                          : "bg-white border-[#E5E7EB] hover:bg-[#F9FBFA]"
-                                      }`}
+                                      className={`tap-target w-full h-[42px] flex items-center justify-between px-2.5 py-1 rounded-xl border transition-all text-left active:scale-[0.98] ${isActive
+                                        ? "bg-[#E8F8F3] border-[#087F63] shadow-sm ring-1 ring-[#087F63]"
+                                        : "bg-white border-[#E5E7EB] hover:bg-[#F9FBFA]"
+                                        }`}
                                     >
                                       <div className="flex items-center gap-2 min-w-0 flex-1">
                                         {item.icon}
@@ -13010,9 +13028,8 @@ function ProductRatesScreen({
                                             {item.label}
                                           </span>
                                           <span
-                                            className={`text-[12px] font-bold block truncate mt-0.5 ${
-                                              isActive ? "text-[#087F63]" : "text-[#1F2937]"
-                                            }`}
+                                            className={`text-[12px] font-bold block truncate mt-0.5 ${isActive ? "text-[#087F63]" : "text-[#1F2937]"
+                                              }`}
                                             style={{
                                               fontFamily: lang === "ur" ? URDU_FONT : "inherit",
                                             }}
@@ -13047,11 +13064,10 @@ function ProductRatesScreen({
                             {/* FLOATING DROPDOWN POPOVER CARD */}
                             {(isLeftColActive || isRightColActive) && (
                               <div
-                                className={`absolute z-50 bg-white rounded-2xl p-3 shadow-2xl border border-[#E2E8F0] flex flex-col animate-fadeIn ${
-                                  isRightColActive
-                                    ? "right-0 w-[54%] min-w-[175px]"
-                                    : "left-0 w-[54%] min-w-[175px]"
-                                }`}
+                                className={`absolute z-50 bg-white rounded-2xl p-3 shadow-2xl border border-[#E2E8F0] flex flex-col animate-fadeIn ${isRightColActive
+                                  ? "right-0 w-[54%] min-w-[175px]"
+                                  : "left-0 w-[54%] min-w-[175px]"
+                                  }`}
                                 style={{
                                   top: popoverTop,
                                   maxHeight: "230px",
@@ -13061,9 +13077,8 @@ function ProductRatesScreen({
                               >
                                 {/* Upward Pointer Notch */}
                                 <div
-                                  className={`absolute -top-1.5 w-3 h-3 bg-white border-t border-l border-[#E2E8F0] rotate-45 ${
-                                    isRightColActive ? "right-8" : "left-8"
-                                  }`}
+                                  className={`absolute -top-1.5 w-3 h-3 bg-white border-t border-l border-[#E2E8F0] rotate-45 ${isRightColActive ? "right-8" : "left-8"
+                                    }`}
                                 />
 
                                 {/* Header Title */}
@@ -13090,22 +13105,20 @@ function ProductRatesScreen({
                                         className="tap-target flex items-center gap-2.5 py-1 px-1 rounded-lg hover:bg-[#F8FAF9] transition text-left cursor-pointer active:scale-98"
                                       >
                                         <div
-                                          className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                                            isSelected
-                                              ? "border-[#087F63]"
-                                              : "border-[#9CA3AF]"
-                                          }`}
+                                          className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${isSelected
+                                            ? "border-[#087F63]"
+                                            : "border-[#9CA3AF]"
+                                            }`}
                                         >
                                           {isSelected && (
                                             <div className="w-2 h-2 rounded-full bg-[#087F63]" />
                                           )}
                                         </div>
                                         <span
-                                          className={`text-[12.5px] truncate ${
-                                            isSelected
-                                              ? "font-bold text-[#087F63]"
-                                              : "font-medium text-[#374151]"
-                                          }`}
+                                          className={`text-[12.5px] truncate ${isSelected
+                                            ? "font-bold text-[#087F63]"
+                                            : "font-medium text-[#374151]"
+                                            }`}
                                           style={{
                                             fontFamily: lang === "ur" ? URDU_FONT : "inherit",
                                           }}
@@ -13356,6 +13369,7 @@ function ProductRatesScreen({
                         onClick={() => {
                           setIsTableExpanded(false);
                           setSelectedMandiGraphRow(null);
+                          if (inDevicePreview()) requestDeviceOrientation("portrait");
                         }}
                       />
                     )}
@@ -13363,7 +13377,7 @@ function ProductRatesScreen({
                     <div
                       className={
                         isTableExpanded
-                          ? `zm-landscape-expanded-table ${landscapeRotated ? "zm-force-landscape" : ""} transition-all duration-300`
+                          ? `zm-landscape-expanded-table ${landscapeRotated && !inDevicePreview() ? "zm-force-landscape" : ""} transition-all duration-300`
                           : "rounded-2xl overflow-hidden transition-all duration-300 flex flex-col shadow-sm"
                       }
                       style={{
@@ -13378,6 +13392,7 @@ function ProductRatesScreen({
                           onClick={() => {
                             setIsTableExpanded(false);
                             setSelectedMandiGraphRow(null);
+                            if (inDevicePreview()) requestDeviceOrientation("portrait");
                           }}
                         />
                       )}
@@ -13397,6 +13412,7 @@ function ProductRatesScreen({
                                 onClick={() => {
                                   setIsTableExpanded(false);
                                   setSelectedMandiGraphRow(null);
+                                  if (inDevicePreview()) requestDeviceOrientation("portrait");
                                 }}
                                 className="tap-target flex items-center justify-center w-7 h-7 rounded-full bg-[#E5EFEA] hover:bg-[#D5E5DE] text-[#064E3B] transition active:scale-95 flex-shrink-0"
                                 title={lang === "ur" ? "واپس / بند کریں" : "Back / Close"}
@@ -13444,7 +13460,13 @@ function ProductRatesScreen({
                             {isTableExpanded && (
                               <button
                                 type="button"
-                                onClick={() => setLandscapeRotated((r) => !r)}
+                                onClick={() => {
+                                  const next = !landscapeRotated;
+                                  setLandscapeRotated(next);
+                                  if (inDevicePreview()) {
+                                    requestDeviceOrientation(next ? "landscape" : "portrait");
+                                  }
+                                }}
                                 className="tap-target zm-beam-border flex items-center gap-1 px-2.5 py-1 rounded-full font-bold text-xs transition active:scale-95"
                                 style={{
                                   background: "rgba(255, 255, 255, 0.75)",
@@ -13480,9 +13502,11 @@ function ProductRatesScreen({
                                 setIsTableExpanded((prev) => {
                                   if (prev) {
                                     setSelectedMandiGraphRow(null);
+                                    if (inDevicePreview()) requestDeviceOrientation("portrait");
                                     return false;
                                   }
                                   setLandscapeRotated(true);
+                                  if (inDevicePreview()) requestDeviceOrientation("landscape");
                                   return true;
                                 });
                               }}
@@ -13963,7 +13987,77 @@ function ProductRatesScreen({
                                   {lang === "ur" ? "قسم" : "Price Type"}
                                 </th>
 
-                                {/* 4. Trend (with Interval dropdown) */}
+                                {/* 4. Primary Special Attribute First (Moisture for Maize, Color for Cotton/Sesame, Variety for Rice, Quality for Wheat/Gram/others) */}
+                                {primarySpecialAttr === "moisture" && (
+                                  <th
+                                    style={{
+                                      padding: "7px 4px",
+                                      textAlign: "center",
+                                      fontWeight: 800,
+                                      fontSize: lang === "ur" ? 13 : 10,
+                                      color: "#80918B",
+                                      textTransform: "uppercase",
+                                      borderBottom: "1.5px solid #D5E2DD",
+                                      minWidth: 64,
+                                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                    }}
+                                  >
+                                    {lang === "ur" ? "نمی" : "Moisture"}
+                                  </th>
+                                )}
+                                {primarySpecialAttr === "color" && (
+                                  <th
+                                    style={{
+                                      padding: "7px 4px",
+                                      textAlign: "center",
+                                      fontWeight: 800,
+                                      fontSize: lang === "ur" ? 13 : 10,
+                                      color: "#80918B",
+                                      textTransform: "uppercase",
+                                      borderBottom: "1.5px solid #D5E2DD",
+                                      minWidth: 64,
+                                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                    }}
+                                  >
+                                    {lang === "ur" ? "رنگ" : "Color"}
+                                  </th>
+                                )}
+                                {primarySpecialAttr === "variety" && (
+                                  <th
+                                    style={{
+                                      padding: "7px 4px",
+                                      textAlign: "center",
+                                      fontWeight: 800,
+                                      fontSize: lang === "ur" ? 13 : 10,
+                                      color: "#80918B",
+                                      textTransform: "uppercase",
+                                      borderBottom: "1.5px solid #D5E2DD",
+                                      minWidth: 74,
+                                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                    }}
+                                  >
+                                    {lang === "ur" ? "قسم" : "Variety"}
+                                  </th>
+                                )}
+                                {primarySpecialAttr === "quality" && (
+                                  <th
+                                    style={{
+                                      padding: "7px 4px",
+                                      textAlign: "center",
+                                      fontWeight: 800,
+                                      fontSize: lang === "ur" ? 13 : 10,
+                                      color: "#80918B",
+                                      textTransform: "uppercase",
+                                      borderBottom: "1.5px solid #D5E2DD",
+                                      minWidth: 64,
+                                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                    }}
+                                  >
+                                    {lang === "ur" ? "معیار" : "Quality"}
+                                  </th>
+                                )}
+
+                                {/* 5. Trend (with Interval dropdown) */}
                                 <th
                                   style={{
                                     padding: "7px 4px",
@@ -14060,76 +14154,6 @@ function ProductRatesScreen({
                                     )}
                                   </div>
                                 </th>
-
-                                {/* 5. Primary Special Attribute First (Moisture for Maize, Color for Cotton/Sesame, Variety for Rice, Quality for Wheat/Gram/others) */}
-                                {primarySpecialAttr === "moisture" && (
-                                  <th
-                                    style={{
-                                      padding: "7px 4px",
-                                      textAlign: "center",
-                                      fontWeight: 800,
-                                      fontSize: lang === "ur" ? 13 : 10,
-                                      color: "#80918B",
-                                      textTransform: "uppercase",
-                                      borderBottom: "1.5px solid #D5E2DD",
-                                      minWidth: 64,
-                                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                                    }}
-                                  >
-                                    {lang === "ur" ? "نمی" : "Moisture"}
-                                  </th>
-                                )}
-                                {primarySpecialAttr === "color" && (
-                                  <th
-                                    style={{
-                                      padding: "7px 4px",
-                                      textAlign: "center",
-                                      fontWeight: 800,
-                                      fontSize: lang === "ur" ? 13 : 10,
-                                      color: "#80918B",
-                                      textTransform: "uppercase",
-                                      borderBottom: "1.5px solid #D5E2DD",
-                                      minWidth: 64,
-                                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                                    }}
-                                  >
-                                    {lang === "ur" ? "رنگ" : "Color"}
-                                  </th>
-                                )}
-                                {primarySpecialAttr === "variety" && (
-                                  <th
-                                    style={{
-                                      padding: "7px 4px",
-                                      textAlign: "center",
-                                      fontWeight: 800,
-                                      fontSize: lang === "ur" ? 13 : 10,
-                                      color: "#80918B",
-                                      textTransform: "uppercase",
-                                      borderBottom: "1.5px solid #D5E2DD",
-                                      minWidth: 74,
-                                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                                    }}
-                                  >
-                                    {lang === "ur" ? "قسم" : "Variety"}
-                                  </th>
-                                )}
-                                {primarySpecialAttr === "quality" && (
-                                  <th
-                                    style={{
-                                      padding: "7px 4px",
-                                      textAlign: "center",
-                                      fontWeight: 800,
-                                      fontSize: lang === "ur" ? 13 : 10,
-                                      color: "#80918B",
-                                      textTransform: "uppercase",
-                                      borderBottom: "1.5px solid #D5E2DD",
-                                      minWidth: 64,
-                                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                                    }}
-                                  >
-                                    {lang === "ur" ? "معیار" : "Quality"}
-                                  </th>
-                                )}
 
                                 {/* 6. Arrival Quantity */}
                                 <th
@@ -14331,1199 +14355,1263 @@ function ProductRatesScreen({
                                 </tr>
                               ) : (
                                 tableRows.map((r, ci) => {
-                                // Multi-interval trend calculation derived from real Excel observations
-                                const rowTimeline = getExcelTimeline({
-                                  product,
-                                  byproduct: r.byproduct || byproduct,
-                                  locationLabel: r.mandiName,
-                                  locationKind: "mandi",
-                                  rateType: r.rateType,
-                                  range: "year",
-                                });
+                                  // Multi-interval trend calculation derived from real Excel observations
+                                  const rowTimeline = getExcelTimeline({
+                                    product,
+                                    byproduct: r.byproduct || byproduct,
+                                    locationLabel: r.mandiName,
+                                    locationKind: "mandi",
+                                    rateType: r.rateType,
+                                    range: "year",
+                                  });
 
-                                let rowMin = 0;
-                                let rowMax = 0;
-                                let rowArr = 0;
-                                let intervalPct = 0;
-                                let intervalTrend: "up" | "down" | "stable" = "stable";
+                                  let rowMin = 0;
+                                  let rowMax = 0;
+                                  let rowArr = 0;
+                                  let intervalPct = 0;
+                                  let intervalTrend: "up" | "down" | "stable" = "stable";
 
-                                if (isDateInRange && dateIdx >= 0) {
-                                  const startIdx =
-                                    tableTrendInterval === "72h"
-                                      ? Math.max(0, dateIdx - 3)
-                                      : tableTrendInterval === "weekly"
-                                        ? Math.max(0, dateIdx - 7)
-                                        : tableTrendInterval === "monthly"
-                                          ? 0
-                                          : Math.max(0, dateIdx - 1);
+                                  if (isDateInRange && dateIdx >= 0) {
+                                    const startIdx =
+                                      tableTrendInterval === "72h"
+                                        ? Math.max(0, dateIdx - 3)
+                                        : tableTrendInterval === "weekly"
+                                          ? Math.max(0, dateIdx - 7)
+                                          : tableTrendInterval === "monthly"
+                                            ? 0
+                                            : Math.max(0, dateIdx - 1);
 
-                                  const sliceMins = rowTimeline.mins.slice(startIdx, dateIdx + 1).filter((v) => v > 0);
-                                  rowMin = sliceMins.length > 0 ? Math.min(...sliceMins) : (rowTimeline.mins[dateIdx] ?? r.min);
+                                    const sliceMins = rowTimeline.mins.slice(startIdx, dateIdx + 1).filter((v) => v > 0);
+                                    rowMin = sliceMins.length > 0 ? Math.min(...sliceMins) : (rowTimeline.mins[dateIdx] ?? r.min);
 
-                                  const sliceMaxs = rowTimeline.maxs.slice(startIdx, dateIdx + 1).filter((v) => v > 0);
-                                  rowMax = sliceMaxs.length > 0 ? Math.max(...sliceMaxs) : (rowTimeline.maxs[dateIdx] ?? r.max);
+                                    const sliceMaxs = rowTimeline.maxs.slice(startIdx, dateIdx + 1).filter((v) => v > 0);
+                                    rowMax = sliceMaxs.length > 0 ? Math.max(...sliceMaxs) : (rowTimeline.maxs[dateIdx] ?? r.max);
 
-                                  const sliceArrs = rowTimeline.arrivals.slice(startIdx, dateIdx + 1).filter((v) => v > 0);
-                                  rowArr = sliceArrs.length > 0 ? sliceArrs.reduce((a, b) => a + b, 0) : (rowTimeline.arrivals[dateIdx] ?? parseArrival(r.arrival));
+                                    const sliceArrs = rowTimeline.arrivals.slice(startIdx, dateIdx + 1).filter((v) => v > 0);
+                                    rowArr = sliceArrs.length > 0 ? sliceArrs.reduce((a, b) => a + b, 0) : (rowTimeline.arrivals[dateIdx] ?? parseArrival(r.arrival));
 
-                                  const pSeries = rowTimeline.prices;
-                                  const pLatest = pSeries[dateIdx] ?? 0;
-                                  const pPrev = pSeries[startIdx] ?? pLatest;
+                                    const pSeries = rowTimeline.prices;
+                                    const pLatest = pSeries[dateIdx] ?? 0;
+                                    const pPrev = pSeries[startIdx] ?? pLatest;
 
-                                  if (pPrev > 0 && pLatest > 0) {
-                                    const delta = pLatest - pPrev;
-                                    intervalPct = Math.round((Math.abs(delta) / pPrev) * 1000) / 10;
-                                    if (delta > 0.01) intervalTrend = "up";
-                                    else if (delta < -0.01) intervalTrend = "down";
+                                    if (pPrev > 0 && pLatest > 0) {
+                                      const delta = pLatest - pPrev;
+                                      intervalPct = Math.round((Math.abs(delta) / pPrev) * 1000) / 10;
+                                      if (delta > 0.01) intervalTrend = "up";
+                                      else if (delta < -0.01) intervalTrend = "down";
+                                    }
+                                  } else {
+                                    rowMin = r.min;
+                                    rowMax = r.max;
+                                    rowArr = parseArrival(r.arrival);
                                   }
-                                } else {
-                                  rowMin = r.min;
-                                  rowMax = r.max;
-                                  rowArr = parseArrival(r.arrival);
-                                }
 
-                                const trendArrow =
-                                  intervalTrend === "up" ? "▲" : intervalTrend === "down" ? "▼" : "—";
-                                const trendColor =
-                                  intervalTrend === "up"
-                                    ? "#16A34A"
-                                    : intervalTrend === "down"
-                                      ? "#C94A43"
-                                      : "#52635F";
-                                const rtColor = RATE_COLORS[r.rateType] || "#52635F";
-                                const isRowModalActive =
-                                  selectedMandiGraphRow?.mandiName === r.mandiName &&
-                                  selectedMandiGraphRow?.rateType === r.rateType;
-                                // If a mandi graph is selected/open, highlight only that active mandi; otherwise highlight the initial/scope mandi
-                                const isSelected = selectedMandiGraphRow
-                                  ? isRowModalActive
-                                  : (locScope.kind === "mandi" &&
-                                    (locScope.label === r.mandiName ||
-                                      locScope.label.replace(/\s*mandi$/i, "").replace(/\s*منڈی$/i, "") ===
-                                      r.mandiName.replace(/\s*mandi$/i, "").replace(/\s*منڈی$/i, "")));
-                                const rowBg = isSelected
-                                  ? "#E4F2EC"
-                                  : ci % 2 === 0
-                                    ? "#FFFFFF"
-                                    : "#F8FCFA";
+                                  const trendArrow =
+                                    intervalTrend === "up" ? "▲" : intervalTrend === "down" ? "▼" : "—";
+                                  const trendColor =
+                                    intervalTrend === "up"
+                                      ? "#16A34A"
+                                      : intervalTrend === "down"
+                                        ? "#C94A43"
+                                        : "#52635F";
+                                  const rtColor = RATE_COLORS[r.rateType] || "#52635F";
+                                  const isRowModalActive =
+                                    selectedMandiGraphRow?.mandiName === r.mandiName &&
+                                    selectedMandiGraphRow?.rateType === r.rateType;
+                                  // If a mandi graph is selected/open, highlight only that active mandi; otherwise highlight the initial/scope mandi
+                                  const isSelected = selectedMandiGraphRow
+                                    ? isRowModalActive
+                                    : (locScope.kind === "mandi" &&
+                                      (locScope.label === r.mandiName ||
+                                        locScope.label.replace(/\s*mandi$/i, "").replace(/\s*منڈی$/i, "") ===
+                                        r.mandiName.replace(/\s*mandi$/i, "").replace(/\s*منڈی$/i, "")));
+                                  const rowBg = isSelected
+                                    ? "#E4F2EC"
+                                    : ci % 2 === 0
+                                      ? "#FFFFFF"
+                                      : "#F8FCFA";
 
-                                return (
-                                  <React.Fragment key={`${r.mandiName}-${r.rateType}-${ci}`}>
-                                    <tr
-                                      onClick={() => {
-                                        // Only expand this row's own inline graph -- do NOT
-                                        // change locScope here. locScope drives the whole
-                                        // table + the top overview chart, so setting it on a
-                                        // row click was re-scoping the entire screen down to
-                                        // this one mandi instead of just expanding the row.
-                                        setSelectedMandiGraphRow((prev) => {
-                                          if (
-                                            prev?.mandiName === r.mandiName &&
-                                            prev?.rateType === r.rateType
-                                          ) {
-                                            return null;
+                                  return (
+                                    <React.Fragment key={`${r.mandiName}-${r.rateType}-${ci}`}>
+                                      <tr
+                                        onClick={() => {
+                                          // Only expand this row's own inline graph -- do NOT
+                                          // change locScope here. locScope drives the whole
+                                          // table + the top overview chart, so setting it on a
+                                          // row click was re-scoping the entire screen down to
+                                          // this one mandi instead of just expanding the row.
+                                          setSelectedMandiGraphRow((prev) => {
+                                            if (
+                                              prev?.mandiName === r.mandiName &&
+                                              prev?.rateType === r.rateType
+                                            ) {
+                                              return null;
+                                            }
+                                            if (!isTableExpanded) {
+                                              setIsTableExpanded(true);
+                                              setLandscapeRotated(true);
+                                            }
+                                            return {
+                                              mandiName: r.mandiName,
+                                              rateType: r.rateType,
+                                              min: rowMin,
+                                              max: rowMax,
+                                              trend: intervalTrend,
+                                              trendPct: intervalPct,
+                                              arrival: rowArr > 0 ? rowArr : undefined,
+                                            };
+                                          });
+
+                                          if (voiceEnabled) {
+                                            const cleanMandi = r.mandiName.replace(/\s*mandi$/i, "").replace(/\s*منڈی$/i, "");
+                                            const minVal = rowMin > 0 ? rowMin.toLocaleString("en-PK") : "";
+                                            const maxVal = rowMax > 0 ? rowMax.toLocaleString("en-PK") : "";
+                                            const rtUr = tr(r.rateType).replace(" ریٹ", "").replace(" Rate", "");
+                                            const spoken = lang === "ur"
+                                              ? `${tm(cleanMandi)} منڈی، ${rtUr}، ریٹ ${minVal} سے ${maxVal} روپے`
+                                              : `${cleanMandi} Mandi, ${r.rateType} rate, ${minVal} to ${maxVal} rupees`;
+                                            speakText(spoken);
                                           }
-                                          if (!isTableExpanded) {
-                                            setIsTableExpanded(true);
-                                            setLandscapeRotated(false);
-                                          }
-                                          return {
-                                            mandiName: r.mandiName,
-                                            rateType: r.rateType,
-                                            min: rowMin,
-                                            max: rowMax,
-                                            trend: intervalTrend,
-                                            trendPct: intervalPct,
-                                            arrival: rowArr > 0 ? rowArr : undefined,
-                                          };
-                                        });
-
-                                        if (voiceEnabled) {
-                                          const cleanMandi = r.mandiName.replace(/\s*mandi$/i, "").replace(/\s*منڈی$/i, "");
-                                          const minVal = rowMin > 0 ? rowMin.toLocaleString("en-PK") : "";
-                                          const maxVal = rowMax > 0 ? rowMax.toLocaleString("en-PK") : "";
-                                          const rtUr = tr(r.rateType).replace(" ریٹ", "").replace(" Rate", "");
-                                          const spoken = lang === "ur"
-                                            ? `${tm(cleanMandi)} منڈی، ${rtUr}، ریٹ ${minVal} سے ${maxVal} روپے`
-                                            : `${cleanMandi} Mandi, ${r.rateType} rate, ${minVal} to ${maxVal} rupees`;
-                                          speakText(spoken);
-                                        }
-                                      }}
-                                      className="cursor-pointer transition hover:bg-[#EAF5F0]"
-                                      style={{
-                                        background: rowBg,
-                                        borderBottom: isRowModalActive ? "none" : "1px solid #EBF2EE",
-                                      }}
-                                    >
-                                      {/* 1. Station (Sticky) */}
-                                      <td
+                                        }}
+                                        className="cursor-pointer transition hover:bg-[#EAF5F0]"
                                         style={{
-                                          position: "sticky",
-                                          left: 0,
-                                          zIndex: 10,
                                           background: rowBg,
-                                          padding: "7px 6px",
-                                          fontWeight: 700,
-                                          color: "#183B34",
-                                          whiteSpace: "nowrap",
-                                          overflow: "hidden",
-                                          textOverflow: "ellipsis",
-                                          maxWidth: 90,
-                                          borderRight: "1px solid #D5E2DD",
-                                          fontFamily:
-                                            lang === "ur"
-                                              ? URDU_FONT
-                                              : "inherit",
+                                          borderBottom: isRowModalActive ? "none" : "1px solid #EBF2EE",
                                         }}
                                       >
-                                        {tm(
-                                          r.mandiName
-                                            .replace(/\s*mandi$/i, "")
-                                            .replace(/\s*منڈی$/i, ""),
-                                        )}
-                                      </td>
-
-                                      {/* 2. Min – Max */}
-                                      <td
-                                        style={{
-                                          padding: "7px 4px",
-                                          textAlign: "center",
-                                          color: rowMin > 0 ? "#087F63" : "#80918B",
-                                          fontWeight: 800,
-                                          fontSize: 11,
-                                          whiteSpace: "nowrap",
-                                        }}
-                                      >
-                                        {rowMin > 0 && rowMax > 0
-                                          ? `${rowMin.toLocaleString("en-PK")} – ${rowMax.toLocaleString("en-PK")}`
-                                          : "—"}
-                                      </td>
-
-                                      {/* 3. Price Type */}
-                                      <td
-                                        style={{
-                                          padding: "7px 2px",
-                                          textAlign: "center",
-                                          whiteSpace: "nowrap",
-                                        }}
-                                      >
-                                        <span
-                                          className="px-1.5 py-0.5 rounded-md font-bold text-[9px]"
-                                          style={{
-                                            background: `${rtColor}15`,
-                                            color: rtColor,
-                                            fontFamily:
-                                              lang === "ur"
-                                                ? URDU_FONT
-                                                : "inherit",
-                                          }}
-                                        >
-                                          {tr(r.rateType)
-                                            .replace(" ریٹ", "")
-                                            .replace(" Rate", "")}
-                                        </span>
-                                      </td>
-
-                                      {/* 4. Trend */}
-                                      <td
-                                        style={{
-                                          padding: "7px 4px",
-                                          textAlign: "center",
-                                          color: trendColor,
-                                          fontWeight: 800,
-                                          fontSize: 10.5,
-                                          whiteSpace: "nowrap",
-                                        }}
-                                      >
-                                        {rowMin > 0 ? (
-                                          <span>
-                                            <span>{trendArrow}</span>{" "}
-                                            {intervalPct > 0 ? `${intervalPct}%` : ""}
-                                          </span>
-                                        ) : (
-                                          "—"
-                                        )}
-                                      </td>
-
-                                      {/* 5. Primary Special Attribute First */}
-                                      {primarySpecialAttr === "moisture" && (
+                                        {/* 1. Station (Sticky) */}
                                         <td
                                           style={{
-                                            padding: "7px 4px",
-                                            textAlign: "center",
-                                            color: "#087F63",
+                                            position: "sticky",
+                                            left: 0,
+                                            zIndex: 10,
+                                            background: rowBg,
+                                            padding: "7px 6px",
                                             fontWeight: 700,
-                                            fontSize: 10,
+                                            color: "#183B34",
                                             whiteSpace: "nowrap",
-                                          }}
-                                        >
-                                          {r.moisture ? (r.moisture.includes("%") ? r.moisture : `${r.moisture}%`) : "—"}
-                                        </td>
-                                      )}
-                                      {primarySpecialAttr === "color" && (
-                                        <td
-                                          style={{
-                                            padding: "7px 4px",
-                                            textAlign: "center",
-                                            color: "#52635F",
-                                            fontWeight: 600,
-                                            fontSize: 10,
-                                            whiteSpace: "nowrap",
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                            maxWidth: 90,
+                                            borderRight: "1px solid #D5E2DD",
                                             fontFamily:
                                               lang === "ur"
                                                 ? URDU_FONT
                                                 : "inherit",
                                           }}
                                         >
-                                          {r.color ? tc(r.color) : "—"}
+                                          {tm(
+                                            r.mandiName
+                                              .replace(/\s*mandi$/i, "")
+                                              .replace(/\s*منڈی$/i, ""),
+                                          )}
                                         </td>
-                                      )}
-                                      {primarySpecialAttr === "variety" && (
+
+                                        {/* 2. Min – Max */}
                                         <td
                                           style={{
                                             padding: "7px 4px",
                                             textAlign: "center",
-                                            color: "#52635F",
-                                            fontWeight: 600,
-                                            fontSize: 10,
+                                            color: rowMin > 0 ? "#087F63" : "#80918B",
+                                            fontWeight: 800,
+                                            fontSize: 11,
                                             whiteSpace: "nowrap",
-                                            fontFamily:
-                                              lang === "ur"
-                                                ? URDU_FONT
-                                                : "inherit",
                                           }}
                                         >
-                                          {r.variety || "—"}
+                                          {rowMin > 0 && rowMax > 0
+                                            ? `${rowMin.toLocaleString("en-PK")} – ${rowMax.toLocaleString("en-PK")}`
+                                            : "—"}
                                         </td>
-                                      )}
-                                      {primarySpecialAttr === "quality" && (
+
+                                        {/* 3. Price Type */}
                                         <td
                                           style={{
-                                            padding: "7px 4px",
+                                            padding: "7px 2px",
                                             textAlign: "center",
                                             whiteSpace: "nowrap",
                                           }}
                                         >
                                           <span
-                                            className="px-2 py-0.5 rounded-md font-bold text-[10px]"
+                                            className="px-1.5 py-0.5 rounded-md font-bold text-[9px]"
                                             style={{
-                                              background: (r.newOld || r.quality) === "New" ? "#E4F4EC" : "#FFF4E6",
-                                              color: (r.newOld || r.quality) === "New" ? "#0A7F5A" : "#B45309",
+                                              background: `${rtColor}15`,
+                                              color: rtColor,
                                               fontFamily:
                                                 lang === "ur"
                                                   ? URDU_FONT
                                                   : "inherit",
                                             }}
                                           >
-                                            {r.newOld || r.quality || "—"}
+                                            {tr(r.rateType)
+                                              .replace(" ریٹ", "")
+                                              .replace(" Rate", "")}
                                           </span>
                                         </td>
-                                      )}
 
-                                      {/* 6. Arrival Quantity */}
-                                      <td
-                                        style={{
-                                          padding: "7px 4px",
-                                          textAlign: "center",
-                                          color: rowArr > 0 ? "#087F63" : "#80918B",
-                                          fontWeight: 700,
-                                          fontSize: 10,
-                                          whiteSpace: "nowrap",
-                                        }}
-                                      >
-                                        {rowArr > 0
-                                          ? (lang === "ur" ? `${toUrduDigits(rowArr.toLocaleString("en-PK"))} بوریاں` : `${rowArr.toLocaleString("en-PK")} Bags`)
-                                          : "—"}
-                                      </td>
-
-                                      {/* 7. Arrival Unit */}
-                                      <td
-                                        style={{
-                                          padding: "7px 4px",
-                                          textAlign: "center",
-                                          color: rowArr > 0 ? "#087F63" : "#80918B",
-                                          fontWeight: 700,
-                                          fontSize: 10,
-                                          whiteSpace: "nowrap",
-                                          fontFamily:
-                                            lang === "ur"
-                                              ? URDU_FONT
-                                              : "inherit",
-                                        }}
-                                      >
-                                        {rowArr > 0 ? ((r as any).arrivalUnit || (lang === "ur" ? "۴۰ کلو" : "40 kg")) : "—"}
-                                      </td>
-
-                                      {/* Remaining Spec Columns */}
-                                      {primarySpecialAttr !== "quality" && (
-                                        <td
-                                          style={{
-                                            padding: "7px 4px",
-                                            textAlign: "center",
-                                            whiteSpace: "nowrap",
-                                          }}
-                                        >
-                                          <span
-                                            className="px-2 py-0.5 rounded-md font-bold text-[10px]"
+                                        {/* 4. Primary Special Attribute First */}
+                                        {primarySpecialAttr === "moisture" && (
+                                          <td
                                             style={{
-                                              background: (r.newOld || r.quality) === "New" ? "#E4F4EC" : "#FFF4E6",
-                                              color: (r.newOld || r.quality) === "New" ? "#0A7F5A" : "#B45309",
+                                              padding: "7px 4px",
+                                              textAlign: "center",
+                                              color: "#087F63",
+                                              fontWeight: 700,
+                                              fontSize: 10,
+                                              whiteSpace: "nowrap",
+                                            }}
+                                          >
+                                            {r.moisture ? (r.moisture.includes("%") ? r.moisture : `${r.moisture}%`) : "—"}
+                                          </td>
+                                        )}
+                                        {primarySpecialAttr === "color" && (
+                                          <td
+                                            style={{
+                                              padding: "7px 4px",
+                                              textAlign: "center",
+                                              color: "#52635F",
+                                              fontWeight: 600,
+                                              fontSize: 10,
+                                              whiteSpace: "nowrap",
                                               fontFamily:
                                                 lang === "ur"
                                                   ? URDU_FONT
                                                   : "inherit",
                                             }}
                                           >
-                                            {r.newOld || r.quality || "—"}
-                                          </span>
-                                        </td>
-                                      )}
-
-                                      {primarySpecialAttr !== "moisture" && (
-                                        <td
-                                          style={{
-                                            padding: "7px 4px",
-                                            textAlign: "center",
-                                            color: "#087F63",
-                                            fontWeight: 700,
-                                            fontSize: 10,
-                                            whiteSpace: "nowrap",
-                                          }}
-                                        >
-                                          {r.moisture ? (r.moisture.includes("%") ? r.moisture : `${r.moisture}%`) : "—"}
-                                        </td>
-                                      )}
-
-                                      {primarySpecialAttr !== "color" && (
-                                        <td
-                                          style={{
-                                            padding: "7px 4px",
-                                            textAlign: "center",
-                                            color: "#52635F",
-                                            fontWeight: 600,
-                                            fontSize: 10,
-                                            whiteSpace: "nowrap",
-                                            fontFamily:
-                                              lang === "ur"
-                                                ? URDU_FONT
-                                                : "inherit",
-                                          }}
-                                        >
-                                          {r.color ? tc(r.color) : "—"}
-                                        </td>
-                                      )}
-
-                                      {primarySpecialAttr !== "variety" && (
-                                        <td
-                                          style={{
-                                            padding: "7px 4px",
-                                            textAlign: "center",
-                                            color: "#52635F",
-                                            fontWeight: 600,
-                                            fontSize: 10,
-                                            whiteSpace: "nowrap",
-                                            fontFamily:
-                                              lang === "ur"
-                                                ? URDU_FONT
-                                                : "inherit",
-                                          }}
-                                        >
-                                          {r.variety || "—"}
-                                        </td>
-                                      )}
-
-                                      {/* 10. Origin */}
-                                      <td
-                                        style={{
-                                          padding: "7px 4px",
-                                          textAlign: "center",
-                                          color: "#52635F",
-                                          fontWeight: 600,
-                                          fontSize: 10,
-                                          whiteSpace: "nowrap",
-                                          fontFamily:
-                                            lang === "ur"
-                                              ? URDU_FONT
-                                              : "inherit",
-                                        }}
-                                      >
-                                        {r.origin ? tm(r.origin) : "—"}
-                                      </td>
-
-                                      {/* 11. Condition */}
-                                      <td
-                                        style={{
-                                          padding: "7px 4px",
-                                          textAlign: "center",
-                                          color: "#52635F",
-                                          fontWeight: 600,
-                                          fontSize: 10,
-                                          whiteSpace: "nowrap",
-                                          fontFamily:
-                                            lang === "ur"
-                                              ? URDU_FONT
-                                              : "inherit",
-                                        }}
-                                      >
-                                        {r.condition || r.quality || "—"}
-                                      </td>
-
-                                      {/* 12. Specification */}
-                                      <td
-                                        style={{
-                                          padding: "7px 4px",
-                                          textAlign: "center",
-                                          color: "#52635F",
-                                          fontWeight: 600,
-                                          fontSize: 10,
-                                          whiteSpace: "nowrap",
-                                          fontFamily:
-                                            lang === "ur"
-                                              ? URDU_FONT
-                                              : "inherit",
-                                        }}
-                                      >
-                                        {r.spec || "—"}
-                                      </td>
-                                    </tr>
-
-                                    {/* Inline Expandable Trend Graph Row directly below this clicked row */}
-                                    {isRowModalActive && (
-                                      <tr>
-                                        <td
-                                          colSpan={13}
-                                          className="p-0 border-b-2 border-[#10B981]"
-                                          style={{
-                                            background: "#F4FAF7",
-                                            padding: 0,
-                                          }}
-                                        >
-                                          <div
+                                            {r.color ? tc(r.color) : "—"}
+                                          </td>
+                                        )}
+                                        {primarySpecialAttr === "variety" && (
+                                          <td
                                             style={{
-                                              position: "sticky",
-                                              left: 0,
-                                              width: tableClientWidth > 0 ? `${tableClientWidth}px` : "100%",
-                                              maxWidth: tableClientWidth > 0 ? `${tableClientWidth}px` : "100%",
-                                              boxSizing: "border-box",
+                                              padding: "7px 4px",
+                                              textAlign: "center",
+                                              color: "#52635F",
+                                              fontWeight: 600,
+                                              fontSize: 10,
+                                              whiteSpace: "nowrap",
+                                              fontFamily:
+                                                lang === "ur"
+                                                  ? URDU_FONT
+                                                  : "inherit",
                                             }}
-                                            className="p-2 sm:p-3.5 flex flex-col gap-2.5 shadow-inner bg-[#F4FAF7]"
                                           >
-                                            {/* Trends-matching Card Container */}
-                                            <div
-                                              className="rounded-2xl p-3 sm:p-4 flex flex-col gap-3 shadow-sm bg-white"
+                                            {r.variety || "—"}
+                                          </td>
+                                        )}
+                                        {primarySpecialAttr === "quality" && (
+                                          <td
+                                            style={{
+                                              padding: "7px 4px",
+                                              textAlign: "center",
+                                              whiteSpace: "nowrap",
+                                            }}
+                                          >
+                                            <span
+                                              className="px-2 py-0.5 rounded-md font-bold text-[10px]"
                                               style={{
-                                                border: "1px solid #D5E2DD",
-                                                width: "100%",
-                                                boxSizing: "border-box",
+                                                background: (r.newOld || r.quality) === "New" ? "#E4F4EC" : "#FFF4E6",
+                                                color: (r.newOld || r.quality) === "New" ? "#0A7F5A" : "#B45309",
+                                                fontFamily:
+                                                  lang === "ur"
+                                                    ? URDU_FONT
+                                                    : "inherit",
                                               }}
                                             >
-                                              {/* 1. Top Row: Price vs Arrival Switcher Tabs + Close Button */}
-                                              <div className="flex items-center justify-between gap-2 pb-2 border-b border-[#E8EFEC]">
-                                                <div className="flex items-center bg-[#E5EFEA] p-0.5 rounded-lg border border-[#CCE2D7]">
-                                                  <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                      e.stopPropagation();
-                                                      setTableGraphView("price");
-                                                    }}
-                                                    className="tap-target px-3 py-1 rounded-md text-[10.5px] font-extrabold transition"
-                                                    style={{
-                                                      background: tableGraphView === "price" ? "#087F63" : "transparent",
-                                                      color: tableGraphView === "price" ? "#FFFFFF" : "#4E665E",
-                                                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                                                    }}
-                                                  >
-                                                    {lang === "ur" ? "قیمت کا رجحان" : "Price Trend"}
-                                                  </button>
-                                                  <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                      e.stopPropagation();
-                                                      setTableGraphView("arrival");
-                                                    }}
-                                                    className="tap-target px-3 py-1 rounded-md text-[10.5px] font-extrabold transition"
-                                                    style={{
-                                                      background: tableGraphView === "arrival" ? "#D97706" : "transparent",
-                                                      color: tableGraphView === "arrival" ? "#FFFFFF" : "#4E665E",
-                                                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                                                    }}
-                                                  >
-                                                    {lang === "ur" ? "آمد کا رجحان" : "Arrival Trend"}
-                                                  </button>
-                                                </div>
+                                              {r.newOld || r.quality || "—"}
+                                            </span>
+                                          </td>
+                                        )}
 
-                                                <button
-                                                  type="button"
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setSelectedMandiGraphRow(null);
-                                                  }}
-                                                  className="tap-target w-7 h-7 rounded-full bg-[#E5EFEA] hover:bg-[#D5E5DE] text-[#064D40] text-xs font-bold flex items-center justify-center transition active:scale-95 flex-shrink-0"
-                                                  title={lang === "ur" ? "بند کریں" : "Close"}
-                                                >
-                                                  ✕
-                                                </button>
-                                              </div>
+                                        {/* 5. Trend */}
+                                        <td
+                                          style={{
+                                            padding: "7px 4px",
+                                            textAlign: "center",
+                                            color: trendColor,
+                                            fontWeight: 800,
+                                            fontSize: 10.5,
+                                            whiteSpace: "nowrap",
+                                          }}
+                                        >
+                                          {rowMin > 0 ? (
+                                            <span>
+                                              <span>{trendArrow}</span>{" "}
+                                              {intervalPct > 0 ? `${intervalPct}%` : ""}
+                                            </span>
+                                          ) : (
+                                            "—"
+                                          )}
+                                        </td>
 
-                                              {/* 2. Second Row: Granularity Filters (1, 5, 15, 30, 1H, 5H, 1D, 1W, 1M) */}
-                                              <div className="flex items-center gap-1 overflow-x-auto py-1 border-b border-[#E8EFEC]" style={{ scrollbarWidth: "none" }}>
-                                                {["1", "5", "15", "30", "1H", "5H", "1D", "1W", "1M"].map((g) => {
-                                                  const isGActive = tableGraphGranularity === g;
-                                                  return (
+                                        {/* 6. Arrival Quantity */}
+                                        <td
+                                          style={{
+                                            padding: "7px 4px",
+                                            textAlign: "center",
+                                            color: rowArr > 0 ? "#087F63" : "#80918B",
+                                            fontWeight: 700,
+                                            fontSize: 10,
+                                            whiteSpace: "nowrap",
+                                          }}
+                                        >
+                                          {rowArr > 0
+                                            ? (lang === "ur" ? `${toUrduDigits(rowArr.toLocaleString("en-PK"))} بوریاں` : `${rowArr.toLocaleString("en-PK")} Bags`)
+                                            : "—"}
+                                        </td>
+
+                                        {/* 7. Arrival Unit */}
+                                        <td
+                                          style={{
+                                            padding: "7px 4px",
+                                            textAlign: "center",
+                                            color: rowArr > 0 ? "#087F63" : "#80918B",
+                                            fontWeight: 700,
+                                            fontSize: 10,
+                                            whiteSpace: "nowrap",
+                                            fontFamily:
+                                              lang === "ur"
+                                                ? URDU_FONT
+                                                : "inherit",
+                                          }}
+                                        >
+                                          {rowArr > 0 ? ((r as any).arrivalUnit || (lang === "ur" ? "۴۰ کلو" : "40 kg")) : "—"}
+                                        </td>
+
+                                        {/* Remaining Spec Columns */}
+                                        {primarySpecialAttr !== "quality" && (
+                                          <td
+                                            style={{
+                                              padding: "7px 4px",
+                                              textAlign: "center",
+                                              whiteSpace: "nowrap",
+                                            }}
+                                          >
+                                            <span
+                                              className="px-2 py-0.5 rounded-md font-bold text-[10px]"
+                                              style={{
+                                                background: (r.newOld || r.quality) === "New" ? "#E4F4EC" : "#FFF4E6",
+                                                color: (r.newOld || r.quality) === "New" ? "#0A7F5A" : "#B45309",
+                                                fontFamily:
+                                                  lang === "ur"
+                                                    ? URDU_FONT
+                                                    : "inherit",
+                                              }}
+                                            >
+                                              {r.newOld || r.quality || "—"}
+                                            </span>
+                                          </td>
+                                        )}
+
+                                        {primarySpecialAttr !== "moisture" && (
+                                          <td
+                                            style={{
+                                              padding: "7px 4px",
+                                              textAlign: "center",
+                                              color: "#087F63",
+                                              fontWeight: 700,
+                                              fontSize: 10,
+                                              whiteSpace: "nowrap",
+                                            }}
+                                          >
+                                            {r.moisture ? (r.moisture.includes("%") ? r.moisture : `${r.moisture}%`) : "—"}
+                                          </td>
+                                        )}
+
+                                        {primarySpecialAttr !== "color" && (
+                                          <td
+                                            style={{
+                                              padding: "7px 4px",
+                                              textAlign: "center",
+                                              color: "#52635F",
+                                              fontWeight: 600,
+                                              fontSize: 10,
+                                              whiteSpace: "nowrap",
+                                              fontFamily:
+                                                lang === "ur"
+                                                  ? URDU_FONT
+                                                  : "inherit",
+                                            }}
+                                          >
+                                            {r.color ? tc(r.color) : "—"}
+                                          </td>
+                                        )}
+
+                                        {primarySpecialAttr !== "variety" && (
+                                          <td
+                                            style={{
+                                              padding: "7px 4px",
+                                              textAlign: "center",
+                                              color: "#52635F",
+                                              fontWeight: 600,
+                                              fontSize: 10,
+                                              whiteSpace: "nowrap",
+                                              fontFamily:
+                                                lang === "ur"
+                                                  ? URDU_FONT
+                                                  : "inherit",
+                                            }}
+                                          >
+                                            {r.variety || "—"}
+                                          </td>
+                                        )}
+
+                                        {/* 10. Origin */}
+                                        <td
+                                          style={{
+                                            padding: "7px 4px",
+                                            textAlign: "center",
+                                            color: "#52635F",
+                                            fontWeight: 600,
+                                            fontSize: 10,
+                                            whiteSpace: "nowrap",
+                                            fontFamily:
+                                              lang === "ur"
+                                                ? URDU_FONT
+                                                : "inherit",
+                                          }}
+                                        >
+                                          {r.origin ? tm(r.origin) : "—"}
+                                        </td>
+
+                                        {/* 11. Condition */}
+                                        <td
+                                          style={{
+                                            padding: "7px 4px",
+                                            textAlign: "center",
+                                            color: "#52635F",
+                                            fontWeight: 600,
+                                            fontSize: 10,
+                                            whiteSpace: "nowrap",
+                                            fontFamily:
+                                              lang === "ur"
+                                                ? URDU_FONT
+                                                : "inherit",
+                                          }}
+                                        >
+                                          {r.condition || r.quality || "—"}
+                                        </td>
+
+                                        {/* 12. Specification */}
+                                        <td
+                                          style={{
+                                            padding: "7px 4px",
+                                            textAlign: "center",
+                                            color: "#52635F",
+                                            fontWeight: 600,
+                                            fontSize: 10,
+                                            whiteSpace: "nowrap",
+                                            fontFamily:
+                                              lang === "ur"
+                                                ? URDU_FONT
+                                                : "inherit",
+                                          }}
+                                        >
+                                          {r.spec || "—"}
+                                        </td>
+                                      </tr>
+
+                                      {/* Inline Expandable Trend Graph Row directly below this clicked row */}
+                                      {isRowModalActive && (
+                                        <tr>
+                                          <td
+                                            colSpan={13}
+                                            className="p-0 border-b-2 border-[#10B981]"
+                                            style={{
+                                              background: "#F4FAF7",
+                                              padding: 0,
+                                            }}
+                                          >
+                                            <div
+                                              style={{
+                                                position: "sticky",
+                                                left: 0,
+                                                width: tableClientWidth > 0 ? `${tableClientWidth}px` : "100%",
+                                                maxWidth: tableClientWidth > 0 ? `${tableClientWidth}px` : "100%",
+                                                boxSizing: "border-box",
+                                              }}
+                                              className="p-2 sm:p-3.5 flex flex-col gap-2.5 shadow-inner bg-[#F4FAF7]"
+                                            >
+                                              {/* Trends-matching Card Container */}
+                                              <div
+                                                className="rounded-2xl p-3 sm:p-4 flex flex-col gap-3 shadow-sm bg-white"
+                                                style={{
+                                                  border: "1px solid #D5E2DD",
+                                                  width: "100%",
+                                                  boxSizing: "border-box",
+                                                }}
+                                              >
+                                                {/* 1. Top Row: Price vs Arrival Switcher Tabs + Close Button */}
+                                                <div className="flex items-center justify-between gap-2 pb-2 border-b border-[#E8EFEC]">
+                                                  <div className="flex items-center bg-[#E5EFEA] p-0.5 rounded-lg border border-[#CCE2D7]">
                                                     <button
-                                                      key={g}
                                                       type="button"
                                                       onClick={(e) => {
                                                         e.stopPropagation();
-                                                        setTableGraphGranularity(g);
+                                                        setTableGraphView("price");
                                                       }}
-                                                      className={`px-2 py-0.5 rounded text-[10.5px] font-bold transition-colors flex-shrink-0 ${isGActive
-                                                        ? tableGraphView === "price"
-                                                          ? "bg-[#087F63] text-white shadow-xs"
-                                                          : "bg-[#D97706] text-white shadow-xs"
-                                                        : "text-[#52635F] hover:bg-[#F1F7F4] hover:text-[#143B33]"
-                                                        }`}
+                                                      className="tap-target px-3 py-1 rounded-md text-[10.5px] font-extrabold transition"
+                                                      style={{
+                                                        background: tableGraphView === "price" ? "#087F63" : "transparent",
+                                                        color: tableGraphView === "price" ? "#FFFFFF" : "#4E665E",
+                                                        fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                                      }}
                                                     >
-                                                      {g}
+                                                      {lang === "ur" ? "قیمت کا رجحان" : "Price Trend"}
                                                     </button>
-                                                  );
-                                                })}
-                                              </div>
+                                                    <button
+                                                      type="button"
+                                                      onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setTableGraphView("arrival");
+                                                      }}
+                                                      className="tap-target px-3 py-1 rounded-md text-[10.5px] font-extrabold transition"
+                                                      style={{
+                                                        background: tableGraphView === "arrival" ? "#D97706" : "transparent",
+                                                        color: tableGraphView === "arrival" ? "#FFFFFF" : "#4E665E",
+                                                        fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                                      }}
+                                                    >
+                                                      {lang === "ur" ? "آمد کا رجحان" : "Arrival Trend"}
+                                                    </button>
+                                                  </div>
 
-                                              {/* 2. Main Graph Body according to Price vs Arrival */}
-                                              {tableGraphView === "price" ? (
-                                                <>
-                                                  {(() => {
-                                                    const graphData = buildMandiInlineGraphFromRows({
-                                                      allRows,
-                                                      mandiName: r.mandiName,
-                                                      rateType: r.rateType,
-                                                      timeframe: graphTimeframe,
-                                                      lang,
-                                                      view: "price",
-                                                    });
-                                                    const pts = graphData.points;
-                                                    const len = pts.length;
-                                                    const hoverI = tableGraphHoverIdx !== null && tableGraphHoverIdx < len ? tableGraphHoverIdx : len - 1;
-                                                    const displayPrice = pts[hoverI] ?? graphData.latestPrice;
-                                                    const startPrice = pts[0] || displayPrice || 1;
-                                                    const changeAmt = displayPrice - startPrice;
-                                                    const absPct = Math.abs((changeAmt / (startPrice || 1)) * 100).toFixed(2);
-                                                    const isPositive = changeAmt > 0;
-                                                    const isFlat = changeAmt === 0;
-                                                    const seriesMax = Math.max(...pts, displayPrice);
-                                                    const seriesMin = Math.min(...pts, displayPrice);
-                                                    const seriesAvg = Math.round(pts.reduce((a, b) => a + b, 0) / (len || 1));
-                                                    const currentDateLabel = graphData.dates[hoverI] || graphData.dates[len - 1] || "14 Sep 2026";
+                                                  <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      setSelectedMandiGraphRow(null);
+                                                    }}
+                                                    className="tap-target w-7 h-7 rounded-full bg-[#E5EFEA] hover:bg-[#D5E5DE] text-[#064D40] text-xs font-bold flex items-center justify-center transition active:scale-95 flex-shrink-0"
+                                                    title={lang === "ur" ? "بند کریں" : "Close"}
+                                                  >
+                                                    ✕
+                                                  </button>
+                                                </div>
 
-                                                    const CW = 540;
-                                                    const CH = 145;
-                                                    const PL = 42;
-                                                    const PR = 42;
-                                                    const PT = 14;
-                                                    const PB = 24;
-                                                    const chartW = CW - PL - PR;
-                                                    const chartH = CH - PT - PB;
-                                                    const pMin = graphData.yMinBound;
-                                                    const pMax = graphData.yMaxBound;
-                                                    const yOf = (v: number) => PT + chartH - ((v - pMin) / (pMax - pMin || 1)) * chartH;
-                                                    const xOf = (i: number) => PL + (i / (len - 1 || 1)) * chartW;
-                                                    const volBaseY = CH - PB;
-                                                    const volMaxH = 24;
-                                                    const maxArr = graphData.peakArrival || 1;
-                                                    const currentCloseY = yOf(displayPrice);
-
-                                                    return (
-                                                      <>
-                                                        {/* Commodity Header HUD */}
-                                                        <div className="flex flex-col gap-2 border-b border-[#E8EFEC] pb-2.5">
-                                                          <div className="flex items-center justify-between">
-                                                            <div className="flex items-center gap-2">
-                                                              <span
-                                                                className="text-xs sm:text-sm font-extrabold text-[#143B33]"
-                                                                style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                                                              >
-                                                                {tm(r.mandiName.replace(/\s*mandi$/i, "").replace(/\s*منڈی$/i, ""))} — {byproduct ? `${tc(byproduct)}` : `${tc(product)}`}
-                                                              </span>
-                                                              <span className="text-[10px] font-bold text-[#087F63] bg-[#E8F8F4] px-2 py-0.5 rounded-full border border-[#C2E8DB]">
-                                                                {tr(r.rateType).replace(" ریٹ", "").replace(" Rate", "")}
-                                                              </span>
-                                                            </div>
-                                                            <span className="text-[10px] font-bold text-[#80918B]">
-                                                              {lang === "ur" ? "روپے فی ۴۰ کلو" : "PKR / 40kg"}
-                                                            </span>
-                                                          </div>
-
-                                                          {/* Price & Change Display */}
-                                                          <div className="flex items-baseline justify-between flex-wrap gap-2">
-                                                            <div className="flex items-baseline gap-2.5">
-                                                              <span className="text-2xl sm:text-3xl font-black text-[#143B33] tracking-tight">
-                                                                {lang === "ur" ? `روپے ${toUrduDigits(displayPrice.toLocaleString())}` : `Rs. ${displayPrice.toLocaleString()}`}
-                                                              </span>
-                                                              <span
-                                                                className="text-xs font-bold px-2.5 py-0.5 rounded-md flex items-center gap-1"
-                                                                style={{
-                                                                  background: isFlat ? "#F3F4F6" : isPositive ? "#DCFCE7" : "#FEE2E2",
-                                                                  color: isFlat ? "#4B5563" : isPositive ? "#15803D" : "#B91C1C",
-                                                                  border: `1px solid ${isFlat ? "#E5E7EB" : isPositive ? "#86EFAC" : "#FCA5A5"}`,
-                                                                }}
-                                                              >
-                                                                <span>{isFlat ? "—" : isPositive ? "▲" : "▼"}</span>
-                                                                <span>{absPct}%</span>
-                                                              </span>
-                                                            </div>
-
-                                                            {/* Date / Scrub Indicator */}
-                                                            <div className="text-[11px] font-semibold text-[#52635F]">
-                                                              {currentDateLabel}
-                                                            </div>
-                                                          </div>
-
-                                                          {/* Stat Summary Bar (High, Low, Avg) */}
-                                                          <div className="grid grid-cols-3 gap-2 pt-1 text-[10px]">
-                                                            <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
-                                                              <span className="text-[#80918B] font-semibold">
-                                                                {lang === "ur" ? "زیادہ سے زیادہ" : "Period High"}
-                                                              </span>
-                                                              <span className="font-bold text-[#143B33] text-xs">
-                                                                {lang === "ur" ? `روپے ${toUrduDigits(seriesMax.toLocaleString())}` : `Rs. ${seriesMax.toLocaleString()}`}
-                                                              </span>
-                                                            </div>
-                                                            <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
-                                                              <span className="text-[#80918B] font-semibold">
-                                                                {lang === "ur" ? "کم سے کم" : "Period Low"}
-                                                              </span>
-                                                              <span className="font-bold text-[#143B33] text-xs">
-                                                                {lang === "ur" ? `روپے ${toUrduDigits(seriesMin.toLocaleString())}` : `Rs. ${seriesMin.toLocaleString()}`}
-                                                              </span>
-                                                            </div>
-                                                            <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
-                                                              <span className="text-[#80918B] font-semibold">
-                                                                {lang === "ur" ? "اوسط ریٹ" : "Period Avg"}
-                                                              </span>
-                                                              <span className="font-bold text-[#087F63] text-xs">
-                                                                {lang === "ur" ? `روپے ${toUrduDigits(seriesAvg.toLocaleString())}` : `Rs. ${seriesAvg.toLocaleString()}`}
-                                                              </span>
-                                                            </div>
-                                                          </div>
-                                                        </div>
-
-                                                        {/* SVG Chart Canvas */}
-                                                        <div className="relative w-full select-none bg-[#FCFDFD] rounded-xl border border-[#EDF4F1] p-1">
-                                                          <svg
-                                                            viewBox={`0 0 ${CW} ${CH}`}
-                                                            className="w-full select-none"
-                                                            style={{ height: isTableExpanded ? 160 : 135, display: "block", touchAction: "none" }}
-                                                            onMouseDown={(e) => {
-                                                              const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-                                                              const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
-                                                              const i = Math.round((relX / chartW) * (len - 1));
-                                                              setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
-                                                            }}
-                                                            onMouseMove={(e) => {
-                                                              if (e.buttons === 1 || tableGraphHoverIdx !== null) {
-                                                                const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-                                                                const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
-                                                                const i = Math.round((relX / chartW) * (len - 1));
-                                                                setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
-                                                              }
-                                                            }}
-                                                            onMouseUp={() => setTableGraphHoverIdx(null)}
-                                                            onMouseLeave={() => setTableGraphHoverIdx(null)}
-                                                            onTouchStart={(e) => {
-                                                              const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-                                                              const touch = e.touches[0];
-                                                              if (touch) {
-                                                                const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
-                                                                const i = Math.round((relX / chartW) * (len - 1));
-                                                                setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
-                                                              }
-                                                            }}
-                                                            onTouchMove={(e) => {
-                                                              const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-                                                              const touch = e.touches[0];
-                                                              if (touch) {
-                                                                const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
-                                                                const i = Math.round((relX / chartW) * (len - 1));
-                                                                setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
-                                                              }
-                                                            }}
-                                                            onTouchEnd={() => setTableGraphHoverIdx(null)}
-                                                            onTouchCancel={() => setTableGraphHoverIdx(null)}
-                                                          >
-                                                            <defs>
-                                                              <linearGradient
-                                                                id={`tableInlinePriceGrad-${ci}`}
-                                                                x1="0"
-                                                                y1="0"
-                                                                x2="0"
-                                                                y2="1"
-                                                              >
-                                                                <stop offset="0%" stopColor="#087F63" stopOpacity="0.22" />
-                                                                <stop offset="75%" stopColor="#087F63" stopOpacity="0.03" />
-                                                                <stop offset="100%" stopColor="#087F63" stopOpacity="0.00" />
-                                                              </linearGradient>
-                                                            </defs>
-
-                                                            {/* Horizontal Gridlines + Left & Right Price Axis Labels */}
-                                                            {graphData.yLabels.map((tick, ti) => {
-                                                              const y = yOf(tick.val);
-                                                              return (
-                                                                <g key={`yTick-${ti}`}>
-                                                                  <line
-                                                                    x1={PL}
-                                                                    y1={y}
-                                                                    x2={CW - PR}
-                                                                    y2={y}
-                                                                    stroke="#E8EFEF"
-                                                                    strokeWidth="1"
-                                                                    strokeDasharray="3 3"
-                                                                  />
-                                                                  <text
-                                                                    x={PL - 5}
-                                                                    y={y + 3.5}
-                                                                    textAnchor="end"
-                                                                    fontSize="8.5"
-                                                                    fontWeight="600"
-                                                                    fill="#80918B"
-                                                                  >
-                                                                    {tick.label}
-                                                                  </text>
-                                                                  <text
-                                                                    x={CW - PR + 5}
-                                                                    y={y + 3.5}
-                                                                    textAnchor="start"
-                                                                    fontSize="8"
-                                                                    fontWeight="600"
-                                                                    fill="#9BAAA5"
-                                                                  >
-                                                                    {tick.val}
-                                                                  </text>
-                                                                </g>
-                                                              );
-                                                            })}
-
-                                                            {/* Volume Baseline / X-Axis Baseline */}
-                                                            <line
-                                                              x1={PL}
-                                                              y1={volBaseY}
-                                                              x2={CW - PR}
-                                                              y2={volBaseY}
-                                                              stroke="#D5E2DD"
-                                                              strokeWidth="1.2"
-                                                            />
-
-                                                            {/* X-Axis Date Labels */}
-                                                            {graphData.xLabels.map((lbl, i) =>
-                                                              lbl ? (
-                                                                <text
-                                                                  key={`xPriceTick-${i}`}
-                                                                  x={xOf(i)}
-                                                                  y={CH - 6}
-                                                                  textAnchor="middle"
-                                                                  fontSize="8.5"
-                                                                  fontWeight="600"
-                                                                  fill="#80918B"
-                                                                  fontFamily={lang === "ur" ? URDU_FONT : "inherit"}
-                                                                >
-                                                                  {lbl}
-                                                                </text>
-                                                              ) : null,
-                                                            )}
-
-                                                            {/* Mini Arrival Volume Bars along Bottom */}
-                                                            {graphData.arrivals.map((arrVal, i) => {
-                                                              const barX = xOf(i);
-                                                              const barH = (arrVal / maxArr) * volMaxH;
-                                                              const prevP = i > 0 ? pts[i - 1] : pts[i];
-                                                              const curP = pts[i];
-                                                              const isUp = curP >= prevP;
-                                                              const barW = Math.max(2.5, Math.min(6, (chartW / len) * 0.55));
-                                                              const isHov = tableGraphHoverIdx === i;
-
-                                                              return (
-                                                                <rect
-                                                                  key={`vol-${i}`}
-                                                                  x={barX - barW / 2}
-                                                                  y={volBaseY - barH}
-                                                                  width={barW}
-                                                                  height={barH}
-                                                                  rx={1}
-                                                                  fill={isUp ? "#10B981" : "#EF4444"}
-                                                                  opacity={isHov ? 1 : 0.65}
-                                                                />
-                                                              );
-                                                            })}
-
-                                                            {/* Area & Line */}
-                                                            {(() => {
-                                                              const lineCoords = pts.map((v, i) => `${i === 0 ? "M" : "L"}${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`).join(" ");
-                                                              const areaCoords = `${lineCoords} L${xOf(len - 1).toFixed(1)},${volBaseY} L${PL},${volBaseY} Z`;
-                                                              return (
-                                                                <g>
-                                                                  <path d={areaCoords} fill={`url(#tableInlinePriceGrad-${ci})`} />
-                                                                  <path d={lineCoords} stroke="#087F63" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                                                                  {/* Dotted Latest Price Guideline */}
-                                                                  <line x1={PL} y1={currentCloseY} x2={CW - PR} y2={currentCloseY} stroke="#087F63" strokeWidth="0.9" strokeDasharray="3 3" opacity="0.6" />
-                                                                  {/* Latest Price Tag */}
-                                                                  <g transform={`translate(${CW - PR + 2}, ${currentCloseY - 7})`}>
-                                                                    <rect x={0} y={0} width={28} height={14} rx={3} fill="#087F63" />
-                                                                    <text x={14} y={10} textAnchor="middle" fontSize="8" fontWeight="bold" fill="#FFFFFF">
-                                                                      {displayPrice >= 1000 ? `${(displayPrice / 1000).toFixed(1)}k` : displayPrice}
-                                                                    </text>
-                                                                  </g>
-                                                                  {/* Live Pulse Dot */}
-                                                                  <circle cx={xOf(len - 1)} cy={currentCloseY} r="4" fill="#087F63" stroke="#FFFFFF" strokeWidth="2" />
-                                                                </g>
-                                                              );
-                                                            })()}
-
-                                                            {/* Interactive Hover Crosshairs */}
-                                                            {tableGraphHoverIdx !== null && (
-                                                              <g>
-                                                                <line x1={xOf(tableGraphHoverIdx)} y1={PT} x2={xOf(tableGraphHoverIdx)} y2={volBaseY} stroke="#0284C7" strokeWidth="1.2" strokeDasharray="2 2" />
-                                                                <line x1={PL} y1={yOf(pts[tableGraphHoverIdx])} x2={CW - PR} y2={yOf(pts[tableGraphHoverIdx])} stroke="#0284C7" strokeWidth="1" strokeDasharray="2 2" opacity="0.75" />
-                                                                <circle cx={xOf(tableGraphHoverIdx)} cy={yOf(pts[tableGraphHoverIdx])} r="5" fill="#0284C7" stroke="#FFFFFF" strokeWidth="2" />
-                                                              </g>
-                                                            )}
-                                                          </svg>
-
-                                                          {/* Interactive Hover Tooltip */}
-                                                          {tableGraphHoverIdx !== null && (() => {
-                                                            const curP = pts[tableGraphHoverIdx] || 0;
-                                                            const minP = graphData.mins?.[tableGraphHoverIdx] || Math.max(0, curP - Math.round(curP * 0.008));
-                                                            const maxP = graphData.maxs?.[tableGraphHoverIdx] || (curP + Math.round(curP * 0.008));
-                                                            const volVal = graphData.arrivals?.[tableGraphHoverIdx] || 0;
-                                                            const dateStr = graphData.dates[tableGraphHoverIdx] || "14 Sep 2026";
-
-                                                            return (
-                                                              <div
-                                                                className="pointer-events-none absolute z-20 rounded-xl shadow-xl border p-2 flex flex-col gap-1 backdrop-blur-md transition-all duration-75"
-                                                                style={{
-                                                                  left: `${Math.min(Math.max((xOf(tableGraphHoverIdx) / CW) * 100, 24), 76)}%`,
-                                                                  top: 8,
-                                                                  transform: "translateX(-50%)",
-                                                                  background: "rgba(255, 255, 255, 0.97)",
-                                                                  borderColor: "#38BDF8",
-                                                                  minWidth: 150,
-                                                                  boxShadow: "0 8px 24px -4px rgba(2, 132, 199, 0.22)",
-                                                                }}
-                                                              >
-                                                                <div className="flex items-center justify-between text-[10px] font-bold text-[#0284C7] border-b border-[#E0F2FE] pb-1">
-                                                                  <span>DT:</span>
-                                                                  <span className="font-mono text-[#0F172A]">{dateStr}</span>
-                                                                </div>
-                                                                <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10px] font-semibold text-[#334155] pt-1">
-                                                                  <span className="text-[#64748B]">{lang === "ur" ? "کم سے کم ریٹ:" : "Min Rate:"}</span>
-                                                                  <span className="font-mono font-bold text-right text-[#B91C1C]">Rs. {minP.toLocaleString()}</span>
-                                                                  <span className="text-[#64748B]">{lang === "ur" ? "زیادہ سے زیادہ:" : "Max Rate:"}</span>
-                                                                  <span className="font-mono font-bold text-right text-[#15803D]">Rs. {maxP.toLocaleString()}</span>
-                                                                  <span className="text-[#64748B]">{lang === "ur" ? "آمد:" : "Arrivals:"}</span>
-                                                                  <span className="font-mono font-bold text-right text-[#0284C7]">{volVal > 0 ? `${volVal.toLocaleString()} bags` : "—"}</span>
-                                                                </div>
-                                                              </div>
-                                                            );
-                                                          })()}
-                                                        </div>
-                                                      </>
-                                                    );
-                                                  })()}
-                                                </>
-                                              ) : (
-                                                <>
-                                                  {(() => {
-                                                    const arrivalData = buildMandiInlineGraphFromRows({
-                                                      allRows,
-                                                      mandiName: r.mandiName,
-                                                      rateType: r.rateType,
-                                                      timeframe: graphTimeframe,
-                                                      lang,
-                                                      view: "arrival",
-                                                    });
-                                                    const pts = arrivalData.points;
-                                                    const len = pts.length;
-                                                    const hoverI = tableGraphHoverIdx !== null && tableGraphHoverIdx < len ? tableGraphHoverIdx : len - 1;
-                                                    const displayArr = pts[hoverI] ?? arrivalData.latestArrival;
-                                                    const totalArr = arrivalData.totalArrival;
-                                                    const peakArr = arrivalData.peakArrival;
-                                                    const avgArr = Math.round(totalArr / (len || 1));
-                                                    const currentDateLabel = arrivalData.dates[hoverI] || arrivalData.dates[len - 1] || "14 Sep 2026";
-
-                                                    const CW = 540;
-                                                    const CH = 145;
-                                                    const PL = 42;
-                                                    const PR = 42;
-                                                    const PT = 14;
-                                                    const PB = 24;
-                                                    const chartW = CW - PL - PR;
-                                                    const chartH = CH - PT - PB;
-                                                    const aMin = 0;
-                                                    const aMax = arrivalData.yMaxBound;
-                                                    const yOf = (v: number) => PT + chartH - ((v - aMin) / (aMax - aMin || 1)) * chartH;
-                                                    const xOf = (i: number) => PL + (i / (len - 1 || 1)) * chartW;
-                                                    const volBaseY = CH - PB;
-                                                    const volMaxH = 26;
-
-                                                    return (
-                                                      <>
-                                                        {/* Arrival Header HUD */}
-                                                        <div className="flex flex-col gap-2 border-b border-[#E8EFEC] pb-2.5">
-                                                          <div className="flex items-center justify-between">
-                                                            <div className="flex items-center gap-1.5">
-                                                              <span className="w-2.5 h-2.5 rounded-full bg-[#D97706]" />
-                                                              <span
-                                                                className="text-xs sm:text-sm font-extrabold text-[#143B33]"
-                                                                style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                                                              >
-                                                                {tm(r.mandiName.replace(/\s*mandi$/i, "").replace(/\s*منڈی$/i, ""))} — {lang === "ur" ? "آمد کی مقدار (مارکیٹ رسد)" : "Arrival Volume Trend"}
-                                                              </span>
-                                                            </div>
-                                                            <span className="text-[10px] font-semibold text-[#92400E] bg-[#FEF3C7] px-2 py-0.5 rounded-md border border-[#FDE68A]">
-                                                              {lang === "ur" ? "تھیلے" : "Bags"}
-                                                            </span>
-                                                          </div>
-
-                                                          <div className="flex items-baseline justify-between flex-wrap gap-2">
-                                                            <div className="flex items-baseline gap-2">
-                                                              <span className="text-2xl font-black text-[#92400E]">
-                                                                {lang === "ur" ? `${toUrduDigits(displayArr.toLocaleString())} تھیلے` : `${displayArr.toLocaleString()} Bags`}
-                                                              </span>
-                                                            </div>
-                                                            <div className="text-[11px] font-semibold text-[#52635F]">
-                                                              {currentDateLabel}
-                                                            </div>
-                                                          </div>
-
-                                                          <div className="grid grid-cols-3 gap-2 pt-1 text-[10px]">
-                                                            <div className="bg-[#FFFDF5] p-1.5 rounded-lg border border-[#FDE68A] flex flex-col">
-                                                              <span className="text-[#92400E] font-semibold">{lang === "ur" ? "کل آمد" : "Total Period"}</span>
-                                                              <span className="font-bold text-[#78350F] text-xs">
-                                                                {totalArr.toLocaleString()} Bags
-                                                              </span>
-                                                            </div>
-                                                            <div className="bg-[#FFFDF5] p-1.5 rounded-lg border border-[#FDE68A] flex flex-col">
-                                                              <span className="text-[#92400E] font-semibold">{lang === "ur" ? "سب سے زیادہ" : "Peak Day"}</span>
-                                                              <span className="font-bold text-[#78350F] text-xs">
-                                                                {peakArr.toLocaleString()} Bags
-                                                              </span>
-                                                            </div>
-                                                            <div className="bg-[#FFFDF5] p-1.5 rounded-lg border border-[#FDE68A] flex flex-col">
-                                                              <span className="text-[#92400E] font-semibold">{lang === "ur" ? "روزانہ اوسط" : "Daily Avg"}</span>
-                                                              <span className="font-bold text-[#92400E] text-xs">
-                                                                {avgArr.toLocaleString()} Bags
-                                                              </span>
-                                                            </div>
-                                                          </div>
-                                                        </div>
-
-                                                        {/* SVG Arrival Canvas */}
-                                                        <div className="relative w-full select-none bg-[#FCFDFD] rounded-xl border border-[#EDF4F1] p-1">
-                                                          <svg
-                                                            viewBox={`0 0 ${CW} ${CH}`}
-                                                            className="w-full select-none"
-                                                            style={{ height: isTableExpanded ? 160 : 135, display: "block", touchAction: "none" }}
-                                                            onMouseDown={(e) => {
-                                                              const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-                                                              const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
-                                                              const i = Math.round((relX / chartW) * (len - 1));
-                                                              setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
-                                                            }}
-                                                            onMouseMove={(e) => {
-                                                              if (e.buttons === 1 || tableGraphHoverIdx !== null) {
-                                                                const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-                                                                const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
-                                                                const i = Math.round((relX / chartW) * (len - 1));
-                                                                setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
-                                                              }
-                                                            }}
-                                                            onMouseUp={() => setTableGraphHoverIdx(null)}
-                                                            onMouseLeave={() => setTableGraphHoverIdx(null)}
-                                                            onTouchStart={(e) => {
-                                                              const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-                                                              const touch = e.touches[0];
-                                                              if (touch) {
-                                                                const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
-                                                                const i = Math.round((relX / chartW) * (len - 1));
-                                                                setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
-                                                              }
-                                                            }}
-                                                            onTouchMove={(e) => {
-                                                              const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-                                                              const touch = e.touches[0];
-                                                              if (touch) {
-                                                                const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
-                                                                const i = Math.round((relX / chartW) * (len - 1));
-                                                                setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
-                                                              }
-                                                            }}
-                                                            onTouchEnd={() => setTableGraphHoverIdx(null)}
-                                                            onTouchCancel={() => setTableGraphHoverIdx(null)}
-                                                          >
-                                                            <defs>
-                                                              <linearGradient id={`tableInlineArrGrad-${ci}`} x1="0" y1="0" x2="0" y2="1">
-                                                                <stop offset="0%" stopColor="#D97706" stopOpacity="0.32" />
-                                                                <stop offset="85%" stopColor="#D97706" stopOpacity="0.04" />
-                                                                <stop offset="100%" stopColor="#D97706" stopOpacity="0.00" />
-                                                              </linearGradient>
-                                                            </defs>
-
-                                                            {/* Horizontal Dashed Gridlines + Y Ticks */}
-                                                            {arrivalData.yLabels.map((tick, ti) => {
-                                                              const y = yOf(tick.val);
-                                                              return (
-                                                                <g key={`yArrTick-${ti}`}>
-                                                                  <line x1={PL} y1={y} x2={CW - PR} y2={y} stroke="#E5EAE8" strokeWidth="1" strokeDasharray="4 4" />
-                                                                  <text x={PL - 6} y={y + 3.5} textAnchor="end" fontSize="9" fontWeight="600" fill="#80918B">
-                                                                    {tick.label}
-                                                                  </text>
-                                                                </g>
-                                                              );
-                                                            })}
-
-                                                            {/* X-Axis Baseline */}
-                                                            <line x1={PL} y1={volBaseY} x2={CW - PR} y2={volBaseY} stroke="#D5E2DD" strokeWidth="1.2" />
-
-                                                            {/* X-Axis Dates */}
-                                                            {arrivalData.xLabels.map((lbl, i) =>
-                                                              lbl ? (
-                                                                <text key={`xArrTick-${i}`} x={xOf(i)} y={CH - 6} textAnchor="middle" fontSize="8.5" fontWeight="600" fill="#80918B" fontFamily={lang === "ur" ? URDU_FONT : "inherit"}>
-                                                                  {lbl}
-                                                                </text>
-                                                              ) : null,
-                                                            )}
-
-                                                            {/* Arrival Volume Bars along Bottom */}
-                                                            {pts.map((arrVal, i) => {
-                                                              const barX = xOf(i);
-                                                              const maxVal = arrivalData.peakArrival || 1;
-                                                              const barH = (arrVal / maxVal) * volMaxH;
-                                                              const barW = Math.max(2.5, Math.min(6, (chartW / len) * 0.55));
-                                                              const isHov = tableGraphHoverIdx === i;
-                                                              return (
-                                                                <rect
-                                                                  key={`arr-vol-bar-${i}`}
-                                                                  x={barX - barW / 2}
-                                                                  y={volBaseY - barH}
-                                                                  width={barW}
-                                                                  height={barH}
-                                                                  rx={1}
-                                                                  fill="#D97706"
-                                                                  opacity={isHov ? 0.95 : 0.6}
-                                                                />
-                                                              );
-                                                            })}
-
-                                                            {/* Area Fill */}
-                                                            <path
-                                                              d={[
-                                                                ...pts.map((v, i) => `${i === 0 ? "M" : "L"}${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`),
-                                                                `L${xOf(len - 1).toFixed(1)},${volBaseY}`,
-                                                                `L${PL},${volBaseY}`,
-                                                                "Z",
-                                                              ].join(" ")}
-                                                              fill={`url(#tableInlineArrGrad-${ci})`}
-                                                            />
-
-                                                            {/* Main Line */}
-                                                            <path
-                                                              d={pts.map((v, i) => `${i === 0 ? "M" : "L"}${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`).join(" ")}
-                                                              stroke="#D97706"
-                                                              strokeWidth="2.8"
-                                                              fill="none"
-                                                              strokeLinecap="round"
-                                                              strokeLinejoin="round"
-                                                            />
-
-                                                            {/* Hover Guide and Marker */}
-                                                            {tableGraphHoverIdx !== null && (
-                                                              <g>
-                                                                <line x1={xOf(tableGraphHoverIdx)} y1={PT} x2={xOf(tableGraphHoverIdx)} y2={volBaseY} stroke="#92400E" strokeWidth="1.2" strokeDasharray="3 3" />
-                                                                <circle cx={xOf(tableGraphHoverIdx)} cy={yOf(pts[tableGraphHoverIdx])} r="5" fill="#D97706" stroke="#FFFFFF" strokeWidth="2" />
-                                                              </g>
-                                                            )}
-                                                          </svg>
-
-                                                          {/* Interactive Hover Tooltip for Arrival */}
-                                                          {tableGraphHoverIdx !== null && (() => {
-                                                            const volVal = pts[tableGraphHoverIdx] || 0;
-                                                            const dateStr = arrivalData.dates[tableGraphHoverIdx] || "14 Sep 2026";
-                                                            return (
-                                                              <div
-                                                                className="pointer-events-none absolute z-20 rounded-xl shadow-xl border p-2 flex flex-col gap-1 backdrop-blur-md transition-all duration-75"
-                                                                style={{
-                                                                  left: `${Math.min(Math.max((xOf(tableGraphHoverIdx) / CW) * 100, 24), 76)}%`,
-                                                                  top: 8,
-                                                                  transform: "translateX(-50%)",
-                                                                  background: "rgba(255, 255, 255, 0.97)",
-                                                                  borderColor: "#FDE68A",
-                                                                  minWidth: 140,
-                                                                  boxShadow: "0 8px 24px -4px rgba(217, 119, 6, 0.22)",
-                                                                }}
-                                                              >
-                                                                <div className="flex items-center justify-between text-[10px] font-bold text-[#92400E] border-b border-[#FEF3C7] pb-1">
-                                                                  <span>DT:</span>
-                                                                  <span className="font-mono text-[#0F172A]">{dateStr}</span>
-                                                                </div>
-                                                                <div className="flex items-center justify-between text-[10.5px] font-semibold text-[#334155] pt-1">
-                                                                  <span className="text-[#78350F]">{lang === "ur" ? "آمد:" : "Arrivals:"}</span>
-                                                                  <span className="font-mono font-bold text-right text-[#92400E]">
-                                                                    {volVal > 0 ? `${volVal.toLocaleString()} bags` : "—"}
-                                                                  </span>
-                                                                </div>
-                                                              </div>
-                                                            );
-                                                          })()}
-                                                        </div>
-                                                      </>
-                                                    );
-                                                  })()}
-                                                </>
-                                              )}
-
-                                              {/* 3. Timeframe Filter: 1 Month, 3 Months, 6 Months, 1 Year */}
-                                              <div className="pt-0.5">
-                                                <div className="grid grid-cols-4 gap-1.5 border border-[#D5E2DD] rounded-xl p-1 bg-[#F9FBFA]">
-                                                  {[
-                                                    { id: "1M", labelEn: "1 Month", labelUr: "۱ مہینہ" },
-                                                    { id: "3M", labelEn: "3 Months", labelUr: "۳ مہینے" },
-                                                    { id: "6M", labelEn: "6 Months", labelUr: "۶ مہینے" },
-                                                    { id: "1Y", labelEn: "1 Year", labelUr: "۱ سال" },
-                                                  ].map((tf) => {
-                                                    const isTfActive = graphTimeframe === tf.id;
+                                                {/* 2. Second Row: Granularity Filters (1, 5, 15, 30, 1H, 5H, 1D, 1W, 1M) */}
+                                                <div className="flex items-center gap-1 overflow-x-auto py-1 border-b border-[#E8EFEC]" style={{ scrollbarWidth: "none" }}>
+                                                  {["1", "5", "15", "30", "1H", "5H", "1D", "1W", "1M"].map((g) => {
+                                                    const isGActive = tableGraphGranularity === g;
                                                     return (
                                                       <button
-                                                        key={tf.id}
+                                                        key={g}
                                                         type="button"
                                                         onClick={(e) => {
                                                           e.stopPropagation();
-                                                          setGraphTimeframe(tf.id as any);
+                                                          setTableGraphGranularity(g);
                                                         }}
-                                                        className={`flex items-center justify-center py-2 px-1 rounded-lg transition-all font-bold ${isTfActive
+                                                        className={`px-2 py-0.5 rounded text-[10.5px] font-bold transition-colors flex-shrink-0 ${isGActive
                                                           ? tableGraphView === "price"
-                                                            ? "bg-[#087F63] text-white shadow-sm ring-1 ring-[#087F63]/30 scale-[1.01]"
-                                                            : "bg-[#D97706] text-white shadow-sm ring-1 ring-[#D97706]/30 scale-[1.01]"
-                                                          : "bg-white/80 text-[#52635F] hover:bg-white hover:text-[#183B34] border border-[#E8EFEC]"
+                                                            ? "bg-[#087F63] text-white shadow-xs"
+                                                            : "bg-[#D97706] text-white shadow-xs"
+                                                          : "text-[#52635F] hover:bg-[#F1F7F4] hover:text-[#143B33]"
                                                           }`}
-                                                        style={{
-                                                          fontSize: lang === "ur" ? 13 : 11,
-                                                          fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                                                        }}
                                                       >
-                                                        <span>{lang === "ur" ? tf.labelUr : tf.labelEn}</span>
+                                                        {g}
                                                       </button>
                                                     );
                                                   })}
                                                 </div>
+
+                                                {/* 2. Main Graph Body according to Price vs Arrival */}
+                                                {tableGraphView === "price" ? (
+                                                  <>
+                                                    {(() => {
+                                                      const graphData = buildMandiInlineGraphFromRows({
+                                                        allRows,
+                                                        mandiName: r.mandiName,
+                                                        rateType: r.rateType,
+                                                        timeframe: graphTimeframe,
+                                                        lang,
+                                                        view: "price",
+                                                      });
+                                                      const pts = graphData.points;
+                                                      const len = pts.length;
+                                                      const hoverI = tableGraphHoverIdx !== null && tableGraphHoverIdx < len ? tableGraphHoverIdx : len - 1;
+                                                      const displayPrice = pts[hoverI] ?? graphData.latestPrice;
+                                                      const startPrice = pts[0] || displayPrice || 1;
+                                                      const changeAmt = displayPrice - startPrice;
+                                                      const absPct = Math.abs((changeAmt / (startPrice || 1)) * 100).toFixed(2);
+                                                      const isPositive = changeAmt > 0;
+                                                      const isFlat = changeAmt === 0;
+                                                      const seriesMax = Math.max(...pts, displayPrice);
+                                                      const seriesMin = Math.min(...pts, displayPrice);
+                                                      const seriesAvg = Math.round(pts.reduce((a, b) => a + b, 0) / (len || 1));
+                                                      const currentDateLabel = graphData.dates[hoverI] || graphData.dates[len - 1] || "14 Sep 2026";
+
+                                                      const CW = 540;
+                                                      const CH = 145;
+                                                      const PL = 42;
+                                                      const PR = 42;
+                                                      const PT = 14;
+                                                      const PB = 24;
+                                                      const chartW = CW - PL - PR;
+                                                      const volBaseY = CH - PB;
+                                                      const volMaxH = 22;
+                                                      const separatorY = volBaseY - volMaxH - 6;
+                                                      const lineChartH = separatorY - PT;
+                                                      const pMin = graphData.yMinBound;
+                                                      const pMax = graphData.yMaxBound;
+                                                      const yOf = (v: number) => PT + lineChartH - ((v - pMin) / (pMax - pMin || 1)) * lineChartH;
+                                                      const xOf = (i: number) => PL + (i / (len - 1 || 1)) * chartW;
+                                                      const maxArr = graphData.peakArrival || 1;
+                                                      const currentCloseY = yOf(displayPrice);
+
+                                                      return (
+                                                        <>
+                                                          {/* Commodity Header HUD */}
+                                                          <div className="flex flex-col gap-2 border-b border-[#E8EFEC] pb-2.5">
+                                                            <div className="flex items-center justify-between">
+                                                              <div className="flex items-center gap-2">
+                                                                <span
+                                                                  className="text-xs sm:text-sm font-extrabold text-[#143B33]"
+                                                                  style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                                                                >
+                                                                  {tm(r.mandiName.replace(/\s*mandi$/i, "").replace(/\s*منڈی$/i, ""))} — {byproduct ? `${tc(byproduct)}` : `${tc(product)}`}
+                                                                </span>
+                                                                <span className="text-[10px] font-bold text-[#087F63] bg-[#E8F8F4] px-2 py-0.5 rounded-full border border-[#C2E8DB]">
+                                                                  {tr(r.rateType).replace(" ریٹ", "").replace(" Rate", "")}
+                                                                </span>
+                                                              </div>
+                                                              <span className="text-[10px] font-bold text-[#80918B]">
+                                                                {lang === "ur" ? "روپے فی ۴۰ کلو" : "PKR / 40kg"}
+                                                              </span>
+                                                            </div>
+
+                                                            {/* Price & Change Display */}
+                                                            <div className="flex items-baseline justify-between flex-wrap gap-2">
+                                                              <div className="flex items-baseline gap-2.5">
+                                                                <span className="text-2xl sm:text-3xl font-black text-[#143B33] tracking-tight">
+                                                                  {lang === "ur" ? `روپے ${toUrduDigits(displayPrice.toLocaleString())}` : `Rs. ${displayPrice.toLocaleString()}`}
+                                                                </span>
+                                                                <span
+                                                                  className="text-xs font-bold px-2.5 py-0.5 rounded-md flex items-center gap-1"
+                                                                  style={{
+                                                                    background: isFlat ? "#F3F4F6" : isPositive ? "#DCFCE7" : "#FEE2E2",
+                                                                    color: isFlat ? "#4B5563" : isPositive ? "#15803D" : "#B91C1C",
+                                                                    border: `1px solid ${isFlat ? "#E5E7EB" : isPositive ? "#86EFAC" : "#FCA5A5"}`,
+                                                                  }}
+                                                                >
+                                                                  <span>{isFlat ? "—" : isPositive ? "▲" : "▼"}</span>
+                                                                  <span>{absPct}%</span>
+                                                                </span>
+                                                              </div>
+
+                                                              {/* Date / Scrub Indicator */}
+                                                              <div className="text-[11px] font-semibold text-[#52635F]">
+                                                                {currentDateLabel}
+                                                              </div>
+                                                            </div>
+
+                                                            {/* Stat Summary Bar (High, Low, Avg) */}
+                                                            <div className="grid grid-cols-3 gap-2 pt-1 text-[10px]">
+                                                              <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
+                                                                <span className="text-[#80918B] font-semibold">
+                                                                  {lang === "ur" ? "زیادہ سے زیادہ" : "Period High"}
+                                                                </span>
+                                                                <span className="font-bold text-[#143B33] text-xs">
+                                                                  {lang === "ur" ? `روپے ${toUrduDigits(seriesMax.toLocaleString())}` : `Rs. ${seriesMax.toLocaleString()}`}
+                                                                </span>
+                                                              </div>
+                                                              <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
+                                                                <span className="text-[#80918B] font-semibold">
+                                                                  {lang === "ur" ? "کم سے کم" : "Period Low"}
+                                                                </span>
+                                                                <span className="font-bold text-[#143B33] text-xs">
+                                                                  {lang === "ur" ? `روپے ${toUrduDigits(seriesMin.toLocaleString())}` : `Rs. ${seriesMin.toLocaleString()}`}
+                                                                </span>
+                                                              </div>
+                                                              <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
+                                                                <span className="text-[#80918B] font-semibold">
+                                                                  {lang === "ur" ? "اوسط ریٹ" : "Period Avg"}
+                                                                </span>
+                                                                <span className="font-bold text-[#087F63] text-xs">
+                                                                  {lang === "ur" ? `روپے ${toUrduDigits(seriesAvg.toLocaleString())}` : `Rs. ${seriesAvg.toLocaleString()}`}
+                                                                </span>
+                                                              </div>
+                                                            </div>
+                                                          </div>
+
+                                                          {/* SVG Chart Canvas */}
+                                                          <div className="relative w-full select-none bg-[#FCFDFD] rounded-xl border border-[#EDF4F1] p-1">
+                                                            <svg
+                                                              viewBox={`0 0 ${CW} ${CH}`}
+                                                              className="w-full select-none"
+                                                              style={{ height: isTableExpanded ? 160 : 135, display: "block", touchAction: "none" }}
+                                                              onMouseDown={(e) => {
+                                                                const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                                                                const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
+                                                                const i = Math.round((relX / chartW) * (len - 1));
+                                                                setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                                                              }}
+                                                              onMouseMove={(e) => {
+                                                                if (e.buttons === 1 || tableGraphHoverIdx !== null) {
+                                                                  const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                                                                  const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
+                                                                  const i = Math.round((relX / chartW) * (len - 1));
+                                                                  setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                                                                }
+                                                              }}
+                                                              onMouseUp={() => setTableGraphHoverIdx(null)}
+                                                              onMouseLeave={() => setTableGraphHoverIdx(null)}
+                                                              onTouchStart={(e) => {
+                                                                const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                                                                const touch = e.touches[0];
+                                                                if (touch) {
+                                                                  const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
+                                                                  const i = Math.round((relX / chartW) * (len - 1));
+                                                                  setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                                                                }
+                                                              }}
+                                                              onTouchMove={(e) => {
+                                                                const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                                                                const touch = e.touches[0];
+                                                                if (touch) {
+                                                                  const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
+                                                                  const i = Math.round((relX / chartW) * (len - 1));
+                                                                  setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                                                                }
+                                                              }}
+                                                              onTouchEnd={() => setTableGraphHoverIdx(null)}
+                                                              onTouchCancel={() => setTableGraphHoverIdx(null)}
+                                                            >
+                                                              <defs>
+                                                                <linearGradient
+                                                                  id={`tableInlinePriceGrad-${ci}`}
+                                                                  x1="0"
+                                                                  y1="0"
+                                                                  x2="0"
+                                                                  y2="1"
+                                                                >
+                                                                  <stop offset="0%" stopColor="#087F63" stopOpacity="0.22" />
+                                                                  <stop offset="75%" stopColor="#087F63" stopOpacity="0.03" />
+                                                                  <stop offset="100%" stopColor="#087F63" stopOpacity="0.00" />
+                                                                </linearGradient>
+                                                              </defs>
+
+                                                              {/* Horizontal Gridlines + Left & Right Price Axis Labels */}
+                                                              {graphData.yLabels.map((tick, ti) => {
+                                                                const y = yOf(tick.val);
+                                                                return (
+                                                                  <g key={`yTick-${ti}`}>
+                                                                    <line
+                                                                      x1={PL}
+                                                                      y1={y}
+                                                                      x2={CW - PR}
+                                                                      y2={y}
+                                                                      stroke="#E8EFEF"
+                                                                      strokeWidth="1"
+                                                                      strokeDasharray="3 3"
+                                                                    />
+                                                                    <text
+                                                                      x={PL - 5}
+                                                                      y={y + 3.5}
+                                                                      textAnchor="end"
+                                                                      fontSize="8.5"
+                                                                      fontWeight="600"
+                                                                      fill="#80918B"
+                                                                    >
+                                                                      {tick.label}
+                                                                    </text>
+                                                                    <text
+                                                                      x={CW - PR + 5}
+                                                                      y={y + 3.5}
+                                                                      textAnchor="start"
+                                                                      fontSize="8"
+                                                                      fontWeight="600"
+                                                                      fill="#9BAAA5"
+                                                                    >
+                                                                      {tick.val}
+                                                                    </text>
+                                                                  </g>
+                                                                );
+                                                              })}
+
+                                                              {/* Pane Separator Line (Line Graph vs Bar Graph) */}
+                                                              <line
+                                                                x1={PL}
+                                                                y1={separatorY}
+                                                                x2={CW - PR}
+                                                                y2={separatorY}
+                                                                stroke="#CBD5E1"
+                                                                strokeWidth="1.2"
+                                                                strokeDasharray="4 3"
+                                                              />
+                                                              <text
+                                                                x={PL - 5}
+                                                                y={separatorY + 3.5}
+                                                                textAnchor="end"
+                                                                fontSize="8"
+                                                                fontWeight="600"
+                                                                fill="#94A3B8"
+                                                              >
+                                                                0
+                                                              </text>
+                                                              <text
+                                                                x={CW - PR + 5}
+                                                                y={separatorY + 3.5}
+                                                                textAnchor="start"
+                                                                fontSize="7.5"
+                                                                fontWeight="700"
+                                                                fill="#94A3B8"
+                                                              >
+                                                                VOL
+                                                              </text>
+
+                                                              {/* Volume Baseline / X-Axis Baseline */}
+                                                              <line
+                                                                x1={PL}
+                                                                y1={volBaseY}
+                                                                x2={CW - PR}
+                                                                y2={volBaseY}
+                                                                stroke="#D5E2DD"
+                                                                strokeWidth="1.2"
+                                                              />
+
+                                                              {/* X-Axis Date Labels */}
+                                                              {graphData.xLabels.map((lbl, i) =>
+                                                                lbl ? (
+                                                                  <text
+                                                                    key={`xPriceTick-${i}`}
+                                                                    x={xOf(i)}
+                                                                    y={CH - 6}
+                                                                    textAnchor="middle"
+                                                                    fontSize="8.5"
+                                                                    fontWeight="600"
+                                                                    fill="#80918B"
+                                                                    fontFamily={lang === "ur" ? URDU_FONT : "inherit"}
+                                                                  >
+                                                                    {lbl}
+                                                                  </text>
+                                                                ) : null,
+                                                              )}
+
+                                                              {/* Mini Arrival Volume Bars along Bottom */}
+                                                              {graphData.arrivals.map((arrVal, i) => {
+                                                                const barX = xOf(i);
+                                                                const barH = (arrVal / maxArr) * volMaxH;
+                                                                const prevP = i > 0 ? pts[i - 1] : pts[i];
+                                                                const curP = pts[i];
+                                                                const isUp = curP >= prevP;
+                                                                const barW = Math.max(2.5, Math.min(6, (chartW / len) * 0.55));
+                                                                const isHov = tableGraphHoverIdx === i;
+
+                                                                return (
+                                                                  <rect
+                                                                    key={`vol-${i}`}
+                                                                    x={barX - barW / 2}
+                                                                    y={volBaseY - barH}
+                                                                    width={barW}
+                                                                    height={barH}
+                                                                    rx={1}
+                                                                    fill={isUp ? "#10B981" : "#EF4444"}
+                                                                    opacity={isHov ? 1 : 0.65}
+                                                                  />
+                                                                );
+                                                              })}
+
+                                                              {/* Area & Line */}
+                                                              {(() => {
+                                                                const lineCoords = pts.map((v, i) => `${i === 0 ? "M" : "L"}${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`).join(" ");
+                                                                const areaCoords = `${lineCoords} L${xOf(len - 1).toFixed(1)},${separatorY} L${PL},${separatorY} Z`;
+                                                                return (
+                                                                  <g>
+                                                                    <path d={areaCoords} fill={`url(#tableInlinePriceGrad-${ci})`} />
+                                                                    <path d={lineCoords} stroke="#087F63" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                                                                    {/* Dotted Latest Price Guideline */}
+                                                                    <line x1={PL} y1={currentCloseY} x2={CW - PR} y2={currentCloseY} stroke="#087F63" strokeWidth="0.9" strokeDasharray="3 3" opacity="0.6" />
+                                                                    {/* Latest Price Tag */}
+                                                                    <g transform={`translate(${CW - PR + 2}, ${currentCloseY - 7})`}>
+                                                                      <rect x={0} y={0} width={28} height={14} rx={3} fill="#087F63" />
+                                                                      <text x={14} y={10} textAnchor="middle" fontSize="8" fontWeight="bold" fill="#FFFFFF">
+                                                                        {displayPrice >= 1000 ? `${(displayPrice / 1000).toFixed(1)}k` : displayPrice}
+                                                                      </text>
+                                                                    </g>
+                                                                    {/* Live Pulse Dot */}
+                                                                    <circle cx={xOf(len - 1)} cy={currentCloseY} r="4" fill="#087F63" stroke="#FFFFFF" strokeWidth="2" />
+                                                                  </g>
+                                                                );
+                                                              })()}
+
+                                                              {/* Interactive Hover Crosshairs */}
+                                                              {tableGraphHoverIdx !== null && (
+                                                                <g>
+                                                                  <line x1={xOf(tableGraphHoverIdx)} y1={PT} x2={xOf(tableGraphHoverIdx)} y2={volBaseY} stroke="#0284C7" strokeWidth="1.2" strokeDasharray="2 2" />
+                                                                  <line x1={PL} y1={yOf(pts[tableGraphHoverIdx])} x2={CW - PR} y2={yOf(pts[tableGraphHoverIdx])} stroke="#0284C7" strokeWidth="1" strokeDasharray="2 2" opacity="0.75" />
+                                                                  <circle cx={xOf(tableGraphHoverIdx)} cy={yOf(pts[tableGraphHoverIdx])} r="5" fill="#0284C7" stroke="#FFFFFF" strokeWidth="2" />
+                                                                </g>
+                                                              )}
+                                                            </svg>
+
+                                                            {/* Interactive Hover Tooltip */}
+                                                            {tableGraphHoverIdx !== null && (() => {
+                                                              const curP = pts[tableGraphHoverIdx] || 0;
+                                                              const minP = graphData.mins?.[tableGraphHoverIdx] || Math.max(0, curP - Math.round(curP * 0.008));
+                                                              const maxP = graphData.maxs?.[tableGraphHoverIdx] || (curP + Math.round(curP * 0.008));
+                                                              const volVal = graphData.arrivals?.[tableGraphHoverIdx] || 0;
+                                                              const dateStr = graphData.dates[tableGraphHoverIdx] || "14 Sep 2026";
+
+                                                              return (
+                                                                <div
+                                                                  className="pointer-events-none absolute z-20 rounded-xl shadow-xl border p-2 flex flex-col gap-1 backdrop-blur-md transition-all duration-75"
+                                                                  style={{
+                                                                    left: `${Math.min(Math.max((xOf(tableGraphHoverIdx) / CW) * 100, 24), 76)}%`,
+                                                                    top: 8,
+                                                                    transform: "translateX(-50%)",
+                                                                    background: "rgba(255, 255, 255, 0.97)",
+                                                                    borderColor: "#38BDF8",
+                                                                    minWidth: 150,
+                                                                    boxShadow: "0 8px 24px -4px rgba(2, 132, 199, 0.22)",
+                                                                  }}
+                                                                >
+                                                                  <div className="flex items-center justify-between text-[10px] font-bold text-[#0284C7] border-b border-[#E0F2FE] pb-1">
+                                                                    <span>DT:</span>
+                                                                    <span className="font-mono text-[#0F172A]">{dateStr}</span>
+                                                                  </div>
+                                                                  <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10px] font-semibold text-[#334155] pt-1">
+                                                                    <span className="text-[#64748B]">{lang === "ur" ? "کم سے کم ریٹ:" : "Min Rate:"}</span>
+                                                                    <span className="font-mono font-bold text-right text-[#B91C1C]">Rs. {minP.toLocaleString()}</span>
+                                                                    <span className="text-[#64748B]">{lang === "ur" ? "زیادہ سے زیادہ:" : "Max Rate:"}</span>
+                                                                    <span className="font-mono font-bold text-right text-[#15803D]">Rs. {maxP.toLocaleString()}</span>
+                                                                    <span className="text-[#64748B]">{lang === "ur" ? "آمد:" : "Arrivals:"}</span>
+                                                                    <span className="font-mono font-bold text-right text-[#0284C7]">{volVal > 0 ? `${volVal.toLocaleString()} bags` : "—"}</span>
+                                                                  </div>
+                                                                </div>
+                                                              );
+                                                            })()}
+                                                          </div>
+                                                        </>
+                                                      );
+                                                    })()}
+                                                  </>
+                                                ) : (
+                                                  <>
+                                                    {(() => {
+                                                      const arrivalData = buildMandiInlineGraphFromRows({
+                                                        allRows,
+                                                        mandiName: r.mandiName,
+                                                        rateType: r.rateType,
+                                                        timeframe: graphTimeframe,
+                                                        lang,
+                                                        view: "arrival",
+                                                      });
+                                                      const pts = arrivalData.points;
+                                                      const len = pts.length;
+                                                      const hoverI = tableGraphHoverIdx !== null && tableGraphHoverIdx < len ? tableGraphHoverIdx : len - 1;
+                                                      const displayArr = pts[hoverI] ?? arrivalData.latestArrival;
+                                                      const totalArr = arrivalData.totalArrival;
+                                                      const peakArr = arrivalData.peakArrival;
+                                                      const avgArr = Math.round(totalArr / (len || 1));
+                                                      const currentDateLabel = arrivalData.dates[hoverI] || arrivalData.dates[len - 1] || "14 Sep 2026";
+
+                                                      const CW = 540;
+                                                      const CH = 145;
+                                                      const PL = 42;
+                                                      const PR = 42;
+                                                      const PT = 14;
+                                                      const PB = 24;
+                                                      const chartW = CW - PL - PR;
+                                                      const volBaseY = CH - PB;
+                                                      const volMaxH = 22;
+                                                      const separatorY = volBaseY - volMaxH - 6;
+                                                      const lineChartH = separatorY - PT;
+                                                      const aMin = 0;
+                                                      const aMax = arrivalData.yMaxBound;
+                                                      const yOf = (v: number) => PT + lineChartH - ((v - aMin) / (aMax - aMin || 1)) * lineChartH;
+                                                      const xOf = (i: number) => PL + (i / (len - 1 || 1)) * chartW;
+
+                                                      return (
+                                                        <>
+                                                          {/* Arrival Header HUD */}
+                                                          <div className="flex flex-col gap-2 border-b border-[#E8EFEC] pb-2.5">
+                                                            <div className="flex items-center justify-between">
+                                                              <div className="flex items-center gap-1.5">
+                                                                <span className="w-2.5 h-2.5 rounded-full bg-[#D97706]" />
+                                                                <span
+                                                                  className="text-xs sm:text-sm font-extrabold text-[#143B33]"
+                                                                  style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                                                                >
+                                                                  {tm(r.mandiName.replace(/\s*mandi$/i, "").replace(/\s*منڈی$/i, ""))} — {lang === "ur" ? "آمد کی مقدار (مارکیٹ رسد)" : "Arrival Volume Trend"}
+                                                                </span>
+                                                              </div>
+                                                              <span className="text-[10px] font-semibold text-[#92400E] bg-[#FEF3C7] px-2 py-0.5 rounded-md border border-[#FDE68A]">
+                                                                {lang === "ur" ? "تھیلے" : "Bags"}
+                                                              </span>
+                                                            </div>
+
+                                                            <div className="flex items-baseline justify-between flex-wrap gap-2">
+                                                              <div className="flex items-baseline gap-2">
+                                                                <span className="text-2xl font-black text-[#92400E]">
+                                                                  {lang === "ur" ? `${toUrduDigits(displayArr.toLocaleString())} تھیلے` : `${displayArr.toLocaleString()} Bags`}
+                                                                </span>
+                                                              </div>
+                                                              <div className="text-[11px] font-semibold text-[#52635F]">
+                                                                {currentDateLabel}
+                                                              </div>
+                                                            </div>
+
+                                                            <div className="grid grid-cols-3 gap-2 pt-1 text-[10px]">
+                                                              <div className="bg-[#FFFDF5] p-1.5 rounded-lg border border-[#FDE68A] flex flex-col">
+                                                                <span className="text-[#92400E] font-semibold">{lang === "ur" ? "کل آمد" : "Total Period"}</span>
+                                                                <span className="font-bold text-[#78350F] text-xs">
+                                                                  {totalArr.toLocaleString()} Bags
+                                                                </span>
+                                                              </div>
+                                                              <div className="bg-[#FFFDF5] p-1.5 rounded-lg border border-[#FDE68A] flex flex-col">
+                                                                <span className="text-[#92400E] font-semibold">{lang === "ur" ? "سب سے زیادہ" : "Peak Day"}</span>
+                                                                <span className="font-bold text-[#78350F] text-xs">
+                                                                  {peakArr.toLocaleString()} Bags
+                                                                </span>
+                                                              </div>
+                                                              <div className="bg-[#FFFDF5] p-1.5 rounded-lg border border-[#FDE68A] flex flex-col">
+                                                                <span className="text-[#92400E] font-semibold">{lang === "ur" ? "روزانہ اوسط" : "Daily Avg"}</span>
+                                                                <span className="font-bold text-[#92400E] text-xs">
+                                                                  {avgArr.toLocaleString()} Bags
+                                                                </span>
+                                                              </div>
+                                                            </div>
+                                                          </div>
+
+                                                          {/* SVG Arrival Canvas */}
+                                                          <div className="relative w-full select-none bg-[#FCFDFD] rounded-xl border border-[#EDF4F1] p-1">
+                                                            <svg
+                                                              viewBox={`0 0 ${CW} ${CH}`}
+                                                              className="w-full select-none"
+                                                              style={{ height: isTableExpanded ? 160 : 135, display: "block", touchAction: "none" }}
+                                                              onMouseDown={(e) => {
+                                                                const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                                                                const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
+                                                                const i = Math.round((relX / chartW) * (len - 1));
+                                                                setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                                                              }}
+                                                              onMouseMove={(e) => {
+                                                                if (e.buttons === 1 || tableGraphHoverIdx !== null) {
+                                                                  const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                                                                  const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
+                                                                  const i = Math.round((relX / chartW) * (len - 1));
+                                                                  setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                                                                }
+                                                              }}
+                                                              onMouseUp={() => setTableGraphHoverIdx(null)}
+                                                              onMouseLeave={() => setTableGraphHoverIdx(null)}
+                                                              onTouchStart={(e) => {
+                                                                const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                                                                const touch = e.touches[0];
+                                                                if (touch) {
+                                                                  const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
+                                                                  const i = Math.round((relX / chartW) * (len - 1));
+                                                                  setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                                                                }
+                                                              }}
+                                                              onTouchMove={(e) => {
+                                                                const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+                                                                const touch = e.touches[0];
+                                                                if (touch) {
+                                                                  const relX = ((touch.clientX - rect.left) / rect.width) * CW - PL;
+                                                                  const i = Math.round((relX / chartW) * (len - 1));
+                                                                  setTableGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
+                                                                }
+                                                              }}
+                                                              onTouchEnd={() => setTableGraphHoverIdx(null)}
+                                                              onTouchCancel={() => setTableGraphHoverIdx(null)}
+                                                            >
+                                                              <defs>
+                                                                <linearGradient id={`tableInlineArrGrad-${ci}`} x1="0" y1="0" x2="0" y2="1">
+                                                                  <stop offset="0%" stopColor="#D97706" stopOpacity="0.32" />
+                                                                  <stop offset="85%" stopColor="#D97706" stopOpacity="0.04" />
+                                                                  <stop offset="100%" stopColor="#D97706" stopOpacity="0.00" />
+                                                                </linearGradient>
+                                                              </defs>
+
+                                                              {/* Horizontal Dashed Gridlines + Y Ticks */}
+                                                              {arrivalData.yLabels.map((tick, ti) => {
+                                                                const y = yOf(tick.val);
+                                                                return (
+                                                                  <g key={`yArrTick-${ti}`}>
+                                                                    <line x1={PL} y1={y} x2={CW - PR} y2={y} stroke="#E5EAE8" strokeWidth="1" strokeDasharray="4 4" />
+                                                                    <text x={PL - 6} y={y + 3.5} textAnchor="end" fontSize="9" fontWeight="600" fill="#80918B">
+                                                                      {tick.label}
+                                                                    </text>
+                                                                  </g>
+                                                                );
+                                                              })}
+
+                                                              {/* Pane Separator Line (Line Graph vs Bar Graph) */}
+                                                              <line
+                                                                x1={PL}
+                                                                y1={separatorY}
+                                                                x2={CW - PR}
+                                                                y2={separatorY}
+                                                                stroke="#CBD5E1"
+                                                                strokeWidth="1.2"
+                                                                strokeDasharray="4 3"
+                                                              />
+                                                              <text
+                                                                x={PL - 5}
+                                                                y={separatorY + 3.5}
+                                                                textAnchor="end"
+                                                                fontSize="8"
+                                                                fontWeight="600"
+                                                                fill="#94A3B8"
+                                                              >
+                                                                0
+                                                              </text>
+                                                              <text
+                                                                x={CW - PR + 5}
+                                                                y={separatorY + 3.5}
+                                                                textAnchor="start"
+                                                                fontSize="7.5"
+                                                                fontWeight="700"
+                                                                fill="#94A3B8"
+                                                              >
+                                                                VOL
+                                                              </text>
+
+                                                              {/* X-Axis Baseline */}
+                                                              <line x1={PL} y1={volBaseY} x2={CW - PR} y2={volBaseY} stroke="#D5E2DD" strokeWidth="1.2" />
+
+                                                              {/* X-Axis Dates */}
+                                                              {arrivalData.xLabels.map((lbl, i) =>
+                                                                lbl ? (
+                                                                  <text key={`xArrTick-${i}`} x={xOf(i)} y={CH - 6} textAnchor="middle" fontSize="8.5" fontWeight="600" fill="#80918B" fontFamily={lang === "ur" ? URDU_FONT : "inherit"}>
+                                                                    {lbl}
+                                                                  </text>
+                                                                ) : null,
+                                                              )}
+
+                                                              {/* Arrival Volume Bars along Bottom */}
+                                                              {pts.map((arrVal, i) => {
+                                                                const barX = xOf(i);
+                                                                const maxVal = arrivalData.peakArrival || 1;
+                                                                const barH = (arrVal / maxVal) * volMaxH;
+                                                                const barW = Math.max(2.5, Math.min(6, (chartW / len) * 0.55));
+                                                                const isHov = tableGraphHoverIdx === i;
+                                                                return (
+                                                                  <rect
+                                                                    key={`arr-vol-bar-${i}`}
+                                                                    x={barX - barW / 2}
+                                                                    y={volBaseY - barH}
+                                                                    width={barW}
+                                                                    height={barH}
+                                                                    rx={1}
+                                                                    fill="#D97706"
+                                                                    opacity={isHov ? 0.95 : 0.6}
+                                                                  />
+                                                                );
+                                                              })}
+
+                                                              {/* Area Fill */}
+                                                              <path
+                                                                d={[
+                                                                  ...pts.map((v, i) => `${i === 0 ? "M" : "L"}${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`),
+                                                                  `L${xOf(len - 1).toFixed(1)},${separatorY}`,
+                                                                  `L${PL},${separatorY}`,
+                                                                  "Z",
+                                                                ].join(" ")}
+                                                                fill={`url(#tableInlineArrGrad-${ci})`}
+                                                              />
+
+                                                              {/* Main Line */}
+                                                              <path
+                                                                d={pts.map((v, i) => `${i === 0 ? "M" : "L"}${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`).join(" ")}
+                                                                stroke="#D97706"
+                                                                strokeWidth="2.8"
+                                                                fill="none"
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                              />
+
+                                                              {/* Hover Guide and Marker */}
+                                                              {tableGraphHoverIdx !== null && (
+                                                                <g>
+                                                                  <line x1={xOf(tableGraphHoverIdx)} y1={PT} x2={xOf(tableGraphHoverIdx)} y2={volBaseY} stroke="#92400E" strokeWidth="1.2" strokeDasharray="3 3" />
+                                                                  <circle cx={xOf(tableGraphHoverIdx)} cy={yOf(pts[tableGraphHoverIdx])} r="5" fill="#D97706" stroke="#FFFFFF" strokeWidth="2" />
+                                                                </g>
+                                                              )}
+                                                            </svg>
+
+                                                            {/* Interactive Hover Tooltip for Arrival */}
+                                                            {tableGraphHoverIdx !== null && (() => {
+                                                              const volVal = pts[tableGraphHoverIdx] || 0;
+                                                              const dateStr = arrivalData.dates[tableGraphHoverIdx] || "14 Sep 2026";
+                                                              return (
+                                                                <div
+                                                                  className="pointer-events-none absolute z-20 rounded-xl shadow-xl border p-2 flex flex-col gap-1 backdrop-blur-md transition-all duration-75"
+                                                                  style={{
+                                                                    left: `${Math.min(Math.max((xOf(tableGraphHoverIdx) / CW) * 100, 24), 76)}%`,
+                                                                    top: 8,
+                                                                    transform: "translateX(-50%)",
+                                                                    background: "rgba(255, 255, 255, 0.97)",
+                                                                    borderColor: "#FDE68A",
+                                                                    minWidth: 140,
+                                                                    boxShadow: "0 8px 24px -4px rgba(217, 119, 6, 0.22)",
+                                                                  }}
+                                                                >
+                                                                  <div className="flex items-center justify-between text-[10px] font-bold text-[#92400E] border-b border-[#FEF3C7] pb-1">
+                                                                    <span>DT:</span>
+                                                                    <span className="font-mono text-[#0F172A]">{dateStr}</span>
+                                                                  </div>
+                                                                  <div className="flex items-center justify-between text-[10.5px] font-semibold text-[#334155] pt-1">
+                                                                    <span className="text-[#78350F]">{lang === "ur" ? "آمد:" : "Arrivals:"}</span>
+                                                                    <span className="font-mono font-bold text-right text-[#92400E]">
+                                                                      {volVal > 0 ? `${volVal.toLocaleString()} bags` : "—"}
+                                                                    </span>
+                                                                  </div>
+                                                                </div>
+                                                              );
+                                                            })()}
+                                                          </div>
+                                                        </>
+                                                      );
+                                                    })()}
+                                                  </>
+                                                )}
+
+                                                {/* 3. Timeframe Filter: 1 Month, 3 Months, 6 Months, 1 Year */}
+                                                <div className="pt-0.5">
+                                                  <div className="grid grid-cols-4 gap-1.5 border border-[#D5E2DD] rounded-xl p-1 bg-[#F9FBFA]">
+                                                    {[
+                                                      { id: "1M", labelEn: "1 Month", labelUr: "۱ مہینہ" },
+                                                      { id: "3M", labelEn: "3 Months", labelUr: "۳ مہینے" },
+                                                      { id: "6M", labelEn: "6 Months", labelUr: "۶ مہینے" },
+                                                      { id: "1Y", labelEn: "1 Year", labelUr: "۱ سال" },
+                                                    ].map((tf) => {
+                                                      const isTfActive = graphTimeframe === tf.id;
+                                                      return (
+                                                        <button
+                                                          key={tf.id}
+                                                          type="button"
+                                                          onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setGraphTimeframe(tf.id as any);
+                                                          }}
+                                                          className={`flex items-center justify-center py-2 px-1 rounded-lg transition-all font-bold ${isTfActive
+                                                            ? tableGraphView === "price"
+                                                              ? "bg-[#087F63] text-white shadow-sm ring-1 ring-[#087F63]/30 scale-[1.01]"
+                                                              : "bg-[#D97706] text-white shadow-sm ring-1 ring-[#D97706]/30 scale-[1.01]"
+                                                            : "bg-white/80 text-[#52635F] hover:bg-white hover:text-[#183B34] border border-[#E8EFEC]"
+                                                            }`}
+                                                          style={{
+                                                            fontSize: lang === "ur" ? 13 : 11,
+                                                            fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                                                          }}
+                                                        >
+                                                          <span>{lang === "ur" ? tf.labelUr : tf.labelEn}</span>
+                                                        </button>
+                                                      );
+                                                    })}
+                                                  </div>
+                                                </div>
                                               </div>
                                             </div>
-                                          </div>
-                                        </td>
-                                      </tr>
-                                    )}
-                                  </React.Fragment>
-                                );
-                              })
-                            )}
+                                          </td>
+                                        </tr>
+                                      )}
+                                    </React.Fragment>
+                                  );
+                                })
+                              )}
                             </tbody>
                           </table>
                         )}
@@ -15930,8 +16018,8 @@ function ProductRatesScreen({
                                   "Station",
                                   "Min – Max",
                                   "Price Type",
-                                  "Trend",
                                   "Quality",
+                                  "Trend",
                                   "Arrival",
                                   "Color",
                                   "Variety",
@@ -16243,22 +16331,7 @@ function ProductRatesScreen({
                                         </span>
                                       </td>
 
-                                      {/* 4. Trend */}
-                                      <td
-                                        style={{
-                                          padding: "7px 8px",
-                                          color: trendColor,
-                                          fontWeight: 700,
-                                          fontSize: 11,
-                                          textAlign: "center",
-                                          whiteSpace: "nowrap",
-                                        }}
-                                      >
-                                        {trendIcon}{" "}
-                                        {r.trendPct > 0 ? r.trendPct + "%" : ""}
-                                      </td>
-
-                                      {/* 5. Quality (New or Old) */}
+                                      {/* 4. Quality (New or Old) */}
                                       <td
                                         style={{
                                           padding: "7px 8px",
@@ -16283,6 +16356,21 @@ function ProductRatesScreen({
                                               : "پرانا"
                                             : rowQuality}
                                         </span>
+                                      </td>
+
+                                      {/* 5. Trend */}
+                                      <td
+                                        style={{
+                                          padding: "7px 8px",
+                                          color: trendColor,
+                                          fontWeight: 700,
+                                          fontSize: 11,
+                                          textAlign: "center",
+                                          whiteSpace: "nowrap",
+                                        }}
+                                      >
+                                        {trendIcon}{" "}
+                                        {r.trendPct > 0 ? r.trendPct + "%" : ""}
                                       </td>
 
                                       {/* 6. Arrival */}
@@ -16312,7 +16400,7 @@ function ProductRatesScreen({
                                         }}
                                       >
                                         {lang === "ur"
-                                          ? t(r.color) || r.color || "—"
+                                          ? (r.color ? (t(r.color) || r.color) : "—")
                                           : r.color || "—"}
                                       </td>
 
@@ -16331,7 +16419,7 @@ function ProductRatesScreen({
                                         }}
                                       >
                                         {lang === "ur"
-                                          ? t(r.variety) || r.variety || "—"
+                                          ? (r.variety ? (t(r.variety) || r.variety) : "—")
                                           : r.variety || "—"}
                                       </td>
 
@@ -16550,16 +16638,29 @@ function ProductRatesScreen({
                   {/* Compare Button & Mode Indicator */}
                   <div className="flex items-center gap-1.5">
                     <button
-                      onClick={() => setCompareMode((prev) => !prev)}
-                      className="tap-target flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10.5px] font-bold transition-all active:scale-95"
+                      onClick={() => {
+                        setCompareMode((prev) => {
+                          const next = !prev;
+                          if (next) {
+                            if (activeTypes.length < 2) {
+                              const other = orderedRateTypes.find((t) => t !== focusedType) || ALL_RATE_TYPES.find((t) => t !== focusedType) || "Mill Rate";
+                              setActiveTypes([focusedType, other]);
+                            }
+                          } else {
+                            setActiveTypes([focusedType]);
+                          }
+                          return next;
+                        });
+                      }}
+                      className="tap-target flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10.5px] font-bold transition-all active:scale-95 shadow-xs"
                       style={{
                         background: compareMode ? "#087F63" : "#F1F7F4",
-                        color: compareMode ? "#FFFFFF" : "#52635F",
-                        border: `1px solid ${compareMode ? "#087F63" : "#D5E2DD"}`,
+                        color: compareMode ? "#FFFFFF" : "#143B33",
+                        border: `1.5px solid ${compareMode ? "#087F63" : "#B8D5CB"}`,
                         fontFamily: lang === "ur" ? URDU_FONT : "inherit",
                       }}
                     >
-                      <span>+ {compareMode ? (lang === "ur" ? "اکیلا دیکھیں" : "Single") : (lang === "ur" ? "موازنہ کریں" : "Compare")}</span>
+                      <span>+ {compareMode ? (lang === "ur" ? "اکیلا دیکھیں (Single)" : "Single Mode") : (lang === "ur" ? "موازنہ کریں (Compare)" : "Compare Rates")}</span>
                     </button>
                   </div>
                 </div>
@@ -16654,6 +16755,29 @@ function ProductRatesScreen({
                   );
                 })()}
 
+                {/* Active Comparison Legend when Compare Mode is Active */}
+                {compareMode && (
+                  <div className="flex flex-wrap gap-1.5 items-center p-2 rounded-xl bg-[#F0FDF4] border border-[#BBF7D0]">
+                    <span className="text-[10.5px] font-bold text-[#166534]">
+                      {lang === "ur" ? "موازنہ کیا جا رہا ہے:" : "Comparing Rates:"}
+                    </span>
+                    {activeSeries.map((s) => {
+                      const curVal = s.data[hoverIdx !== null ? hoverIdx : len - 1] || 0;
+                      return (
+                        <span
+                          key={`comp-badge-${s.label}`}
+                          className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold text-white shadow-xs"
+                          style={{ background: s.color || "#087F63" }}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-white opacity-80" />
+                          <span>{tr(s.label).replace(" ریٹ", "").replace(" Rate", "")}:</span>
+                          <span>{lang === "ur" ? `روپے ${toUrduDigits(curVal.toLocaleString())}` : `Rs. ${curVal.toLocaleString()}`}</span>
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+
                 {/* SVG Chart Canvas (Price Trend with Volume Bars) */}
                 {(() => {
                   const mainSeries = activeSeries.find((s) => s.label === focusedType) || activeSeries[0] || priceSeries[0];
@@ -16664,6 +16788,7 @@ function ProductRatesScreen({
                   const maxArr = Math.max(...arrivalData, 1);
                   const volBaseY = CH - PB;
                   const volMaxH = 24;
+                  const separatorY = compareMode ? volBaseY : volBaseY - volMaxH - 8;
 
                   return (
                     <div className="relative w-full select-none bg-[#FCFDFD] rounded-xl border border-[#EDF4F1] p-1">
@@ -16763,6 +16888,41 @@ function ProductRatesScreen({
                           );
                         })}
 
+                        {/* Pane Separator Line (Line Graph vs Bar Graph) */}
+                        {!compareMode && (
+                          <>
+                            <line
+                              x1={PL}
+                              y1={separatorY}
+                              x2={CW - PR}
+                              y2={separatorY}
+                              stroke="#CBD5E1"
+                              strokeWidth="1.2"
+                              strokeDasharray="4 3"
+                            />
+                            <text
+                              x={PL - 5}
+                              y={separatorY + 3.5}
+                              textAnchor="end"
+                              fontSize="8"
+                              fontWeight="600"
+                              fill="#94A3B8"
+                            >
+                              0
+                            </text>
+                            <text
+                              x={CW - PR + 5}
+                              y={separatorY + 3.5}
+                              textAnchor="start"
+                              fontSize="7.5"
+                              fontWeight="700"
+                              fill="#94A3B8"
+                            >
+                              VOL
+                            </text>
+                          </>
+                        )}
+
                         {/* Volume Baseline / X-Axis Baseline */}
                         <line
                           x1={PL}
@@ -16791,127 +16951,161 @@ function ProductRatesScreen({
                           ) : null,
                         )}
 
-                        {/* Mini Arrival Volume Bars along Bottom */}
-                        {arrivalData.map((arrVal, i) => {
-                          const barX = xOf(i, len);
-                          const barH = (arrVal / maxArr) * volMaxH;
-                          const prevP = i > 0 ? (mainSeries?.data[i - 1] || 0) : (mainSeries?.data[i] || 0);
-                          const curP = mainSeries?.data[i] || 0;
-                          const isUp = curP >= prevP;
-                          const barW = Math.max(2, Math.min(6, (chartW / len) * 0.55));
-                          const isHov = hoverIdx === i;
+                        {/* Mini Arrival Volume Bars along Bottom (Hidden when comparing) */}
+                        {!compareMode &&
+                          arrivalData.map((arrVal, i) => {
+                            const barX = xOf(i, len);
+                            const barH = (arrVal / maxArr) * volMaxH;
+                            const prevP = i > 0 ? (mainSeries?.data[i - 1] || 0) : (mainSeries?.data[i] || 0);
+                            const curP = mainSeries?.data[i] || 0;
+                            const isUp = curP >= prevP;
+                            const barW = Math.max(2, Math.min(6, (chartW / len) * 0.55));
+                            const isHov = hoverIdx === i;
 
-                          return (
-                            <rect
-                              key={`vol-${i}`}
-                              x={barX - barW / 2}
-                              y={volBaseY - barH}
-                              width={barW}
-                              height={barH}
-                              rx={1}
-                              fill={isUp ? "#10B981" : "#EF4444"}
-                              opacity={isHov ? 1 : 0.65}
-                            />
-                          );
-                        })}
-
-                        {/* Primary Focused Rate Type Line & Area Gradient Glow */}
-                        {(() => {
-                          const s = activeSeries.find((ser) => ser.label === focusedType) || activeSeries[0];
-                          if (!s) return null;
-                          const pts = s.data
-                            .map(
-                              (v, i) =>
-                                `${i === 0 ? "M" : "L"}${xOf(i, len).toFixed(1)},${yOf(v, pMin, pMax).toFixed(1)}`,
-                            )
-                            .join(" ");
-                          const areaPath = `${pts} L${xOf(len - 1, len).toFixed(1)},${volBaseY} L${PL},${volBaseY} Z`;
-
-                          return (
-                            <g key={`main-${s.label}`}>
-                              <path
-                                d={areaPath}
-                                fill={`url(#areaGrad-${s.label.replace(/\s+/g, "_")})`}
+                            return (
+                              <rect
+                                key={`vol-${i}`}
+                                x={barX - barW / 2}
+                                y={volBaseY - barH}
+                                width={barW}
+                                height={barH}
+                                rx={1}
+                                fill={isUp ? "#10B981" : "#EF4444"}
+                                opacity={isHov ? 1 : 0.65}
                               />
-                              <path
-                                d={pts}
-                                stroke={s.color || "#087F63"}
-                                strokeWidth="2.5"
-                                fill="none"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
+                            );
+                          })}
 
-                              {/* Dotted Horizontal Guideline for latest price */}
-                              <line
-                                x1={PL}
-                                y1={currentCloseY}
-                                x2={CW - PR}
-                                y2={currentCloseY}
-                                stroke={s.color || "#087F63"}
-                                strokeWidth="0.9"
-                                strokeDasharray="3 3"
-                                opacity="0.6"
-                              />
-                              {/* Latest Price Right-side Tag */}
-                              <g transform={`translate(${CW - PR + 2}, ${currentCloseY - 7})`}>
-                                <rect
-                                  x={0}
-                                  y={0}
-                                  width={28}
-                                  height={14}
-                                  rx={3}
-                                  fill={s.color || "#087F63"}
-                                />
-                                <text
-                                  x={14}
-                                  y={10}
-                                  textAnchor="middle"
-                                  fontSize="8"
-                                  fontWeight="bold"
-                                  fill="#FFFFFF"
-                                >
-                                  {currentClose >= 1000 ? `${(currentClose / 1000).toFixed(1)}k` : currentClose}
-                                </text>
-                              </g>
+                        {/* Line Graphs Rendering: Multiple Lines in Compare Mode, Single Line in Normal Mode */}
+                        {compareMode ? (
+                          // Compare Mode: Render ALL activeSeries with distinct solid colored lines and price tags
+                          activeSeries.map((s) => {
+                            const pts = s.data
+                              .map(
+                                (v, i) =>
+                                  `${i === 0 ? "M" : "L"}${xOf(i, len).toFixed(1)},${yOf(v, pMin, pMax).toFixed(1)}`,
+                              )
+                              .join(" ");
+                            const sClose = s.data[len - 1] || 0;
+                            const sCloseY = yOf(sClose, pMin, pMax);
 
-                              {/* Live Pulse Dot on Latest Value */}
-                              <circle
-                                cx={xOf(len - 1, len)}
-                                cy={currentCloseY}
-                                r="4"
-                                fill={s.color || "#087F63"}
-                                stroke="#FFFFFF"
-                                strokeWidth="2"
-                              />
-                            </g>
-                          );
-                        })()}
-
-                        {/* Compare Mode Secondary Lines */}
-                        {compareMode &&
-                          activeSeries
-                            .filter((s) => s.label !== focusedType)
-                            .map((s) => {
-                              const pts = s.data
-                                .map(
-                                  (v, i) =>
-                                    `${i === 0 ? "M" : "L"}${xOf(i, len).toFixed(1)},${yOf(v, pMin, pMax).toFixed(1)}`,
-                                )
-                                .join(" ");
-                              return (
+                            return (
+                              <g key={`comp-line-${s.label}`}>
                                 <path
-                                  key={`sec-${s.label}`}
                                   d={pts}
-                                  stroke={s.color}
-                                  strokeWidth="1.8"
-                                  strokeDasharray="4 2"
+                                  stroke={s.color || "#087F63"}
+                                  strokeWidth="2.5"
                                   fill="none"
                                   strokeLinecap="round"
-                                  opacity="0.85"
+                                  strokeLinejoin="round"
                                 />
-                              );
-                            })}
+                                {/* Latest Price Right-side Tag */}
+                                <g transform={`translate(${CW - PR + 2}, ${Math.max(PT, Math.min(CH - PB - 14, sCloseY - 7))})`}>
+                                  <rect
+                                    x={0}
+                                    y={0}
+                                    width={28}
+                                    height={14}
+                                    rx={3}
+                                    fill={s.color || "#087F63"}
+                                  />
+                                  <text
+                                    x={14}
+                                    y={10}
+                                    textAnchor="middle"
+                                    fontSize="8"
+                                    fontWeight="bold"
+                                    fill="#FFFFFF"
+                                  >
+                                    {sClose >= 1000 ? `${(sClose / 1000).toFixed(1)}k` : sClose}
+                                  </text>
+                                </g>
+                                {/* Live Pulse Dot on Latest Value */}
+                                <circle
+                                  cx={xOf(len - 1, len)}
+                                  cy={sCloseY}
+                                  r="3.5"
+                                  fill={s.color || "#087F63"}
+                                  stroke="#FFFFFF"
+                                  strokeWidth="1.5"
+                                />
+                              </g>
+                            );
+                          })
+                        ) : (
+                          // Single Focused Rate Type Line & Area Gradient Glow
+                          (() => {
+                            const s = activeSeries.find((ser) => ser.label === focusedType) || activeSeries[0];
+                            if (!s) return null;
+                            const pts = s.data
+                              .map(
+                                (v, i) =>
+                                  `${i === 0 ? "M" : "L"}${xOf(i, len).toFixed(1)},${yOf(v, pMin, pMax).toFixed(1)}`,
+                              )
+                              .join(" ");
+                            const areaPath = `${pts} L${xOf(len - 1, len).toFixed(1)},${separatorY} L${PL},${separatorY} Z`;
+
+                            return (
+                              <g key={`main-${s.label}`}>
+                                <path
+                                  d={areaPath}
+                                  fill={`url(#areaGrad-${s.label.replace(/\s+/g, "_")})`}
+                                />
+                                <path
+                                  d={pts}
+                                  stroke={s.color || "#087F63"}
+                                  strokeWidth="2.5"
+                                  fill="none"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+
+                                {/* Dotted Horizontal Guideline for latest price */}
+                                <line
+                                  x1={PL}
+                                  y1={currentCloseY}
+                                  x2={CW - PR}
+                                  y2={currentCloseY}
+                                  stroke={s.color || "#087F63"}
+                                  strokeWidth="0.9"
+                                  strokeDasharray="3 3"
+                                  opacity="0.6"
+                                />
+                                {/* Latest Price Right-side Tag */}
+                                <g transform={`translate(${CW - PR + 2}, ${currentCloseY - 7})`}>
+                                  <rect
+                                    x={0}
+                                    y={0}
+                                    width={28}
+                                    height={14}
+                                    rx={3}
+                                    fill={s.color || "#087F63"}
+                                  />
+                                  <text
+                                    x={14}
+                                    y={10}
+                                    textAnchor="middle"
+                                    fontSize="8"
+                                    fontWeight="bold"
+                                    fill="#FFFFFF"
+                                  >
+                                    {currentClose >= 1000 ? `${(currentClose / 1000).toFixed(1)}k` : currentClose}
+                                  </text>
+                                </g>
+
+                                {/* Live Pulse Dot on Latest Value */}
+                                <circle
+                                  cx={xOf(len - 1, len)}
+                                  cy={currentCloseY}
+                                  r="4"
+                                  fill={s.color || "#087F63"}
+                                  stroke="#FFFFFF"
+                                  strokeWidth="2"
+                                />
+                              </g>
+                            );
+                          })()
+                        )}
 
                         {/* Interactive Hover Crosshair Lines */}
                         {hoverIdx !== null && (
@@ -16949,13 +17143,52 @@ function ProductRatesScreen({
                         )}
                       </svg>
 
-                      {/* Interactive Agricultural Hover Tooltip (Only Min Rate, Max Rate, Arrivals) */}
+                      {/* Interactive Agricultural Hover Tooltip */}
                       {hoverIdx !== null && (() => {
+                        const dateStr = fullDateLabels[hoverIdx]?.fullDate || "14 Sep 2026";
+
+                        if (compareMode) {
+                          return (
+                            <div
+                              className="pointer-events-none absolute z-20 rounded-xl shadow-xl border p-2.5 flex flex-col gap-1.5 backdrop-blur-md transition-all duration-75"
+                              style={{
+                                left: `${Math.min(Math.max((xOf(hoverIdx, len) / CW) * 100, 24), 76)}%`,
+                                top: 12,
+                                transform: "translateX(-50%)",
+                                background: "rgba(255, 255, 255, 0.97)",
+                                borderColor: "#087F63",
+                                minWidth: 170,
+                                boxShadow: "0 8px 24px -4px rgba(8, 127, 99, 0.22)",
+                              }}
+                            >
+                              <div className="flex items-center justify-between text-[10px] font-bold text-[#087F63] border-b border-[#E8EFEC] pb-1">
+                                <span>{lang === "ur" ? "تاریخ:" : "Date:"}</span>
+                                <span className="font-mono text-[#0F172A]">{dateStr}</span>
+                              </div>
+                              <div className="flex flex-col gap-1 pt-0.5">
+                                {activeSeries.map((s) => {
+                                  const pVal = s.data[hoverIdx] || 0;
+                                  return (
+                                    <div key={`tip-${s.label}`} className="flex items-center justify-between text-[10.5px]">
+                                      <div className="flex items-center gap-1.5">
+                                        <span className="w-2 h-2 rounded-full" style={{ background: s.color || "#087F63" }} />
+                                        <span className="font-semibold text-[#334155]">{tr(s.label).replace(" ریٹ", "").replace(" Rate", "")}:</span>
+                                      </div>
+                                      <span className="font-mono font-bold" style={{ color: s.color || "#087F63" }}>
+                                        Rs. {pVal.toLocaleString()}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        }
+
                         const curP = mainSeries?.data[hoverIdx] || 0;
                         const minP = mainSeries?.mins?.[hoverIdx] || Math.max(0, curP - Math.round(curP * 0.008));
                         const maxP = mainSeries?.maxs?.[hoverIdx] || (curP + Math.round(curP * 0.008));
                         const volVal = arrivalData[hoverIdx] || 0;
-                        const dateStr = fullDateLabels[hoverIdx]?.fullDate || "14 Sep 2026";
 
                         return (
                           <div
@@ -17058,16 +17291,27 @@ function ProductRatesScreen({
                       const isFocused = focusedType === tRt;
                       const isCompared = activeTypes.includes(tRt);
                       const isSelected = compareMode ? isCompared : isFocused;
+                      const chipColor = RATE_COLORS[tRt] || "#087F63";
 
                       return (
                         <button
                           key={tRt}
                           onClick={() => {
                             if (compareMode) {
-                              // Switch from compare mode to single rate type focus
-                              setCompareMode(false);
-                              setFocusedType(tRt);
-                              setActiveTypes([tRt]);
+                              // Multi-select toggle in compare mode: stacks or unstacks rate types
+                              setActiveTypes((prev) => {
+                                if (prev.includes(tRt)) {
+                                  if (prev.length > 1) {
+                                    const remaining = prev.filter((x) => x !== tRt);
+                                    if (focusedType === tRt) setFocusedType(remaining[0]);
+                                    return remaining;
+                                  }
+                                  return prev; // keep at least 1 rate type selected
+                                } else {
+                                  setFocusedType(tRt);
+                                  return [...prev, tRt];
+                                }
+                              });
                             } else {
                               setFocusedType(tRt);
                               setActiveTypes([tRt]);
@@ -17077,8 +17321,8 @@ function ProductRatesScreen({
                           style={{
                             fontSize: lang === "ur" ? 13 : 11,
                             padding: "5px 11px",
-                            background: isSelected ? RATE_COLORS[tRt] || "#087F63" : "#F4FAF7",
-                            border: `1.5px solid ${isSelected ? RATE_COLORS[tRt] || "#087F63" : "#D5E2DD"}`,
+                            background: isSelected ? chipColor : "#F4FAF7",
+                            border: `1.5px solid ${isSelected ? chipColor : "#D5E2DD"}`,
                             color: isSelected ? "#FFFFFF" : "#52635F",
                             fontFamily: lang === "ur" ? URDU_FONT : "inherit",
                           }}
@@ -17088,10 +17332,13 @@ function ProductRatesScreen({
                             style={{
                               width: 7,
                               height: 7,
-                              background: isSelected ? "#FFFFFF" : RATE_COLORS[tRt] || "#087F63",
+                              background: isSelected ? "#FFFFFF" : chipColor,
                             }}
                           />
                           <span>{tr(tRt).replace(" ریٹ", "").replace(" Rate", "")}</span>
+                          {compareMode && isSelected && (
+                            <span className="text-[9px] bg-white/25 px-1 rounded-sm">✓</span>
+                          )}
                         </button>
                       );
                     })}
@@ -18249,861 +18496,6 @@ function MandiDetailScreen({
   );
 }
 
-//  ANALYTICS
-
-function genPts(base: number, len: number, vol = 0.035) {
-  const pts: number[] = [];
-  let c = base;
-  for (let i = 0; i < len; i++) {
-    c = c * (1 + (Math.random() - 0.47) * vol);
-    pts.push(Math.round(c));
-  }
-  return pts;
-}
-function LineChart({
-  data,
-  color = "#2FAE68",
-  height = 110,
-}: {
-  data: number[];
-  color?: string;
-  height?: number;
-}) {
-  if (!data.length) return null;
-  const w = 320,
-    pd = 4,
-    mn = Math.min(...data),
-    mx = Math.max(...data),
-    rng = mx - mn || 1;
-  const pts = data.map((v, i) => [
-    (pd + (i / (data.length - 1)) * (w - pd * 2)).toFixed(1),
-    (pd + ((mx - v) / rng) * (height - pd * 2)).toFixed(1),
-  ]);
-  const path = pts
-    .map((p, i) => `${i === 0 ? "M" : "L"}${p[0]},${p[1]}`)
-    .join(" ");
-  return (
-    <svg viewBox={`0 0 ${w} ${height}`} className="w-full" style={{ height }}>
-      <defs>
-        <linearGradient
-          id={`g${color.replace("#", "")}`}
-          x1="0"
-          y1="0"
-          x2="0"
-          y2="1"
-        >
-          <stop offset="0%" stopColor={color} stopOpacity="0.2" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <path
-        d={path + ` L${w - pd},${height} L${pd},${height} Z`}
-        fill={`url(#g${color.replace("#", "")})`}
-      />
-      <path
-        d={path}
-        stroke={color}
-        strokeWidth="2.5"
-        fill="none"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      {pts.length > 0 && (
-        <circle
-          cx={pts[pts.length - 1][0]}
-          cy={pts[pts.length - 1][1]}
-          r="4"
-          fill={color}
-          stroke="#fff"
-          strokeWidth="2"
-        />
-      )}
-    </svg>
-  );
-}
-function MiniSparkline({
-  data,
-  color = "#2FAE68",
-}: {
-  data: number[];
-  color?: string;
-}) {
-  if (data.length < 2) return null;
-  const w = 60,
-    h = 24,
-    mn = Math.min(...data),
-    mx = Math.max(...data),
-    rng = mx - mn || 1;
-  const pts = data.map((v, i) => [
-    (i / (data.length - 1)) * w,
-    h - ((v - mn) / rng) * h,
-  ]);
-  const path = pts
-    .map(
-      (p, i) => `${i === 0 ? "M" : "L"}${p[0].toFixed(1)},${p[1].toFixed(1)}`,
-    )
-    .join(" ");
-  return (
-    <svg viewBox={`0 0 ${w} ${h}`} width={60} height={24}>
-      <path
-        d={path}
-        stroke={color}
-        strokeWidth="1.5"
-        fill="none"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-const A_MANDIS_LIST = [
-  "Pakpattan",
-  "Sahiwal",
-  "Lahore",
-  "Multan",
-  "Faisalabad",
-];
-const MANDI_COLORS = ["#2FAE68", "#249985", "#D95A51", "#D79A2B", "#2A9D87"];
-
-function AnalyticsScreen() {
-  const { lang, t, tc, tr } = useLang();
-  const [subTab, setSubTab] = useState<AnalyticsTab>("trends");
-  const [product, setproduct] = useState("Wheat");
-  const [timeRange, setTimeRange] = useState<TimeRange>("week");
-  const [priceType, setPriceType] = useState("Mill Rate");
-  const [compareSel, setCompareSel] = useState<string[]>([
-    "Pakpattan",
-    "Lahore",
-  ]);
-  const [regionProvince, setRegionProvince] = useState("Punjab");
-  const [regionDistrict, setRegionDistrict] = useState("Rahim Yar Khan");
-  const [comSheet, setComSheet] = useState(false);
-  const [rateSheet, setRateSheet] = useState(false);
-  const [locSheet, setLocSheet] = useState(false);
-  const [analyticsSelectedBP, setAnalyticsSelectedBP] = useState<string | null>(
-    null,
-  );
-  const [analyticsSelectedRateTypes, setAnalyticsSelectedRateTypes] = useState<
-    string[]
-  >([]);
-
-  const tResult = useMemo(() => {
-    return getExcelTimeline({
-      product,
-      byproduct: analyticsSelectedBP || "",
-      rateType: priceType,
-      range: timeRange,
-    });
-  }, [product, analyticsSelectedBP, priceType, timeRange]);
-
-  const mainData = tResult.prices;
-  const cur = tResult.latestPrice;
-  const prev = mainData.length >= 2 ? mainData[mainData.length - 2] : cur;
-  const trend = tResult.trend;
-  const trendPct = tResult.trendPct.toFixed(1);
-
-  const allRateSeries = useMemo(() => {
-    return ALL_RATE_TYPES.map((rt) => {
-      const res = getExcelTimeline({
-        product,
-        byproduct: analyticsSelectedBP || "",
-        rateType: rt,
-        range: timeRange,
-      });
-      return {
-        label: rt,
-        color: RATE_COLORS[rt] || "#087F63",
-        data: res.prices,
-      };
-    });
-  }, [product, analyticsSelectedBP, timeRange]);
-
-  const compareSeries = useMemo(() => {
-    return compareSel.map((m) => {
-      const res = getExcelTimeline({
-        product,
-        byproduct: analyticsSelectedBP || "",
-        locationLabel: m,
-        locationKind: "mandi",
-        rateType: priceType,
-        range: timeRange,
-      });
-      return {
-        label: m,
-        color: MANDI_COLORS[A_MANDIS_LIST.indexOf(m) % MANDI_COLORS.length] || "#2FAE68",
-        data: res.prices,
-      };
-    });
-  }, [compareSel, product, analyticsSelectedBP, priceType, timeRange]);
-
-  const regionStations = LOCATIONS[regionProvince]?.[regionDistrict] || [];
-  const regionData = useMemo(() => {
-    return regionStations.map((s) => {
-      const res = getExcelTimeline({
-        product,
-        byproduct: analyticsSelectedBP || "",
-        locationLabel: s,
-        locationKind: "mandi",
-        range: "week",
-      });
-      return {
-        station: s,
-        price: res.latestPrice,
-        spark: res.prices,
-        trend: res.trend === "down" ? ("down" as const) : ("up" as const),
-      };
-    });
-  }, [regionStations, product, analyticsSelectedBP]);
-
-  const decision =
-    trend === "up"
-      ? ` ${product} rising at ${priceType} level. Selling recommended next 2–3 days.`
-      : ` ${product} softening at ${priceType} level. Hold stock 3–5 days.`;
-
-  return (
-    <div
-      className="flex flex-col h-full screen-enter"
-      style={{ background: "#F1F7F4" }}
-    >
-      <header
-        className="pt-10 pb-0 flex-shrink-0"
-        style={{ background: "#F4FAF7", borderBottom: "1px solid #D5E2DD" }}
-      >
-        <h1 className="font-extrabold text-xl mb-3 px-4">
-          {lang === "ur" ? "تجزیات" : " Analytics"}
-        </h1>
-        <div className="flex gap-2 overflow-x-auto mb-3 px-4">
-          <button
-            onClick={() => setComSheet(true)}
-            className="tap-target flex-shrink-0 flex items-center gap-1 px-3 rounded-2xl font-semibold text-sm"
-            style={{
-              height: 44,
-              background: "#F1F7F4",
-              color: "#087F63",
-              border: "1px solid #E4F2EC",
-            }}
-          >
-            {tc(product)}
-          </button>
-          <button
-            onClick={() => setLocSheet(true)}
-            className="tap-target flex-shrink-0 flex items-center gap-1 px-3 rounded-2xl font-semibold text-sm"
-            style={{
-              height: 44,
-              background: "#EAF5F1",
-              color: "#147D72",
-              border: "1px solid #DDEFE9",
-            }}
-          >
-            {regionDistrict}
-          </button>
-          <button
-            onClick={() => setRateSheet(true)}
-            className="tap-target flex-shrink-0 flex items-center gap-1 px-3 rounded-2xl font-semibold text-sm"
-            style={{
-              height: 44,
-              background: "#EAF5F1",
-              color: "#168A76",
-              border: "1px solid #E3F1EC",
-            }}
-          >
-            {priceType}
-          </button>
-        </div>
-        {/* Row 1: By-product chips for current product */}
-        {(() => {
-          const analyticsBPs = (() => {
-            for (const [, vd] of Object.entries(VERTICALS)) {
-              const cd = vd.products[product];
-              if (cd) return Array.isArray(cd) ? cd : [];
-            }
-            return [];
-          })();
-          return analyticsBPs.length > 0 ? (
-            <ScrollRow bg="#fff" style={{ borderTop: "1px solid #E8EFEC" }}>
-              <span
-                className="flex-shrink-0 text-[10px] font-extrabold uppercase tracking-wider mr-1"
-                style={{ color: "#80918B", minWidth: 32 }}
-              >
-                ByP
-              </span>
-              <button
-                onClick={() => setAnalyticsSelectedBP(null)}
-                className="tap-target flex-shrink-0 rounded-full font-semibold text-xs px-3 py-2"
-                style={{
-                  background: !analyticsSelectedBP ? "#087F63" : "#E8EFEC",
-                  color: !analyticsSelectedBP ? "#fff" : "#52635F",
-                  border: !analyticsSelectedBP ? "none" : "1px solid #D5E2DD",
-                }}
-              >
-                All
-              </button>
-              {analyticsBPs.map((bp: string) => (
-                <button
-                  key={bp}
-                  onClick={() =>
-                    setAnalyticsSelectedBP(
-                      analyticsSelectedBP === bp ? null : bp,
-                    )
-                  }
-                  className="tap-target flex-shrink-0 flex items-center gap-1.5 rounded-full font-semibold text-xs px-3 py-2"
-                  style={{
-                    background:
-                      analyticsSelectedBP === bp ? "#087F63" : "#E8EFEC",
-                    color: analyticsSelectedBP === bp ? "#fff" : "#52635F",
-                    border:
-                      analyticsSelectedBP === bp ? "none" : "1px solid #D5E2DD",
-                  }}
-                >
-                  {bp}
-                </button>
-              ))}
-            </ScrollRow>
-          ) : null;
-        })()}
-        {/* Row 2: Price type chips */}
-        <ScrollRow bg="#fff" style={{ borderTop: "1px solid #E8EFEC" }}>
-          <span
-            className="flex-shrink-0 text-[10px] font-extrabold uppercase tracking-wider mr-1"
-            style={{ color: "#80918B", minWidth: 32 }}
-          >
-            Price
-          </span>
-          <button
-            onClick={() => setAnalyticsSelectedRateTypes([])}
-            className="tap-target flex-shrink-0 rounded-full font-semibold text-xs px-3 py-2"
-            style={{
-              background:
-                analyticsSelectedRateTypes.length === 0 ? "#087F63" : "#E8EFEC",
-              color:
-                analyticsSelectedRateTypes.length === 0 ? "#fff" : "#52635F",
-              border:
-                analyticsSelectedRateTypes.length === 0
-                  ? "none"
-                  : "1px solid #D5E2DD",
-            }}
-          >
-            All
-          </button>
-          {ALL_RATE_TYPES.map((rt) => {
-            const on = analyticsSelectedRateTypes.includes(rt);
-            return (
-              <button
-                key={rt}
-                onClick={() =>
-                  setAnalyticsSelectedRateTypes((p) =>
-                    p.includes(rt) ? p.filter((x) => x !== rt) : [...p, rt],
-                  )
-                }
-                className="tap-target flex-shrink-0 rounded-full font-semibold text-xs px-3 py-2"
-                style={{
-                  background: on ? "#087F63" : "#E8EFEC",
-                  color: on ? "#fff" : "#80918B",
-                  border: on ? "none" : "1px solid #D5E2DD",
-                }}
-              >
-                {rt.replace(" Rate", "")}
-              </button>
-            );
-          })}
-        </ScrollRow>
-        <div className="flex gap-1.5 overflow-x-auto px-4 py-3">
-          {(
-            [
-              ["trends", lang === "ur" ? "رجحانات" : " Trends"],
-              ["allrates", lang === "ur" ? "تمام نرخ" : " All Rates"],
-              ["compare", lang === "ur" ? "موازنہ" : " Compare"],
-              ["regional", lang === "ur" ? "علاقائی" : " Regional"],
-            ] as [AnalyticsTab, string][]
-          ).map(([t, label]) => (
-            <button
-              key={t}
-              onClick={() => setSubTab(t)}
-              className="tap-target flex-shrink-0 px-3 rounded-xl font-bold text-xs"
-              style={{
-                height: 36,
-                background: subTab === t ? "#087F63" : "#E8EFEC",
-                color: subTab === t ? "#fff" : "#183B34",
-              }}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </header>
-      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-4 flex flex-col gap-4">
-        {subTab === "trends" && (
-          <>
-            <div className="rounded-2xl p-5" style={{ background: "#087F63" }}>
-              <p className="text-green-200 text-xs">
-                {priceType} · {product}
-              </p>
-              <p className="text-4xl font-extrabold mt-1 text-white">
-                {fmt(cur)}
-              </p>
-              <p className="text-green-200 text-sm">/40 KG</p>
-              <div className="flex gap-4 mt-3">
-                <div>
-                  <p className="text-green-200 text-xs">Low</p>
-                  <p className="font-bold text-sm text-white">
-                    {fmt(Math.min(...mainData))}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-green-200 text-xs">High</p>
-                  <p className="font-bold text-sm text-white">
-                    {fmt(Math.max(...mainData))}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-green-200 text-xs">Trend</p>
-                  <p className="font-bold text-sm text-white">
-                    {trend === "up" ? "" : ""} {trendPct}%
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="grid grid-cols-4 gap-1.5 border border-[#D5E2DD] rounded-xl p-1 bg-[#F9FBFA]">
-              {[
-                { id: "1M", labelEn: "1 Month", labelUr: "۱ مہینہ", r: "month" as const },
-                { id: "3M", labelEn: "3 Months", labelUr: "۳ مہینے", r: "quarter" as const },
-                { id: "6M", labelEn: "6 Months", labelUr: "۶ مہینے", r: "quarter" as const },
-                { id: "1Y", labelEn: "1 Year", labelUr: "۱ سال", r: "year" as const },
-              ].map((tf) => {
-                const active = timeRange === (tf.r as any) || (timeRange as any) === tf.id;
-                return (
-                  <button
-                    key={tf.id}
-                    onClick={() => setTimeRange(tf.r as any)}
-                    className={`flex items-center justify-center py-2 px-1 rounded-lg transition-all font-bold ${active
-                      ? "bg-[#087F63] text-white shadow-sm ring-1 ring-[#087F63]/30 scale-[1.01]"
-                      : "bg-white/80 text-[#52635F] hover:bg-white hover:text-[#183B34] border border-[#E8EFEC]"
-                      }`}
-                    style={{
-                      fontSize: lang === "ur" ? 13 : 11,
-                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                    }}
-                  >
-                    <span>{lang === "ur" ? tf.labelUr : tf.labelEn}</span>
-                  </button>
-                );
-              })}
-            </div>
-            <div
-              className="rounded-2xl p-4"
-              style={{ background: "#F4FAF7", border: "1px solid #D5E2DD" }}
-            >
-              <p
-                className="text-xs font-semibold mb-3"
-                style={{ color: "#52635F" }}
-              >
-                Rate Trend · {priceType}
-              </p>
-              <LineChart data={mainData} height={130} />
-              <div className="flex justify-between mt-1">
-                {[xl[0], xl[Math.floor(xl.length / 2)], xl[xl.length - 1]].map(
-                  (l, i) => (
-                    <span
-                      key={i}
-                      className="text-[10px]"
-                      style={{ color: "#52635F" }}
-                    >
-                      {l}
-                    </span>
-                  ),
-                )}
-              </div>
-            </div>
-            <div
-              className="rounded-2xl p-4"
-              style={{ background: "#FFF8E1", border: "1.5px solid #F2D58A" }}
-            >
-              <p className="font-bold text-sm mb-2"> AI Decision Estimate</p>
-              <p
-                className="text-sm leading-relaxed"
-                style={{ color: "#92400e" }}
-              >
-                {decision}
-              </p>
-            </div>
-          </>
-        )}
-        {subTab === "allrates" && (
-          <>
-            <div
-              className="rounded-2xl p-4"
-              style={{ background: "#F4FAF7", border: "1px solid #D5E2DD" }}
-            >
-              <p className="text-sm font-bold mb-3">
-                {product} · All 9 Price Types
-              </p>
-              <svg
-                viewBox="0 0 320 160"
-                className="w-full"
-                style={{ height: 160 }}
-              >
-                {allRateSeries.map((s) => {
-                  const w2 = 320,
-                    pd2 = 8,
-                    allV = s.data,
-                    mn2 = Math.min(...allRateSeries.flatMap((x) => x.data)),
-                    mx2 = Math.max(...allRateSeries.flatMap((x) => x.data)),
-                    rng2 = mx2 - mn2 || 1;
-                  const pts = allV.map((v, i) => [
-                    (pd2 + (i / (allV.length - 1)) * (w2 - pd2 * 2)).toFixed(1),
-                    (pd2 + ((mx2 - v) / rng2) * (160 - pd2 * 2)).toFixed(1),
-                  ]);
-                  return (
-                    <path
-                      key={s.label}
-                      d={pts
-                        .map((p, i) => `${i === 0 ? "M" : "L"}${p[0]},${p[1]}`)
-                        .join(" ")}
-                      stroke={s.color}
-                      strokeWidth="1.8"
-                      fill="none"
-                      strokeLinecap="round"
-                      strokeOpacity="0.85"
-                    />
-                  );
-                })}
-              </svg>
-            </div>
-            {allRateSeries.map((s) => (
-              <div
-                key={s.label}
-                className="rounded-xl px-4 py-2.5 flex items-center gap-3"
-                style={{ background: "#F4FAF7", border: "1px solid #D5E2DD" }}
-              >
-                <div
-                  className="w-3 h-3 rounded-full flex-shrink-0"
-                  style={{ background: s.color }}
-                />
-                <p className="flex-1 font-semibold text-sm">{s.label}</p>
-                <p className="font-bold text-sm" style={{ color: s.color }}>
-                  {fmt(s.data[s.data.length - 1])}
-                </p>
-                <MiniSparkline data={s.data.slice(-8)} color={s.color} />
-              </div>
-            ))}
-          </>
-        )}
-        {subTab === "compare" && (
-          <>
-            <div className="flex gap-2 flex-wrap mb-1">
-              {A_MANDIS_LIST.map((m, i) => (
-                <button
-                  key={m}
-                  onClick={() =>
-                    setCompareSel((p) =>
-                      p.includes(m) ? p.filter((x) => x !== m) : [...p, m],
-                    )
-                  }
-                  className="tap-target flex items-center gap-1.5 px-3 py-2 rounded-xl font-semibold text-sm"
-                  style={{
-                    background: compareSel.includes(m)
-                      ? MANDI_COLORS[i]
-                      : "#E8EFEC",
-                    color: compareSel.includes(m) ? "#fff" : "#183B34",
-                  }}
-                >
-                  {compareSel.includes(m) ? " " : ""}
-                  {m}
-                </button>
-              ))}
-            </div>
-            <div className="grid grid-cols-4 gap-1.5 border border-[#D5E2DD] rounded-xl p-1 bg-[#F9FBFA]">
-              {[
-                { id: "1M", labelEn: "1 Month", labelUr: "۱ مہینہ", r: "month" as const },
-                { id: "3M", labelEn: "3 Months", labelUr: "۳ مہینے", r: "quarter" as const },
-                { id: "6M", labelEn: "6 Months", labelUr: "۶ مہینے", r: "quarter" as const },
-                { id: "1Y", labelEn: "1 Year", labelUr: "۱ سال", r: "year" as const },
-              ].map((tf) => {
-                const active = timeRange === (tf.r as any) || (timeRange as any) === tf.id;
-                return (
-                  <button
-                    key={tf.id}
-                    onClick={() => setTimeRange(tf.r as any)}
-                    className={`flex items-center justify-center py-2 px-1 rounded-lg transition-all font-bold ${active
-                      ? "bg-[#087F63] text-white shadow-sm ring-1 ring-[#087F63]/30 scale-[1.01]"
-                      : "bg-white/80 text-[#52635F] hover:bg-white hover:text-[#183B34] border border-[#E8EFEC]"
-                      }`}
-                    style={{
-                      fontSize: lang === "ur" ? 13 : 11,
-                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                    }}
-                  >
-                    <span>{lang === "ur" ? tf.labelUr : tf.labelEn}</span>
-                  </button>
-                );
-              })}
-            </div>
-            {compareSeries.length > 0 && (
-              <>
-                <div
-                  className="rounded-2xl p-4"
-                  style={{ background: "#F4FAF7", border: "1px solid #D5E2DD" }}
-                >
-                  <svg
-                    viewBox="0 0 320 160"
-                    className="w-full"
-                    style={{ height: 160 }}
-                  >
-                    {compareSeries.map((s) => {
-                      const w2 = 320,
-                        pd2 = 8,
-                        allV2 = compareSeries.flatMap((x) => x.data),
-                        mn2 = Math.min(...allV2),
-                        mx2 = Math.max(...allV2),
-                        rng2 = mx2 - mn2 || 1;
-                      const pts = s.data.map((v, i) => [
-                        (
-                          pd2 +
-                          (i / (s.data.length - 1)) * (w2 - pd2 * 2)
-                        ).toFixed(1),
-                        (pd2 + ((mx2 - v) / rng2) * (160 - pd2 * 2)).toFixed(1),
-                      ]);
-                      return (
-                        <path
-                          key={s.label}
-                          d={pts
-                            .map(
-                              (p, i) => `${i === 0 ? "M" : "L"}${p[0]},${p[1]}`,
-                            )
-                            .join(" ")}
-                          stroke={s.color}
-                          strokeWidth="2"
-                          fill="none"
-                          strokeLinecap="round"
-                        />
-                      );
-                    })}
-                  </svg>
-                  <div className="flex gap-3 mt-3 flex-wrap">
-                    {compareSeries.map((s) => (
-                      <div key={s.label} className="flex items-center gap-1.5">
-                        <div
-                          className="w-3 h-3 rounded-full"
-                          style={{ background: s.color }}
-                        />
-                        <span className="text-xs font-semibold">{s.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                {compareSeries.map((s) => {
-                  const cur2 = s.data[s.data.length - 1],
-                    base2 =
-                      compareSeries[0].data[compareSeries[0].data.length - 1];
-                  const diff = (((cur2 - base2) / base2) * 100).toFixed(1);
-                  return (
-                    <div
-                      key={s.label}
-                      className="rounded-2xl px-4 py-3 flex items-center gap-3"
-                      style={{
-                        background: "#F4FAF7",
-                        border: "1px solid #D5E2DD",
-                      }}
-                    >
-                      <div
-                        className="w-3 h-3 rounded-full flex-shrink-0"
-                        style={{ background: s.color }}
-                      />
-                      <p className="flex-1 font-semibold text-sm">{s.label}</p>
-                      <p
-                        className="font-bold text-base"
-                        style={{ color: s.color }}
-                      >
-                        {fmt(cur2)}
-                      </p>
-                      <span
-                        className="text-xs font-bold px-2 py-0.5 rounded-full"
-                        style={{
-                          background: Number(diff) >= 0 ? "#E4F2EC" : "#F9E1DE",
-                          color: Number(diff) >= 0 ? "#147A3F" : "#A83B37",
-                        }}
-                      >
-                        {Number(diff) >= 0 ? "+" : ""}
-                        {diff}%
-                      </span>
-                      <MiniSparkline data={s.data.slice(-8)} color={s.color} />
-                    </div>
-                  );
-                })}
-              </>
-            )}
-          </>
-        )}
-        {subTab === "regional" && (
-          <>
-            <div
-              className="rounded-2xl p-4"
-              style={{ background: "#F4FAF7", border: "1px solid #D5E2DD" }}
-            >
-              <p className="font-bold text-sm mb-2">
-                Regional · {regionProvince} · {product}
-              </p>
-              <div className="flex gap-2 overflow-x-auto">
-                {Object.keys(LOCATIONS[regionProvince] || {}).map((d) => (
-                  <button
-                    key={d}
-                    onClick={() => setRegionDistrict(d)}
-                    className="tap-target flex-shrink-0 px-3 rounded-xl font-bold text-xs whitespace-nowrap"
-                    style={{
-                      height: 36,
-                      background: regionDistrict === d ? "#087F63" : "#E8EFEC",
-                      color: regionDistrict === d ? "#fff" : "#183B34",
-                    }}
-                  >
-                    {d}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {regionData.map((rd, i) => {
-              const maxP = Math.max(...regionData.map((r) => r.price));
-              return (
-                <div
-                  key={i}
-                  className="rounded-2xl p-4"
-                  style={{ background: "#F4FAF7", border: "1px solid #D5E2DD" }}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="font-bold text-sm">{rd.station}</p>
-                    <div className="flex items-center gap-2">
-                      <p
-                        className="font-extrabold text-base"
-                        style={{ color: "#087F63" }}
-                      >
-                        {fmt(rd.price)}
-                      </p>
-                      <TrendBadge
-                        trend={rd.trend}
-                        pct={Number((Math.random() * 2 + 0.2).toFixed(1))}
-                      />
-                    </div>
-                  </div>
-                  <div
-                    className="h-2 rounded-full mb-2"
-                    style={{ background: "#E8EFEC" }}
-                  >
-                    <div
-                      className="h-full rounded-full"
-                      style={{
-                        background: MANDI_COLORS[i % MANDI_COLORS.length],
-                        width: `${(rd.price / maxP) * 100}%`,
-                      }}
-                    />
-                  </div>
-                  <MiniSparkline
-                    data={rd.spark}
-                    color={rd.trend === "up" ? "#2FAE68" : "#D95A51"}
-                  />
-                </div>
-              );
-            })}
-            {regionData.length === 0 && (
-              <div className="text-center py-8 opacity-40">
-                <p className="text-sm">No stations for this district</p>
-              </div>
-            )}
-            <div
-              className="rounded-2xl p-4"
-              style={{ background: "#F1F7F4", border: "1.5px solid #bbf7d0" }}
-            >
-              <p className="font-bold text-sm mb-2"> Exporter Insight</p>
-              <p
-                className="text-sm leading-relaxed"
-                style={{ color: "#14532d" }}
-              >
-                Best price for {product} in {regionDistrict} is at{" "}
-                {regionData[0]?.station || "—"} (
-                {fmt(regionData[0]?.price || 0)}). Change district above to
-                compare.
-              </p>
-            </div>
-          </>
-        )}
-      </div>
-      {comSheet && (
-        <div
-          className="zm-sheet-overlay"
-          style={{ zIndex: 200 }}
-          onClick={() => setComSheet(false)}
-        >
-          <div
-            className="zm-sheet"
-            style={{ background: "#F4FAF7", maxHeight: "80vh" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="px-5 pt-4 pb-3 border-b border-[#DCE8E3]">
-              <p className="font-bold text-lg">Select product</p>
-            </div>
-            <div
-              className="overflow-y-auto p-4 flex flex-col gap-2"
-              style={{ maxHeight: "calc(80vh-68px)" }}
-            >
-              {Object.entries(VERTICALS).map(([v, vd]) =>
-                Object.keys(vd.products).map((c) => (
-                  <button
-                    key={`${v}${c}`}
-                    onClick={() => {
-                      setproduct(c);
-                      setComSheet(false);
-                    }}
-                    className="tap-target rounded-2xl px-4 flex items-center gap-3"
-                    style={{
-                      background: product === c ? "#F1F7F4" : "#F1F7F4",
-                      border: `1.5px solid ${product === c ? "#087F63" : "#D5E2DD"
-                        }`,
-                      minHeight: 48,
-                    }}
-                  >
-                    <SpriteIcon
-                      spriteKey={VERTICALS[v]?.icon || "grains"}
-                      size={26}
-                      style={{ flexShrink: 0 }}
-                    />
-                    <span className="font-semibold text-sm flex-1">{c}</span>
-                    {product === c && (
-                      <span
-                        className="text-xs font-bold"
-                        style={{ color: "#087F63" }}
-                      >
-                        ✓
-                      </span>
-                    )}
-                  </button>
-                )),
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-      {rateSheet && (
-        <PriceTypeSheet
-          selected={priceType ? [priceType] : []}
-          onApply={(ts) => setPriceType(ts[0] || "Mill Rate")}
-          onClose={() => setRateSheet(false)}
-        />
-      )}
-      {locSheet && (
-        <LocationSheet
-          districtOnly
-          onSelect={(_p, d) => {
-            if (d) {
-              setRegionProvince(_p);
-              setRegionDistrict(d);
-            }
-            setLocSheet(false);
-          }}
-          onClose={() => setLocSheet(false)}
-        />
-      )}
-    </div>
-  );
-}
-
 // ─── ZARAI REELS & VIDEOS (TIKTOK STYLE) ──────────────────────────────────
 
 interface ReelComment {
@@ -19146,9 +18538,9 @@ interface ZaraiReel {
 }
 
 const VIDEO_MAIN_CATEGORIES = [
-  { id: "products", label: "Products", labelUrdu: "مصنوعات" },
-  { id: "general", label: "General Info", labelUrdu: "عمومی معلومات" },
-  { id: "harvesting", label: "Baithak", labelUrdu: "بیٹھک" },
+  { id: "products", label: "Products", labelUrdu: "مصنوعات", icon: "🌾" },
+  { id: "general", label: "General Info", labelUrdu: "عمومی معلومات", icon: "ℹ️" },
+  { id: "harvesting", label: "Baithak", labelUrdu: "بیٹھک", icon: "🚜" },
 ] as const;
 
 type VideoMainCategory = (typeof VIDEO_MAIN_CATEGORIES)[number]["id"];
@@ -20112,7 +19504,7 @@ function ZaraiReelsScreen({
             <button
               onClick={() => {
                 setFeedTab("forYou");
-                setSelectedProduct("all");
+                setSelectedProductSub("all");
               }}
               className="mt-4 px-5 py-2.5 rounded-full bg-[#087F63] text-white font-extrabold text-xs tap-target shadow-lg"
             >
@@ -20749,7 +20141,7 @@ function getSeasonPackageIconSrc(pkgOrProd: string, _fallbackVertical?: string):
       k.includes(p.name.toLowerCase())
   );
   if (pkg) return pkg.icon;
-  return wheatImg;
+  return ICON_PATHS.wheat || `${PRODUCTS_PATH}/wheat200.png`;
 }
 
 function CompleteProfileModal({
@@ -21079,20 +20471,18 @@ function CompleteProfileModal({
               style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
             >
               {lang === "ur"
-                ? `مرحلہ ${toUrduDigits(currentStep)} از ${toUrduDigits(totalSteps)}: ${
-                    activeStepKey === "products"
-                      ? "دلچسپی کی مصنوعات"
-                      : activeStepKey === "plan"
-                        ? "سبسکرپشن پلان"
-                        : "ادائیگی کی تفصیلات"
-                  }`
-                : `Step ${currentStep} of ${totalSteps}: ${
-                    activeStepKey === "products"
-                      ? "Interested Products"
-                      : activeStepKey === "plan"
-                        ? "Subscription Plan"
-                        : "Card & Payment"
-                  }`}
+                ? `مرحلہ ${toUrduDigits(currentStep)} از ${toUrduDigits(totalSteps)}: ${activeStepKey === "products"
+                  ? "دلچسپی کی مصنوعات"
+                  : activeStepKey === "plan"
+                    ? "سبسکرپشن پلان"
+                    : "ادائیگی کی تفصیلات"
+                }`
+                : `Step ${currentStep} of ${totalSteps}: ${activeStepKey === "products"
+                  ? "Interested Products"
+                  : activeStepKey === "plan"
+                    ? "Subscription Plan"
+                    : "Card & Payment"
+                }`}
             </span>
           </div>
 
@@ -21188,11 +20578,10 @@ function CompleteProfileModal({
                                   setDemoMonthIdx(mIdx);
                                   setIsMonthPickerOpen(false);
                                 }}
-                                className={`px-2 py-1.5 rounded-lg text-[11px] font-bold transition text-center ${
-                                  isCur
-                                    ? "bg-[#087F63] text-white"
-                                    : "text-[#374151] hover:bg-[#F3F4F6]"
-                                }`}
+                                className={`px-2 py-1.5 rounded-lg text-[11px] font-bold transition text-center ${isCur
+                                  ? "bg-[#087F63] text-white"
+                                  : "text-[#374151] hover:bg-[#F3F4F6]"
+                                  }`}
                               >
                                 {mName.slice(0, 3)}
                               </button>
@@ -21248,11 +20637,10 @@ function CompleteProfileModal({
                             className="tap-target focus:outline-none"
                           >
                             <div
-                              className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                                isSelected
-                                  ? "border-[#087F63] bg-[#087F63] text-white"
-                                  : "border-[#9CA3AF] bg-white hover:border-[#087F63]"
-                              }`}
+                              className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${isSelected
+                                ? "border-[#087F63] bg-[#087F63] text-white"
+                                : "border-[#9CA3AF] bg-white hover:border-[#087F63]"
+                                }`}
                             >
                               {isSelected && <span className="text-[10px] font-black">✓</span>}
                             </div>
@@ -21314,11 +20702,10 @@ function CompleteProfileModal({
                             toggleProd(pkg.name);
                           }
                         }}
-                        className={`rounded-2xl p-2.5 flex items-center justify-between gap-1.5 transition-all cursor-pointer ${
-                          isSelected
-                            ? "border-2 border-[#087F63] bg-[#E8F8F3] shadow-xs"
-                            : "border border-[#D5E2DD] bg-white hover:border-[#B5CEC5]"
-                        }`}
+                        className={`rounded-2xl p-2.5 flex items-center justify-between gap-1.5 transition-all cursor-pointer ${isSelected
+                          ? "border-2 border-[#087F63] bg-[#E8F8F3] shadow-xs"
+                          : "border border-[#D5E2DD] bg-white hover:border-[#B5CEC5]"
+                          }`}
                       >
                         {/* Icon + Title */}
                         <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -21328,9 +20715,8 @@ function CompleteProfileModal({
                             className="w-8 h-8 object-contain flex-shrink-0"
                           />
                           <span
-                            className={`text-[13px] font-bold truncate ${
-                              isSelected ? "text-[#087F63]" : "text-[#183B34]"
-                            }`}
+                            className={`text-[13px] font-bold truncate ${isSelected ? "text-[#087F63]" : "text-[#183B34]"
+                              }`}
                             style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                           >
                             {lang === "ur" ? pkg.nameUr : pkg.name}
@@ -21364,11 +20750,10 @@ function CompleteProfileModal({
                             className="tap-target focus:outline-none"
                           >
                             <div
-                              className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                                isSelected
-                                  ? "border-[#087F63] bg-[#087F63] text-white"
-                                  : "border-[#9CA3AF] bg-white hover:border-[#087F63]"
-                              }`}
+                              className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${isSelected
+                                ? "border-[#087F63] bg-[#087F63] text-white"
+                                : "border-[#9CA3AF] bg-white hover:border-[#087F63]"
+                                }`}
                             >
                               {isSelected && <span className="text-[10px] font-black">✓</span>}
                             </div>
@@ -22364,11 +21749,10 @@ function CompleteProfileModal({
                 type="button"
                 onClick={handleNext}
                 disabled={data.selectedProds.length === 0}
-                className={`tap-target px-5 py-3 rounded-2xl font-black text-sm text-white flex items-center gap-1.5 transition-all ${
-                  data.selectedProds.length === 0
-                    ? "bg-[#9CA3AF] opacity-60 cursor-not-allowed"
-                    : "bg-[#087F63] hover:bg-[#066A52] active:scale-95 shadow-md shadow-[#087F63]/25"
-                }`}
+                className={`tap-target px-5 py-3 rounded-2xl font-black text-sm text-white flex items-center gap-1.5 transition-all ${data.selectedProds.length === 0
+                  ? "bg-[#9CA3AF] opacity-60 cursor-not-allowed"
+                  : "bg-[#087F63] hover:bg-[#066A52] active:scale-95 shadow-md shadow-[#087F63]/25"
+                  }`}
                 style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
               >
                 <span>{lang === "ur" ? "پلان منتخب کریں" : "Choose Plan"}</span>
@@ -27523,7 +26907,7 @@ function BottomNav({
 
   const tabIndexMap: Record<string, number> = {
     home: 0,
-    analytics: 1,
+    compare: 1,
     news: 2,
     voice: 3,
   };
@@ -27550,8 +26934,8 @@ function BottomNav({
       onClick: () => onNav("home"),
     },
     {
-      id: "analytics",
-      label: t("nav.analytics"),
+      id: "compare",
+      label: t("nav.compare"),
       color: "#2FAE68",
       icon: (
         <svg
@@ -27561,12 +26945,12 @@ function BottomNav({
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
-          <rect x="3" y="12" width="4" height="9" rx="1" fill={currentActiveIndex === 1 ? "#ffffff" : "#183B34"} />
-          <rect x="10" y="7" width="4" height="14" rx="1" fill={currentActiveIndex === 1 ? "#ffffff" : "#183B34"} />
-          <rect x="17" y="3" width="4" height="18" rx="1" fill={currentActiveIndex === 1 ? "#ffffff" : "#183B34"} />
+          <rect x="3" y="3" width="7" height="18" rx="2" stroke={currentActiveIndex === 1 ? "#ffffff" : "#183B34"} strokeWidth="2" />
+          <rect x="14" y="3" width="7" height="18" rx="2" fill={currentActiveIndex === 1 ? "#ffffff" : "#183B34"} />
+          <path d="M6 8h1M6 13h1" stroke={currentActiveIndex === 1 ? "#ffffff" : "#183B34"} strokeWidth="2" strokeLinecap="round" />
         </svg>
       ),
-      onClick: () => onNav("analytics"),
+      onClick: () => onNav("compare"),
     },
     {
       id: "news",
@@ -27625,7 +27009,7 @@ function BottomNav({
 
   return (
     <nav
-      className="flex-shrink-0 relative z-50 ltr-only w-full"
+      className="zm-bottom-nav-shell flex-shrink-0 relative z-50 ltr-only w-full"
       style={{ direction: "ltr" }}
     >
       <AnimatedTabBar
@@ -27633,7 +27017,7 @@ function BottomNav({
         activeIndex={currentActiveIndex}
         onTabChange={(index) => {
           if (index === 0) onNav("home");
-          else if (index === 1) onNav("analytics");
+          else if (index === 1) onNav("compare");
           else if (index === 2) onNav("news");
         }}
       />
@@ -30532,7 +29916,10 @@ function AppInner({
   };
   const replace = (s: Screen) => setStack((p) => [...p.slice(0, -1), s]);
 
+  const curtain = usePageCurtain();
+
   const handleNav = (tab: NavTab) => {
+    if (curtain.isPending) return;
     setVoicePhase("idle");
     const doNav = () => {
       if (activeNav === "news" && tab !== "news") {
@@ -30543,21 +29930,40 @@ function AppInner({
         setFloatingVideo(null);
       }
       setActiveNav(tab);
-      if (tab === "home" || tab === "analytics" || tab === "news") {
+      if (tab === "home" || tab === "compare" || tab === "news") {
         setStack([{ id: tab }]);
       }
+    };
+
+    // Curtain names the destination, then the page swaps while it is covered.
+    const curtainInfo = NAV_CURTAIN[tab];
+    const alreadyThere = tab === activeNav && stack.length === 1;
+    const navigate = () => {
+      if (!curtainInfo || alreadyThere) {
+        doNav();
+        return;
+      }
+      curtain.play(
+        {
+          title: lang === "ur" ? curtainInfo.ur : curtainInfo.en,
+          subtitle: lang === "ur" ? curtainInfo.en : curtainInfo.ur,
+          color: curtainInfo.color,
+          direction: NAV_ORDER[tab] > NAV_ORDER[navActive] ? 1 : -1,
+        },
+        doNav,
+      );
     };
 
     if (voiceEnabled) {
       let speech = "";
       if (tab === "home") speech = lang === "ur" ? "مرکزی صفحہ" : "Home";
-      else if (tab === "analytics") speech = lang === "ur" ? "تجزیات" : "Analytics";
+      else if (tab === "compare") speech = lang === "ur" ? "موازنہ" : "Compare";
       else if (tab === "news") speech = lang === "ur" ? "ویڈیوز" : "Videos";
       if (speech) speakText(speech);
-      setTimeout(doNav, 850);
+      setTimeout(navigate, 850);
       return;
     }
-    doNav();
+    navigate();
   };
 
   const openFeed = (filter?: Partial<FeedFilter>) => {
@@ -30594,7 +30000,7 @@ function AppInner({
   };
 
   const navActive: NavTab =
-    (["analytics", "news"] as NavTab[]).includes(activeNav) &&
+    (["compare", "news"] as NavTab[]).includes(activeNav) &&
       stack.length === 1
       ? activeNav
       : "home";
@@ -30613,7 +30019,7 @@ function AppInner({
       }}
     >
       <div
-        className="relative flex flex-col w-full max-w-md overflow-hidden"
+        className="zm-shell relative flex flex-col w-full max-w-md overflow-hidden"
         style={{
           height: "100dvh",
           background: "#F1F7F4",
@@ -30621,9 +30027,10 @@ function AppInner({
         }}
       >
         <div
-          className="flex-1 overflow-hidden flex flex-col"
+          className="relative flex-1 overflow-hidden flex flex-col"
           style={{ minHeight: 0 }}
         >
+          <PageCurtain controller={curtain} />
           {current.id === "home" && (
             activeRole === "representative" ? (
               <RepDashboardScreen
@@ -30726,7 +30133,24 @@ function AppInner({
             />
           )}
           {current.id === "live-market" && <LiveMarketScreen onBack={pop} />}
-          {current.id === "analytics" && <AnalyticsScreen />}
+          {current.id === "compare" && (
+            <Suspense fallback={<div className="flex-1" style={{ background: "#F1F7F4" }} />}>
+              <CompareScreen
+                productIcon={(division) => getproductIconSrc(division)}
+                // Free trial: every product can be compared; afterwards only paid ones.
+                ownedProducts={profileCompleted ? userSubscribedList : undefined}
+                renderLocationPicker={(picker) => (
+                  <MultiLocSheet
+                    multiProvince
+                    selected={picker.selected}
+                    dataMandiNames={picker.dataNames}
+                    onApply={picker.onApply}
+                    onClose={picker.onClose}
+                  />
+                )}
+              />
+            </Suspense>
+          )}
           {current.id === "news" && (
             <NewsVideosScreen
               profileCompleted={profileCompleted}

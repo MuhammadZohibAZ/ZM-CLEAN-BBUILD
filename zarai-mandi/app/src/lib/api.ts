@@ -85,9 +85,9 @@ export interface LocationFilter {
   locationLabel?: string;
 }
 
-function qs(params: Record<string, string | number | undefined | null>): string {
+function qs(params: object): string {
   const usp = new URLSearchParams();
-  for (const [k, v] of Object.entries(params)) {
+  for (const [k, v] of Object.entries(params as Record<string, unknown>)) {
     if (v !== undefined && v !== null && v !== "") usp.set(k, String(v));
   }
   const s = usp.toString();
@@ -171,4 +171,37 @@ export function fetchTrendAll(
   return cached(`trend-all:${byProductId}:${query}`, () =>
     getJson(`/api/by-products/${byProductId}/trend-all${query}`)
   );
+}
+
+// ── Compare tab (api/src/compare.js) ─────────────────────────────────────────
+
+export interface CompareCatalog {
+  divisions: {
+    name: string;
+    byProducts: {
+      id: number;
+      name: string;
+      records: number;
+      attributes: { key: string; fillRate: number; classification: string }[];
+      /** The by-product's one special attribute (same rule as the home cards). */
+      special: { key: string; type: string } | null;
+    }[];
+  }[];
+  locations: { province: string; district: string; station: string }[];
+  dateRange: { first: string; last: string } | null;
+}
+
+/** Column-oriented raw observations; `fields` names each tuple position. */
+export interface CompareRecords {
+  fields: string[];
+  rows: (string | number | null)[][];
+}
+
+export function fetchCompareCatalog(): Promise<CompareCatalog> {
+  return cached("compare-catalog", () => getJson<CompareCatalog>("/api/compare/catalog"));
+}
+
+export function fetchCompareRecords(byProductIds: number[]): Promise<CompareRecords> {
+  const ids = [...byProductIds].sort((a, b) => a - b).join(",");
+  return cached(`compare-records:${ids}`, () => getJson<CompareRecords>(`/api/compare/records?ids=${ids}`));
 }

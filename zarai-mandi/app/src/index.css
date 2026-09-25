@@ -1420,4 +1420,16 @@ body {
 }
 .zm-popover-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #065F46;
-}
+}
+
+/* Landscape phone: use the full width (e.g. the Compare report when rotated).
+   On the Compare report the bottom nav is hidden; its header Back / Portrait
+   buttons leave landscape. */
+@media (orientation: landscape) and (max-height: 540px) {
+  .zm-shell {
+    max-width: none !important;
+  }
+  html[data-zm-compare-report] .zm-bottom-nav-shell {
+    display: none;
+  }
+}
