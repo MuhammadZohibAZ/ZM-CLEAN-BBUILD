@@ -7342,7 +7342,6 @@ function ByProductNationalCard({
   onMorePriceTypesClick?: () => void;
 }) {
   const { lang, tc, tr } = useLang();
-  const iconSrc = getproductIconSrc(stats.byproduct, product || vertical);
 
   // Resolve special attribute label and value
   const attrType = stats.specialAttr?.type || getProductSpecialAttrType(stats.byproduct, product || vertical || stats.product);
@@ -7370,29 +7369,16 @@ function ByProductNationalCard({
       tabIndex={0}
       onClick={onClick}
       onKeyDown={(e) => e.key === 'Enter' && onClick()}
-      className="relative w-full rounded-[22px] overflow-hidden transition-all duration-200 active:scale-[0.98] cursor-pointer shadow-[0_5px_18px_rgba(6,77,64,0.08)] hover:shadow-[0_8px_24px_rgba(6,77,64,0.13)] select-none flex flex-col p-2.5 sm:p-3"
+      className="relative w-full rounded-[16px] sm:rounded-[18px] overflow-hidden transition-all duration-200 active:scale-[0.98] cursor-pointer shadow-[0_3px_12px_rgba(6,77,64,0.06)] hover:shadow-[0_6px_18px_rgba(6,77,64,0.11)] select-none flex flex-col p-2.5 sm:p-3"
       style={{
         background: '#FFFFFF',
         border: '1.5px solid #D1E5DC',
       }}
     >
-      {/* Subtle Concentric Rings Motif in bottom-right corner */}
-      <div
-        className="absolute -bottom-7 -right-7 pointer-events-none rounded-full"
-        style={{
-          width: 148,
-          height: 148,
-          border: '1.5px solid rgba(16, 185, 129, 0.14)',
-          boxShadow:
-            'inset 0 0 0 16px rgba(16, 185, 129, 0.045), inset 0 0 0 36px rgba(16, 185, 129, 0.02)',
-          zIndex: 0,
-        }}
-      />
-
-      {/* Top Header: Title & Rate Type (Dates removed, full title width) */}
-      <div className="relative z-10 w-full mb-2">
+      {/* Top Header: Full Width Title & Rate Type */}
+      <div className="relative z-10 w-full mb-1.5">
         <h3
-          className="text-[15px] sm:text-[16.5px] font-black text-[#143B33] leading-tight tracking-tight"
+          className="text-[14px] sm:text-[15px] font-black text-[#143B33] leading-tight tracking-tight truncate"
           style={{
             fontFamily: lang === 'ur' ? URDU_FONT : "'Inter', sans-serif",
           }}
@@ -7401,14 +7387,14 @@ function ByProductNationalCard({
           {tc(stats.byproduct)}
         </h3>
         <p
-          className="text-[11px] sm:text-[11.5px] font-bold text-[#087F63] mt-0.5 leading-none truncate"
+          className="text-[10.5px] sm:text-[11px] font-bold text-[#087F63] mt-0.5 leading-none truncate"
           style={{ fontFamily: lang === 'ur' ? URDU_FONT : 'inherit' }}
         >
           {tr(stats.mostOccurringRateType)}
         </p>
       </div>
 
-      {/* Metric rows: exactly 3 rows across every card for 100% uniform height and structure */}
+      {/* Metric rows: 3 clean rows */}
       <div className="relative z-10 w-full">
         {/* Row 1: Avg min | Avg max */}
         <div className="flex w-full">
@@ -7437,7 +7423,7 @@ function ByProductNationalCard({
           />
         </div>
 
-        <div className="h-px w-full my-2" style={{ background: '#E7F0EB' }} />
+        <div className="h-px w-full my-1.5" style={{ background: '#E7F0EB' }} />
 
         {/* Row 2: Total arrival | Special Attribute */}
         <div className="flex w-full">
@@ -7454,58 +7440,44 @@ function ByProductNationalCard({
           />
         </div>
 
-        <div className="h-px w-full my-2" style={{ background: '#E7F0EB' }} />
+        <div className="h-px w-full my-1.5" style={{ background: '#E7F0EB' }} />
 
-        {/* Row 3: Locations (always full-width on row 3 for 100% consistent structure) */}
-        <div className="flex w-full">
+        {/* Row 3: Locations on Left + Time Pill on Bottom-Right */}
+        <div className="flex items-end justify-between w-full">
           <LocationStatCell
-            fullWidth
             marketCount={stats.markets}
             lang={lang}
           />
-        </div>
-      </div>
 
-      {/* Bottom Row: Bigger Prominent Time Pill on Left + Crisp Crop Illustration on Right */}
-      <div className="h-px w-full mt-auto" style={{ background: '#E7F0EB' }} />
-      <div className="relative z-10 flex items-end justify-between pt-2 min-h-[52px]">
-        <div
-          className="flex items-center gap-1.5 text-[9.5px] sm:text-[10px] font-bold text-[#065F46] bg-[#E8F8F3] border border-[#BCE8D8] py-1 px-2.5 rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.04)] mb-1 max-w-[62%]"
-          style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-        >
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#087F63"
-            strokeWidth="2.4"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="flex-shrink-0"
+          {/* Time Pill on Bottom-Right */}
+          <div
+            className="flex-shrink-0 flex items-center gap-1 text-[8.5px] sm:text-[9px] font-bold text-[#065F46] bg-[#E8F8F3] border border-[#BCE8D8] py-0.5 px-1.5 sm:px-2 rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.03)] mb-0.5"
+            style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
           >
-            <circle cx="12" cy="12" r="10" />
-            <polyline points="12 6 12 12 16 14" />
-          </svg>
-          <span className="truncate">
-            {getCardUpdatedAgo(stats.catalogId || stats.byproduct, lang)}
-          </span>
-        </div>
-
-        {/* Large Crisp Crop Illustration */}
-        <div className="relative -mb-2.5 -mr-2.5 pointer-events-none flex-shrink-0 flex items-center justify-center">
-          <img
-            src={iconSrc}
-            alt={stats.byproduct}
-            className="w-[82px] h-[82px] sm:w-[94px] sm:h-[94px] max-w-[94px] max-h-[94px] object-contain drop-shadow-[0_6px_14px_rgba(0,0,0,0.16)] transition-transform duration-200"
-            loading="lazy"
-          />
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#087F63"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="flex-shrink-0"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            <span className="truncate">
+              {getCardUpdatedAgo(stats.catalogId || stats.byproduct, lang)}
+            </span>
+          </div>
         </div>
       </div>
 
       {/* No Data Overlay if hasData is false */}
       {!stats.hasData && (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-2 rounded-[22px] bg-white/90 backdrop-blur-[2px] pointer-events-none">
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-2 rounded-[16px] sm:rounded-[18px] bg-white/90 backdrop-blur-[2px] pointer-events-none">
           <div className="px-3 py-1.5 rounded-xl bg-[#F1F7F4] border border-[#D1E5DC] text-center shadow-sm">
             <span
               className="text-xs font-bold text-[#143B33]"
@@ -7757,14 +7729,30 @@ function ByProductCombinedScreen({
     };
   }, [divisionsNeeded.join('|'), curDateStr, currentLocScope.kind, currentLocScope.label]);
 
-  // 1 summary card per by-product, from the real market API, sorted by updated time (freshest first).
+  // 1 summary card per by-product, updating dynamically when date, location, or division changes.
   const byproductCardsData = useMemo(() => {
     const statsForDivision = cardStatsByDivision[dbDivision] || [];
     const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
     const list = byproducts.map((bp) => {
       const normBp = norm(bp);
       const raw = statsForDivision.find((s) => norm(s.byproduct) === normBp || s.byproduct.toLowerCase() === bp.toLowerCase());
-      const stats = raw ? apiCardStatsToUi(raw) : emptyByproductStats(dbDivision, bp);
+      let stats = raw ? apiCardStatsToUi(raw) : emptyByproductStats(dbDivision, bp);
+
+      // Compute date-specific rates and arrivals from the dataset for the selected date
+      const localStats = calculateByproductSummary(activeProduct?.product || dbDivision, bp, currentLocScope, curDate);
+      if (localStats) {
+        stats = {
+          ...stats,
+          hasData: localStats.hasData,
+          avgMin: localStats.avgMin,
+          avgMax: localStats.avgMax,
+          totalArrival: localStats.totalArrival,
+          markets: localStats.markets,
+          mostOccurringRateType: localStats.mostOccurringRateType || stats.mostOccurringRateType,
+          specialAttr: localStats.specialAttr || stats.specialAttr,
+        };
+      }
+
       return {
         bp,
         stats,
@@ -7781,7 +7769,7 @@ function ByProductCombinedScreen({
       const minsB = getCardUpdatedMinutes(b.stats.catalogId || b.stats.byproduct);
       return minsA - minsB;
     });
-  }, [byproducts, dbDivision, cardStatsByDivision]);
+  }, [byproducts, dbDivision, cardStatsByDivision, curDate, curDateStr, activeProduct?.product, currentLocScope]);
 
   return (
     <div
