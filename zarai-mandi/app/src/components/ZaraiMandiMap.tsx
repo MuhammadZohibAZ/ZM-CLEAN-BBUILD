@@ -1272,7 +1272,7 @@ export default function ZaraiMandiMap({
         const historyRows = [...mandiRecords].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 
         const W = 560;
-        const H = 180;
+        const H = 190;
         const PL = 46;
         const PR = 46;
         const PT = 16;
@@ -1281,7 +1281,7 @@ export default function ZaraiMandiMap({
         const volBaseY = H - PB;
         const volMaxH = 24;
         const separatorY = volBaseY - volMaxH - 8;
-        const lineChartH = separatorY - PT;
+        const lineChartH = separatorY - PT - 8;
 
         const isArrival = graphMode === "arrival";
         const currentData = isArrival ? arrData : graphData;
@@ -1746,19 +1746,19 @@ export default function ZaraiMandiMap({
                                 x={PL - 6}
                                 y={y + 3.5}
                                 textAnchor="end"
-                                fontSize="10"
+                                fontSize="10.5"
                                 fontWeight="700"
-                                fill="#52635F"
+                                fill="#1E3A34"
                               >
                                 {tick.label}
                               </text>
                               <text
-                                x={W - PR + 6}
+                                x={W - PR + 8}
                                 y={y + 3.5}
                                 textAnchor="start"
-                                fontSize="9"
+                                fontSize="10"
                                 fontWeight="700"
-                                fill="#80918B"
+                                fill="#264E43"
                               >
                                 {tick.val}
                               </text>
@@ -1772,7 +1772,7 @@ export default function ZaraiMandiMap({
                           y1={separatorY}
                           x2={W - PR}
                           y2={separatorY}
-                          stroke="#CBD5E1"
+                          stroke="#94A3B8"
                           strokeWidth="1.2"
                           strokeDasharray="4 3"
                         />
@@ -1780,19 +1780,19 @@ export default function ZaraiMandiMap({
                           x={PL - 6}
                           y={separatorY + 3.5}
                           textAnchor="end"
-                          fontSize="9"
-                          fontWeight="700"
-                          fill="#94A3B8"
+                          fontSize="9.5"
+                          fontWeight="800"
+                          fill="#475569"
                         >
                           0
                         </text>
                         <text
-                          x={W - PR + 6}
+                          x={W - PR + 8}
                           y={separatorY + 3.5}
                           textAnchor="start"
-                          fontSize="8"
-                          fontWeight="700"
-                          fill="#94A3B8"
+                          fontSize="9.5"
+                          fontWeight="800"
+                          fill="#475569"
                         >
                           VOL
                         </text>
@@ -1803,8 +1803,8 @@ export default function ZaraiMandiMap({
                           y1={volBaseY}
                           x2={W - PR}
                           y2={volBaseY}
-                          stroke="#D5E2DD"
-                          strokeWidth="1.5"
+                          stroke="#C8DCD5"
+                          strokeWidth="1.4"
                         />
 
                         {/* X-Axis Date Labels */}
@@ -1815,9 +1815,9 @@ export default function ZaraiMandiMap({
                               x={xOf(i)}
                               y={H - 8}
                               textAnchor="middle"
-                              fontSize="9.5"
+                              fontSize="10"
                               fontWeight="700"
-                              fill="#52635F"
+                              fill="#1E3A34"
                               fontFamily={lang === "ur" ? urduFont : "inherit"}
                             >
                               {lbl}

@@ -126,8 +126,8 @@ export const ExpandableMandiMapCard: React.FC<ExpandableMandiMapCardProps> = ({
           <div className="flex-1 min-w-0 flex flex-col justify-center px-2 z-10">
             <div className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
-              <span className="text-[10.5px] font-bold uppercase tracking-wider text-emerald-800/90">
-                {commodityName} Market
+              <span className="text-[10.5px] font-bold uppercase tracking-wider text-emerald-800/90 truncate">
+                {commodityName.replace(/\s+market$/i, "").trim()}
               </span>
             </div>
             <span
