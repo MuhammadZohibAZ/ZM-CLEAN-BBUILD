@@ -6394,7 +6394,7 @@ export function ProductRatesScreen({
 
                   return (
                     <div className="flex flex-col gap-2.5 border-b border-[#E8EFEC] pb-2.5">
-                      {/* Product Name, Trend %, Active Rate Type Badge & Date / Unit */}
+                      {/* Product Name, Active Rate Badge & Date on Left, Trend % at Extreme Right */}
                       <div className="flex items-center justify-between flex-wrap gap-2">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span
@@ -6404,60 +6404,80 @@ export function ProductRatesScreen({
                             {byproduct ? `${tc(byproduct)}` : `${tc(product)}`}
                           </span>
 
-                          {/* Trend % Badge moved right beside product name */}
-                          <span
-                            className="text-xs font-bold px-2 py-0.5 rounded-md flex items-center gap-1"
-                            style={{
-                              background: isFlat ? "#F3F4F6" : isPositive ? "#DCFCE7" : "#FEE2E2",
-                              color: isFlat ? "#4B5563" : isPositive ? "#15803D" : "#B91C1C",
-                              border: `1px solid ${isFlat ? "#E5E7EB" : isPositive ? "#86EFAC" : "#FCA5A5"}`,
-                            }}
-                          >
-                            <span>{isFlat ? "—" : isPositive ? "▲" : "▼"}</span>
-                            <span>{absPct}%</span>
-                          </span>
-
                           {/* Active Rate Type Badge */}
                           <span className="text-[10px] font-bold text-[#087F63] bg-[#E8F8F4] px-2 py-0.5 rounded-full border border-[#C2E8DB]">
                             {focusedType === "All"
                               ? (lang === "ur" ? "تمام ریٹ" : "All Rates")
                               : tr(focusedType).replace(" ریٹ", "").replace(" Rate", "")}
                           </span>
-                        </div>
 
-                        {/* Date & Unit on the Right */}
-                        <div className="flex items-center gap-2 text-[11px] font-semibold text-[#52635F]">
-                          <span>{fullDateLabels[currentIdx]?.fullDate || "14 Sep 2026"}</span>
-                          <span className="text-[#CBD5E1]">•</span>
-                          <span className="text-[10px] font-bold text-[#80918B]">
-                            {lang === "ur" ? "روپے فی ۴۰ کلو" : "PKR / 40kg"}
+                          <span className="text-[#CBD5E1] hidden sm:inline">•</span>
+
+                          {/* Date formatted as '14 September 2026' without day of week */}
+                          <span className="text-[11px] font-semibold text-[#52635F]">
+                            {(() => {
+                              const raw = fullDateLabels[currentIdx]?.fullDate || "14 Sep 2026";
+                              let clean = raw.replace(/\s*\([^)]*\)/g, "").trim();
+                              if (lang !== "ur") {
+                                clean = clean
+                                  .replace(/\bJan\b/g, "January")
+                                  .replace(/\bFeb\b/g, "February")
+                                  .replace(/\bMar\b/g, "March")
+                                  .replace(/\bApr\b/g, "April")
+                                  .replace(/\bMay\b/g, "May")
+                                  .replace(/\bJun\b/g, "June")
+                                  .replace(/\bJul\b/g, "July")
+                                  .replace(/\bAug\b/g, "August")
+                                  .replace(/\bSep\b/g, "September")
+                                  .replace(/\bOct\b/g, "October")
+                                  .replace(/\bNov\b/g, "November")
+                                  .replace(/\bDec\b/g, "December");
+                              }
+                              return clean;
+                            })()}
                           </span>
                         </div>
+
+                        {/* Trend % Badge at Extreme Right */}
+                        <span
+                          className="text-xs font-bold px-2.5 py-0.5 rounded-md flex items-center gap-1 flex-shrink-0"
+                          style={{
+                            background: isFlat ? "#F3F4F6" : isPositive ? "#DCFCE7" : "#FEE2E2",
+                            color: isFlat ? "#4B5563" : isPositive ? "#15803D" : "#B91C1C",
+                            border: `1px solid ${isFlat ? "#E5E7EB" : isPositive ? "#86EFAC" : "#FCA5A5"}`,
+                          }}
+                        >
+                          <span>{isFlat ? "—" : isPositive ? "▲" : "▼"}</span>
+                          <span>{absPct}%</span>
+                        </span>
                       </div>
 
-                      {/* Stat Summary Bar directly below: Period High, Period Low, Period Avg */}
+                      {/* Stat Summary Bar: /40Kg with Period High, Period Low, Period Avg */}
                       <div className="grid grid-cols-3 gap-2 pt-0.5 text-[10px]">
                         <div className="bg-[#F8FBFA] p-2 rounded-xl border border-[#E8EFEC] flex flex-col">
-                          <span className="text-[#80918B] font-semibold">
-                            {lang === "ur" ? "زیادہ سے زیادہ" : "Period High"}
-                          </span>
-                          <span className="font-bold text-[#143B33] text-xs sm:text-sm">
+                          <div className="flex items-center justify-between text-[#80918B] font-semibold text-[10px]">
+                            <span>{lang === "ur" ? "زیادہ سے زیادہ" : "Period High"}</span>
+                            <span className="font-bold text-[9px] text-[#64748B]">/40Kg</span>
+                          </div>
+                          <span className="font-bold text-[#143B33] text-xs sm:text-sm mt-0.5">
                             {lang === "ur" ? `روپے ${toUrduDigits(seriesMax)}` : `Rs. ${seriesMax.toLocaleString()}`}
                           </span>
                         </div>
                         <div className="bg-[#F8FBFA] p-2 rounded-xl border border-[#E8EFEC] flex flex-col">
-                          <span className="text-[#80918B] font-semibold">
-                            {lang === "ur" ? "کم سے کم" : "Period Low"}
-                          </span>
-                          <span className="font-bold text-[#143B33] text-xs sm:text-sm">
+                          <div className="flex items-center justify-between text-[#80918B] font-semibold text-[10px]">
+                            <span>{lang === "ur" ? "کم سے کم" : "Period Low"}</span>
+                            <span className="font-bold text-[9px] text-[#64748B]">/40Kg</span>
+                          </div>
+                          <span className="font-bold text-[#143B33] text-xs sm:text-sm mt-0.5">
                             {lang === "ur" ? `روپے ${toUrduDigits(seriesMin)}` : `Rs. ${seriesMin.toLocaleString()}`}
                           </span>
                         </div>
                         <div className="bg-[#F8FBFA] p-2 rounded-xl border border-[#E8EFEC] flex flex-col">
-                          <span className="text-[#80918B] font-semibold">
-                            {lang === "ur" ? "اوسط ریٹ" : "Period Avg"}
-                          </span>
-                          <span className="font-bold text-[#087F63] text-xs sm:text-sm">
+                          <div className="flex items-center justify-between text-[#80918B] font-semibold text-[10px]">
+                            <span>{lang === "ur" ? "اوسط ریٹ" : "Period Avg"}</span>
+                            <span className="font-bold text-[9px] text-[#64748B]">/40Kg</span>
+                          </div>
+                          <span className="font-bold text-[#087F63] text-xs sm:text-sm mt-0.5">
                             {lang === "ur" ? `روپے ${toUrduDigits(seriesAvg)}` : `Rs. ${seriesAvg.toLocaleString()}`}
                           </span>
                         </div>
