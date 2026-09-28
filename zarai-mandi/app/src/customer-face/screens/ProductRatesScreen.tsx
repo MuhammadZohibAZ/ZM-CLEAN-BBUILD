@@ -6175,22 +6175,26 @@ export function ProductRatesScreen({
                     );
                   })}
 
-                  {/* All / تمام نرخ Button at the End */}
-                  {(() => {
-                    const isAllSelected = focusedType === "All" && !compareMode;
+                  {/* All / تمام نرخ Button: ONLY shown in Compare Mode, hidden in Single Mode */}
+                  {compareMode && (() => {
+                    const isAllSelected = activeTypes.length === orderedRateTypes.length;
                     return (
                       <button
                         onClick={() => {
-                          if (compareMode) {
-                            setCompareMode(false);
+                          if (isAllSelected) {
+                            const single = focusedType && focusedType !== "All" ? focusedType : orderedRateTypes[0];
+                            setFocusedType(single);
+                            setActiveTypes([single]);
+                          } else {
+                            setActiveTypes([...orderedRateTypes]);
                           }
-                          setFocusedType("All");
                         }}
-                        className={`tap-target flex items-center gap-1.5 rounded-full font-bold transition-all duration-200 ease-out active:scale-95 flex-shrink-0 whitespace-nowrap ${isAllSelected ? "zm-chip-active-highlight" : "hover:border-[#94A3B8]"
-                          }`}
+                        className={`tap-target flex items-center gap-1.5 rounded-full font-bold transition-all duration-200 ease-out active:scale-95 flex-shrink-0 whitespace-nowrap focus:outline-none focus:ring-0 ${
+                          isAllSelected ? "zm-chip-active-highlight" : "hover:border-[#94A3B8]"
+                        }`}
                         style={{
                           fontSize: lang === "ur" ? 13 : 11.5,
-                          padding: isAllSelected ? "5.5px 13px" : "5.5px 12px",
+                          padding: isAllSelected ? "5.5px 12px" : "5.5px 11px",
                           background: isAllSelected ? "rgba(14, 100, 92, 0.10)" : "#FFFFFF",
                           border: `1.5px solid ${isAllSelected ? "#0E645C" : "#E2E8F0"}`,
                           color: isAllSelected ? "#0E645C" : "#475569",
@@ -6215,6 +6219,18 @@ export function ProductRatesScreen({
                           />
                         </span>
                         <span>{lang === "ur" ? "سب (All)" : "All"}</span>
+
+                        {isAllSelected && (
+                          <span
+                            className="flex items-center justify-center text-[9px] w-3.5 h-3.5 rounded-full font-extrabold leading-none animate-in zoom-in-50 duration-150"
+                            style={{
+                              background: "#0E645C",
+                              color: "#FFFFFF",
+                            }}
+                          >
+                            ✓
+                          </span>
+                        )}
                       </button>
                     );
                   })()}
@@ -6376,7 +6392,9 @@ export function ProductRatesScreen({
                                 setActiveTypes([focusedType, other]);
                               }
                             } else {
-                              setActiveTypes([focusedType]);
+                              const safeType = focusedType === "All" ? orderedRateTypes[0] : focusedType;
+                              if (focusedType === "All") setFocusedType(safeType);
+                              setActiveTypes([safeType]);
                             }
                             return next;
                           });
