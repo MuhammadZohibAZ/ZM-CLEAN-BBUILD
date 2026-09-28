@@ -6393,35 +6393,20 @@ export function ProductRatesScreen({
                   const seriesAvg = mainSeries ? Math.round(mainSeries.data.reduce((a, b) => a + b, 0) / mainSeries.data.length) : displayPrice;
 
                   return (
-                    <div className="flex flex-col gap-2 border-b border-[#E8EFEC] pb-2.5">
-                      {/* Title & Active Rate Type Badge */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
+                    <div className="flex flex-col gap-2.5 border-b border-[#E8EFEC] pb-2.5">
+                      {/* Product Name, Trend %, Active Rate Type Badge & Date / Unit */}
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span
-                            className="text-xs sm:text-sm font-extrabold text-[#143B33]"
+                            className="text-base sm:text-lg font-black text-[#143B33] tracking-tight"
                             style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                           >
-                            {byproduct ? `${tc(byproduct)}` : `${tc(product)}`} {lang === "ur" ? "مارکیٹ ریٹ انڈیکس" : "Market Rate Index"}
+                            {byproduct ? `${tc(byproduct)}` : `${tc(product)}`}
                           </span>
-                          <span className="text-[10px] font-bold text-[#087F63] bg-[#E8F8F4] px-2 py-0.5 rounded-full border border-[#C2E8DB]">
-                            {focusedType === "All"
-                              ? (lang === "ur" ? "تمام ریٹ" : "All Rates")
-                              : tr(focusedType).replace(" ریٹ", "").replace(" Rate", "")}
-                          </span>
-                        </div>
-                        <span className="text-[10px] font-bold text-[#80918B]">
-                          {lang === "ur" ? "روپے فی ۴۰ کلو" : "PKR / 40kg"}
-                        </span>
-                      </div>
 
-                      {/* Price & Change Display */}
-                      <div className="flex items-baseline justify-between flex-wrap gap-2">
-                        <div className="flex items-baseline gap-2.5">
-                          <span className="text-2xl sm:text-3xl font-black text-[#143B33] tracking-tight">
-                            {lang === "ur" ? `روپے ${toUrduDigits(displayPrice.toLocaleString())}` : `Rs. ${displayPrice.toLocaleString()}`}
-                          </span>
+                          {/* Trend % Badge moved right beside product name */}
                           <span
-                            className="text-xs font-bold px-2.5 py-0.5 rounded-md flex items-center gap-1"
+                            className="text-xs font-bold px-2 py-0.5 rounded-md flex items-center gap-1"
                             style={{
                               background: isFlat ? "#F3F4F6" : isPositive ? "#DCFCE7" : "#FEE2E2",
                               color: isFlat ? "#4B5563" : isPositive ? "#15803D" : "#B91C1C",
@@ -6431,37 +6416,48 @@ export function ProductRatesScreen({
                             <span>{isFlat ? "—" : isPositive ? "▲" : "▼"}</span>
                             <span>{absPct}%</span>
                           </span>
+
+                          {/* Active Rate Type Badge */}
+                          <span className="text-[10px] font-bold text-[#087F63] bg-[#E8F8F4] px-2 py-0.5 rounded-full border border-[#C2E8DB]">
+                            {focusedType === "All"
+                              ? (lang === "ur" ? "تمام ریٹ" : "All Rates")
+                              : tr(focusedType).replace(" ریٹ", "").replace(" Rate", "")}
+                          </span>
                         </div>
 
-                        {/* Date / Scrub Indicator */}
-                        <div className="text-[11px] font-semibold text-[#52635F]">
-                          {fullDateLabels[currentIdx]?.fullDate || "14 Sep 2026"}
+                        {/* Date & Unit on the Right */}
+                        <div className="flex items-center gap-2 text-[11px] font-semibold text-[#52635F]">
+                          <span>{fullDateLabels[currentIdx]?.fullDate || "14 Sep 2026"}</span>
+                          <span className="text-[#CBD5E1]">•</span>
+                          <span className="text-[10px] font-bold text-[#80918B]">
+                            {lang === "ur" ? "روپے فی ۴۰ کلو" : "PKR / 40kg"}
+                          </span>
                         </div>
                       </div>
 
-                      {/* Stat Summary Bar (High, Low, Avg) */}
-                      <div className="grid grid-cols-3 gap-2 pt-1 text-[10px]">
-                        <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
+                      {/* Stat Summary Bar directly below: Period High, Period Low, Period Avg */}
+                      <div className="grid grid-cols-3 gap-2 pt-0.5 text-[10px]">
+                        <div className="bg-[#F8FBFA] p-2 rounded-xl border border-[#E8EFEC] flex flex-col">
                           <span className="text-[#80918B] font-semibold">
                             {lang === "ur" ? "زیادہ سے زیادہ" : "Period High"}
                           </span>
-                          <span className="font-bold text-[#143B33] text-xs">
+                          <span className="font-bold text-[#143B33] text-xs sm:text-sm">
                             {lang === "ur" ? `روپے ${toUrduDigits(seriesMax)}` : `Rs. ${seriesMax.toLocaleString()}`}
                           </span>
                         </div>
-                        <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
+                        <div className="bg-[#F8FBFA] p-2 rounded-xl border border-[#E8EFEC] flex flex-col">
                           <span className="text-[#80918B] font-semibold">
                             {lang === "ur" ? "کم سے کم" : "Period Low"}
                           </span>
-                          <span className="font-bold text-[#143B33] text-xs">
+                          <span className="font-bold text-[#143B33] text-xs sm:text-sm">
                             {lang === "ur" ? `روپے ${toUrduDigits(seriesMin)}` : `Rs. ${seriesMin.toLocaleString()}`}
                           </span>
                         </div>
-                        <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
+                        <div className="bg-[#F8FBFA] p-2 rounded-xl border border-[#E8EFEC] flex flex-col">
                           <span className="text-[#80918B] font-semibold">
                             {lang === "ur" ? "اوسط ریٹ" : "Period Avg"}
                           </span>
-                          <span className="font-bold text-[#087F63] text-xs">
+                          <span className="font-bold text-[#087F63] text-xs sm:text-sm">
                             {lang === "ur" ? `روپے ${toUrduDigits(seriesAvg)}` : `Rs. ${seriesAvg.toLocaleString()}`}
                           </span>
                         </div>
