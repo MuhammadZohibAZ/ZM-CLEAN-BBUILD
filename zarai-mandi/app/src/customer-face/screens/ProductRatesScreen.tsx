@@ -7026,59 +7026,82 @@ export function ProductRatesScreen({
                   const avgArrival = Math.round(totalArrival / arrivalData.length);
 
                   return (
-                    <div className="flex flex-col gap-2 border-b border-[#E8EFEC] pb-2.5">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                          <span className="w-2.5 h-2.5 rounded-full bg-[#D97706]" />
+                    <div className="flex flex-col gap-2.5 border-b border-[#E8EFEC] pb-2.5">
+                      {/* Product Name, Arrival Volume Badge & Date on Left, Unit at Extreme Right */}
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span
-                            className="text-xs font-bold text-[#143B33]"
-                            style={{
-                              fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                              fontSize: lang === "ur" ? 15 : 12,
-                            }}
+                            className="text-base sm:text-lg font-black text-[#143B33] tracking-tight"
+                            style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                           >
-                            {lang === "ur" ? "آمد کی مقدار (مارکیٹ رسد)" : "Arrival Volume Trend"}
+                            {byproduct ? `${tc(byproduct)}` : `${tc(product)}`}
+                          </span>
+
+                          {/* Arrival Volume Badge */}
+                          <span className="text-[10px] font-bold text-[#D97706] bg-[#FEF3C7] px-2 py-0.5 rounded-full border border-[#FDE68A]">
+                            {lang === "ur" ? "آمد کی مقدار" : "Arrival Volume"}
+                          </span>
+
+                          <span className="text-[#CBD5E1] hidden sm:inline">•</span>
+
+                          {/* Date formatted as '14 September 2026' without day of week */}
+                          <span className="text-[11px] font-semibold text-[#52635F]">
+                            {(() => {
+                              const raw = fullDateLabels[currentIdx]?.fullDate || "14 Sep 2026";
+                              let clean = raw.replace(/\s*\([^)]*\)/g, "").trim();
+                              if (lang !== "ur") {
+                                clean = clean
+                                  .replace(/\bJan\b/g, "January")
+                                  .replace(/\bFeb\b/g, "February")
+                                  .replace(/\bMar\b/g, "March")
+                                  .replace(/\bApr\b/g, "April")
+                                  .replace(/\bMay\b/g, "May")
+                                  .replace(/\bJun\b/g, "June")
+                                  .replace(/\bJul\b/g, "July")
+                                  .replace(/\bAug\b/g, "August")
+                                  .replace(/\bSep\b/g, "September")
+                                  .replace(/\bOct\b/g, "October")
+                                  .replace(/\bNov\b/g, "November")
+                                  .replace(/\bDec\b/g, "December");
+                              }
+                              return clean;
+                            })()}
                           </span>
                         </div>
-                        <span className="text-[10px] font-semibold text-[#92400E] bg-[#FEF3C7] px-2 py-0.5 rounded-md border border-[#FDE68A]">
-                          {lang === "ur" ? "تھیلے" : "Bags"}
+
+                        {/* Unit Badge at Extreme Right */}
+                        <span className="text-[10px] font-bold text-[#B45309] bg-[#FFFBEB] px-2.5 py-0.5 rounded-md border border-[#FDE68A] flex-shrink-0">
+                          {lang === "ur" ? "تھیلے (Bags)" : "Bags"}
                         </span>
                       </div>
 
-                      <div className="flex items-baseline justify-between flex-wrap gap-2">
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-2xl font-black text-[#92400E]">
-                            {lang === "ur" ? `${toUrduDigits(displayArr.toLocaleString())} تھیلے` : `${displayArr.toLocaleString()} Bags`}
+                      {/* Stat Summary Bar matching Price Trends consistency: Total Period, Peak Day, Daily Avg */}
+                      <div className="grid grid-cols-3 gap-2 pt-0.5 text-[10px]">
+                        <div className="bg-[#F8FBFA] p-2 rounded-xl border border-[#E8EFEC] flex flex-col">
+                          <div className="flex items-center justify-between text-[#80918B] font-semibold text-[10px]">
+                            <span>{lang === "ur" ? "کل آمد" : "Total Period"}</span>
+                            <span className="font-bold text-[9px] text-[#64748B]">Bags</span>
+                          </div>
+                          <span className="font-bold text-[#143B33] text-xs sm:text-sm mt-0.5">
+                            {lang === "ur" ? toUrduDigits(totalArrival.toLocaleString()) : totalArrival.toLocaleString()}
                           </span>
                         </div>
-                        <div className="text-[11px] font-semibold text-[#52635F]">
-                          {fullDateLabels[currentIdx]?.fullDate}
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-2 pt-1 text-[10px]">
-                        <div className="bg-[#FFFDF5] p-1.5 rounded-lg border border-[#FDE68A] flex flex-col">
-                          <span className="text-[#92400E] font-semibold">
-                            {lang === "ur" ? "کل آمد" : "Total Period"}
-                          </span>
-                          <span className="font-bold text-[#78350F] text-xs">
-                            {totalArrival.toLocaleString()} Bags
+                        <div className="bg-[#F8FBFA] p-2 rounded-xl border border-[#E8EFEC] flex flex-col">
+                          <div className="flex items-center justify-between text-[#80918B] font-semibold text-[10px]">
+                            <span>{lang === "ur" ? "سب سے زیادہ" : "Peak Day"}</span>
+                            <span className="font-bold text-[9px] text-[#64748B]">Bags</span>
+                          </div>
+                          <span className="font-bold text-[#143B33] text-xs sm:text-sm mt-0.5">
+                            {lang === "ur" ? toUrduDigits(peakArrival.toLocaleString()) : peakArrival.toLocaleString()}
                           </span>
                         </div>
-                        <div className="bg-[#FFFDF5] p-1.5 rounded-lg border border-[#FDE68A] flex flex-col">
-                          <span className="text-[#92400E] font-semibold">
-                            {lang === "ur" ? "سب سے زیادہ" : "Peak Day"}
-                          </span>
-                          <span className="font-bold text-[#78350F] text-xs">
-                            {peakArrival.toLocaleString()} Bags
-                          </span>
-                        </div>
-                        <div className="bg-[#FFFDF5] p-1.5 rounded-lg border border-[#FDE68A] flex flex-col">
-                          <span className="text-[#92400E] font-semibold">
-                            {lang === "ur" ? "روزانہ اوسط" : "Daily Avg"}
-                          </span>
-                          <span className="font-bold text-[#92400E] text-xs">
-                            {avgArrival.toLocaleString()} Bags
+                        <div className="bg-[#F8FBFA] p-2 rounded-xl border border-[#E8EFEC] flex flex-col">
+                          <div className="flex items-center justify-between text-[#80918B] font-semibold text-[10px]">
+                            <span>{lang === "ur" ? "روزانہ اوسط" : "Daily Avg"}</span>
+                            <span className="font-bold text-[9px] text-[#64748B]">Bags</span>
+                          </div>
+                          <span className="font-bold text-[#D97706] text-xs sm:text-sm mt-0.5">
+                            {lang === "ur" ? toUrduDigits(avgArrival.toLocaleString()) : avgArrival.toLocaleString()}
                           </span>
                         </div>
                       </div>
