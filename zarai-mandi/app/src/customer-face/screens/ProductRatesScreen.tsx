@@ -5993,12 +5993,13 @@ export function ProductRatesScreen({
         {/* 2. TRENDS SCREEN CONTAINER - 100% Isolated */}
         {tab === "trends" && (
           <div
-            className="flex-1 min-h-0 overflow-y-auto px-3.5 pt-2 pb-6 flex flex-col gap-3"
+            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-3.5 pt-2 pb-6 flex flex-col gap-3"
             style={{
               scrollbarWidth: "thin",
               WebkitOverflowScrolling: "touch",
               touchAction: "pan-y",
               overscrollBehaviorY: "contain",
+              overflowX: "hidden",
             }}
           >
             {/* Top Control Bar: Price Trend vs Arrival Trend Pill on Left, Location Selector Pill on Right */}
@@ -6289,7 +6290,7 @@ export function ProductRatesScreen({
                               onClick={() => setIsMoreOpen(false)}
                             />
                             <div
-                              className="absolute left-0 top-full mt-1.5 w-36 bg-white rounded-xl shadow-2xl border border-[#D5E2DD] py-1 z-50 animate-fadeIn"
+                              className="absolute right-0 top-full mt-1.5 w-36 bg-white rounded-xl shadow-2xl border border-[#D5E2DD] py-1 z-50 animate-fadeIn"
                               style={{ boxShadow: "0 10px 25px -3px rgba(0,0,0,0.18)" }}
                             >
                               {[
@@ -7171,7 +7172,7 @@ export function ProductRatesScreen({
                               onClick={() => setIsMoreOpen(false)}
                             />
                             <div
-                              className="absolute left-0 top-full mt-1.5 w-36 bg-white rounded-xl shadow-2xl border border-[#D5E2DD] py-1 z-50 animate-fadeIn"
+                              className="absolute right-0 top-full mt-1.5 w-36 bg-white rounded-xl shadow-2xl border border-[#D5E2DD] py-1 z-50 animate-fadeIn"
                               style={{ boxShadow: "0 10px 25px -3px rgba(0,0,0,0.18)" }}
                             >
                               {[
