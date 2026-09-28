@@ -30,7 +30,7 @@ import {
   isMatchByproduct,
   LOCATIONS,
 } from "../shared/data/mandis";
-import { ALL_RATE_TYPES, RATE_COLORS } from "../shared/data/rates";
+import { ALL_RATE_TYPES, RATE_COLORS, RATE_MULTS } from "../shared/data/rates";
 import { toUrduDigits, URDU_FONT, useLang } from "../shared/i18n/LangProvider";
 import {
   type FeedMsg,
@@ -867,8 +867,29 @@ export function ProductRatesScreen({
 
   const excelTimelineMap = useMemo(() => {
     const map: Record<string, TimelineResult> = {};
+    const mandiResult = buildTimelineResultFromApi(trendAllByRateType["Mandi Rate"] || [], REAL_DATES_TIMELINE);
     for (const rt of ALL_RATE_TYPES) {
-      map[rt] = buildTimelineResultFromApi(trendAllByRateType[rt] || [], REAL_DATES_TIMELINE);
+      const apiPoints = trendAllByRateType[rt] || [];
+      const res = buildTimelineResultFromApi(apiPoints, REAL_DATES_TIMELINE);
+      if ((!apiPoints.length || res.latestPrice === 0 || !res.prices.some((v) => v > 0)) && mandiResult.latestPrice > 0) {
+        const mult = RATE_MULTS[rt] || 1.0;
+        const derivedPrices = mandiResult.prices.map((p) => Math.round(p * mult));
+        const derivedMins = mandiResult.mins.map((p) => Math.round(p * mult));
+        const derivedMaxs = mandiResult.maxs.map((p) => Math.round(p * mult));
+        map[rt] = {
+          ...mandiResult,
+          prices: derivedPrices,
+          mins: derivedMins,
+          maxs: derivedMaxs,
+          latestPrice: Math.round(mandiResult.latestPrice * mult),
+          latestMin: Math.round(mandiResult.latestMin * mult),
+          latestMax: Math.round(mandiResult.latestMax * mult),
+          trend: mandiResult.trend,
+          trendPct: mandiResult.trendPct,
+        };
+      } else {
+        map[rt] = res;
+      }
     }
     return map;
   }, [trendAllByRateType]);
@@ -6105,7 +6126,7 @@ export function ProductRatesScreen({
                           setActiveTypes([tRt]);
                         }
                       }}
-                      className={`tap-target flex items-center gap-1.5 rounded-full font-bold transition-all duration-200 ease-out active:scale-95 flex-shrink-0 whitespace-nowrap ${
+                      className={`tap-target flex items-center gap-1.5 rounded-full font-bold transition-all duration-200 ease-out active:scale-95 flex-shrink-0 whitespace-nowrap focus:outline-none focus:ring-0 ${
                         isSelected ? "zm-chip-active-highlight" : "hover:border-[#94A3B8]"
                       }`}
                       style={{
