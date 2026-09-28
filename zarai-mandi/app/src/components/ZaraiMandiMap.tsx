@@ -460,7 +460,10 @@ export default function ZaraiMandiMap({
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [graphMode, setGraphMode] = useState<"price" | "arrival">("price");
-  const [timeframe, setTimeframe] = useState<"1M" | "3M" | "6M" | "1Y" | "72h" | "7d" | "30d">("1M");
+  const [timeframe, setTimeframe] = useState<string>("1D");
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const [customRange, setCustomRange] = useState<{ start: string; end: string }>({ start: "2026-08-15", end: "2026-09-14" });
+  const [isCustomPickerOpen, setIsCustomPickerOpen] = useState(false);
   const [granularity, setGranularity] = useState<string>("15");
   const [graphHoverIdx, setGraphHoverIdx] = useState<number | null>(null);
   const [showWiki, setShowWiki] = useState(false);
@@ -1227,17 +1230,19 @@ export default function ZaraiMandiMap({
           allRows: graphRows,
           mandiName: selectedMandi.name,
           rateType: dominantRateType,
-          timeframe,
+          timeframe: timeframe as any,
           lang,
           view: "price",
+          customRange,
         });
         const arrData = buildMandiInlineGraphFromRows({
           allRows: graphRows,
           mandiName: selectedMandi.name,
           rateType: dominantRateType,
-          timeframe,
+          timeframe: timeframe as any,
           lang,
           view: "arrival",
+          customRange,
         });
 
         const minVal = graphData.latestMin;
@@ -1272,15 +1277,15 @@ export default function ZaraiMandiMap({
         const historyRows = [...mandiRecords].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 
         const W = 560;
-        const H = 180;
-        const PL = 44;
-        const PR = 16;
-        const PT = 8;
-        const PB = 22;
+        const H = 225;
+        const PL = 14;
+        const PR = 48;
+        const PT = 10;
+        const PB = 24;
         const chartW = W - PL - PR;
         const volBaseY = H - PB;
-        const volMaxH = 18;
-        const separatorY = volBaseY - volMaxH - 4;
+        const volMaxH = 22;
+        const separatorY = volBaseY - volMaxH - 6;
         const lineChartH = separatorY - PT;
 
         const isArrival = graphMode === "arrival";
@@ -1665,7 +1670,7 @@ export default function ZaraiMandiMap({
                       <svg
                         viewBox={`0 0 ${W} ${H}`}
                         className="w-full select-none"
-                        style={{ height: 185, display: "block", touchAction: "none" }}
+                        style={{ height: 215, display: "block", touchAction: "none" }}
                         onMouseDown={(e) => {
                           const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
                           const relX = ((e.clientX - rect.left) / rect.width) * W - PL;
@@ -1728,7 +1733,7 @@ export default function ZaraiMandiMap({
                           </linearGradient>
                         </defs>
 
-                        {/* Horizontal Gridlines + Left Y Ticks (Only on Left) */}
+                        {/* Horizontal Gridlines + Right Y Ticks */}
                         {currentData.yLabels.map((tick, ti) => {
                           const y = yOf(tick.val);
                           return (
@@ -1743,10 +1748,10 @@ export default function ZaraiMandiMap({
                                 strokeDasharray="3 3"
                               />
                               <text
-                                x={PL - 6}
+                                x={W - PR + 4}
                                 y={y + 3.5}
-                                textAnchor="end"
-                                fontSize="10.5"
+                                textAnchor="start"
+                                fontSize="9.5"
                                 fontWeight="700"
                                 fill="#1E3A34"
                               >
@@ -1767,14 +1772,14 @@ export default function ZaraiMandiMap({
                           strokeDasharray="4 3"
                         />
                         <text
-                          x={PL - 6}
+                          x={W - PR + 4}
                           y={separatorY + 3.5}
-                          textAnchor="end"
-                          fontSize="9.5"
-                          fontWeight="800"
-                          fill="#475569"
+                          textAnchor="start"
+                          fontSize="8.5"
+                          fontWeight="700"
+                          fill="#64748B"
                         >
-                          0
+                          {graphMode === "price" ? (lang === "ur" ? "نرخ بار" : "Bars") : (lang === "ur" ? "آمد بار" : "Bars")}
                         </text>
 
                         {/* Volume Baseline */}
@@ -1795,7 +1800,7 @@ export default function ZaraiMandiMap({
                               x={xOf(i)}
                               y={H - 8}
                               textAnchor="middle"
-                              fontSize="10"
+                              fontSize="9.5"
                               fontWeight="700"
                               fill="#1E3A34"
                               fontFamily={lang === "ur" ? urduFont : "inherit"}
@@ -1805,26 +1810,28 @@ export default function ZaraiMandiMap({
                           ) : null,
                         )}
 
-                        {/* Mini Volume Bars */}
-                        {graphData.arrivals.map((arrVal, i) => {
+                        {/* Bottom Bars (Pure Price Movement Bars in Price Mode, Pure Arrival Bars in Arrival Mode) */}
+                        {pts.map((vVal, i) => {
                           const barX = xOf(i);
-                          const barH = (arrVal / maxArr) * volMaxH;
-                          const prevP = i > 0 ? pts[i - 1] : pts[i];
-                          const curP = pts[i];
-                          const isUp = curP >= prevP;
-                          const barW = Math.max(3, Math.min(7, (chartW / len) * 0.55));
+                          const prevV = i > 0 ? pts[i - 1] : vVal;
+                          const isUp = vVal >= prevV;
+                          const barRatio = Math.max(0.18, (vVal - pMin) / Math.max(pMax - pMin, 1));
+                          const barH = graphMode === "price"
+                            ? Math.max(4, Math.round(barRatio * volMaxH))
+                            : Math.max(4, Math.round(((graphData.arrivals[i] || 0) / maxArr) * volMaxH));
+                          const barW = Math.max(3, Math.min(8, (chartW / len) * 0.65));
                           const isHov = graphHoverIdx === i;
 
                           return (
                             <rect
-                              key={`vol-${i}`}
+                              key={`bar-${i}`}
                               x={barX - barW / 2}
                               y={volBaseY - barH}
                               width={barW}
                               height={barH}
                               rx={1.5}
                               fill={graphMode === "price" ? (isUp ? "#10B981" : "#EF4444") : "#D97706"}
-                              opacity={isHov ? 1 : 0.65}
+                              opacity={graphHoverIdx === null ? 0.75 : isHov ? 1.0 : 0.35}
                             />
                           );
                         })}
@@ -1839,11 +1846,11 @@ export default function ZaraiMandiMap({
                           return (
                             <g>
                               <path d={areaCoords} fill={`url(#${gradId})`} />
-                              <path d={lineCoords} stroke={strokeColor} strokeWidth="3.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                              <path d={lineCoords} stroke={strokeColor} strokeWidth="2.8" fill="none" strokeLinecap="round" strokeLinejoin="round" />
                               {/* Dotted Latest Price Guideline */}
-                              <line x1={PL} y1={currentCloseY} x2={W - PR} y2={currentCloseY} stroke={strokeColor} strokeWidth="1.1" strokeDasharray="3 3" opacity="0.65" />
+                              <line x1={PL} y1={currentCloseY} x2={W - PR} y2={currentCloseY} stroke={strokeColor} strokeWidth="0.9" strokeDasharray="3 3" opacity="0.6" />
                               {/* Live Pulse Dot */}
-                              <circle cx={xOf(len - 1)} cy={currentCloseY} r="5.5" fill={strokeColor} stroke="#FFFFFF" strokeWidth="2.5" />
+                              <circle cx={xOf(len - 1)} cy={currentCloseY} r="4.5" fill={strokeColor} stroke="#FFFFFF" strokeWidth="2" />
                             </g>
                           );
                         })()}
@@ -1851,9 +1858,9 @@ export default function ZaraiMandiMap({
                         {/* Interactive Hover Crosshairs */}
                         {graphHoverIdx !== null && (
                           <g>
-                            <line x1={xOf(graphHoverIdx)} y1={PT} x2={xOf(graphHoverIdx)} y2={volBaseY} stroke="#0284C7" strokeWidth="1.4" strokeDasharray="2 2" />
-                            <line x1={PL} y1={yOf(pts[graphHoverIdx])} x2={W - PR} y2={yOf(pts[graphHoverIdx])} stroke="#0284C7" strokeWidth="1.2" strokeDasharray="2 2" opacity="0.8" />
-                            <circle cx={xOf(graphHoverIdx)} cy={yOf(pts[graphHoverIdx])} r="6" fill="#0284C7" stroke="#FFFFFF" strokeWidth="2.5" />
+                            <line x1={xOf(graphHoverIdx)} y1={PT} x2={xOf(graphHoverIdx)} y2={volBaseY} stroke="#0284C7" strokeWidth="1.2" strokeDasharray="2 2" />
+                            <line x1={PL} y1={yOf(pts[graphHoverIdx])} x2={W - PR} y2={yOf(pts[graphHoverIdx])} stroke="#0284C7" strokeWidth="1" strokeDasharray="2 2" opacity="0.75" />
+                            <circle cx={xOf(graphHoverIdx)} cy={yOf(pts[graphHoverIdx])} r="5" fill="#0284C7" stroke="#FFFFFF" strokeWidth="2" />
                           </g>
                         )}
                       </svg>
@@ -1896,33 +1903,184 @@ export default function ZaraiMandiMap({
                       })()}
                     </div>
 
-                    {/* 4. Bottom Timeframe Buttons (1 Month, 3 Months, 6 Months, 1 Year) */}
-                    <div className="grid grid-cols-4 gap-1.5 pt-1">
-                      {[
-                        { id: "1M", labelEn: "1 Month", labelUr: "۱ ماہ" },
-                        { id: "3M", labelEn: "3 Months", labelUr: "۳ ماہ" },
-                        { id: "6M", labelEn: "6 Months", labelUr: "۶ ماہ" },
-                        { id: "1Y", labelEn: "1 Year", labelUr: "۱ سال" },
-                      ].map((tf) => {
-                        const isTfActive = timeframe === tf.id;
-                        return (
+                    {/* 4. Bottom Timeframe Buttons (15m, 1h, 4h, 1D, More dropdown) */}
+                    <div className="relative pt-1">
+                      <div className="flex items-center gap-1.5 w-full">
+                        {[
+                          { id: "15m", labelEn: "15m", labelUr: "۱۵ منٹ" },
+                          { id: "1h", labelEn: "1h", labelUr: "۱ گھنٹہ" },
+                          { id: "4h", labelEn: "4h", labelUr: "۴ گھنٹے" },
+                          { id: "1D", labelEn: "1D", labelUr: "۱ دن" },
+                        ].map((tf) => {
+                          const isTfActive = timeframe === tf.id;
+                          return (
+                            <button
+                              key={tf.id}
+                              type="button"
+                              onClick={() => {
+                                setTimeframe(tf.id);
+                                setIsMoreOpen(false);
+                              }}
+                              className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition active:scale-95 text-center ${
+                                isTfActive
+                                  ? graphMode === "price"
+                                    ? "bg-[#087F63] text-white shadow-xs font-black"
+                                    : "bg-[#D97706] text-white shadow-xs font-black"
+                                  : "bg-[#F4FAF7] text-[#2F4A43] border border-[#D5E2DD] hover:bg-[#E8F2ED]"
+                              }`}
+                              style={{ fontFamily: lang === "ur" ? urduFont : "inherit" }}
+                            >
+                              {lang === "ur" ? tf.labelUr : tf.labelEn}
+                            </button>
+                          );
+                        })}
+
+                        {/* More Dropdown Button */}
+                        <div className="relative flex-1">
                           <button
-                            key={tf.id}
                             type="button"
-                            onClick={() => setTimeframe(tf.id as any)}
-                            className={`py-2 rounded-xl text-xs sm:text-[13px] font-bold transition active:scale-95 text-center ${
-                              isTfActive
+                            onClick={() => setIsMoreOpen(!isMoreOpen)}
+                            className={`w-full py-1.5 px-2 rounded-lg text-xs font-bold transition active:scale-95 flex items-center justify-center gap-1 ${
+                              ["1W", "1M", "3M", "6M", "1Y", "CUSTOM"].includes(timeframe)
                                 ? graphMode === "price"
-                                  ? "bg-[#087F63] text-white shadow-sm font-black"
-                                  : "bg-[#D97706] text-white shadow-sm font-black"
+                                  ? "bg-[#087F63] text-white shadow-xs font-black"
+                                  : "bg-[#D97706] text-white shadow-xs font-black"
                                 : "bg-[#F4FAF7] text-[#2F4A43] border border-[#D5E2DD] hover:bg-[#E8F2ED]"
                             }`}
                             style={{ fontFamily: lang === "ur" ? urduFont : "inherit" }}
                           >
-                            {lang === "ur" ? tf.labelUr : tf.labelEn}
+                            <span>
+                              {["1W", "1M", "3M", "6M", "1Y"].includes(timeframe)
+                                ? timeframe
+                                : timeframe === "CUSTOM"
+                                ? (lang === "ur" ? "مخصوص" : "Custom")
+                                : (lang === "ur" ? "مزید" : "More")}
+                            </span>
+                            <span className="text-[9px] opacity-75">▾</span>
                           </button>
-                        );
-                      })}
+
+                          {/* Popout Menu */}
+                          {isMoreOpen && (
+                            <>
+                              <div
+                                className="fixed inset-0 z-40 bg-transparent"
+                                onClick={() => setIsMoreOpen(false)}
+                              />
+                              <div
+                                className="absolute right-0 bottom-full mb-1.5 w-36 bg-white rounded-xl shadow-2xl border border-[#D5E2DD] py-1 z-50 animate-fadeIn"
+                                style={{ boxShadow: "0 10px 25px -3px rgba(0,0,0,0.18)" }}
+                              >
+                                {[
+                                  { id: "1W", labelEn: "1 Week", labelUr: "۱ ہفتہ" },
+                                  { id: "1M", labelEn: "1 Month", labelUr: "۱ ماہ" },
+                                  { id: "3M", labelEn: "3 Months", labelUr: "۳ ماہ" },
+                                  { id: "6M", labelEn: "6 Months", labelUr: "۶ ماہ" },
+                                  { id: "1Y", labelEn: "1 Year", labelUr: "۱ سال" },
+                                ].map((opt) => (
+                                  <button
+                                    key={opt.id}
+                                    type="button"
+                                    onClick={() => {
+                                      setTimeframe(opt.id);
+                                      setIsMoreOpen(false);
+                                    }}
+                                    className={`w-full text-left px-3 py-1.5 text-xs font-bold transition flex items-center justify-between ${
+                                      timeframe === opt.id
+                                        ? "bg-[#E8F8F4] text-[#087F63]"
+                                        : "text-[#334155] hover:bg-[#F8FAF9]"
+                                    }`}
+                                    style={{ fontFamily: lang === "ur" ? urduFont : "inherit" }}
+                                  >
+                                    <span>{lang === "ur" ? opt.labelUr : opt.labelEn}</span>
+                                    {timeframe === opt.id && <span className="text-[#087F63] text-[10px]">✓</span>}
+                                  </button>
+                                ))}
+
+                                <div className="border-t border-[#EEF3F0] my-1" />
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setIsMoreOpen(false);
+                                    setIsCustomPickerOpen(true);
+                                  }}
+                                  className={`w-full text-left px-3 py-1.5 text-xs font-bold transition flex items-center justify-between ${
+                                    timeframe === "CUSTOM"
+                                      ? "bg-[#E8F8F4] text-[#087F63]"
+                                      : "text-[#087F63] hover:bg-[#F8FAF9]"
+                                  }`}
+                                  style={{ fontFamily: lang === "ur" ? urduFont : "inherit" }}
+                                >
+                                  <span>{lang === "ur" ? "مخصوص مدت" : "Custom Range"}</span>
+                                  <span>📅</span>
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Custom Range Picker Dialog */}
+                      {isCustomPickerOpen && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+                          <div className="bg-white rounded-2xl p-4 w-full max-w-xs shadow-2xl border border-[#D5E2DD] flex flex-col gap-3 animate-scaleUp">
+                            <div className="flex items-center justify-between border-b border-[#EEF3F0] pb-2">
+                              <span className="font-extrabold text-sm text-[#143B33]" style={{ fontFamily: lang === "ur" ? urduFont : "inherit" }}>
+                                {lang === "ur" ? "مخصوص مدت کا انتخاب" : "Select Date Range"}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setIsCustomPickerOpen(false)}
+                                className="w-6 h-6 rounded-full bg-[#F1F5F3] text-[#52635F] flex items-center justify-center text-xs font-bold"
+                              >
+                                ✕
+                              </button>
+                            </div>
+
+                            <div className="flex flex-col gap-2 text-xs font-bold text-[#52635F]">
+                              <label className="flex flex-col gap-1">
+                                <span>{lang === "ur" ? "شروع کی تاریخ:" : "Start Date:"}</span>
+                                <input
+                                  type="date"
+                                  value={customRange.start}
+                                  onChange={(e) => setCustomRange((prev) => ({ ...prev, start: e.target.value }))}
+                                  className="border border-[#CBD5E1] rounded-lg p-2 text-xs font-bold text-[#0F172A]"
+                                />
+                              </label>
+
+                              <label className="flex flex-col gap-1">
+                                <span>{lang === "ur" ? "آخری تاریخ:" : "End Date:"}</span>
+                                <input
+                                  type="date"
+                                  value={customRange.end}
+                                  onChange={(e) => setCustomRange((prev) => ({ ...prev, end: e.target.value }))}
+                                  className="border border-[#CBD5E1] rounded-lg p-2 text-xs font-bold text-[#0F172A]"
+                                />
+                              </label>
+                            </div>
+
+                            <div className="flex gap-2 pt-1">
+                              <button
+                                type="button"
+                                onClick={() => setIsCustomPickerOpen(false)}
+                                className="flex-1 py-2 rounded-xl text-xs font-bold bg-[#F1F5F3] text-[#52635F]"
+                              >
+                                {lang === "ur" ? "منسوخ" : "Cancel"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setTimeframe("CUSTOM");
+                                  setIsCustomPickerOpen(false);
+                                }}
+                                className="flex-1 py-2 rounded-xl text-xs font-black bg-[#087F63] text-white shadow-sm"
+                              >
+                                {lang === "ur" ? "لاگو کریں" : "Apply"}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </>
                 )}

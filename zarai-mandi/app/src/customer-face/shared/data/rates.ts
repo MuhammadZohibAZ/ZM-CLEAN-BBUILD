@@ -21,15 +21,15 @@ export const RATE_TYPE_URDU: Record<string, string> = {
   "Wholesale Rate": "ہول سیل ریٹ",
 };
 export const RATE_COLORS: Record<string, string> = {
-  "Mill Rate": "#2FAE68",
-  "Farm Rate": "#D79A2B",
-  "Broker Rate": "#249985",
-  "Mandi Rate": "#2A9D87",
-  "Dealer Rate": "#D95A51",
-  "Wholesale Rate": "#0891b2",
-  "Stock Rate": "#A96F18",
-  "Export Rate": "#0A8F73",
-  "Retail Rate": "#52635F",
+  "Mandi Rate": "#0E645C",
+  "Wholesale Rate": "#1E40AF",
+  "Retail Rate": "#6B21A8",
+  "Stock Rate": "#991B1B",
+  "Broker Rate": "#334155",
+  "Dealer Rate": "#C2410C",
+  "Farm Rate": "#B45309",
+  "Mill Rate": "#0F766E",
+  "Export Rate": "#4338CA",
 };
 export const RATE_MULTS: Record<string, number> = {
   "Farm Rate": 0.88,

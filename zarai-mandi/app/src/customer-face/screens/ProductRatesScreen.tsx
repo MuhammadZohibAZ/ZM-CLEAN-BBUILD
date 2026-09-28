@@ -1,3 +1,4 @@
+import { CustomDateRangeModal } from "../../components/CustomDateRangeModal";
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import ExpandableMandiMapCard from "../../components/ExpandableMandiMapCard";
 import { type MapByProductRecord } from "../../components/ZaraiMandiMap";
@@ -219,7 +220,10 @@ export function ProductRatesScreen({
     initialRateType ? [initialRateType] : ["Mandi Rate"],
   );
   const [trendMode, setTrendMode] = useState<"price" | "arrival">("price");
-  const [stockTimeframe, setStockTimeframe] = useState<"1D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "5Y" | "MAX">("1M");
+  const [stockTimeframe, setStockTimeframe] = useState<string>("1D");
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const [customRange, setCustomRange] = useState<{ start: string; end: string }>({ start: "2026-08-15", end: "2026-09-14" });
+  const [isCustomPickerOpen, setIsCustomPickerOpen] = useState(false);
   const [stockGranularity, setStockGranularity] = useState<string>("1D");
   const [stockChartType, setStockChartType] = useState<"line" | "candle">("line");
   const [range, setRange] = useState<"week" | "month" | "quarter">("week");
@@ -306,9 +310,10 @@ export function ProductRatesScreen({
     arrival?: string | number;
   } | null>(null);
   const [tableGraphView, setTableGraphView] = useState<"price" | "arrival">("price");
-  const [graphTimeframe, setGraphTimeframe] = useState<
-    "1M" | "3M" | "6M" | "1Y" | "72h" | "7d" | "30d"
-  >("1M");
+  const [graphTimeframe, setGraphTimeframe] = useState<string>("15m");
+  const [tableCustomRange, setTableCustomRange] = useState<{ start: string; end: string }>({ start: "2026-08-15", end: "2026-09-14" });
+  const [isTableCustomPickerOpen, setIsTableCustomPickerOpen] = useState(false);
+  const [isTableMoreOpen, setIsTableMoreOpen] = useState(false);
   const [tableGraphGranularity, setTableGraphGranularity] = useState<string>("15");
   const [tableGraphHoverIdx, setTableGraphHoverIdx] = useState<number | null>(null);
   const tableScrollRef = useRef<HTMLDivElement | null>(null);
@@ -891,6 +896,16 @@ export function ProductRatesScreen({
     }
   }, [normInitial]);
 
+  
+  const customSlice = useMemo(() => {
+    if (stockTimeframe !== "CUSTOM" || !customRange?.start || !customRange?.end) return null;
+    const startIdx = Math.max(0, REAL_DATES_TIMELINE.indexOf(customRange.start));
+    const endIdx = REAL_DATES_TIMELINE.indexOf(customRange.end) >= 0
+      ? REAL_DATES_TIMELINE.indexOf(customRange.end) + 1
+      : REAL_DATES_TIMELINE.length;
+    return { startIdx, endIdx: Math.max(startIdx + 2, endIdx) };
+  }, [stockTimeframe, customRange]);
+
   const priceSeries = useMemo(
     () =>
       ALL_RATE_TYPES.map((rt) => {
@@ -910,6 +925,36 @@ export function ProductRatesScreen({
           const maxs = Array.from({ length: tfConfig.len }, (_, i) =>
             tfConfig.maxFactor!(baseLatestPrice, i)
           );
+          return {
+            label: rt,
+            color: RATE_COLORS[rt] || "#087F63",
+            data: prices,
+            mins,
+            maxs,
+            latestMin: mins[mins.length - 1],
+            latestMax: maxs[maxs.length - 1],
+            trend: tResult.trend,
+            trendPct: tResult.trendPct,
+          };
+        } else if (stockTimeframe === "1W" || stockTimeframe === "7d") {
+          const prices = tResult.prices.slice(-7);
+          const mins = tResult.mins.slice(-7);
+          const maxs = tResult.maxs.slice(-7);
+          return {
+            label: rt,
+            color: RATE_COLORS[rt] || "#087F63",
+            data: prices,
+            mins,
+            maxs,
+            latestMin: mins[mins.length - 1],
+            latestMax: maxs[maxs.length - 1],
+            trend: tResult.trend,
+            trendPct: tResult.trendPct,
+          };
+        } else if (customSlice) {
+          const prices = tResult.prices.slice(customSlice.startIdx, customSlice.endIdx);
+          const mins = tResult.mins.slice(customSlice.startIdx, customSlice.endIdx);
+          const maxs = tResult.maxs.slice(customSlice.startIdx, customSlice.endIdx);
           return {
             label: rt,
             color: RATE_COLORS[rt] || "#087F63",
@@ -965,13 +1010,43 @@ export function ProductRatesScreen({
       return Array.from({ length: tfConfig.len }, (_, i) =>
         tfConfig.arrivalFactor!(avgArr, i)
       );
+    } else if (stockTimeframe === "1W" || stockTimeframe === "7d") {
+      return activeArrivalResult.arrivals.slice(-7);
+    } else if (customSlice) {
+      return activeArrivalResult.arrivals.slice(customSlice.startIdx, customSlice.endIdx);
     }
     return baseArrivals;
-  }, [activeArrivalResult, tfConfig]);
+  }, [activeArrivalResult, tfConfig, stockTimeframe, customSlice]);
 
   const activeSeries = useMemo(() => {
     const fallbackSeries = priceSeries.find((s) => s.label === normInitial) || priceSeries[0];
     if (!compareMode) {
+      if (focusedType === "All") {
+        const len = fallbackSeries?.data?.length || 0;
+        const avgData = Array.from({ length: len }, (_, i) => {
+          const vals = priceSeries.map((s) => s.data[i] || 0).filter((v) => v > 0);
+          return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : fallbackSeries.data[i] || 4500;
+        });
+        const avgMins = Array.from({ length: len }, (_, i) => {
+          const vals = priceSeries.map((s) => s.mins[i] || 0).filter((v) => v > 0);
+          return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : fallbackSeries.mins[i] || 4400;
+        });
+        const avgMaxs = Array.from({ length: len }, (_, i) => {
+          const vals = priceSeries.map((s) => s.maxs[i] || 0).filter((v) => v > 0);
+          return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : fallbackSeries.maxs[i] || 4600;
+        });
+        return [{
+          label: "All Rates Index",
+          color: "#087F63",
+          data: avgData,
+          mins: avgMins,
+          maxs: avgMaxs,
+          latestMin: avgMins[avgMins.length - 1],
+          latestMax: avgMaxs[avgMaxs.length - 1],
+          trend: fallbackSeries.trend,
+          trendPct: fallbackSeries.trendPct,
+        }];
+      }
       const main = priceSeries.find((s) => s.label === focusedType) || fallbackSeries;
       return [main];
     }
@@ -989,19 +1064,19 @@ export function ProductRatesScreen({
   };
 
   // Chart SVG helpers (TradingView & Binance style)
-  const CH = 210,
-    CW = 380,
-    PL = 44,
-    PR = 16,
-    PT = 8,
-    PB = 22;
+  const CH = 280,
+    CW = 400,
+    PL = 12,
+    PR = 48,
+    PT = 10,
+    PB = 24;
   const chartW = CW - PL - PR;
   const volBaseY = CH - PB;
-  const volMaxH = 16;
-  const separatorY = compareMode ? volBaseY : volBaseY - volMaxH - 4;
+  const volMaxH = 26;
+  const separatorY = compareMode ? volBaseY : volBaseY - volMaxH - 6;
   const lineChartH = separatorY - PT;
 
-  const arrSeparatorY = volBaseY - volMaxH - 4;
+  const arrSeparatorY = volBaseY - volMaxH - 6;
   const arrLineChartH = arrSeparatorY - PT;
 
   const xOf = (i: number, total: number) => PL + (i / Math.max(total - 1, 1)) * chartW;
@@ -1040,8 +1115,28 @@ export function ProductRatesScreen({
   }, [aMin, aMax]);
 
   return (
-    <div
-      className="flex flex-col h-full min-h-0 overflow-hidden screen-enter"
+    <>
+      <CustomDateRangeModal
+        isOpen={isCustomPickerOpen}
+        onClose={() => setIsCustomPickerOpen(false)}
+        lang={lang}
+        currentRange={customRange}
+        onApply={(newRange) => {
+          setCustomRange(newRange);
+          setStockTimeframe("CUSTOM");
+        }}
+      />
+      <CustomDateRangeModal
+        isOpen={isTableCustomPickerOpen}
+        onClose={() => setIsTableCustomPickerOpen(false)}
+        lang={lang}
+        currentRange={tableCustomRange}
+        onApply={(newRange) => {
+          setTableCustomRange(newRange);
+          setGraphTimeframe("CUSTOM");
+        }}
+      />
+      <div className="flex flex-col h-full min-h-0 overflow-hidden screen-enter"
       style={{ background: "#F1F7F4" }}
     >
       {/*  Header  */}
@@ -4205,32 +4300,131 @@ export function ProductRatesScreen({
                                                   </div>
                                                 </div>
 
-                                                {/* 2. Second Row: Granularity Filters (1, 5, 15, 30, 1H, 5H, 1D, 1W, 1M) */}
-                                                <div className="flex items-center gap-1 overflow-x-auto py-1 border-b border-[#E8EFEC]" style={{ scrollbarWidth: "none" }}>
-                                                  {["1", "5", "15", "30", "1H", "5H", "1D", "1W", "1M"].map((g) => {
-                                                    const isGActive = tableGraphGranularity === g;
-                                                    return (
+                                                {/* 2. Binance-style Timeframe Selector (15m, 1h, 4h, 1D, More ▾) */}
+                                                <div className="relative flex items-center justify-between gap-1.5 w-full pb-1 border-b border-[#E8EFEC]">
+                                                  <div className="flex items-center gap-1 flex-1">
+                                                    {[
+                                                      { id: "15m", labelEn: "15m", labelUr: "۱۵ منٹ" },
+                                                      { id: "1h", labelEn: "1h", labelUr: "۱ گھنٹہ" },
+                                                      { id: "4h", labelEn: "4h", labelUr: "۴ گھنٹے" },
+                                                      { id: "1D", labelEn: "1D", labelUr: "۱ دن" },
+                                                    ].map((tf) => {
+                                                      const isTfActive = graphTimeframe === tf.id;
+                                                      return (
+                                                        <button
+                                                          key={tf.id}
+                                                          type="button"
+                                                          onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setGraphTimeframe(tf.id);
+                                                            setIsTableMoreOpen(false);
+                                                          }}
+                                                          className={`flex-1 py-1 px-1 rounded-md text-[10.5px] font-bold transition active:scale-95 text-center ${
+                                                            isTfActive
+                                                              ? tableGraphView === "price"
+                                                                ? "bg-[#087F63] text-white shadow-xs font-black"
+                                                                : "bg-[#D97706] text-white shadow-xs font-black"
+                                                              : "bg-[#F4FAF7] text-[#2F4A43] border border-[#D5E2DD] hover:bg-[#E8F2ED]"
+                                                          }`}
+                                                          style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                                                        >
+                                                          {lang === "ur" ? tf.labelUr : tf.labelEn}
+                                                        </button>
+                                                      );
+                                                    })}
+
+                                                    {/* More Dropdown */}
+                                                    <div className="relative flex-1">
                                                       <button
-                                                        key={g}
                                                         type="button"
                                                         onClick={(e) => {
                                                           e.stopPropagation();
-                                                          setTableGraphGranularity(g);
+                                                          setIsTableMoreOpen(!isTableMoreOpen);
                                                         }}
-                                                        className={`px-2 py-0.5 rounded text-[10.5px] font-bold transition-colors flex-shrink-0 ${isGActive
-                                                          ? tableGraphView === "price"
-                                                            ? "bg-[#087F63] text-white shadow-xs"
-                                                            : "bg-[#D97706] text-white shadow-xs"
-                                                          : "text-[#52635F] hover:bg-[#F1F7F4] hover:text-[#143B33]"
-                                                          }`}
+                                                        className={`w-full py-1 px-1 rounded-md text-[10.5px] font-bold transition active:scale-95 flex items-center justify-center gap-0.5 ${
+                                                          ["1W", "1M", "3M", "6M", "1Y", "CUSTOM"].includes(graphTimeframe)
+                                                            ? tableGraphView === "price"
+                                                              ? "bg-[#087F63] text-white shadow-xs font-black"
+                                                              : "bg-[#D97706] text-white shadow-xs font-black"
+                                                            : "bg-[#F4FAF7] text-[#2F4A43] border border-[#D5E2DD] hover:bg-[#E8F2ED]"
+                                                        }`}
+                                                        style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                                                       >
-                                                        {g}
+                                                        <span className="truncate">
+                                                          {["1W", "1M", "3M", "6M", "1Y"].includes(graphTimeframe)
+                                                            ? graphTimeframe
+                                                            : graphTimeframe === "CUSTOM"
+                                                            ? (lang === "ur" ? "مخصوص" : "Custom")
+                                                            : (lang === "ur" ? "مزید" : "More")}
+                                                        </span>
+                                                        <span className="text-[8px] opacity-75">▾</span>
                                                       </button>
-                                                    );
-                                                  })}
+
+                                                      {isTableMoreOpen && (
+                                                        <>
+                                                          <div
+                                                            className="fixed inset-0 z-40 bg-transparent"
+                                                            onClick={(e) => {
+                                                              e.stopPropagation();
+                                                              setIsTableMoreOpen(false);
+                                                            }}
+                                                          />
+                                                          <div
+                                                            className="absolute left-0 top-full mt-1 w-32 bg-white rounded-xl shadow-2xl border border-[#D5E2DD] py-1 z-50 animate-fadeIn"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                          >
+                                                            {[
+                                                              { id: "1W", labelEn: "1 Week", labelUr: "۱ ہفتہ" },
+                                                              { id: "1M", labelEn: "1 Month", labelUr: "۱ ماہ" },
+                                                              { id: "3M", labelEn: "3 Months", labelUr: "۳ ماہ" },
+                                                              { id: "6M", labelEn: "6 Months", labelUr: "۶ ماہ" },
+                                                              { id: "1Y", labelEn: "1 Year", labelUr: "۱ سال" },
+                                                            ].map((opt) => (
+                                                              <button
+                                                                key={opt.id}
+                                                                type="button"
+                                                                onClick={(e) => {
+                                                                  e.stopPropagation();
+                                                                  setGraphTimeframe(opt.id);
+                                                                  setIsTableMoreOpen(false);
+                                                                }}
+                                                                className={`w-full text-left px-3 py-1.5 text-xs font-bold transition flex items-center justify-between ${
+                                                                  graphTimeframe === opt.id
+                                                                    ? "bg-[#E8F8F4] text-[#087F63]"
+                                                                    : "text-[#334155] hover:bg-[#F8FAF9]"
+                                                                }`}
+                                                                style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                                                              >
+                                                                <span>{lang === "ur" ? opt.labelUr : opt.labelEn}</span>
+                                                                {graphTimeframe === opt.id && <span className="text-[#087F63] text-[10px]">✓</span>}
+                                                              </button>
+                                                            ))}
+                                                            <div className="border-t border-[#EEF3F0] my-1" />
+                                                            <button
+                                                              type="button"
+                                                              onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setIsTableMoreOpen(false);
+                                                                setIsTableCustomPickerOpen(true);
+                                                              }}
+                                                              className={`w-full text-left px-3 py-1.5 text-xs font-bold transition flex items-center justify-between ${
+                                                                graphTimeframe === "CUSTOM"
+                                                                  ? "bg-[#E8F8F4] text-[#087F63]"
+                                                                  : "text-[#087F63] hover:bg-[#F8FAF9]"
+                                                              }`}
+                                                              style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                                                            >
+                                                              <span>{lang === "ur" ? "مخصوص مدت" : "Custom Range"}</span>
+                                                              <span>📅</span>
+                                                            </button>
+                                                          </div>
+                                                        </>
+                                                      )}
+                                                    </div>
+                                                  </div>
                                                 </div>
 
-                                                {/* 2. Main Graph Body according to Price vs Arrival */}
+                                                                            {/* 2. Main Graph Body according to Price vs Arrival */}
                                                 {tableGraphView === "price" ? (
                                                   <>
                                                     {(() => {
@@ -4241,6 +4435,7 @@ export function ProductRatesScreen({
                                                         timeframe: graphTimeframe,
                                                         lang,
                                                         view: "price",
+                                                        customRange: tableCustomRange,
                                                       });
                                                       const pts = graphData.points;
                                                       const len = pts.length;
@@ -4256,16 +4451,16 @@ export function ProductRatesScreen({
                                                       const seriesAvg = Math.round(pts.reduce((a, b) => a + b, 0) / (len || 1));
                                                       const currentDateLabel = graphData.dates[hoverI] || graphData.dates[len - 1] || "14 Sep 2026";
 
-                                                      const CW = 540;
-                                                      const CH = 180;
-                                                      const PL = 44;
-                                                      const PR = 16;
-                                                      const PT = 8;
-                                                      const PB = 22;
+                                                      const CW = 400;
+                                                      const CH = 320;
+                                                      const PL = 10;
+                                                      const PR = 56;
+                                                      const PT = 14;
+                                                      const PB = 28;
                                                       const chartW = CW - PL - PR;
                                                       const volBaseY = CH - PB;
-                                                      const volMaxH = 18;
-                                                      const separatorY = volBaseY - volMaxH - 4;
+                                                      const volMaxH = 34;
+                                                      const separatorY = volBaseY - volMaxH - 8;
                                                       const lineChartH = separatorY - PT;
                                                       const pMin = graphData.yMinBound;
                                                       const pMax = graphData.yMaxBound;
@@ -4302,7 +4497,7 @@ export function ProductRatesScreen({
                                                                   {lang === "ur" ? `روپے ${toUrduDigits(displayPrice.toLocaleString())}` : `Rs. ${displayPrice.toLocaleString()}`}
                                                                 </span>
                                                                 <span
-                                                                  className="text-xs font-bold px-2.5 py-0.5 rounded-md flex items-center gap-1"
+                                                                  className="text-xs font-bold px-2 py-0.5 rounded-md flex items-center gap-1"
                                                                   style={{
                                                                     background: isFlat ? "#F3F4F6" : isPositive ? "#DCFCE7" : "#FEE2E2",
                                                                     color: isFlat ? "#4B5563" : isPositive ? "#15803D" : "#B91C1C",
@@ -4314,13 +4509,12 @@ export function ProductRatesScreen({
                                                                 </span>
                                                               </div>
 
-                                                              {/* Date / Scrub Indicator */}
                                                               <div className="text-[11px] font-semibold text-[#52635F]">
                                                                 {currentDateLabel}
                                                               </div>
                                                             </div>
 
-                                                            {/* Stat Summary Bar (High, Low, Avg) */}
+{/* Stat Summary Bar (High, Low, Avg) */}
                                                             <div className="grid grid-cols-3 gap-2 pt-1 text-[10px]">
                                                               <div className="bg-[#F8FBFA] p-1.5 rounded-lg border border-[#E8EFEC] flex flex-col">
                                                                 <span className="text-[#80918B] font-semibold">
@@ -4353,8 +4547,9 @@ export function ProductRatesScreen({
                                                           <div className="relative w-full select-none bg-[#FCFDFD] rounded-xl border border-[#EDF4F1] p-1">
                                                             <svg
                                                               viewBox={`0 0 ${CW} ${CH}`}
+                                                              preserveAspectRatio="none"
                                                               className="w-full select-none"
-                                                              style={{ height: isTableExpanded ? 230 : 180, display: "block", touchAction: "none" }}
+                                                              style={{ height: 320, display: "block", touchAction: "none" }}
                                                               onMouseDown={(e) => {
                                                                 const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
                                                                 const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
@@ -4416,21 +4611,20 @@ export function ProductRatesScreen({
                                                                       y1={y}
                                                                       x2={CW - PR}
                                                                       y2={y}
-                                                                      stroke="#E8EFEF"
+                                                                      stroke="#E2ECE8"
                                                                       strokeWidth="1"
                                                                       strokeDasharray="3 3"
                                                                     />
                                                                     <text
-                                                                      x={PL - 6}
+                                                                      x={CW - PR + 4}
                                                                       y={y + 3.5}
-                                                                      textAnchor="end"
-                                                                      fontSize="10"
+                                                                      textAnchor="start"
+                                                                      fontSize="9.5"
                                                                       fontWeight="700"
                                                                       fill="#1E3A34"
                                                                     >
                                                                       {tick.label}
                                                                     </text>
-                                                                    
                                                                   </g>
                                                                 );
                                                               })}
@@ -4441,19 +4635,19 @@ export function ProductRatesScreen({
                                                                 y1={separatorY}
                                                                 x2={CW - PR}
                                                                 y2={separatorY}
-                                                                stroke="#CBD5E1"
+                                                                stroke="#94A3B8"
                                                                 strokeWidth="1.2"
                                                                 strokeDasharray="4 3"
                                                               />
                                                               <text
-                                                                x={PL - 6}
-                                                                y={separatorY + 3.5}
-                                                                textAnchor="end"
-                                                                fontSize="9.5"
-                                                                fontWeight="800"
-                                                                fill="#475569"
+                                                                x={PL + 4}
+                                                                y={separatorY - 4}
+                                                                textAnchor="start"
+                                                                fontSize="9"
+                                                                fontWeight="700"
+                                                                fill="#64748B"
                                                               >
-                                                                0
+                                                                {lang === "ur" ? "نرخ بار" : "Bars"}
                                                               </text>
                                                               
 
@@ -4561,14 +4755,26 @@ export function ProductRatesScreen({
                                                                     <span>DT:</span>
                                                                     <span className="font-mono text-[#0F172A]">{dateStr}</span>
                                                                   </div>
-                                                                  <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10px] font-semibold text-[#334155] pt-1">
-                                                                    <span className="text-[#64748B]">{lang === "ur" ? "کم سے کم ریٹ:" : "Min Rate:"}</span>
-                                                                    <span className="font-mono font-bold text-right text-[#B91C1C]">Rs. {minP.toLocaleString()}</span>
-                                                                    <span className="text-[#64748B]">{lang === "ur" ? "زیادہ سے زیادہ:" : "Max Rate:"}</span>
-                                                                    <span className="font-mono font-bold text-right text-[#15803D]">Rs. {maxP.toLocaleString()}</span>
-                                                                    <span className="text-[#64748B]">{lang === "ur" ? "آمد:" : "Arrivals:"}</span>
-                                                                    <span className="font-mono font-bold text-right text-[#0284C7]">{volVal > 0 ? `${volVal.toLocaleString()} bags` : "—"}</span>
-                                                                  </div>
+                                                                  {(() => {
+                                                                    const prevP = tableGraphHoverIdx > 0 ? (pts[tableGraphHoverIdx - 1] || curP) : curP;
+                                                                    const changeAmt = curP - prevP;
+                                                                    const changePct = prevP > 0 ? ((changeAmt / prevP) * 100).toFixed(2) : "0.00";
+                                                                    const isUp = changeAmt >= 0;
+                                                                    return (
+                                                                      <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10px] font-semibold text-[#334155] pt-1">
+                                                                        <span className="text-[#64748B]">{lang === "ur" ? "ریٹ:" : "Price:"}</span>
+                                                                        <span className="font-mono font-black text-right text-[#087F63]">Rs. {curP.toLocaleString()}</span>
+                                                                        <span className="text-[#64748B]">{lang === "ur" ? "کم سے کم:" : "Min Rate:"}</span>
+                                                                        <span className="font-mono font-bold text-right text-[#B91C1C]">Rs. {minP.toLocaleString()}</span>
+                                                                        <span className="text-[#64748B]">{lang === "ur" ? "زیادہ سے زیادہ:" : "Max Rate:"}</span>
+                                                                        <span className="font-mono font-bold text-right text-[#15803D]">Rs. {maxP.toLocaleString()}</span>
+                                                                        <span className="text-[#64748B]">{lang === "ur" ? "تبدیلی:" : "Change:"}</span>
+                                                                        <span className={`font-mono font-bold text-right ${isUp ? "text-[#15803D]" : "text-[#B91C1C]"}`}>
+                                                                          {isUp ? `+${changePct}%` : `${changePct}%`}
+                                                                        </span>
+                                                                      </div>
+                                                                    );
+                                                                  })()}
                                                                 </div>
                                                               );
                                                             })()}
@@ -4587,6 +4793,7 @@ export function ProductRatesScreen({
                                                         timeframe: graphTimeframe,
                                                         lang,
                                                         view: "arrival",
+                                                        customRange: tableCustomRange,
                                                       });
                                                       const pts = arrivalData.points;
                                                       const len = pts.length;
@@ -4597,16 +4804,16 @@ export function ProductRatesScreen({
                                                       const avgArr = Math.round(totalArr / (len || 1));
                                                       const currentDateLabel = arrivalData.dates[hoverI] || arrivalData.dates[len - 1] || "14 Sep 2026";
 
-                                                      const CW = 540;
-                                                      const CH = 180;
-                                                      const PL = 44;
-                                                      const PR = 16;
-                                                      const PT = 8;
-                                                      const PB = 22;
+                                                      const CW = 400;
+                                                      const CH = 320;
+                                                      const PL = 10;
+                                                      const PR = 56;
+                                                      const PT = 14;
+                                                      const PB = 28;
                                                       const chartW = CW - PL - PR;
                                                       const volBaseY = CH - PB;
-                                                      const volMaxH = 18;
-                                                      const separatorY = volBaseY - volMaxH - 4;
+                                                      const volMaxH = 34;
+                                                      const separatorY = volBaseY - volMaxH - 8;
                                                       const lineChartH = separatorY - PT;
                                                       const aMin = 0;
                                                       const aMax = arrivalData.yMaxBound;
@@ -4669,8 +4876,9 @@ export function ProductRatesScreen({
                                                           <div className="relative w-full select-none bg-[#FCFDFD] rounded-xl border border-[#EDF4F1] p-1">
                                                             <svg
                                                               viewBox={`0 0 ${CW} ${CH}`}
+                                                              preserveAspectRatio="none"
                                                               className="w-full select-none"
-                                                              style={{ height: isTableExpanded ? 230 : 180, display: "block", touchAction: "none" }}
+                                                              style={{ height: 320, display: "block", touchAction: "none" }}
                                                               onMouseDown={(e) => {
                                                                 const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
                                                                 const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
@@ -4722,10 +4930,9 @@ export function ProductRatesScreen({
                                                                 return (
                                                                   <g key={`yArrTick-${ti}`}>
                                                                     <line x1={PL} y1={y} x2={CW - PR} y2={y} stroke="#E2ECE8" strokeWidth="1" strokeDasharray="4 4" />
-                                                                    <text x={PL - 6} y={y + 3.5} textAnchor="end" fontSize="10.5" fontWeight="700" fill="#1E3A34">
+                                                                    <text x={CW - PR + 4} y={y + 3.5} textAnchor="start" fontSize="9.5" fontWeight="700" fill="#1E3A34">
                                                                       {tick.label}
                                                                     </text>
-                                                                    
                                                                   </g>
                                                                 );
                                                               })}
@@ -4741,14 +4948,14 @@ export function ProductRatesScreen({
                                                                 strokeDasharray="4 3"
                                                               />
                                                               <text
-                                                                x={PL - 6}
-                                                                y={separatorY + 3.5}
-                                                                textAnchor="end"
-                                                                fontSize="9.5"
-                                                                fontWeight="800"
-                                                                fill="#475569"
+                                                                x={PL + 4}
+                                                                y={separatorY - 4}
+                                                                textAnchor="start"
+                                                                fontSize="9"
+                                                                fontWeight="700"
+                                                                fill="#64748B"
                                                               >
-                                                                0
+                                                                {lang === "ur" ? "آمد بار" : "Bars"}
                                                               </text>
                                                               
 
@@ -4852,41 +5059,7 @@ export function ProductRatesScreen({
                                                   </>
                                                 )}
 
-                                                {/* 3. Timeframe Filter: 1 Month, 3 Months, 6 Months, 1 Year */}
-                                                <div className="pt-0.5">
-                                                  <div className="grid grid-cols-4 gap-1.5 border border-[#D5E2DD] rounded-xl p-1 bg-[#F9FBFA]">
-                                                    {[
-                                                      { id: "1M", labelEn: "1 Month", labelUr: "۱ مہینہ" },
-                                                      { id: "3M", labelEn: "3 Months", labelUr: "۳ مہینے" },
-                                                      { id: "6M", labelEn: "6 Months", labelUr: "۶ مہینے" },
-                                                      { id: "1Y", labelEn: "1 Year", labelUr: "۱ سال" },
-                                                    ].map((tf) => {
-                                                      const isTfActive = graphTimeframe === tf.id;
-                                                      return (
-                                                        <button
-                                                          key={tf.id}
-                                                          type="button"
-                                                          onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setGraphTimeframe(tf.id as any);
-                                                          }}
-                                                          className={`flex items-center justify-center py-2 px-1 rounded-lg transition-all font-bold ${isTfActive
-                                                            ? tableGraphView === "price"
-                                                              ? "bg-[#087F63] text-white shadow-sm ring-1 ring-[#087F63]/30 scale-[1.01]"
-                                                              : "bg-[#D97706] text-white shadow-sm ring-1 ring-[#D97706]/30 scale-[1.01]"
-                                                            : "bg-white/80 text-[#52635F] hover:bg-white hover:text-[#183B34] border border-[#E8EFEC]"
-                                                            }`}
-                                                          style={{
-                                                            fontSize: lang === "ur" ? 13 : 11,
-                                                            fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                                                          }}
-                                                        >
-                                                          <span>{lang === "ur" ? tf.labelUr : tf.labelEn}</span>
-                                                        </button>
-                                                      );
-                                                    })}
-                                                  </div>
-                                                </div>
+                                                
                                               </div>
                                             </div>
                                           </td>
@@ -5807,38 +5980,50 @@ export function ProductRatesScreen({
             overscrollBehaviorY: "contain",
           }}
         >
-          {/* Top Bar: Title on left, Location selector pill on right */}
+          {/* Top Control Bar: Price Trend vs Arrival Trend Pill on Left, Location Selector Pill on Right */}
           <div className="flex items-center justify-between gap-2">
-            <p
-              className="text-xs font-bold uppercase tracking-wide"
-              style={{
-                color: "#52635F",
-                fontSize: lang === "ur" ? 15 : 12,
-                fontFamily:
-                  lang === "ur"
-                    ? URDU_FONT
-                    : "inherit",
-              }}
-            >
-              {lang === "ur" ? "قیمتوں کے رجحانات" : "Price Trends"}
-            </p>
+            <div className="flex items-center bg-[#EBF4F0] p-0.5 rounded-2xl border border-[#D5E2DD]">
+              <button
+                type="button"
+                onClick={() => setTrendMode("price")}
+                className={`tap-target px-3.5 py-1.5 rounded-xl text-xs font-bold transition active:scale-95 ${
+                  trendMode === "price"
+                    ? "bg-[#087F63] text-white shadow-xs font-black"
+                    : "text-[#52635F] hover:text-[#143B33] bg-transparent"
+                }`}
+                style={{
+                  fontSize: lang === "ur" ? 13 : 11.5,
+                  fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                }}
+              >
+                {lang === "ur" ? "قیمت کا رجحان" : "Price Trend"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setTrendMode("arrival")}
+                className={`tap-target px-3.5 py-1.5 rounded-xl text-xs font-bold transition active:scale-95 ${
+                  trendMode === "arrival"
+                    ? "bg-[#087F63] text-white shadow-xs font-black"
+                    : "text-[#52635F] hover:text-[#143B33] bg-transparent"
+                }`}
+                style={{
+                  fontSize: lang === "ur" ? 13 : 11.5,
+                  fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                }}
+              >
+                {lang === "ur" ? "آمد کا رجحان" : "Arrival Trend"}
+              </button>
+            </div>
 
             <div className="flex items-center gap-1.5">
               {/* Location selector */}
               <button
+                type="button"
                 onClick={() => setLocSheet(true)}
-                className="tap-target flex items-center gap-1 rounded-xl font-bold text-xs px-2.5 py-1.5 transition active:scale-95"
+                className="tap-target flex items-center gap-1 rounded-2xl font-bold text-xs px-3 py-1.5 transition active:scale-95 bg-[#EBF4F0] text-[#087F63] border border-[#D5E2DD]"
                 style={{
-                  background:
-                    locScope.kind === "mandi" ? "#087F63" : "#E4F2EC",
-                  color: locScope.kind === "mandi" ? "#fff" : "#075E4F",
-                  border:
-                    locScope.kind === "mandi" ? "none" : "1px solid #C7E8D8",
-                  fontSize: lang === "ur" ? 13 : 11,
-                  fontFamily:
-                    lang === "ur"
-                      ? URDU_FONT
-                      : "inherit",
+                  fontSize: lang === "ur" ? 13 : 11.5,
+                  fontFamily: lang === "ur" ? URDU_FONT : "inherit",
                 }}
               >
                 <span>
@@ -5852,41 +6037,172 @@ export function ProductRatesScreen({
                           ? "پاکستان"
                           : "Pakistan"}
                 </span>
-                <span className="text-[9px] opacity-70">▾</span>
+                <span className="text-[10px] text-[#087F63] opacity-80">▾</span>
               </button>
             </div>
           </div>
 
-          {/* Segmented Switcher: Price Trend vs Arrival Trend */}
-          <div className="flex gap-2">
-            {(
-              [
-                ["price", lang === "ur" ? "قیمت کا رجحان" : "Price Trend"],
-                [
-                  "arrival",
-                  lang === "ur" ? "آمد کا رجحان" : "Arrival Trend",
-                ],
-              ] as ["price" | "arrival", string][]
-            ).map(([m, label]) => (
-              <button
-                key={m}
-                onClick={() => setTrendMode(m)}
-                className="tap-target flex-1 rounded-xl font-bold text-xs transition"
+          {/* Rate Types Horizontal Scroller Above Graph Card */}
+          {trendMode === "price" && (
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between px-0.5">
+                <span
+                  className="text-[11px] font-bold text-[#52635F]"
+                  style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                >
+                  {lang === "ur" ? "نرخ منتخب کریں (ریٹ تبدیل کریں)" : "Select Rate Type"}
+                </span>
+                {compareMode && (
+                  <span className="text-[10px] font-semibold text-[#087F63] bg-[#E8F8F4] px-2 py-0.5 rounded-full border border-[#C2E8DB]">
+                    {activeSeries.length} {lang === "ur" ? "اقسام فعال ہیں" : "Active Types"}
+                  </span>
+                )}
+              </div>
+
+              {/* Horizontal Scroll Chips (Single Line) */}
+              <div
+                className="flex items-center gap-1.5 overflow-x-auto py-0.5 scroll-smooth w-full flex-nowrap"
                 style={{
-                  height: 34,
-                  background: trendMode === m ? "#075E4F" : "#E8EFEC",
-                  color: trendMode === m ? "#fff" : "#183B34",
-                  fontSize: lang === "ur" ? 14 : 11.5,
-                  fontFamily:
-                    lang === "ur"
-                      ? URDU_FONT
-                      : "inherit",
+                  scrollbarWidth: "none",
+                  msOverflowStyle: "none",
+                  WebkitOverflowScrolling: "touch",
+                  direction: "ltr",
                 }}
               >
-                {label}
-              </button>
-            ))}
-          </div>
+                {orderedRateTypes.map((tRt) => {
+                  const isFocused = focusedType === tRt;
+                  const isCompared = activeTypes.includes(tRt);
+                  const isSelected = compareMode ? isCompared : isFocused;
+                  const chipColor = RATE_COLORS[tRt] || "#0E645C";
+
+                  // Extract RGB for refined soft tint background
+                  const cleanHex = chipColor.replace("#", "");
+                  const r = parseInt(cleanHex.substring(0, 2), 16) || 14;
+                  const g = parseInt(cleanHex.substring(2, 4), 16) || 100;
+                  const b = parseInt(cleanHex.substring(4, 6), 16) || 92;
+                  const softBg = `rgba(${r}, ${g}, ${b}, 0.10)`;
+
+                  return (
+                    <button
+                      key={tRt}
+                      onClick={() => {
+                        if (compareMode) {
+                          setActiveTypes((prev) => {
+                            if (prev.includes(tRt)) {
+                              if (prev.length > 1) {
+                                const remaining = prev.filter((x) => x !== tRt);
+                                if (focusedType === tRt) setFocusedType(remaining[0]);
+                                return remaining;
+                              }
+                              return prev;
+                            } else {
+                              setFocusedType(tRt);
+                              return [...prev, tRt];
+                            }
+                          });
+                        } else {
+                          setFocusedType(tRt);
+                          setActiveTypes([tRt]);
+                        }
+                      }}
+                      className={`tap-target flex items-center gap-1.5 rounded-full font-bold transition-all duration-200 ease-out active:scale-95 flex-shrink-0 whitespace-nowrap ${
+                        isSelected ? "zm-chip-active-highlight" : "hover:border-[#94A3B8]"
+                      }`}
+                      style={{
+                        fontSize: lang === "ur" ? 13 : 11.5,
+                        padding: isSelected ? "5.5px 12px" : "5.5px 11px",
+                        background: isSelected ? softBg : "#FFFFFF",
+                        border: `1.5px solid ${isSelected ? chipColor : "#E2E8F0"}`,
+                        color: isSelected ? chipColor : "#475569",
+                        boxShadow: isSelected
+                          ? `0 0 0 1.5px rgba(${r}, ${g}, ${b}, 0.22), 0 2px 6px rgba(${r}, ${g}, ${b}, 0.15)`
+                          : "0 1px 2px rgba(0,0,0,0.04)",
+                        fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                        ...({ "--chip-glow": `rgba(${r}, ${g}, ${b}, 0.35)` } as React.CSSProperties),
+                      }}
+                    >
+                      {/* Animated Live Beacon / Dot */}
+                      <span className="relative flex items-center justify-center flex-shrink-0" style={{ width: 8, height: 8 }}>
+                        {isSelected && (
+                          <span
+                            className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60"
+                            style={{ backgroundColor: chipColor }}
+                          />
+                        )}
+                        <span
+                          className="relative inline-flex rounded-full"
+                          style={{
+                            width: 6,
+                            height: 6,
+                            background: chipColor,
+                          }}
+                        />
+                      </span>
+
+                      <span>{tr(tRt).replace(" ریٹ", "").replace(" Rate", "")}</span>
+
+                      {compareMode && isSelected && (
+                        <span
+                          className="flex items-center justify-center text-[9px] w-3.5 h-3.5 rounded-full font-extrabold leading-none animate-in zoom-in-50 duration-150"
+                          style={{
+                            background: chipColor,
+                            color: "#FFFFFF",
+                          }}
+                        >
+                          ✓
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+
+                {/* All / تمام نرخ Button at the End */}
+                {(() => {
+                  const isAllSelected = focusedType === "All" && !compareMode;
+                  return (
+                    <button
+                      onClick={() => {
+                        if (compareMode) {
+                          setCompareMode(false);
+                        }
+                        setFocusedType("All");
+                      }}
+                      className={`tap-target flex items-center gap-1.5 rounded-full font-bold transition-all duration-200 ease-out active:scale-95 flex-shrink-0 whitespace-nowrap ${
+                        isAllSelected ? "zm-chip-active-highlight" : "hover:border-[#94A3B8]"
+                      }`}
+                      style={{
+                        fontSize: lang === "ur" ? 13 : 11.5,
+                        padding: isAllSelected ? "5.5px 13px" : "5.5px 12px",
+                        background: isAllSelected ? "rgba(14, 100, 92, 0.10)" : "#FFFFFF",
+                        border: `1.5px solid ${isAllSelected ? "#0E645C" : "#E2E8F0"}`,
+                        color: isAllSelected ? "#0E645C" : "#475569",
+                        boxShadow: isAllSelected
+                          ? "0 0 0 1.5px rgba(14,100,92,0.22), 0 2px 6px rgba(14,100,92,0.15)"
+                          : "0 1px 2px rgba(0,0,0,0.04)",
+                        fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                        ...({ "--chip-glow": "rgba(14,100,92,0.35)" } as React.CSSProperties),
+                      }}
+                    >
+                      <span className="relative flex items-center justify-center flex-shrink-0" style={{ width: 8, height: 8 }}>
+                        {isAllSelected && (
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60 bg-[#0E645C]" />
+                        )}
+                        <span
+                          className="relative inline-flex rounded-full"
+                          style={{
+                            width: 6,
+                            height: 6,
+                            background: "#0E645C",
+                          }}
+                        />
+                      </span>
+                      <span>{lang === "ur" ? "سب (All)" : "All"}</span>
+                    </button>
+                  );
+                })()}
+              </div>
+            </div>
+          )}
 
           {trendMode === "price" ? (
             <>
@@ -5898,55 +6214,147 @@ export function ProductRatesScreen({
                   border: "1px solid #D5E2DD",
                 }}
               >
-                {/* Top Bar: Financial Chart Controls & Granularity Filter */}
-                <div className="flex items-center justify-between gap-1 pb-2 border-b border-[#E8EFEC] flex-wrap">
-                  {/* Granularity Pills: 1, 5, 15, 30, 1H, 5H, 1D, 1W, 1M */}
-                  <div className="flex items-center gap-1 overflow-x-auto py-0.5" style={{ scrollbarWidth: "none" }}>
-                    {["1", "5", "15", "30", "1H", "5H", "1D", "1W", "1M"].map((g) => {
-                      const isGActive = stockGranularity === g;
+                {/* 1. Timeframe & Compare Row: [15m] [1h] [4h] [1D] [More ▾] [+ Compare] */}
+                <div className="relative flex items-center justify-between gap-1.5 w-full pb-2 border-b border-[#E8EFEC]">
+                  <div className="flex items-center gap-1.5 flex-1">
+                    {[
+                      { id: "15m", labelEn: "15m", labelUr: "۱۵ منٹ" },
+                      { id: "1h", labelEn: "1h", labelUr: "۱ گھنٹہ" },
+                      { id: "4h", labelEn: "4h", labelUr: "۴ گھنٹے" },
+                      { id: "1D", labelEn: "1D", labelUr: "۱ دن" },
+                    ].map((tf) => {
+                      const isTfActive = stockTimeframe === tf.id;
                       return (
                         <button
-                          key={g}
-                          onClick={() => setStockGranularity(g)}
-                          className={`px-1.5 py-0.5 rounded text-[10.5px] font-bold transition-colors ${isGActive
-                            ? "bg-[#087F63] text-white shadow-xs"
-                            : "text-[#52635F] hover:bg-[#F1F7F4] hover:text-[#143B33]"
-                            }`}
+                          key={tf.id}
+                          type="button"
+                          onClick={() => {
+                            setStockTimeframe(tf.id);
+                            setIsMoreOpen(false);
+                          }}
+                          className={`flex-1 py-1.5 px-2 rounded-xl text-xs font-bold transition active:scale-95 text-center ${
+                            isTfActive
+                              ? "bg-[#087F63] text-white shadow-xs font-black border border-[#087F63]"
+                              : "bg-[#F4FAF7] text-[#2F4A43] border border-[#D5E2DD] hover:bg-[#E8F2ED]"
+                          }`}
+                          style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                         >
-                          {g}
+                          {lang === "ur" ? tf.labelUr : tf.labelEn}
                         </button>
                       );
                     })}
+
+                    {/* More Dropdown Button */}
+                    <div className="relative flex-1">
+                      <button
+                        type="button"
+                        onClick={() => setIsMoreOpen(!isMoreOpen)}
+                        className={`w-full py-1.5 px-2 rounded-xl text-xs font-bold transition active:scale-95 flex items-center justify-center gap-1 ${
+                          ["1W", "1M", "3M", "6M", "1Y", "CUSTOM"].includes(stockTimeframe)
+                            ? "bg-[#087F63] text-white shadow-xs font-black border border-[#087F63]"
+                            : "bg-[#F4FAF7] text-[#2F4A43] border border-[#D5E2DD] hover:bg-[#E8F2ED]"
+                        }`}
+                        style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                      >
+                        <span className="truncate">
+                          {["1W", "1M", "3M", "6M", "1Y"].includes(stockTimeframe)
+                            ? stockTimeframe
+                            : stockTimeframe === "CUSTOM"
+                            ? (lang === "ur" ? "مخصوص" : "Custom")
+                            : (lang === "ur" ? "مزید" : "More")}
+                        </span>
+                        <span className="text-[9px] opacity-75">▾</span>
+                      </button>
+
+                      {/* Popout Menu */}
+                      {isMoreOpen && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-40 bg-transparent"
+                            onClick={() => setIsMoreOpen(false)}
+                          />
+                          <div
+                            className="absolute left-0 top-full mt-1.5 w-36 bg-white rounded-xl shadow-2xl border border-[#D5E2DD] py-1 z-50 animate-fadeIn"
+                            style={{ boxShadow: "0 10px 25px -3px rgba(0,0,0,0.18)" }}
+                          >
+                            {[
+                              { id: "1W", labelEn: "1 Week", labelUr: "۱ ہفتہ" },
+                              { id: "1M", labelEn: "1 Month", labelUr: "۱ ماہ" },
+                              { id: "3M", labelEn: "3 Months", labelUr: "۳ ماہ" },
+                              { id: "6M", labelEn: "6 Months", labelUr: "۶ ماہ" },
+                              { id: "1Y", labelEn: "1 Year", labelUr: "۱ سال" },
+                            ].map((opt) => (
+                              <button
+                                key={opt.id}
+                                type="button"
+                                onClick={() => {
+                                  setStockTimeframe(opt.id);
+                                  setIsMoreOpen(false);
+                                }}
+                                className={`w-full text-left px-3 py-1.5 text-xs font-bold transition flex items-center justify-between ${
+                                  stockTimeframe === opt.id
+                                    ? "bg-[#E8F8F4] text-[#087F63]"
+                                    : "text-[#334155] hover:bg-[#F8FAF9]"
+                                }`}
+                                style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                              >
+                                <span>{lang === "ur" ? opt.labelUr : opt.labelEn}</span>
+                                {stockTimeframe === opt.id && <span className="text-[#087F63] text-[10px]">✓</span>}
+                              </button>
+                            ))}
+
+                            <div className="border-t border-[#EEF3F0] my-1" />
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsMoreOpen(false);
+                                setIsCustomPickerOpen(true);
+                              }}
+                              className={`w-full text-left px-3 py-1.5 text-xs font-bold transition flex items-center justify-between ${
+                                stockTimeframe === "CUSTOM"
+                                  ? "bg-[#E8F8F4] text-[#087F63]"
+                                  : "text-[#087F63] hover:bg-[#F8FAF9]"
+                              }`}
+                              style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                            >
+                              <span>{lang === "ur" ? "مخصوص مدت" : "Custom Range"}</span>
+                              <span>📅</span>
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Compare Button & Mode Indicator */}
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => {
-                        setCompareMode((prev) => {
-                          const next = !prev;
-                          if (next) {
-                            if (activeTypes.length < 2) {
-                              const other = orderedRateTypes.find((t) => t !== focusedType) || ALL_RATE_TYPES.find((t) => t !== focusedType) || "Mill Rate";
-                              setActiveTypes([focusedType, other]);
-                            }
-                          } else {
-                            setActiveTypes([focusedType]);
+                  {/* Compare Button on the Far Right */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCompareMode((prev) => {
+                        const next = !prev;
+                        if (next) {
+                          if (activeTypes.length < 2) {
+                            const other = orderedRateTypes.find((t) => t !== focusedType) || ALL_RATE_TYPES.find((t) => t !== focusedType) || "Mill Rate";
+                            setActiveTypes([focusedType, other]);
                           }
-                          return next;
-                        });
-                      }}
-                      className="tap-target flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10.5px] font-bold transition-all active:scale-95 shadow-xs"
-                      style={{
-                        background: compareMode ? "#087F63" : "#F1F7F4",
-                        color: compareMode ? "#FFFFFF" : "#143B33",
-                        border: `1.5px solid ${compareMode ? "#087F63" : "#B8D5CB"}`,
-                        fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                      }}
-                    >
-                      <span>+ {compareMode ? (lang === "ur" ? "اکیلا دیکھیں (Single)" : "Single Mode") : (lang === "ur" ? "موازنہ کریں (Compare)" : "Compare Rates")}</span>
-                    </button>
-                  </div>
+                        } else {
+                          setActiveTypes([focusedType]);
+                        }
+                        return next;
+                      });
+                    }}
+                    className={`tap-target flex items-center justify-center gap-1 py-1.5 px-3 rounded-xl text-xs font-bold transition-all active:scale-95 shadow-xs whitespace-nowrap ${
+                      compareMode
+                        ? "bg-[#087F63] text-white border border-[#087F63] font-black"
+                        : "bg-[#F4FAF7] text-[#143B33] border border-[#D5E2DD] hover:bg-[#E8F2ED]"
+                    }`}
+                    style={{
+                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+                    }}
+                  >
+                    <span>+ {compareMode ? (lang === "ur" ? "اکیلا" : "Single") : (lang === "ur" ? "موازنہ" : "Compare")}</span>
+                  </button>
                 </div>
 
                 {/* Agricultural Commodity Header */}
@@ -5975,7 +6383,9 @@ export function ProductRatesScreen({
                             {byproduct ? `${tc(byproduct)}` : `${tc(product)}`} {lang === "ur" ? "مارکیٹ ریٹ انڈیکس" : "Market Rate Index"}
                           </span>
                           <span className="text-[10px] font-bold text-[#087F63] bg-[#E8F8F4] px-2 py-0.5 rounded-full border border-[#C2E8DB]">
-                            {tr(focusedType).replace(" ریٹ", "").replace(" Rate", "")}
+                            {focusedType === "All"
+                              ? (lang === "ur" ? "تمام ریٹ" : "All Rates")
+                              : tr(focusedType).replace(" ریٹ", "").replace(" Rate", "")}
                           </span>
                         </div>
                         <span className="text-[10px] font-bold text-[#80918B]">
@@ -6039,28 +6449,6 @@ export function ProductRatesScreen({
                   );
                 })()}
 
-                {/* Active Comparison Legend when Compare Mode is Active */}
-                {compareMode && (
-                  <div className="flex flex-wrap gap-1.5 items-center p-2 rounded-xl bg-[#F0FDF4] border border-[#BBF7D0]">
-                    <span className="text-[10.5px] font-bold text-[#166534]">
-                      {lang === "ur" ? "موازنہ کیا جا رہا ہے:" : "Comparing Rates:"}
-                    </span>
-                    {activeSeries.map((s) => {
-                      const curVal = s.data[hoverIdx !== null ? hoverIdx : len - 1] || 0;
-                      return (
-                        <span
-                          key={`comp-badge-${s.label}`}
-                          className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold text-white shadow-xs"
-                          style={{ background: s.color || "#087F63" }}
-                        >
-                          <span className="w-1.5 h-1.5 rounded-full bg-white opacity-80" />
-                          <span>{tr(s.label).replace(" ریٹ", "").replace(" Rate", "")}:</span>
-                          <span>{lang === "ur" ? `روپے ${toUrduDigits(curVal.toLocaleString())}` : `Rs. ${curVal.toLocaleString()}`}</span>
-                        </span>
-                      );
-                    })}
-                  </div>
-                )}
 
                 {/* SVG Chart Canvas (Price Trend with Volume Bars) */}
                 {(() => {
@@ -6149,14 +6537,14 @@ export function ProductRatesScreen({
                                 strokeDasharray="3 3"
                               />
                               <text
-                                x={PL - 6}
+                                x={CW - PR + 6}
                                 y={y + 3.5}
-                                textAnchor="end"
-                                fontSize="10.5"
+                                textAnchor="start"
+                                fontSize="10"
                                 fontWeight="700"
-                                fill="#1E3A34"
+                                fill="#475569"
                               >
-                                {tick >= 1000 ? `${(tick / 1000).toFixed(1)}k` : tick}
+                                {tick.toLocaleString()}
                               </text>
                               
                             </g>
@@ -6176,12 +6564,12 @@ export function ProductRatesScreen({
                               strokeDasharray="4 3"
                             />
                             <text
-                              x={PL - 6}
+                              x={CW - PR + 6}
                               y={separatorY + 3.5}
-                              textAnchor="end"
-                              fontSize="9.5"
+                              textAnchor="start"
+                              fontSize="9"
                               fontWeight="800"
-                              fill="#475569"
+                              fill="#64748B"
                             >
                               0
                             </text>
@@ -6217,40 +6605,43 @@ export function ProductRatesScreen({
                           ) : null,
                         )}
 
-                        {/* Mini Arrival Volume Bars along Bottom (Hidden when comparing) */}
+                        {/* Mini Price Movement Bars along Bottom (Hidden when comparing) */}
                         {!compareMode &&
-                          arrivalData.map((arrVal, i) => {
-                            const barX = xOf(i, len);
-                            const barH = (arrVal / maxArr) * volMaxH;
-                            const prevP = i > 0 ? (mainSeries?.data[i - 1] || 0) : (mainSeries?.data[i] || 0);
-                            const curP = mainSeries?.data[i] || 0;
-                            const isUp = curP >= prevP;
-                            const barW = Math.max(2, Math.min(6, (chartW / len) * 0.55));
-                            const isHov = hoverIdx === i;
+                          (() => {
+                            const pts = mainSeries?.data || [];
+                            return pts.map((curP, i) => {
+                              const barX = xOf(i, len);
+                              const prevP = i > 0 ? (pts[i - 1] || curP) : curP;
+                              const isUp = curP >= prevP;
+                              const barRatio = Math.max(0.18, (curP - pMin) / Math.max(pMax - pMin, 1));
+                              const barH = Math.max(4, Math.round(barRatio * volMaxH));
+                              const barW = Math.max(2.5, Math.min(7, (chartW / len) * 0.6));
+                              const isHov = hoverIdx === i;
 
-                            return (
-                              <rect
-                                key={`vol-${i}`}
-                                x={barX - barW / 2}
-                                y={volBaseY - barH}
-                                width={barW}
-                                height={barH}
-                                rx={1}
-                                fill={isUp ? "#10B981" : "#EF4444"}
-                                opacity={isHov ? 1 : 0.65}
-                              />
-                            );
-                          })}
+                              return (
+                                <rect
+                                  key={`vol-${i}`}
+                                  x={barX - barW / 2}
+                                  y={volBaseY - barH}
+                                  width={barW}
+                                  height={barH}
+                                  rx={1.5}
+                                  fill={isUp ? "#10B981" : "#EF4444"}
+                                  opacity={hoverIdx === null ? 0.75 : isHov ? 1.0 : 0.35}
+                                />
+                              );
+                            });
+                          })()}
 
                         {/* Line Graphs Rendering: Multiple Lines in Compare Mode, Single Line in Normal Mode */}
                         {compareMode ? (
                           // Compare Mode: Render ALL activeSeries with distinct solid colored lines and price tags
                           activeSeries.map((s) => {
                             const pts = s.data
-                              .map(
-                                (v, i) =>
-                                  `${i === 0 ? "M" : "L"}${xOf(i, len).toFixed(1)},${yOf(v, pMin, pMax).toFixed(1)}`,
-                              )
+                              .map((v, i) => {
+                                const safeV = v > 0 ? v : (s.data.slice(0, i).reverse().find((x) => x > 0) || s.data.find((x) => x > 0) || pMin);
+                                return `${i === 0 ? "M" : "L"}${xOf(i, len).toFixed(1)},${yOf(safeV, pMin, pMax).toFixed(1)}`;
+                              })
                               .join(" ");
                             const sClose = s.data[len - 1] || 0;
                             const sCloseY = yOf(sClose, pMin, pMax);
@@ -6462,147 +6853,9 @@ export function ProductRatesScreen({
                   );
                 })()}
 
-                {/* 1. Timeframe Filter: 1 Month, 3 Months, 6 Months, 1 Year */}
-                <div className="pt-0.5">
-                  <div className="grid grid-cols-4 gap-1.5 border border-[#D5E2DD] rounded-xl p-1 bg-[#F9FBFA]">
-                    {[
-                      { id: "1M", labelEn: "1 Month", labelUr: "۱ مہینہ", r: "month" as const },
-                      { id: "3M", labelEn: "3 Months", labelUr: "۳ مہینے", r: "quarter" as const },
-                      { id: "6M", labelEn: "6 Months", labelUr: "۶ مہینے", r: "quarter" as const },
-                      { id: "1Y", labelEn: "1 Year", labelUr: "۱ سال", r: "quarter" as const },
-                    ].map((tf) => {
-                      const isTfActive = stockTimeframe === tf.id;
-                      return (
-                        <button
-                          key={tf.id}
-                          onClick={() => {
-                            setStockTimeframe(tf.id as any);
-                            setRange(tf.r);
-                          }}
-                          className={`flex items-center justify-center py-2 px-1 rounded-lg transition-all font-bold ${isTfActive
-                            ? "bg-[#087F63] text-white shadow-sm ring-1 ring-[#087F63]/30 scale-[1.01]"
-                            : "bg-white/80 text-[#52635F] hover:bg-white hover:text-[#183B34] border border-[#E8EFEC]"
-                            }`}
-                          style={{
-                            fontSize: lang === "ur" ? 13 : 11,
-                            fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                          }}
-                        >
-                          <span>{lang === "ur" ? tf.labelUr : tf.labelEn}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
 
-                {/* 2. Rate Types Selector (Selected Card Rate Type First, Remaining Next, All at the End) */}
-                <div className="flex flex-col gap-1.5 pt-1">
-                  <div className="flex items-center justify-between">
-                    <span
-                      className="text-[11px] font-bold text-[#52635F]"
-                      style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                    >
-                      {lang === "ur" ? "نرخ منتخب کریں (ریٹ تبدیل کریں)" : "Select Rate Type"}
-                    </span>
-                    {compareMode && (
-                      <span className="text-[10px] font-semibold text-[#087F63] bg-[#E8F8F4] px-1.5 py-0.5 rounded">
-                        {activeSeries.length} {lang === "ur" ? "اقسام فعال ہیں" : "Active Types"}
-                      </span>
-                    )}
-                  </div>
 
-                  <div className="flex flex-wrap gap-1.5 items-center w-full" style={{ direction: "ltr" }}>
-                    {/* Individual Rate Types with Overview selection in the 1st position */}
-                    {orderedRateTypes.map((tRt) => {
-                      const isFocused = focusedType === tRt;
-                      const isCompared = activeTypes.includes(tRt);
-                      const isSelected = compareMode ? isCompared : isFocused;
-                      const chipColor = RATE_COLORS[tRt] || "#087F63";
 
-                      return (
-                        <button
-                          key={tRt}
-                          onClick={() => {
-                            if (compareMode) {
-                              // Multi-select toggle in compare mode: stacks or unstacks rate types
-                              setActiveTypes((prev) => {
-                                if (prev.includes(tRt)) {
-                                  if (prev.length > 1) {
-                                    const remaining = prev.filter((x) => x !== tRt);
-                                    if (focusedType === tRt) setFocusedType(remaining[0]);
-                                    return remaining;
-                                  }
-                                  return prev; // keep at least 1 rate type selected
-                                } else {
-                                  setFocusedType(tRt);
-                                  return [...prev, tRt];
-                                }
-                              });
-                            } else {
-                              setFocusedType(tRt);
-                              setActiveTypes([tRt]);
-                            }
-                          }}
-                          className="tap-target flex items-center gap-1.5 rounded-full font-bold transition-all active:scale-95 shadow-xs"
-                          style={{
-                            fontSize: lang === "ur" ? 13 : 11,
-                            padding: "5px 11px",
-                            background: isSelected ? chipColor : "#F4FAF7",
-                            border: `1.5px solid ${isSelected ? chipColor : "#D5E2DD"}`,
-                            color: isSelected ? "#FFFFFF" : "#52635F",
-                            fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                          }}
-                        >
-                          <span
-                            className="rounded-full flex-shrink-0"
-                            style={{
-                              width: 7,
-                              height: 7,
-                              background: isSelected ? "#FFFFFF" : chipColor,
-                            }}
-                          />
-                          <span>{tr(tRt).replace(" ریٹ", "").replace(" Rate", "")}</span>
-                          {compareMode && isSelected && (
-                            <span className="text-[9px] bg-white/25 px-1 rounded-sm">✓</span>
-                          )}
-                        </button>
-                      );
-                    })}
-
-                    {/* All / تمام نرخ Button at the Very End */}
-                    <button
-                      onClick={() => {
-                        if (compareMode && activeTypes.length === ALL_RATE_TYPES.length) {
-                          setCompareMode(false);
-                          setActiveTypes([focusedType]);
-                        } else {
-                          setCompareMode(true);
-                          setActiveTypes([...ALL_RATE_TYPES]);
-                        }
-                      }}
-                      className="tap-target flex items-center gap-1.5 rounded-full font-bold transition-all active:scale-95 shadow-xs"
-                      style={{
-                        fontSize: lang === "ur" ? 13 : 11,
-                        padding: "5px 12px",
-                        background:
-                          compareMode && activeTypes.length === ALL_RATE_TYPES.length
-                            ? "#087F63"
-                            : "#E8EFEC",
-                        border: `1.5px solid ${compareMode && activeTypes.length === ALL_RATE_TYPES.length
-                          ? "#087F63"
-                          : "#D5E2DD"
-                          }`,
-                        color:
-                          compareMode && activeTypes.length === ALL_RATE_TYPES.length
-                            ? "#FFFFFF"
-                            : "#183B34",
-                        fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                      }}
-                    >
-                      <span>{lang === "ur" ? "سب (All)" : "All"}</span>
-                    </button>
-                  </div>
-                </div>
               </div>
 
               {/* Dedicated Scroll Buffer for Trends Screen */}
@@ -6614,24 +6867,116 @@ export function ProductRatesScreen({
                 className="rounded-2xl p-3.5 flex flex-col gap-2.5 shadow-sm"
                 style={{ background: "#FFFFFF", border: "1px solid #D5E2DD" }}
               >
-                {/* Top Bar: Granularity Filter for Arrival Trend */}
-                <div className="flex items-center justify-between gap-1 pb-2 border-b border-[#E8EFEC]">
-                  <div className="flex items-center gap-1 overflow-x-auto py-0.5" style={{ scrollbarWidth: "none" }}>
-                    {["1", "5", "15", "30", "1H", "5H", "1D", "1W", "1M"].map((g) => {
-                      const isGActive = stockGranularity === g;
+                {/* Timeframe Selector for Arrival Trend */}
+                <div className="relative flex items-center justify-between gap-1.5 w-full pb-2 border-b border-[#E8EFEC]">
+                  <div className="flex items-center gap-1.5 flex-1">
+                    {[
+                      { id: "15m", labelEn: "15m", labelUr: "۱۵ منٹ" },
+                      { id: "1h", labelEn: "1h", labelUr: "۱ گھنٹہ" },
+                      { id: "4h", labelEn: "4h", labelUr: "۴ گھنٹے" },
+                      { id: "1D", labelEn: "1D", labelUr: "۱ دن" },
+                    ].map((tf) => {
+                      const isTfActive = stockTimeframe === tf.id;
                       return (
                         <button
-                          key={g}
-                          onClick={() => setStockGranularity(g)}
-                          className={`px-1.5 py-0.5 rounded text-[10.5px] font-bold transition-colors flex-shrink-0 ${isGActive
-                            ? "bg-[#D97706] text-white shadow-xs"
-                            : "text-[#52635F] hover:bg-[#F1F7F4] hover:text-[#143B33]"
-                            }`}
+                          key={tf.id}
+                          type="button"
+                          onClick={() => {
+                            setStockTimeframe(tf.id);
+                            setIsMoreOpen(false);
+                          }}
+                          className={`flex-1 py-1.5 px-2 rounded-xl text-xs font-bold transition active:scale-95 text-center ${
+                            isTfActive
+                              ? "bg-[#D97706] text-white shadow-xs font-black border border-[#D97706]"
+                              : "bg-[#F4FAF7] text-[#2F4A43] border border-[#D5E2DD] hover:bg-[#E8F2ED]"
+                          }`}
+                          style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                         >
-                          {g}
+                          {lang === "ur" ? tf.labelUr : tf.labelEn}
                         </button>
                       );
                     })}
+
+                    {/* More Dropdown Button */}
+                    <div className="relative flex-1">
+                      <button
+                        type="button"
+                        onClick={() => setIsMoreOpen(!isMoreOpen)}
+                        className={`w-full py-1.5 px-2 rounded-xl text-xs font-bold transition active:scale-95 flex items-center justify-center gap-1 ${
+                          ["1W", "1M", "3M", "6M", "1Y", "CUSTOM"].includes(stockTimeframe)
+                            ? "bg-[#D97706] text-white shadow-xs font-black border border-[#D97706]"
+                            : "bg-[#F4FAF7] text-[#2F4A43] border border-[#D5E2DD] hover:bg-[#E8F2ED]"
+                        }`}
+                        style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                      >
+                        <span className="truncate">
+                          {["1W", "1M", "3M", "6M", "1Y"].includes(stockTimeframe)
+                            ? stockTimeframe
+                            : stockTimeframe === "CUSTOM"
+                            ? (lang === "ur" ? "مخصوص" : "Custom")
+                            : (lang === "ur" ? "مزید" : "More")}
+                        </span>
+                        <span className="text-[9px] opacity-75">▾</span>
+                      </button>
+
+                      {isMoreOpen && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-40 bg-transparent"
+                            onClick={() => setIsMoreOpen(false)}
+                          />
+                          <div
+                            className="absolute left-0 top-full mt-1.5 w-36 bg-white rounded-xl shadow-2xl border border-[#D5E2DD] py-1 z-50 animate-fadeIn"
+                            style={{ boxShadow: "0 10px 25px -3px rgba(0,0,0,0.18)" }}
+                          >
+                            {[
+                              { id: "1W", labelEn: "1 Week", labelUr: "۱ ہفتہ" },
+                              { id: "1M", labelEn: "1 Month", labelUr: "۱ ماہ" },
+                              { id: "3M", labelEn: "3 Months", labelUr: "۳ ماہ" },
+                              { id: "6M", labelEn: "6 Months", labelUr: "۶ ماہ" },
+                              { id: "1Y", labelEn: "1 Year", labelUr: "۱ سال" },
+                            ].map((opt) => (
+                              <button
+                                key={opt.id}
+                                type="button"
+                                onClick={() => {
+                                  setStockTimeframe(opt.id);
+                                  setIsMoreOpen(false);
+                                }}
+                                className={`w-full text-left px-3 py-1.5 text-xs font-bold transition flex items-center justify-between ${
+                                  stockTimeframe === opt.id
+                                    ? "bg-[#FFFBEB] text-[#D97706]"
+                                    : "text-[#334155] hover:bg-[#F8FAF9]"
+                                }`}
+                                style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                              >
+                                <span>{lang === "ur" ? opt.labelUr : opt.labelEn}</span>
+                                {stockTimeframe === opt.id && <span className="text-[#D97706] text-[10px]">✓</span>}
+                              </button>
+                            ))}
+
+                            <div className="border-t border-[#EEF3F0] my-1" />
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsMoreOpen(false);
+                                setIsCustomPickerOpen(true);
+                              }}
+                              className={`w-full text-left px-3 py-1.5 text-xs font-bold transition flex items-center justify-between ${
+                                stockTimeframe === "CUSTOM"
+                                  ? "bg-[#FFFBEB] text-[#D97706]"
+                                  : "text-[#D97706] hover:bg-[#F8FAF9]"
+                              }`}
+                              style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                            >
+                              <span>{lang === "ur" ? "مخصوص مدت" : "Custom Range"}</span>
+                              <span>📅</span>
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -6770,26 +7115,47 @@ export function ProductRatesScreen({
                             strokeDasharray="4 4"
                           />
                           <text
-                            x={PL - 6}
+                            x={CW - PR + 6}
                             y={y + 3.5}
-                            textAnchor="end"
-                            fontSize="10.5"
+                            textAnchor="start"
+                            fontSize="10"
                             fontWeight="700"
-                            fill="#1E3A34"
+                            fill="#475569"
                           >
-                            {tick >= 1000 ? `${(tick / 1000).toFixed(1)}k` : tick}
+                            {tick.toLocaleString()}
                           </text>
                           
                         </g>
                       );
                     })}
 
-                    {/* X-Axis Baseline */}
+                    {/* Pane Separator Line (Arrival Line Graph vs Arrival Bar Graph) */}
                     <line
                       x1={PL}
-                      y1={CH - PB}
+                      y1={arrSeparatorY}
                       x2={CW - PR}
-                      y2={CH - PB}
+                      y2={arrSeparatorY}
+                      stroke="#94A3B8"
+                      strokeWidth="1.2"
+                      strokeDasharray="4 3"
+                    />
+                    <text
+                      x={CW - PR + 6}
+                      y={arrSeparatorY + 3.5}
+                      textAnchor="start"
+                      fontSize="9"
+                      fontWeight="800"
+                      fill="#64748B"
+                    >
+                      0
+                    </text>
+
+                    {/* Volume Baseline */}
+                    <line
+                      x1={PL}
+                      y1={volBaseY}
+                      x2={CW - PR}
+                      y2={volBaseY}
                       stroke="#C8DCD5"
                       strokeWidth="1.4"
                     />
@@ -6800,9 +7166,9 @@ export function ProductRatesScreen({
                         <text
                           key={`xArrTick-${i}`}
                           x={xOf(i, len)}
-                          y={CH - 8}
+                          y={CH - 7}
                           textAnchor="middle"
-                          fontSize="10"
+                          fontSize="9.5"
                           fontWeight="700"
                           fill="#1E3A34"
                           fontFamily={lang === "ur" ? URDU_FONT : "inherit"}
@@ -6812,14 +7178,14 @@ export function ProductRatesScreen({
                       ) : null,
                     )}
 
-                    {/* Arrival Volume Bars along Bottom to Maintain Consistency */}
+                    {/* Arrival Movement Bars along Bottom */}
                     {arrivalData.map((arrVal, i) => {
                       const barX = xOf(i, len);
-                      const maxArr = Math.max(...arrivalData, 1);
-                      const volMaxH = 34;
-                      const volBaseY = CH - PB;
-                      const barH = (arrVal / maxArr) * volMaxH;
-                      const barW = Math.max(2, Math.min(6, (chartW / len) * 0.55));
+                      const prevArr = i > 0 ? arrivalData[i - 1] : arrVal;
+                      const isUp = arrVal >= prevArr;
+                      const barRatio = Math.max(0.18, (arrVal - aMin) / Math.max(aMax - aMin, 1));
+                      const barH = Math.max(4, Math.round(barRatio * volMaxH));
+                      const barW = Math.max(2.5, Math.min(7, (chartW / len) * 0.6));
                       const isHov = arrivalHoverIdx === i;
 
                       return (
@@ -6829,9 +7195,9 @@ export function ProductRatesScreen({
                           y={volBaseY - barH}
                           width={barW}
                           height={barH}
-                          rx={1}
-                          fill="#D97706"
-                          opacity={isHov ? 0.9 : 0.55}
+                          rx={1.5}
+                          fill={isUp ? "#D97706" : "#B45309"}
+                          opacity={arrivalHoverIdx === null ? 0.75 : isHov ? 1.0 : 0.35}
                         />
                       );
                     })}
@@ -6841,10 +7207,10 @@ export function ProductRatesScreen({
                       d={[
                         ...arrivalData.map(
                           (v, i) =>
-                            `${i === 0 ? "M" : "L"}${xOf(i, len).toFixed(1)},${yOf(v, aMin, aMax).toFixed(1)}`,
+                            `${i === 0 ? "M" : "L"}${xOf(i, len).toFixed(1)},${yOfArr(v, aMin, aMax).toFixed(1)}`,
                         ),
-                        `L${xOf(len - 1, len).toFixed(1)},${CH - PB}`,
-                        `L${PL},${CH - PB}`,
+                        `L${xOf(len - 1, len).toFixed(1)},${arrSeparatorY}`,
+                        `L${PL},${arrSeparatorY}`,
                         "Z",
                       ].join(" ")}
                       fill="url(#arrivalGrad)"
@@ -6855,7 +7221,7 @@ export function ProductRatesScreen({
                       d={arrivalData
                         .map(
                           (v, i) =>
-                            `${i === 0 ? "M" : "L"}${xOf(i, len).toFixed(1)},${yOf(v, aMin, aMax).toFixed(1)}`,
+                            `${i === 0 ? "M" : "L"}${xOf(i, len).toFixed(1)},${yOfArr(v, aMin, aMax).toFixed(1)}`,
                         )
                         .join(" ")}
                       stroke="#D97706"
@@ -7213,5 +7579,6 @@ export function ProductRatesScreen({
       )}
 
     </div>
+    </>
   );
 }

@@ -1433,3 +1433,20 @@ body {
     display: none;
   }
 }
+
+/* Animated pulsing highlight for selected price/rate chips */
+@keyframes zm-chip-pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0px var(--chip-glow, rgba(14, 100, 92, 0.3)), 0 1px 3px rgba(0, 0, 0, 0.05);
+    transform: translateY(0);
+  }
+  50% {
+    box-shadow: 0 0 0 3px var(--chip-glow, rgba(14, 100, 92, 0.18)), 0 3px 8px var(--chip-glow, rgba(14, 100, 92, 0.25));
+    transform: translateY(-0.5px);
+  }
+}
+
+.zm-chip-active-highlight {
+  animation: zm-chip-pulse-glow 2.4s infinite ease-in-out;
+}
+

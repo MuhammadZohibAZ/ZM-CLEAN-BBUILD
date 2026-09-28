@@ -13,11 +13,12 @@ export function buildMandiInlineGraphFromRows(options: {
   allRows: { mandiName: string; rateType: string; min: number; max: number; arrival: string | number; date?: string }[];
   mandiName: string;
   rateType: string;
-  timeframe: "1M" | "3M" | "6M" | "1Y" | "72h" | "7d" | "30d";
+  timeframe: "1M" | "3M" | "6M" | "1Y" | "72h" | "7d" | "30d" | "15m" | "1h" | "4h" | "1D" | "1W" | "5Y" | "MAX" | "CUSTOM" | string;
   lang: string;
   view: "price" | "arrival";
+  customRange?: { start?: string; end?: string };
 }) {
-  const { allRows, mandiName, rateType, timeframe, lang, view } = options;
+  const { allRows, mandiName, rateType, timeframe, lang, view, customRange } = options;
 
   const normMandi = (s: string) => (s || "").toLowerCase().replace(/\s*(mandi|منڈی)$/i, "").trim();
   const targetMandi = normMandi(mandiName);
