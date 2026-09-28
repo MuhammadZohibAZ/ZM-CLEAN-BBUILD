@@ -224,19 +224,21 @@ export function ByProductCombinedScreen({
       const raw = statsForDivision.find((s) => norm(s.byproduct) === normBp || s.byproduct.toLowerCase() === bp.toLowerCase());
       let stats = raw ? apiCardStatsToUi(raw) : emptyByproductStats(dbDivision, bp);
 
-      // Compute date-specific rates and arrivals from the dataset for the selected date
-      const localStats = calculateByproductSummary(activeProduct?.product || dbDivision, bp, currentLocScope, curDate);
-      if (localStats) {
-        stats = {
-          ...stats,
-          hasData: localStats.hasData,
-          avgMin: localStats.avgMin,
-          avgMax: localStats.avgMax,
-          totalArrival: localStats.totalArrival,
-          markets: localStats.markets,
-          mostOccurringRateType: localStats.mostOccurringRateType || stats.mostOccurringRateType,
-          specialAttr: localStats.specialAttr || stats.specialAttr,
-        };
+      // Compute date-specific rates and arrivals from the dataset for the selected date only as fallback if API has no data
+      if (!raw || !raw.hasData) {
+        const localStats = calculateByproductSummary(activeProduct?.product || dbDivision, bp, currentLocScope, curDate);
+        if (localStats && localStats.hasData) {
+          stats = {
+            ...stats,
+            hasData: localStats.hasData,
+            avgMin: localStats.avgMin,
+            avgMax: localStats.avgMax,
+            totalArrival: localStats.totalArrival,
+            markets: localStats.markets,
+            mostOccurringRateType: localStats.mostOccurringRateType || stats.mostOccurringRateType,
+            specialAttr: localStats.specialAttr || stats.specialAttr,
+          };
+        }
       }
 
       return {
@@ -582,32 +584,12 @@ export function ByProductCombinedScreen({
           <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
             {byproductCardsData.map(({ bp, stats }) => {
               const navigateToDetail = () => {
-                const sa = stats.specialAttr;
-                let initMoisture: string | undefined;
-                let initColor: string | undefined;
-                let initVariety: string | undefined;
-                let initNewOld: string | undefined;
-                let initSpec: string | undefined;
-
-                if (sa) {
-                  if (sa.type === 'moisture') initMoisture = sa.valueEn.replace('%', '').trim();
-                  else if (sa.type === 'color') initColor = sa.valueEn;
-                  else if (sa.type === 'variety') initVariety = sa.valueEn;
-                  else if (sa.type === 'newOld') initNewOld = sa.valueEn;
-                  else if (sa.type === 'spec') initSpec = sa.valueEn;
-                }
-
                 push({
                   id: 'product-rates',
                   vertical: activeProduct?.vertical || 'Grains',
                   product: activeProduct?.product || 'Wheat',
                   byproduct: bp,
                   initialRateType: stats.mostOccurringRateType,
-                  initialMoisture: initMoisture,
-                  initialColor: initColor,
-                  initialVariety: initVariety,
-                  initialNewOld: initNewOld,
-                  initialSpec: initSpec,
                   initialStatDate: curDateStr,
                 });
               };

@@ -618,13 +618,19 @@ export function ProductRatesScreen({
         : 0;
 
     // Total arrival volume on this date for this by-product across filtered mandis
+    const allDateRows = baseRows.filter((r) => r.date === curDateStr);
+    const allDateArrs = allDateRows.map((r) => parseArrival(r.arrival));
+    const totalDayArrival = allDateArrs.reduce((a, b) => a + b, 0);
+    const hasSpecificAttrFilter = Boolean(attrMoisture || attrColor || attrVariety || attrNewOld || attrSpec || attrCondition);
     const dateArrs = dateFilteredRows.map((r) => parseArrival(r.arrival));
-    const sArrival = dateArrs.reduce((a, b) => a + b, 0);
+    const filteredArrival = dateArrs.reduce((a, b) => a + b, 0);
+    const sArrival = hasSpecificAttrFilter ? filteredArrival : (totalDayArrival > 0 ? totalDayArrival : filteredArrival);
 
+    const targetRowsForMarkets = hasSpecificAttrFilter ? dateFilteredRows : allDateRows;
     const marketSet = new Set<string>();
-    for (let i = 0; i < dateFilteredRows.length; i++) {
-      if (dateFilteredRows[i].mandiName || dateFilteredRows[i].mandiCity) {
-        marketSet.add(dateFilteredRows[i].mandiName || dateFilteredRows[i].mandiCity || "Mandi");
+    for (let i = 0; i < targetRowsForMarkets.length; i++) {
+      if (targetRowsForMarkets[i].mandiName || targetRowsForMarkets[i].mandiCity) {
+        marketSet.add(targetRowsForMarkets[i].mandiName || targetRowsForMarkets[i].mandiCity || "Mandi");
       }
     }
     const sMandis = marketSet.size;
@@ -4345,10 +4351,10 @@ export function ProductRatesScreen({
                                                               setIsTableMoreOpen(false);
                                                             }}
                                                             className={`flex-1 py-1 px-1 rounded-md text-[10.5px] font-bold transition active:scale-95 text-center ${isTfActive
-                                                                ? tableGraphView === "price"
-                                                                  ? "bg-[#087F63] text-white shadow-xs font-black"
-                                                                  : "bg-[#D97706] text-white shadow-xs font-black"
-                                                                : "bg-[#F4FAF7] text-[#2F4A43] border border-[#D5E2DD] hover:bg-[#E8F2ED]"
+                                                              ? tableGraphView === "price"
+                                                                ? "bg-[#087F63] text-white shadow-xs font-black"
+                                                                : "bg-[#D97706] text-white shadow-xs font-black"
+                                                              : "bg-[#F4FAF7] text-[#2F4A43] border border-[#D5E2DD] hover:bg-[#E8F2ED]"
                                                               }`}
                                                             style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                                                           >
@@ -4366,10 +4372,10 @@ export function ProductRatesScreen({
                                                             setIsTableMoreOpen(!isTableMoreOpen);
                                                           }}
                                                           className={`w-full py-1 px-1 rounded-md text-[10.5px] font-bold transition active:scale-95 flex items-center justify-center gap-0.5 ${["1W", "1M", "3M", "6M", "1Y", "CUSTOM"].includes(graphTimeframe)
-                                                              ? tableGraphView === "price"
-                                                                ? "bg-[#087F63] text-white shadow-xs font-black"
-                                                                : "bg-[#D97706] text-white shadow-xs font-black"
-                                                              : "bg-[#F4FAF7] text-[#2F4A43] border border-[#D5E2DD] hover:bg-[#E8F2ED]"
+                                                            ? tableGraphView === "price"
+                                                              ? "bg-[#087F63] text-white shadow-xs font-black"
+                                                              : "bg-[#D97706] text-white shadow-xs font-black"
+                                                            : "bg-[#F4FAF7] text-[#2F4A43] border border-[#D5E2DD] hover:bg-[#E8F2ED]"
                                                             }`}
                                                           style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                                                         >
@@ -4412,8 +4418,8 @@ export function ProductRatesScreen({
                                                                     setIsTableMoreOpen(false);
                                                                   }}
                                                                   className={`w-full text-left px-3 py-1.5 text-xs font-bold transition flex items-center justify-between ${graphTimeframe === opt.id
-                                                                      ? "bg-[#E8F8F4] text-[#087F63]"
-                                                                      : "text-[#334155] hover:bg-[#F8FAF9]"
+                                                                    ? "bg-[#E8F8F4] text-[#087F63]"
+                                                                    : "text-[#334155] hover:bg-[#F8FAF9]"
                                                                     }`}
                                                                   style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                                                                 >
@@ -4430,8 +4436,8 @@ export function ProductRatesScreen({
                                                                   setIsTableCustomPickerOpen(true);
                                                                 }}
                                                                 className={`w-full text-left px-3 py-1.5 text-xs font-bold transition flex items-center justify-between ${graphTimeframe === "CUSTOM"
-                                                                    ? "bg-[#E8F8F4] text-[#087F63]"
-                                                                    : "text-[#087F63] hover:bg-[#F8FAF9]"
+                                                                  ? "bg-[#E8F8F4] text-[#087F63]"
+                                                                  : "text-[#087F63] hover:bg-[#F8FAF9]"
                                                                   }`}
                                                                 style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                                                               >
@@ -6009,8 +6015,8 @@ export function ProductRatesScreen({
                   type="button"
                   onClick={() => setTrendMode("price")}
                   className={`tap-target px-3.5 py-1.5 rounded-xl text-xs font-bold transition active:scale-95 ${trendMode === "price"
-                      ? "bg-[#087F63] text-white shadow-xs font-black"
-                      : "text-[#52635F] hover:text-[#143B33] bg-transparent"
+                    ? "bg-[#087F63] text-white shadow-xs font-black"
+                    : "text-[#52635F] hover:text-[#143B33] bg-transparent"
                     }`}
                   style={{
                     fontSize: lang === "ur" ? 13 : 11.5,
@@ -6023,8 +6029,8 @@ export function ProductRatesScreen({
                   type="button"
                   onClick={() => setTrendMode("arrival")}
                   className={`tap-target px-3.5 py-1.5 rounded-xl text-xs font-bold transition active:scale-95 ${trendMode === "arrival"
-                      ? "bg-[#087F63] text-white shadow-xs font-black"
-                      : "text-[#52635F] hover:text-[#143B33] bg-transparent"
+                    ? "bg-[#087F63] text-white shadow-xs font-black"
+                    : "text-[#52635F] hover:text-[#143B33] bg-transparent"
                     }`}
                   style={{
                     fontSize: lang === "ur" ? 13 : 11.5,
@@ -6189,9 +6195,8 @@ export function ProductRatesScreen({
                             setActiveTypes([...orderedRateTypes]);
                           }
                         }}
-                        className={`tap-target flex items-center gap-1.5 rounded-full font-bold transition-all duration-200 ease-out active:scale-95 flex-shrink-0 whitespace-nowrap focus:outline-none focus:ring-0 ${
-                          isAllSelected ? "zm-chip-active-highlight" : "hover:border-[#94A3B8]"
-                        }`}
+                        className={`tap-target flex items-center gap-1.5 rounded-full font-bold transition-all duration-200 ease-out active:scale-95 flex-shrink-0 whitespace-nowrap focus:outline-none focus:ring-0 ${isAllSelected ? "zm-chip-active-highlight" : "hover:border-[#94A3B8]"
+                          }`}
                         style={{
                           fontSize: lang === "ur" ? 13 : 11.5,
                           padding: isAllSelected ? "5.5px 12px" : "5.5px 11px",
@@ -6267,8 +6272,8 @@ export function ProductRatesScreen({
                               setIsMoreOpen(false);
                             }}
                             className={`flex-1 py-1.5 px-2 rounded-xl text-xs font-bold transition active:scale-95 text-center ${isTfActive
-                                ? "bg-[#087F63] text-white shadow-xs font-black border border-[#087F63]"
-                                : "bg-[#F4FAF7] text-[#2F4A43] border border-[#D5E2DD] hover:bg-[#E8F2ED]"
+                              ? "bg-[#087F63] text-white shadow-xs font-black border border-[#087F63]"
+                              : "bg-[#F4FAF7] text-[#2F4A43] border border-[#D5E2DD] hover:bg-[#E8F2ED]"
                               }`}
                             style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                           >
@@ -6283,8 +6288,8 @@ export function ProductRatesScreen({
                           type="button"
                           onClick={() => setIsMoreOpen(!isMoreOpen)}
                           className={`w-full py-1.5 px-2 rounded-xl text-xs font-bold transition active:scale-95 flex items-center justify-center gap-1 ${["1W", "1M", "3M", "6M", "1Y", "CUSTOM"].includes(stockTimeframe)
-                              ? "bg-[#087F63] text-white shadow-xs font-black border border-[#087F63]"
-                              : "bg-[#F4FAF7] text-[#2F4A43] border border-[#D5E2DD] hover:bg-[#E8F2ED]"
+                            ? "bg-[#087F63] text-white shadow-xs font-black border border-[#087F63]"
+                            : "bg-[#F4FAF7] text-[#2F4A43] border border-[#D5E2DD] hover:bg-[#E8F2ED]"
                             }`}
                           style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                         >
@@ -6324,8 +6329,8 @@ export function ProductRatesScreen({
                                     setIsMoreOpen(false);
                                   }}
                                   className={`w-full text-left px-3 py-1.5 text-xs font-bold transition flex items-center justify-between ${stockTimeframe === opt.id
-                                      ? "bg-[#E8F8F4] text-[#087F63]"
-                                      : "text-[#334155] hover:bg-[#F8FAF9]"
+                                    ? "bg-[#E8F8F4] text-[#087F63]"
+                                    : "text-[#334155] hover:bg-[#F8FAF9]"
                                     }`}
                                   style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                                 >
@@ -6343,8 +6348,8 @@ export function ProductRatesScreen({
                                   setIsCustomPickerOpen(true);
                                 }}
                                 className={`w-full text-left px-3 py-1.5 text-xs font-bold transition flex items-center justify-between ${stockTimeframe === "CUSTOM"
-                                    ? "bg-[#E8F8F4] text-[#087F63]"
-                                    : "text-[#087F63] hover:bg-[#F8FAF9]"
+                                  ? "bg-[#E8F8F4] text-[#087F63]"
+                                  : "text-[#087F63] hover:bg-[#F8FAF9]"
                                   }`}
                                 style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                               >
@@ -6364,11 +6369,10 @@ export function ProductRatesScreen({
                         type="button"
                         onClick={() => setStockChartType((prev) => (prev === "candle" ? "line" : "candle"))}
                         title={lang === "ur" ? "کینڈلز" : "Candles"}
-                        className={`tap-target flex items-center justify-center gap-1 py-1.5 px-2.5 rounded-xl text-xs font-bold transition-all active:scale-95 shadow-xs whitespace-nowrap ${
-                          stockChartType === "candle"
+                        className={`tap-target flex items-center justify-center gap-1 py-1.5 px-2.5 rounded-xl text-xs font-bold transition-all active:scale-95 shadow-xs whitespace-nowrap ${stockChartType === "candle"
                             ? "bg-[#087F63] text-white border border-[#087F63] font-black"
                             : "bg-[#F4FAF7] text-[#143B33] border border-[#D5E2DD] hover:bg-[#E8F2ED]"
-                        }`}
+                          }`}
                         style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                       >
                         <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
@@ -6400,8 +6404,8 @@ export function ProductRatesScreen({
                           });
                         }}
                         className={`tap-target flex items-center justify-center gap-1 py-1.5 px-3 rounded-xl text-xs font-bold transition-all active:scale-95 shadow-xs whitespace-nowrap ${compareMode
-                            ? "bg-[#087F63] text-white border border-[#087F63] font-black"
-                            : "bg-[#F4FAF7] text-[#143B33] border border-[#D5E2DD] hover:bg-[#E8F2ED]"
+                          ? "bg-[#087F63] text-white border border-[#087F63] font-black"
+                          : "bg-[#F4FAF7] text-[#143B33] border border-[#D5E2DD] hover:bg-[#E8F2ED]"
                           }`}
                         style={{
                           fontFamily: lang === "ur" ? URDU_FONT : "inherit",
@@ -7152,8 +7156,8 @@ export function ProductRatesScreen({
                               setIsMoreOpen(false);
                             }}
                             className={`flex-1 py-1.5 px-2 rounded-xl text-xs font-bold transition active:scale-95 text-center ${isTfActive
-                                ? "bg-[#D97706] text-white shadow-xs font-black border border-[#D97706]"
-                                : "bg-[#F4FAF7] text-[#2F4A43] border border-[#D5E2DD] hover:bg-[#E8F2ED]"
+                              ? "bg-[#D97706] text-white shadow-xs font-black border border-[#D97706]"
+                              : "bg-[#F4FAF7] text-[#2F4A43] border border-[#D5E2DD] hover:bg-[#E8F2ED]"
                               }`}
                             style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                           >
@@ -7168,8 +7172,8 @@ export function ProductRatesScreen({
                           type="button"
                           onClick={() => setIsMoreOpen(!isMoreOpen)}
                           className={`w-full py-1.5 px-2 rounded-xl text-xs font-bold transition active:scale-95 flex items-center justify-center gap-1 ${["1W", "1M", "3M", "6M", "1Y", "CUSTOM"].includes(stockTimeframe)
-                              ? "bg-[#D97706] text-white shadow-xs font-black border border-[#D97706]"
-                              : "bg-[#F4FAF7] text-[#2F4A43] border border-[#D5E2DD] hover:bg-[#E8F2ED]"
+                            ? "bg-[#D97706] text-white shadow-xs font-black border border-[#D97706]"
+                            : "bg-[#F4FAF7] text-[#2F4A43] border border-[#D5E2DD] hover:bg-[#E8F2ED]"
                             }`}
                           style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                         >
@@ -7208,8 +7212,8 @@ export function ProductRatesScreen({
                                     setIsMoreOpen(false);
                                   }}
                                   className={`w-full text-left px-3 py-1.5 text-xs font-bold transition flex items-center justify-between ${stockTimeframe === opt.id
-                                      ? "bg-[#FFFBEB] text-[#D97706]"
-                                      : "text-[#334155] hover:bg-[#F8FAF9]"
+                                    ? "bg-[#FFFBEB] text-[#D97706]"
+                                    : "text-[#334155] hover:bg-[#F8FAF9]"
                                     }`}
                                   style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                                 >
@@ -7227,8 +7231,8 @@ export function ProductRatesScreen({
                                   setIsCustomPickerOpen(true);
                                 }}
                                 className={`w-full text-left px-3 py-1.5 text-xs font-bold transition flex items-center justify-between ${stockTimeframe === "CUSTOM"
-                                    ? "bg-[#FFFBEB] text-[#D97706]"
-                                    : "text-[#D97706] hover:bg-[#F8FAF9]"
+                                  ? "bg-[#FFFBEB] text-[#D97706]"
+                                  : "text-[#D97706] hover:bg-[#F8FAF9]"
                                   }`}
                                 style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                               >
@@ -7303,31 +7307,43 @@ export function ProductRatesScreen({
                         {/* Stat Summary Bar matching Price Trends consistency: Total Period, Peak Day, Daily Avg */}
                         <div className="grid grid-cols-3 gap-2 pt-0.5 text-[10px]">
                           <div className="bg-[#F8FBFA] p-2 rounded-xl border border-[#E8EFEC] flex flex-col">
-                            <div className="flex items-center justify-between text-[#80918B] font-semibold text-[10px]">
-                              <span>{lang === "ur" ? "کل آمد" : "Total Period"}</span>
-                              <span className="font-bold text-[9px] text-[#64748B]">Bags</span>
-                            </div>
-                            <span className="font-bold text-[#143B33] text-xs sm:text-sm mt-0.5">
-                              {lang === "ur" ? toUrduDigits(totalArrival.toLocaleString()) : totalArrival.toLocaleString()}
+                            <span className="text-[#80918B] font-semibold text-[10px]">
+                              {lang === "ur" ? "کل آمد" : "Total Period"}
                             </span>
+                            <div className="flex items-baseline gap-1 mt-0.5">
+                              <span className="font-bold text-[#143B33] text-xs sm:text-sm">
+                                {lang === "ur" ? toUrduDigits(totalArrival.toLocaleString()) : totalArrival.toLocaleString()}
+                              </span>
+                              <span className="text-[10px] font-semibold text-[#64748B]">
+                                {lang === "ur" ? "تھیلے" : "Bags"}
+                              </span>
+                            </div>
                           </div>
                           <div className="bg-[#F8FBFA] p-2 rounded-xl border border-[#E8EFEC] flex flex-col">
-                            <div className="flex items-center justify-between text-[#80918B] font-semibold text-[10px]">
-                              <span>{lang === "ur" ? "سب سے زیادہ" : "Peak Day"}</span>
-                              <span className="font-bold text-[9px] text-[#64748B]">Bags</span>
-                            </div>
-                            <span className="font-bold text-[#143B33] text-xs sm:text-sm mt-0.5">
-                              {lang === "ur" ? toUrduDigits(peakArrival.toLocaleString()) : peakArrival.toLocaleString()}
+                            <span className="text-[#80918B] font-semibold text-[10px]">
+                              {lang === "ur" ? "سب سے زیادہ" : "Peak Day"}
                             </span>
+                            <div className="flex items-baseline gap-1 mt-0.5">
+                              <span className="font-bold text-[#143B33] text-xs sm:text-sm">
+                                {lang === "ur" ? toUrduDigits(peakArrival.toLocaleString()) : peakArrival.toLocaleString()}
+                              </span>
+                              <span className="text-[10px] font-semibold text-[#64748B]">
+                                {lang === "ur" ? "تھیلے" : "Bags"}
+                              </span>
+                            </div>
                           </div>
                           <div className="bg-[#F8FBFA] p-2 rounded-xl border border-[#E8EFEC] flex flex-col">
-                            <div className="flex items-center justify-between text-[#80918B] font-semibold text-[10px]">
-                              <span>{lang === "ur" ? "روزانہ اوسط" : "Daily Avg"}</span>
-                              <span className="font-bold text-[9px] text-[#64748B]">Bags</span>
-                            </div>
-                            <span className="font-bold text-[#D97706] text-xs sm:text-sm mt-0.5">
-                              {lang === "ur" ? toUrduDigits(avgArrival.toLocaleString()) : avgArrival.toLocaleString()}
+                            <span className="text-[#80918B] font-semibold text-[10px]">
+                              {lang === "ur" ? "روزانہ اوسط" : "Daily Avg"}
                             </span>
+                            <div className="flex items-baseline gap-1 mt-0.5">
+                              <span className="font-bold text-[#D97706] text-xs sm:text-sm">
+                                {lang === "ur" ? toUrduDigits(avgArrival.toLocaleString()) : avgArrival.toLocaleString()}
+                              </span>
+                              <span className="text-[10px] font-semibold text-[#64748B]">
+                                {lang === "ur" ? "تھیلے" : "Bags"}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
