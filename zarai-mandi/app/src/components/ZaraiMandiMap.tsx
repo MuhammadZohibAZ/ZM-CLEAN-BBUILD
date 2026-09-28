@@ -1272,16 +1272,16 @@ export default function ZaraiMandiMap({
         const historyRows = [...mandiRecords].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 
         const W = 560;
-        const H = 190;
-        const PL = 46;
-        const PR = 46;
-        const PT = 16;
-        const PB = 28;
+        const H = 180;
+        const PL = 44;
+        const PR = 16;
+        const PT = 8;
+        const PB = 22;
         const chartW = W - PL - PR;
         const volBaseY = H - PB;
-        const volMaxH = 24;
-        const separatorY = volBaseY - volMaxH - 8;
-        const lineChartH = separatorY - PT - 8;
+        const volMaxH = 18;
+        const separatorY = volBaseY - volMaxH - 4;
+        const lineChartH = separatorY - PT;
 
         const isArrival = graphMode === "arrival";
         const currentData = isArrival ? arrData : graphData;
@@ -1665,7 +1665,7 @@ export default function ZaraiMandiMap({
                       <svg
                         viewBox={`0 0 ${W} ${H}`}
                         className="w-full select-none"
-                        style={{ height: 180, display: "block", touchAction: "none" }}
+                        style={{ height: 185, display: "block", touchAction: "none" }}
                         onMouseDown={(e) => {
                           const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
                           const relX = ((e.clientX - rect.left) / rect.width) * W - PL;
@@ -1728,7 +1728,7 @@ export default function ZaraiMandiMap({
                           </linearGradient>
                         </defs>
 
-                        {/* Horizontal Gridlines + Y Ticks */}
+                        {/* Horizontal Gridlines + Left Y Ticks (Only on Left) */}
                         {currentData.yLabels.map((tick, ti) => {
                           const y = yOf(tick.val);
                           return (
@@ -1751,16 +1751,6 @@ export default function ZaraiMandiMap({
                                 fill="#1E3A34"
                               >
                                 {tick.label}
-                              </text>
-                              <text
-                                x={W - PR + 8}
-                                y={y + 3.5}
-                                textAnchor="start"
-                                fontSize="10"
-                                fontWeight="700"
-                                fill="#264E43"
-                              >
-                                {tick.val}
                               </text>
                             </g>
                           );
@@ -1785,16 +1775,6 @@ export default function ZaraiMandiMap({
                           fill="#475569"
                         >
                           0
-                        </text>
-                        <text
-                          x={W - PR + 8}
-                          y={separatorY + 3.5}
-                          textAnchor="start"
-                          fontSize="9.5"
-                          fontWeight="800"
-                          fill="#475569"
-                        >
-                          VOL
                         </text>
 
                         {/* Volume Baseline */}
@@ -1862,15 +1842,6 @@ export default function ZaraiMandiMap({
                               <path d={lineCoords} stroke={strokeColor} strokeWidth="3.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
                               {/* Dotted Latest Price Guideline */}
                               <line x1={PL} y1={currentCloseY} x2={W - PR} y2={currentCloseY} stroke={strokeColor} strokeWidth="1.1" strokeDasharray="3 3" opacity="0.65" />
-                              {/* Latest Price Tag */}
-                              <g transform={`translate(${W - PR + 2}, ${currentCloseY - 8.5})`}>
-                                <rect x={0} y={0} width={36} height={17} rx={3.5} fill={strokeColor} />
-                                <text x={18} y={12} textAnchor="middle" fontSize="9.5" fontWeight="bold" fill="#FFFFFF">
-                                  {graphMode === "price"
-                                    ? (displayPrice >= 1000 ? `${(displayPrice / 1000).toFixed(1)}k` : displayPrice)
-                                    : (displayArr >= 1000 ? `${(displayArr / 1000).toFixed(1)}k` : displayArr)}
-                                </text>
-                              </g>
                               {/* Live Pulse Dot */}
                               <circle cx={xOf(len - 1)} cy={currentCloseY} r="5.5" fill={strokeColor} stroke="#FFFFFF" strokeWidth="2.5" />
                             </g>

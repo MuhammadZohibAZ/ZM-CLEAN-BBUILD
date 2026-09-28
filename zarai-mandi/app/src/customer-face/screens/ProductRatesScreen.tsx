@@ -287,7 +287,7 @@ export function ProductRatesScreen({
   const [tableDateFilter, setTableDateFilter] = useState<Date | null>(null);
   const [tableDateCalOpen, setTableDateCalOpen] = useState(false);
   const [isTableExpanded, setIsTableExpanded] = useState(false);
-  const [landscapeRotated, setLandscapeRotated] = useState(true);
+  const [landscapeRotated, setLandscapeRotated] = useState(false);
   const [isMapExpanded, setIsMapExpanded] = useState(false);
   const [tableDateCalMonth, setTableDateCalMonth] = useState<Date>(
     new Date(2026, 7, 21),
@@ -989,20 +989,20 @@ export function ProductRatesScreen({
   };
 
   // Chart SVG helpers (TradingView & Binance style)
-  const CH = 230,
-    CW = 370,
-    PL = 46,
-    PR = 44,
-    PT = 16,
-    PB = 28;
+  const CH = 210,
+    CW = 380,
+    PL = 44,
+    PR = 16,
+    PT = 8,
+    PB = 22;
   const chartW = CW - PL - PR;
   const volBaseY = CH - PB;
-  const volMaxH = 22;
-  const separatorY = compareMode ? volBaseY : volBaseY - volMaxH - 8;
-  const lineChartH = separatorY - PT - 8;
+  const volMaxH = 16;
+  const separatorY = compareMode ? volBaseY : volBaseY - volMaxH - 4;
+  const lineChartH = separatorY - PT;
 
-  const arrSeparatorY = volBaseY - volMaxH - 8;
-  const arrLineChartH = arrSeparatorY - PT - 8;
+  const arrSeparatorY = volBaseY - volMaxH - 4;
+  const arrLineChartH = arrSeparatorY - PT;
 
   const xOf = (i: number, total: number) => PL + (i / Math.max(total - 1, 1)) * chartW;
   const yOf = (v: number, mn: number, mx: number) =>
@@ -1010,19 +1010,18 @@ export function ProductRatesScreen({
   const yOfArr = (v: number, mn: number, mx: number) =>
     PT + ((mx - v) / Math.max(mx - mn, 1)) * arrLineChartH;
 
-  const priceFlat = activeSeries.flatMap((s) => s.data);
+  const priceFlat = activeSeries.flatMap((s) => s.data).filter((v) => v > 0);
   const rawPMin = priceFlat.length ? Math.min(...priceFlat) : 2500;
   const rawPMax = priceFlat.length ? Math.max(...priceFlat) : 3500;
 
-  // Nice rounded ticks for Y-axis with dynamic adaptive spread
-  const pSpread = rawPMax - rawPMin;
-  const minSpread = Math.max(Math.round(rawPMax * 0.04), 80);
-  const pPadding = Math.max(pSpread * 0.15, 30);
+  // Tight bounds so fluctuations fill the full vertical height
+  const pSpread = Math.max(rawPMax - rawPMin, 20);
+  const pPadding = Math.max(pSpread * 0.05, 10);
   const pMin = Math.max(
     0,
-    Math.floor((rawPMin - (pSpread < minSpread ? (minSpread - pSpread) / 2 : pPadding)) / 25) * 25,
+    Math.floor((rawPMin - pPadding) / 10) * 10,
   );
-  const pMax = Math.ceil((rawPMax + (pSpread < minSpread ? (minSpread - pSpread) / 2 : pPadding)) / 25) * 25;
+  const pMax = Math.ceil((rawPMax + pPadding) / 10) * 10;
 
   const rawAMin = arrivalData.length ? Math.min(...arrivalData) : 0;
   const rawAMax = arrivalData.length ? Math.max(...arrivalData) : 1000;
@@ -2654,6 +2653,7 @@ export function ProductRatesScreen({
                         onClick={() => {
                           setIsTableExpanded(false);
                           setSelectedMandiGraphRow(null);
+                          setLandscapeRotated(false);
                           if (inDevicePreview()) requestDeviceOrientation("portrait");
                         }}
                       />
@@ -2677,6 +2677,7 @@ export function ProductRatesScreen({
                           onClick={() => {
                             setIsTableExpanded(false);
                             setSelectedMandiGraphRow(null);
+                            setLandscapeRotated(false);
                             if (inDevicePreview()) requestDeviceOrientation("portrait");
                           }}
                         />
@@ -2697,6 +2698,7 @@ export function ProductRatesScreen({
                                 onClick={() => {
                                   setIsTableExpanded(false);
                                   setSelectedMandiGraphRow(null);
+                                  setLandscapeRotated(false);
                                   if (inDevicePreview()) requestDeviceOrientation("portrait");
                                 }}
                                 className="tap-target flex items-center justify-center w-7 h-7 rounded-full bg-[#E5EFEA] hover:bg-[#D5E5DE] text-[#064E3B] transition active:scale-95 flex-shrink-0"
@@ -2787,6 +2789,7 @@ export function ProductRatesScreen({
                                 setIsTableExpanded((prev) => {
                                   if (prev) {
                                     setSelectedMandiGraphRow(null);
+                                    setLandscapeRotated(false);
                                     if (inDevicePreview()) requestDeviceOrientation("portrait");
                                     return false;
                                   }
@@ -3732,10 +3735,6 @@ export function ProductRatesScreen({
                                             ) {
                                               return null;
                                             }
-                                            if (!isTableExpanded) {
-                                              setIsTableExpanded(true);
-                                              setLandscapeRotated(true);
-                                            }
                                             return {
                                               mandiName: r.mandiName,
                                               rateType: r.rateType,
@@ -4161,17 +4160,49 @@ export function ProductRatesScreen({
                                                     </button>
                                                   </div>
 
-                                                  <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                      e.stopPropagation();
-                                                      setSelectedMandiGraphRow(null);
-                                                    }}
-                                                    className="tap-target w-7 h-7 rounded-full bg-[#E5EFEA] hover:bg-[#D5E5DE] text-[#064D40] text-xs font-bold flex items-center justify-center transition active:scale-95 flex-shrink-0"
-                                                    title={lang === "ur" ? "بند کریں" : "Close"}
-                                                  >
-                                                    ✕
-                                                  </button>
+                                                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                                                    {!isTableExpanded && (
+                                                      <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                          e.stopPropagation();
+                                                          setIsTableExpanded(true);
+                                                          setLandscapeRotated(true);
+                                                          if (inDevicePreview()) requestDeviceOrientation("landscape");
+                                                        }}
+                                                        className="tap-target px-2.5 py-1 rounded-full bg-[#E5EFEA] hover:bg-[#D5E5DE] text-[#064D40] text-[11px] font-bold flex items-center gap-1 transition active:scale-95 border border-[#10B981]/40"
+                                                        title={lang === "ur" ? "پوری اسکرین پر دیکھیں (افقی)" : "Expand to Landscape"}
+                                                      >
+                                                        <svg
+                                                          width="12"
+                                                          height="12"
+                                                          viewBox="0 0 24 24"
+                                                          fill="none"
+                                                          stroke="#064D40"
+                                                          strokeWidth="2.5"
+                                                          strokeLinecap="round"
+                                                          strokeLinejoin="round"
+                                                        >
+                                                          <polyline points="15 3 21 3 21 9" />
+                                                          <polyline points="9 21 3 21 3 15" />
+                                                          <line x1="21" y1="3" x2="14" y2="10" />
+                                                          <line x1="3" y1="21" x2="10" y2="14" />
+                                                        </svg>
+                                                        <span>{lang === "ur" ? "بڑا کریں" : "Expand"}</span>
+                                                      </button>
+                                                    )}
+                                                    <button
+                                                      type="button"
+                                                      onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setSelectedMandiGraphRow(null);
+                                                      }}
+                                                      className="tap-target w-7 h-7 rounded-full bg-[#E5EFEA] hover:bg-[#D5E5DE] text-[#064D40] text-xs font-bold flex items-center justify-center transition active:scale-95 flex-shrink-0"
+                                                      title={lang === "ur" ? "بند کریں" : "Close"}
+                                                    >
+                                                      ✕
+                                                    </button>
+                                                  </div>
                                                 </div>
 
                                                 {/* 2. Second Row: Granularity Filters (1, 5, 15, 30, 1H, 5H, 1D, 1W, 1M) */}
@@ -4226,16 +4257,16 @@ export function ProductRatesScreen({
                                                       const currentDateLabel = graphData.dates[hoverI] || graphData.dates[len - 1] || "14 Sep 2026";
 
                                                       const CW = 540;
-                                                      const CH = 155;
-                                                      const PL = 46;
-                                                      const PR = 46;
-                                                      const PT = 14;
-                                                      const PB = 26;
+                                                      const CH = 180;
+                                                      const PL = 44;
+                                                      const PR = 16;
+                                                      const PT = 8;
+                                                      const PB = 22;
                                                       const chartW = CW - PL - PR;
                                                       const volBaseY = CH - PB;
-                                                      const volMaxH = 22;
-                                                      const separatorY = volBaseY - volMaxH - 6;
-                                                      const lineChartH = separatorY - PT - 8;
+                                                      const volMaxH = 18;
+                                                      const separatorY = volBaseY - volMaxH - 4;
+                                                      const lineChartH = separatorY - PT;
                                                       const pMin = graphData.yMinBound;
                                                       const pMax = graphData.yMaxBound;
                                                       const yOf = (v: number) => PT + lineChartH - ((v - pMin) / (pMax - pMin || 1)) * lineChartH;
@@ -4323,7 +4354,7 @@ export function ProductRatesScreen({
                                                             <svg
                                                               viewBox={`0 0 ${CW} ${CH}`}
                                                               className="w-full select-none"
-                                                              style={{ height: isTableExpanded ? 160 : 135, display: "block", touchAction: "none" }}
+                                                              style={{ height: isTableExpanded ? 230 : 180, display: "block", touchAction: "none" }}
                                                               onMouseDown={(e) => {
                                                                 const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
                                                                 const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
@@ -4399,16 +4430,7 @@ export function ProductRatesScreen({
                                                                     >
                                                                       {tick.label}
                                                                     </text>
-                                                                    <text
-                                                                      x={CW - PR + 8}
-                                                                      y={y + 3.5}
-                                                                      textAnchor="start"
-                                                                      fontSize="10"
-                                                                      fontWeight="700"
-                                                                      fill="#264E43"
-                                                                    >
-                                                                      {tick.val}
-                                                                    </text>
+                                                                    
                                                                   </g>
                                                                 );
                                                               })}
@@ -4433,16 +4455,7 @@ export function ProductRatesScreen({
                                                               >
                                                                 0
                                                               </text>
-                                                              <text
-                                                                x={CW - PR + 8}
-                                                                y={separatorY + 3.5}
-                                                                textAnchor="start"
-                                                                fontSize="9.5"
-                                                                fontWeight="800"
-                                                                fill="#475569"
-                                                              >
-                                                                VOL
-                                                              </text>
+                                                              
 
                                                               {/* Volume Baseline / X-Axis Baseline */}
                                                               <line
@@ -4503,16 +4516,10 @@ export function ProductRatesScreen({
                                                                 return (
                                                                   <g>
                                                                     <path d={areaCoords} fill={`url(#tableInlinePriceGrad-${ci})`} />
-                                                                    <path d={lineCoords} stroke="#087F63" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                                                                    <path d={lineCoords} stroke="#087F63" strokeWidth="3.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
                                                                     {/* Dotted Latest Price Guideline */}
                                                                     <line x1={PL} y1={currentCloseY} x2={CW - PR} y2={currentCloseY} stroke="#087F63" strokeWidth="0.9" strokeDasharray="3 3" opacity="0.6" />
-                                                                    {/* Latest Price Tag */}
-                                                                    <g transform={`translate(${CW - PR + 2}, ${currentCloseY - 7})`}>
-                                                                      <rect x={0} y={0} width={28} height={14} rx={3} fill="#087F63" />
-                                                                      <text x={14} y={10} textAnchor="middle" fontSize="8" fontWeight="bold" fill="#FFFFFF">
-                                                                        {displayPrice >= 1000 ? `${(displayPrice / 1000).toFixed(1)}k` : displayPrice}
-                                                                      </text>
-                                                                    </g>
+                                                                    
                                                                     {/* Live Pulse Dot */}
                                                                     <circle cx={xOf(len - 1)} cy={currentCloseY} r="4" fill="#087F63" stroke="#FFFFFF" strokeWidth="2" />
                                                                   </g>
@@ -4591,16 +4598,16 @@ export function ProductRatesScreen({
                                                       const currentDateLabel = arrivalData.dates[hoverI] || arrivalData.dates[len - 1] || "14 Sep 2026";
 
                                                       const CW = 540;
-                                                      const CH = 155;
-                                                      const PL = 46;
-                                                      const PR = 46;
-                                                      const PT = 14;
-                                                      const PB = 26;
+                                                      const CH = 180;
+                                                      const PL = 44;
+                                                      const PR = 16;
+                                                      const PT = 8;
+                                                      const PB = 22;
                                                       const chartW = CW - PL - PR;
                                                       const volBaseY = CH - PB;
-                                                      const volMaxH = 22;
-                                                      const separatorY = volBaseY - volMaxH - 6;
-                                                      const lineChartH = separatorY - PT - 8;
+                                                      const volMaxH = 18;
+                                                      const separatorY = volBaseY - volMaxH - 4;
+                                                      const lineChartH = separatorY - PT;
                                                       const aMin = 0;
                                                       const aMax = arrivalData.yMaxBound;
                                                       const yOf = (v: number) => PT + lineChartH - ((v - aMin) / (aMax - aMin || 1)) * lineChartH;
@@ -4663,7 +4670,7 @@ export function ProductRatesScreen({
                                                             <svg
                                                               viewBox={`0 0 ${CW} ${CH}`}
                                                               className="w-full select-none"
-                                                              style={{ height: isTableExpanded ? 160 : 135, display: "block", touchAction: "none" }}
+                                                              style={{ height: isTableExpanded ? 230 : 180, display: "block", touchAction: "none" }}
                                                               onMouseDown={(e) => {
                                                                 const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
                                                                 const relX = ((e.clientX - rect.left) / rect.width) * CW - PL;
@@ -4718,9 +4725,7 @@ export function ProductRatesScreen({
                                                                     <text x={PL - 6} y={y + 3.5} textAnchor="end" fontSize="10.5" fontWeight="700" fill="#1E3A34">
                                                                       {tick.label}
                                                                     </text>
-                                                                    <text x={CW - PR + 8} y={y + 3.5} textAnchor="start" fontSize="10" fontWeight="700" fill="#264E43">
-                                                                      {tick.val}
-                                                                    </text>
+                                                                    
                                                                   </g>
                                                                 );
                                                               })}
@@ -4745,16 +4750,7 @@ export function ProductRatesScreen({
                                                               >
                                                                 0
                                                               </text>
-                                                              <text
-                                                                x={CW - PR + 8}
-                                                                y={separatorY + 3.5}
-                                                                textAnchor="start"
-                                                                fontSize="9.5"
-                                                                fontWeight="800"
-                                                                fill="#475569"
-                                                              >
-                                                                VOL
-                                                              </text>
+                                                              
 
                                                               {/* X-Axis Baseline */}
                                                               <line x1={PL} y1={volBaseY} x2={CW - PR} y2={volBaseY} stroke="#C8DCD5" strokeWidth="1.4" />
@@ -6162,16 +6158,7 @@ export function ProductRatesScreen({
                               >
                                 {tick >= 1000 ? `${(tick / 1000).toFixed(1)}k` : tick}
                               </text>
-                              <text
-                                x={CW - PR + 8}
-                                y={y + 3.5}
-                                textAnchor="start"
-                                fontSize="10"
-                                fontWeight="700"
-                                fill="#264E43"
-                              >
-                                {tick}
-                              </text>
+                              
                             </g>
                           );
                         })}
@@ -6198,16 +6185,7 @@ export function ProductRatesScreen({
                             >
                               0
                             </text>
-                            <text
-                              x={CW - PR + 8}
-                              y={separatorY + 3.5}
-                              textAnchor="start"
-                              fontSize="9.5"
-                              fontWeight="800"
-                              fill="#475569"
-                            >
-                              VOL
-                            </text>
+                            
                           </>
                         )}
 
@@ -6287,29 +6265,7 @@ export function ProductRatesScreen({
                                   strokeLinecap="round"
                                   strokeLinejoin="round"
                                 />
-                                {/* Latest Price Right-side Tag */}
-                                <g transform={`translate(${CW - PR + 4}, ${Math.max(PT, Math.min(separatorY - 16, sCloseY - 8))})`}>
-                                  <rect
-                                    x={0}
-                                    y={0}
-                                    width={38}
-                                    height={16}
-                                    rx={4}
-                                    fill={s.color || "#087F63"}
-                                    stroke="#FFFFFF"
-                                    strokeWidth="1"
-                                  />
-                                  <text
-                                    x={19}
-                                    y={11.5}
-                                    textAnchor="middle"
-                                    fontSize="9.5"
-                                    fontWeight="800"
-                                    fill="#FFFFFF"
-                                  >
-                                    {sClose >= 1000 ? `${(sClose / 1000).toFixed(1)}k` : sClose}
-                                  </text>
-                                </g>
+                                
                                 {/* Live Pulse Dot on Latest Value */}
                                 <circle
                                   cx={xOf(len - 1, len)}
@@ -6361,29 +6317,7 @@ export function ProductRatesScreen({
                                   strokeDasharray="3 3"
                                   opacity="0.6"
                                 />
-                                {/* Latest Price Right-side Tag */}
-                                <g transform={`translate(${CW - PR + 4}, ${Math.max(PT, Math.min(separatorY - 16, currentCloseY - 8))})`}>
-                                  <rect
-                                    x={0}
-                                    y={0}
-                                    width={38}
-                                    height={16}
-                                    rx={4}
-                                    fill={s.color || "#087F63"}
-                                    stroke="#FFFFFF"
-                                    strokeWidth="1"
-                                  />
-                                  <text
-                                    x={19}
-                                    y={11.5}
-                                    textAnchor="middle"
-                                    fontSize="9.5"
-                                    fontWeight="800"
-                                    fill="#FFFFFF"
-                                  >
-                                    {currentClose >= 1000 ? `${(currentClose / 1000).toFixed(1)}k` : currentClose}
-                                  </text>
-                                </g>
+                                
 
                                 {/* Live Pulse Dot on Latest Value */}
                                 <circle
@@ -6845,16 +6779,7 @@ export function ProductRatesScreen({
                           >
                             {tick >= 1000 ? `${(tick / 1000).toFixed(1)}k` : tick}
                           </text>
-                          <text
-                            x={CW - PR + 8}
-                            y={y + 3.5}
-                            textAnchor="start"
-                            fontSize="10"
-                            fontWeight="700"
-                            fill="#264E43"
-                          >
-                            {tick >= 1000 ? `${(tick / 1000).toFixed(1)}k` : tick}
-                          </text>
+                          
                         </g>
                       );
                     })}

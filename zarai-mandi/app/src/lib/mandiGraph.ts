@@ -194,13 +194,13 @@ export function buildMandiInlineGraphFromRows(options: {
   const totalArrival = sArrivals.reduce((acc, curr) => acc + curr, 0);
 
   if (view === "price") {
-    const validMins = sMins.filter((v) => v > 0);
-    const validMaxs = sMaxs.filter((v) => v > 0);
-    const minVal = validMins.length > 0 ? Math.min(...validMins) : (latestMin > 0 ? latestMin : fallbackMin || 4000);
-    const maxVal = validMaxs.length > 0 ? Math.max(...validMaxs) : (latestMax > 0 ? latestMax : fallbackMax || 4500);
-    const diff = Math.max(maxVal - minVal, 50);
-    const yMinBound = Math.max(0, Math.floor((minVal - diff * 0.15) / 25) * 25);
-    const yMaxBound = Math.ceil((maxVal + diff * 0.15) / 25) * 25;
+    const validPts = points.filter((v) => v > 0);
+    const minVal = validPts.length > 0 ? Math.min(...validPts) : (latestMin > 0 ? latestMin : fallbackMin || 4000);
+    const maxVal = validPts.length > 0 ? Math.max(...validPts) : (latestMax > 0 ? latestMax : fallbackMax || 4500);
+    const diff = Math.max(maxVal - minVal, 20);
+    const pad = Math.max(diff * 0.05, 10);
+    const yMinBound = Math.max(0, Math.floor((minVal - pad) / 10) * 10);
+    const yMaxBound = Math.ceil((maxVal + pad) / 10) * 10;
     const yMidVal = Math.round((yMinBound + yMaxBound) / 2);
     const yLabels = [
       { label: fmtK(yMaxBound), val: yMaxBound },
