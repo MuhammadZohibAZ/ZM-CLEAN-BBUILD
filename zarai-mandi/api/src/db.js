@@ -3,7 +3,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const dbPath = path.resolve(__dirname, "../db/zarai_mandi.sqlite");
+// SQLITE_PATH overrides the default (e.g. to try a freshly built database).
+const dbPath = process.env.SQLITE_PATH
+  ? path.resolve(process.env.SQLITE_PATH)
+  : path.resolve(__dirname, "../db/zarai_mandi.sqlite");
 const sqliteDb = new DatabaseSync(dbPath);
 
 sqliteDb.exec("PRAGMA journal_mode = WAL; PRAGMA synchronous = NORMAL; PRAGMA cache_size = -64000;");

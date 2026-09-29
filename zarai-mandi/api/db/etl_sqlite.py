@@ -1,17 +1,34 @@
 #!/usr/bin/env python3
-"""Load the commodity price XLSX into SQLite and build the derived catalog.
+"""Load a commodity price XLSX export into SQLite and build the derived catalog.
 
 Usage:
-    python etl_sqlite.py
+    python3 db/etl_sqlite.py [path/to/export.xlsx] [--out path.sqlite] [--allow-missing-locations]
+
+Accepts both export layouts:
+  - 1-month export: sheet "Commodity Prices", header on row 7 (after a title block)
+  - 1-year export:  sheet "Prices", header on row 1
+The sheet and header row are detected automatically (the row whose first cell
+is "Date").
+
+Data-quality gate: before replacing anything, the load reports how filled the
+columns the app depends on are. If Province/District/Station are (almost)
+empty -- the map, location filters and market counts would have nothing to
+show -- it stops unless --allow-missing-locations is given.
+
+The database is built in a temporary file and swapped in only after a
+successful load, so a failed load never leaves the API without data.
+Restart the API afterwards (it keeps the old file open).
 """
+import argparse
 import csv
 import os
 import re
 import sqlite3
+import sys
 import openpyxl
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-XLSX_PATH = os.path.join(BASE_DIR, "..", "..", "data", "All Commodity Prices - 15-Aug-2026 to 14-Sept-2026.xlsx")
+DEFAULT_XLSX = os.path.join(BASE_DIR, "..", "..", "data", "All Commodity Prices_2025-09-23_to_2026-09-23.xlsx")
 SQLITE_PATH = os.path.join(BASE_DIR, "zarai_mandi.sqlite")
 CATALOG_PATH = os.path.join(BASE_DIR, "catalog_459.csv")
 ALIASES_PATH = os.path.join(BASE_DIR, "catalog_aliases.csv")
@@ -84,12 +101,43 @@ def normalize_key(s):
     return s
 
 
-def main():
-    print(f"Opening {SQLITE_PATH}")
-    if os.path.exists(SQLITE_PATH):
-        os.remove(SQLITE_PATH)
+REQUIRED_HEADERS = {"Date", "Product", "By_Product", "Minimum", "Maximum"}
+# Columns the app's location features and rate-type tabs depend on.
+GATED_COLUMNS = ("Province", "District", "Station", "Price_Type")
+MIN_LOCATION_FILL = 0.5
 
-    conn = sqlite3.connect(SQLITE_PATH)
+
+def open_export(xlsx_path):
+    """Find the sheet + header row in either export layout; return (rows_iter, headers, header_row)."""
+    wb = openpyxl.load_workbook(xlsx_path, read_only=True, data_only=True)
+    for name in ("Prices", "Commodity Prices", *wb.sheetnames):
+        if name not in wb.sheetnames:
+            continue
+        ws = wb[name]
+        for header_row, row in enumerate(ws.iter_rows(min_row=1, max_row=20, values_only=True), start=1):
+            headers = [str(h).strip() if h is not None else "" for h in row]
+            if REQUIRED_HEADERS.issubset(headers):
+                print(f"Sheet '{name}', header on row {header_row}")
+                return ws.iter_rows(min_row=header_row + 1, values_only=True), headers, header_row
+    sys.exit(f"No sheet with a header row containing {sorted(REQUIRED_HEADERS)} in {xlsx_path}")
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("xlsx", nargs="?", default=DEFAULT_XLSX, help="export to load")
+    ap.add_argument("--out", default=SQLITE_PATH, help="SQLite file to (re)build")
+    ap.add_argument("--allow-missing-locations", action="store_true",
+                    help="load even if Province/District/Station are mostly empty")
+    args = ap.parse_args()
+    xlsx_path, out_path = os.path.abspath(args.xlsx), os.path.abspath(args.out)
+
+    tmp_path = out_path + ".building"
+    for p in (tmp_path, tmp_path + "-wal", tmp_path + "-shm"):
+        if os.path.exists(p):
+            os.remove(p)
+    print(f"Building {tmp_path}")
+
+    conn = sqlite3.connect(tmp_path)
     conn.execute("PRAGMA journal_mode = WAL;")
     conn.execute("PRAGMA synchronous = NORMAL;")
     cur = conn.cursor()
@@ -191,12 +239,12 @@ def main():
                 (int(row["catalog_id"]), row["raw_product"], row["raw_by_product"]),
             )
 
-    print(f"Reading XLSX: {XLSX_PATH}")
-    wb = openpyxl.load_workbook(XLSX_PATH, read_only=True, data_only=True)
-    ws = wb["Commodity Prices"]
-    rows = ws.iter_rows(min_row=7, values_only=True)
-    headers = [str(h).strip() if h is not None else "" for h in next(rows)]
+    print(f"Reading XLSX: {xlsx_path}")
+    rows, headers, header_row = open_export(xlsx_path)
     col_idx = {h: i for i, h in enumerate(headers)}
+    filled = {c: 0 for c in GATED_COLUMNS}
+    seen = 0
+    skipped_unnamed = 0
 
     insert_sql = """
         INSERT INTO price_records (
@@ -209,7 +257,7 @@ def main():
 
     batch = []
     n = 0
-    for row_num, row in enumerate(rows, start=8):
+    for row_num, row in enumerate(rows, start=header_row + 1):
         if row[0] is None and all(v in (None, "") for v in row):
             continue
         date_val = row[col_idx.get("Date", 0)]
@@ -227,6 +275,14 @@ def main():
         max_val = to_decimal(row[col_idx.get("Maximum", 12)])
         if min_val is None or max_val is None:
             continue
+        if not norm(row[col_idx.get("Product", 2)]) or not norm(row[col_idx.get("By_Product", 3)]):
+            skipped_unnamed += 1
+            continue
+
+        seen += 1
+        for c in GATED_COLUMNS:
+            if c in col_idx and norm(row[col_idx[c]]):
+                filled[c] += 1
 
         batch.append((
             row_num,
@@ -261,6 +317,26 @@ def main():
         cur.executemany(insert_sql, batch)
     conn.commit()
     print(f"Loaded {n} price records")
+    if skipped_unnamed:
+        print(f"Skipped {skipped_unnamed} rows with no Product or By_Product")
+
+    cur.execute("SELECT min(record_date), max(record_date), count(distinct record_date) FROM price_records")
+    first, last, days = cur.fetchone()
+    print(f"Date range: {first} .. {last} ({days} days)")
+    print("Column fill rates (rows with valid min/max):")
+    for c in GATED_COLUMNS:
+        print(f"  {c:12s} {filled[c] / max(seen, 1):7.1%}")
+    location_fill = min(filled[c] for c in ("Province", "District", "Station")) / max(seen, 1)
+    if location_fill < MIN_LOCATION_FILL and not args.allow_missing_locations:
+        conn.close()
+        for p in (tmp_path, tmp_path + "-wal", tmp_path + "-shm"):
+            if os.path.exists(p):
+                os.remove(p)
+        sys.exit(
+            f"\nSTOPPED: Province/District/Station are only {location_fill:.1%} filled. The map, location "
+            "filters and market counts need them. Re-export with location columns, or pass "
+            "--allow-missing-locations to load anyway. The existing database was left untouched."
+        )
 
     print("Creating indexes...")
     cur.executescript("""
@@ -271,6 +347,10 @@ def main():
         CREATE INDEX idx_pr_district ON price_records(district);
         CREATE INDEX idx_pr_province ON price_records(province);
         CREATE INDEX idx_pr_pvalid ON price_records(price_valid);
+        -- A year of data (~300k rows): per-by-product queries filter on
+        -- product + by_product and then by date / rate type.
+        CREATE INDEX idx_pr_prod_bp_date ON price_records(product, by_product, record_date);
+        CREATE INDEX idx_pr_prod_bp_ptype ON price_records(product, by_product, price_type, record_date);
     """)
     conn.commit()
 
@@ -360,9 +440,21 @@ def main():
     cur.execute("SELECT count(*) FROM by_products")
     print("by_products:", cur.fetchone()[0])
 
+    cur.execute("ANALYZE")
+    conn.commit()
     cur.close()
+    conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
     conn.close()
-    print("Done generating zarai_mandi.sqlite.")
+
+    # Swap the new database in only now that the load has succeeded.
+    for p in (out_path + "-wal", out_path + "-shm"):
+        if os.path.exists(p):
+            os.remove(p)
+    os.replace(tmp_path, out_path)
+    for p in (tmp_path + "-wal", tmp_path + "-shm"):
+        if os.path.exists(p):
+            os.remove(p)
+    print(f"Done: {out_path}. Restart the API to serve the new data.")
 
 
 if __name__ == "__main__":

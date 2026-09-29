@@ -7,44 +7,58 @@ the real commodity price export, implementing the aggregation rules in
 
 ## Setup
 
+The API runs on SQLite (`node:sqlite`, Node 22+), from `db/zarai_mandi.sqlite`.
+`db/etl_sqlite.py` builds that file from a commodity price export.
+(`db/etl_load.py` + `db/schema.sql` are the older Postgres loader; the
+running API no longer uses them.)
+
 ```bash
-# 1. Postgres running, then create the role/db once:
-sudo -u postgres psql -c "CREATE USER zarai_mandi WITH PASSWORD 'zarai_mandi_dev' CREATEDB;"
-sudo -u postgres psql -c "CREATE DATABASE zarai_mandi OWNER zarai_mandi;"
+# 1. One-off: Python with openpyxl
+python3 -m pip install openpyxl
 
-# 2. Apply schema:
-PGPASSWORD=zarai_mandi_dev psql -h localhost -U zarai_mandi -d zarai_mandi -f db/schema.sql
+# 2. Load an export (default: data/All Commodity Prices_2025-09-23_to_2026-09-23.xlsx)
+cd api
+python3 db/etl_sqlite.py "../data/<export>.xlsx"
 
-# 3. Export the source xlsx to CSV (openpyxl), then load it:
-python3 -c "
-import openpyxl, csv
-wb = openpyxl.load_workbook('../data/All Commodity Prices - 15-Aug-2026 to 14-Sept-2026.xlsx', read_only=True, data_only=True)
-ws = wb['Commodity Prices']
-rows = ws.iter_rows(min_row=7, values_only=True)
-header = next(rows)
-with open('../data/commodity_prices.csv', 'w', newline='', encoding='utf-8') as f:
-    w = csv.writer(f); w.writerow(header)
-    for row in rows:
-        if row[0] is None and all(v in (None, '') for v in row): continue
-        w.writerow(row)
-"
-DATABASE_URL="postgresql://zarai_mandi:zarai_mandi_dev@localhost:5432/zarai_mandi" python3 db/etl_load.py
-
-# 4. Run the API:
+# 3. Run the API
 npm install
-DATABASE_URL="postgresql://zarai_mandi:zarai_mandi_dev@localhost:5432/zarai_mandi" npm start
-# -> listening on :8090
+npm start            # -> listening on :8090
 ```
 
 The frontend (`../app`) talks to this via `VITE_MARKET_API_URL` (default
 `http://localhost:8090`, see `../app/src/lib/api.ts`).
 
-Re-run `db/etl_load.py` whenever the source xlsx changes -- it's
-idempotent (truncates and reloads).
+### Loading a new export (e.g. the 1-year data)
+
+1. Stop the API.
+2. `python3 db/etl_sqlite.py "../data/<new export>.xlsx"`
+3. Start the API.
+
+The loader:
+
+- reads both export layouts: the 1-month file (sheet "Commodity Prices",
+  header on row 7) and the 1-year file (sheet "Prices", header on row 1);
+- prints the date range and how filled Province/District/Station/Price_Type are;
+- **stops without touching the current database if Province/District/Station
+  are under 50% filled**, because the map, location filters, market counts,
+  trend graphs and Compare only count prices from an identifiable market
+  (province + district + station) with a rate type. Pass
+  `--allow-missing-locations` to load such an export anyway;
+- skips rows with no Product/By_Product (and says how many);
+- builds into `zarai_mandi.sqlite.building` and swaps it in only after a
+  successful load, so a failed load never leaves the API without data.
+
+`--out other.sqlite` builds somewhere else; `SQLITE_PATH=other.sqlite npm start`
+runs the API against it (handy for trying a new export on a second port with
+`PORT=8091`).
+
+Everything date-related in the API is derived from the data (latest day =
+`max(record_date)`, compare range = min/max date), so a longer export needs no
+code changes.
 
 ## Data model
 
-- **`price_records`** -- every source row (40,959), typed and indexed,
+- **`price_records`** -- every source row (40,959 in the 1-month export, ~298k in the 1-year export), typed and indexed,
   with generated validity columns (`price_valid`, `arrival_weight_known`,
   `arrival_weight_kg`). Never mutated after load.
 - **`catalog_entries`** -- the 468-entry customer-facing catalog
