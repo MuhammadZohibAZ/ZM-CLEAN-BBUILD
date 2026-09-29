@@ -591,6 +591,10 @@ export function ByProductCombinedScreen({
                   byproduct: bp,
                   initialRateType: stats.mostOccurringRateType,
                   initialStatDate: curDateStr,
+                  initialAvgMin: stats.avgMin > 0 ? stats.avgMin : undefined,
+                  initialAvgMax: stats.avgMax > 0 ? stats.avgMax : undefined,
+                  initialTotalArrival: stats.totalArrival > 0 ? stats.totalArrival : undefined,
+                  initialMarkets: stats.markets > 0 ? stats.markets : undefined,
                 });
               };
 

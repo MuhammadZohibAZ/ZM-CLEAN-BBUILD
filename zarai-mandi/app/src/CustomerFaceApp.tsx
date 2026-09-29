@@ -435,6 +435,10 @@ function AppInner({
               initialCondition={(current as ComRatesScr).initialCondition}
               initialMoisture={(current as ComRatesScr).initialMoisture}
               initialStatDate={(current as ComRatesScr).initialStatDate}
+              initialAvgMin={(current as ComRatesScr).initialAvgMin}
+              initialAvgMax={(current as ComRatesScr).initialAvgMax}
+              initialTotalArrival={(current as ComRatesScr).initialTotalArrival}
+              initialMarkets={(current as ComRatesScr).initialMarkets}
             />
           )}
           {current.id === "live-market" && <LiveMarketScreen onBack={pop} />}

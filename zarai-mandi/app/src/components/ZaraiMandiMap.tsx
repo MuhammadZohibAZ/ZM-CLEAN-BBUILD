@@ -27,6 +27,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { buildMandiInlineGraphFromRows } from "../lib/mandiGraph";
+import { MandiTrendGraphView } from "./MandiTrendGraphView";
 
 /* ------------------------------------------------------------------ */
 /*  Data model                                                         */
@@ -831,20 +832,15 @@ export default function ZaraiMandiMap({
           )}
         </div>
 
-        {/* Commodity Badge Pill (No Emoji) */}
-        <div className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-700 text-white shadow-sm font-bold">
-          <span className="text-[12px] tracking-tight">{activeCommodity}</span>
-          <span className="text-[11px] opacity-85 font-semibold">({visibleCropMandis.length})</span>
-        </div>
+
       </div>
 
       {/* ── Vector Map Area ── */}
       <div className="relative flex-1 min-h-0 bg-[#E8F5EE]/40 overflow-hidden">
         {/* Floating Nearby Mandis Collapsible Sidebar on the Left Area */}
         <div
-          className={`absolute left-2.5 top-2.5 ${
-            sidebarOpen ? "bottom-2.5 z-20 flex flex-col w-[180px] sm:w-[225px]" : "z-20 w-auto"
-          } transition-all duration-300 pointer-events-auto`}
+          className={`absolute left-2.5 top-2.5 ${sidebarOpen ? "bottom-2.5 z-20 flex flex-col w-[180px] sm:w-[225px]" : "z-20 w-auto"
+            } transition-all duration-300 pointer-events-auto`}
         >
           {sidebarOpen ? (
             <div className="w-full h-full bg-white/95 backdrop-blur-md rounded-2xl border border-emerald-200/90 shadow-xl flex flex-col overflow-hidden">
@@ -912,11 +908,10 @@ export default function ZaraiMandiMap({
                       <button
                         key={item.mandi.id}
                         onClick={() => goMandi(item.mandi)}
-                        className={`w-full text-left p-2 rounded-xl transition-all border ${
-                          isSelected
+                        className={`w-full text-left p-2 rounded-xl transition-all border ${isSelected
                             ? "bg-emerald-700 text-white border-emerald-700 shadow-md scale-[1.01]"
                             : "bg-[#FAFCFB] hover:bg-emerald-50 text-slate-800 border-emerald-100/80 shadow-sm"
-                        }`}
+                          }`}
                       >
                         <div className="flex items-start justify-between gap-1">
                           <p className={`text-[11px] sm:text-[11.5px] font-black leading-tight truncate ${isSelected ? "text-white" : "text-emerald-950"}`}>
@@ -1418,102 +1413,12 @@ export default function ZaraiMandiMap({
               </div>
             </div>
 
-            {/* 2. DEDICATED GRAPH BOX CARD (MATCHING USER SCREENSHOT EXACTLY) */}
+            {/* 2. DEDICATED GRAPH BOX CARD (MATCHING PRODUCTRATESSCREEN TRENDS TAB EXACTLY) */}
             <div className="p-3">
-              <div className="bg-white rounded-2xl border border-slate-100 shadow-md p-3.5 flex flex-col gap-2.5">
-                {/* 1. Header: Price Trend vs Arrival Trend + Wiki & Close Buttons */}
-                <div className="flex items-center justify-between gap-2 border-b border-[#E8EFEC] pb-2">
-                  <div className="flex items-center bg-[#EAF5F0] p-0.5 rounded-lg border border-[#CDE5DC]">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setGraphMode("price");
-                        setShowWiki(false);
-                      }}
-                      className="tap-target px-3 py-1 rounded-md text-[10.5px] font-extrabold transition"
-                      style={{
-                        background: graphMode === "price" && !showWiki ? "#087F63" : "transparent",
-                        color: graphMode === "price" && !showWiki ? "#FFFFFF" : "#4E665E",
-                        fontFamily: lang === "ur" ? urduFont : "inherit",
-                      }}
-                    >
-                      {lang === "ur" ? "قیمت کا رجحان" : "Price Trend"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setGraphMode("arrival");
-                        setShowWiki(false);
-                      }}
-                      className="tap-target px-3 py-1 rounded-md text-[10.5px] font-extrabold transition"
-                      style={{
-                        background: graphMode === "arrival" && !showWiki ? "#D97706" : "transparent",
-                        color: graphMode === "arrival" && !showWiki ? "#FFFFFF" : "#4E665E",
-                        fontFamily: lang === "ur" ? urduFont : "inherit",
-                      }}
-                    >
-                      {lang === "ur" ? "آمد کا رجحان" : "Arrival Trend"}
-                    </button>
-                  </div>
-
-                  <div className="flex items-center gap-1.5">
-                    {/* Wiki Info Drawer Button */}
-                    <button
-                      type="button"
-                      onClick={() => setShowWiki((prev) => !prev)}
-                      className={`w-7 h-7 rounded-full flex items-center justify-center transition active:scale-95 ${
-                        showWiki
-                          ? "bg-emerald-700 text-white"
-                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                      }`}
-                      title={lang === "ur" ? "منڈی کی معلومات" : "Mandi Wiki Information"}
-                    >
-                      {showWiki ? <X size={13} strokeWidth={2.5} /> : <Info size={13} strokeWidth={2.5} />}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setView({ level: "country", province: null, mandi: null });
-                      }}
-                      className="tap-target w-7 h-7 rounded-full bg-[#E5EFEA] hover:bg-[#D5E5DE] text-[#064D40] text-xs font-bold flex items-center justify-center transition active:scale-95"
-                      title={lang === "ur" ? "بند کریں" : "Close"}
-                    >
-                      ✕
-                    </button>
-                  </div>
-                </div>
-
-                {/* 2. Granularity Filter Bar (1, 5, 15, 30, 1H, 5H, 1D, 1W, 1M) */}
-                <div className="flex items-center gap-1 overflow-x-auto py-1 border-b border-[#E8EFEC]" style={{ scrollbarWidth: "none" }}>
-                  {["1", "5", "15", "30", "1H", "5H", "1D", "1W", "1M"].map((g) => {
-                    const isGActive = granularity === g;
-                    return (
-                      <button
-                        key={g}
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setGranularity(g);
-                        }}
-                        className={`px-2 py-0.5 rounded text-[10.5px] font-bold transition-colors flex-shrink-0 ${
-                          isGActive
-                            ? graphMode === "price"
-                              ? "bg-[#087F63] text-white shadow-xs"
-                              : "bg-[#D97706] text-white shadow-xs"
-                            : "text-[#52635F] hover:bg-[#F1F7F4] hover:text-[#143B33]"
-                        }`}
-                      >
-                        {g}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* 3. Main Graph Body or Wiki Drawer */}
-                {showWiki ? (
-                  <div className="p-3.5 rounded-xl bg-[#F0FDF4] border border-emerald-200 text-xs text-emerald-950 space-y-2.5 animate-in fade-in duration-200 max-h-[38vh] overflow-y-auto">
-                    <div className="flex items-center gap-1.5 font-bold text-emerald-900">
+              {showWiki ? (
+                <div className="p-3.5 rounded-2xl bg-white border border-[#D5E2DD] shadow-sm flex flex-col gap-2.5">
+                  <div className="flex items-center justify-between pb-2 border-b border-[#E8EFEC]">
+                    <div className="flex items-center gap-1.5 font-bold text-emerald-900 text-xs">
                       <BookOpen size={14} className="text-emerald-700" />
                       <span>
                         {lang === "ur"
@@ -1521,570 +1426,99 @@ export default function ZaraiMandiMap({
                           : `${stationName}'s role in ${activeCommodity} trade`}
                       </span>
                     </div>
-                    <p className="text-[10.5px] leading-relaxed text-emerald-900/60 font-semibold -mt-1">
-                      {lang === "ur"
-                        ? "اس مہینے کے حقیقی ریکارڈز سے خودکار حساب"
-                        : "Computed from this month's real records"}
-                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setShowWiki(false)}
+                      className="tap-target w-7 h-7 rounded-full bg-[#E5EFEA] hover:bg-[#D5E5DE] text-[#064D40] text-xs font-bold flex items-center justify-center transition active:scale-95"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <p className="text-[10.5px] leading-relaxed text-emerald-900/60 font-semibold -mt-1">
+                    {lang === "ur"
+                      ? "اس مہینے کے حقیقی ریکارڈز سے خودکار حساب"
+                      : "Computed from this month's real records"}
+                  </p>
 
-                    <div className="grid grid-cols-2 gap-2.5 text-[11px]">
-                      <div>
-                        <span className="font-bold text-emerald-800 block">{lang === "ur" ? "کل ریکارڈز" : "Records this month"}</span>
-                        <span className="font-semibold text-slate-800">{mandiRecords.length}</span>
-                      </div>
-                      <div>
-                        <span className="font-bold text-emerald-800 block">{lang === "ur" ? "نرخ کی اقسام" : "Price types reported"}</span>
-                        <span className="font-semibold text-slate-800">{priceTypesAtMandi.join(", ")}</span>
-                      </div>
-                      {arrivalSharePct !== null && (
-                        <div>
-                          <span className="font-bold text-emerald-800 block">
-                            {lang === "ur" ? "قومی آمد میں حصہ" : "Share of national arrivals"}
-                          </span>
-                          <span className="font-semibold text-slate-800">{arrivalSharePct}%</span>
-                        </div>
-                      )}
+                  <div className="grid grid-cols-2 gap-2.5 text-[11px]">
+                    <div>
+                      <span className="font-bold text-emerald-800 block">{lang === "ur" ? "کل ریکارڈز" : "Records this month"}</span>
+                      <span className="font-semibold text-slate-800">{mandiRecords.length}</span>
+                    </div>
+                    <div>
+                      <span className="font-bold text-emerald-800 block">{lang === "ur" ? "نرخ کی اقسام" : "Price types reported"}</span>
+                      <span className="font-semibold text-slate-800">{priceTypesAtMandi.join(", ")}</span>
+                    </div>
+                    {arrivalSharePct !== null && (
                       <div>
                         <span className="font-bold text-emerald-800 block">
-                          {lang === "ur" ? "دیگر رپورٹ کرنے والی منڈیاں" : "Other reporting mandis nationwide"}
+                          {lang === "ur" ? "قومی آمد میں حصہ" : "Share of national arrivals"}
                         </span>
-                        <span className="font-semibold text-slate-800">{Math.max(0, distinctMandiCount - 1)}</span>
+                        <span className="font-semibold text-slate-800">{arrivalSharePct}%</span>
                       </div>
-                      {firstDate && lastDate && (
-                        <div className="col-span-2">
-                          <span className="font-bold text-emerald-800 block">
-                            {lang === "ur" ? "فعال تاریخیں" : "Active dates"}
-                          </span>
-                          <span className="font-semibold text-slate-800">{firstDate} – {lastDate}</span>
-                        </div>
-                      )}
+                    )}
+                    <div>
+                      <span className="font-bold text-emerald-800 block">
+                        {lang === "ur" ? "دیگر رپورٹ کرنے والی منڈیاں" : "Other reporting mandis nationwide"}
+                      </span>
+                      <span className="font-semibold text-slate-800">{Math.max(0, distinctMandiCount - 1)}</span>
                     </div>
-
-                    {selectedMandi.agriProfile && (
-                      <div className="pt-2.5 border-t border-emerald-200/80">
-                        <span className="font-bold text-emerald-800 block mb-1">
-                          {lang === "ur" ? "علاقے کا عمومی پس منظر" : "General background on the area"}
+                    {firstDate && lastDate && (
+                      <div className="col-span-2">
+                        <span className="font-bold text-emerald-800 block">
+                          {lang === "ur" ? "فعال تاریخیں" : "Active dates"}
                         </span>
-                        <p className="text-[11px] leading-relaxed text-emerald-950/75 font-medium">
-                          {selectedMandi.agriProfile}
-                        </p>
+                        <span className="font-semibold text-slate-800">{firstDate} – {lastDate}</span>
                       </div>
                     )}
                   </div>
-                ) : (
-                  <>
-                    {/* Commodity Header HUD */}
-                    <div className="flex flex-col gap-2.5 border-b border-[#E8EFEC] pb-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className="text-sm sm:text-base font-black text-[#143B33]"
-                            style={{ fontFamily: lang === "ur" ? urduFont : "inherit" }}
-                          >
-                            {stationName} — {activeCommodity}
-                          </span>
-                          <span className="text-[11px] font-black text-[#087F63] bg-[#E8F8F4] px-2.5 py-0.5 rounded-full border border-[#C2E8DB]">
-                            {dominantRateType || (lang === "ur" ? "منڈی" : "Mandi")}
-                          </span>
-                        </div>
-                        <span className="text-[11px] font-bold text-[#627771]">
-                          {graphMode === "price"
-                            ? (lang === "ur" ? "روپے فی ۴۰ کلو" : "PKR / 40kg")
-                            : (lang === "ur" ? "تھیلے (۴۰ کلو)" : "Bags (40kg)")}
-                        </span>
-                      </div>
 
-                      {/* Value & Change Display */}
-                      <div className="flex items-baseline justify-between flex-wrap gap-2">
-                        <div className="flex items-baseline gap-3">
-                          <span className="text-3xl sm:text-4xl font-black text-[#143B33] tracking-tight">
-                            {graphMode === "price"
-                              ? (lang === "ur" ? `روپے ${toUrduDigits(displayPrice.toLocaleString())}` : `Rs. ${displayPrice.toLocaleString()}`)
-                              : (lang === "ur" ? `${toUrduDigits(displayArr.toLocaleString())} تھیلے` : `${displayArr.toLocaleString()} Bags`)}
-                          </span>
-                          <span
-                            className="text-xs sm:text-[13px] font-black px-3 py-1 rounded-md flex items-center gap-1"
-                            style={{
-                              background: isFlat ? "#F3F4F6" : isPositive ? "#DCFCE7" : "#FEE2E2",
-                              color: isFlat ? "#4B5563" : isPositive ? "#15803D" : "#B91C1C",
-                              border: `1px solid ${isFlat ? "#E5E7EB" : isPositive ? "#86EFAC" : "#FCA5A5"}`,
-                            }}
-                          >
-                            <span>{isFlat ? "—" : isPositive ? "▲" : "▼"}</span>
-                            <span>{absPct}%</span>
-                          </span>
-                        </div>
-
-                        {/* Date / Scrub Indicator */}
-                        <div className="text-xs font-bold text-[#52635F]">
-                          {currentDateLabel}
-                        </div>
-                      </div>
-
-                      {/* Stat Summary Bar (High, Low, Avg) */}
-                      <div className="grid grid-cols-3 gap-2.5 pt-1 text-[11px]">
-                        <div className="bg-[#F8FBFA] p-2 sm:p-2.5 rounded-xl border border-[#DCE8E3] flex flex-col">
-                          <span className="text-[#52635F] font-bold">
-                            {graphMode === "price"
-                              ? (lang === "ur" ? "زیادہ سے زیادہ" : "Period High")
-                              : (lang === "ur" ? "کل آمد" : "Total Period")}
-                          </span>
-                          <span className="font-black text-[#143B33] text-sm sm:text-[15px] mt-0.5">
-                            {graphMode === "price"
-                              ? (lang === "ur" ? `روپے ${toUrduDigits(seriesMax.toLocaleString())}` : `Rs. ${seriesMax.toLocaleString()}`)
-                              : `${totalArr.toLocaleString()} Bags`}
-                          </span>
-                        </div>
-                        <div className="bg-[#F8FBFA] p-2 sm:p-2.5 rounded-xl border border-[#DCE8E3] flex flex-col">
-                          <span className="text-[#52635F] font-bold">
-                            {graphMode === "price"
-                              ? (lang === "ur" ? "کم سے کم" : "Period Low")
-                              : (lang === "ur" ? "سب سے زیادہ" : "Peak Day")}
-                          </span>
-                          <span className="font-black text-[#143B33] text-sm sm:text-[15px] mt-0.5">
-                            {graphMode === "price"
-                              ? (lang === "ur" ? `روپے ${toUrduDigits(seriesMin.toLocaleString())}` : `Rs. ${seriesMin.toLocaleString()}`)
-                              : `${peakArr.toLocaleString()} Bags`}
-                          </span>
-                        </div>
-                        <div className="bg-[#F8FBFA] p-2 sm:p-2.5 rounded-xl border border-[#DCE8E3] flex flex-col">
-                          <span className="text-[#52635F] font-bold">
-                            {graphMode === "price"
-                              ? (lang === "ur" ? "اوسط ریٹ" : "Period Avg")
-                              : (lang === "ur" ? "روزانہ اوسط" : "Daily Avg")}
-                          </span>
-                          <span
-                            className="font-black text-sm sm:text-[15px] mt-0.5"
-                            style={{ color: graphMode === "price" ? "#087F63" : "#D97706" }}
-                          >
-                            {graphMode === "price"
-                              ? (lang === "ur" ? `روپے ${toUrduDigits(seriesAvg.toLocaleString())}` : `Rs. ${seriesAvg.toLocaleString()}`)
-                              : `${avgArr.toLocaleString()} Bags`}
-                          </span>
-                        </div>
-                      </div>
+                  {selectedMandi.agriProfile && (
+                    <div className="pt-2.5 border-t border-emerald-200/80">
+                      <span className="font-bold text-emerald-800 block mb-1">
+                        {lang === "ur" ? "علاقے کا عمومی پس منظر" : "General background on the area"}
+                      </span>
+                      <p className="text-[11px] leading-relaxed text-emerald-950/75 font-medium">
+                        {selectedMandi.agriProfile}
+                      </p>
                     </div>
-
-                    {/* SVG Interactive Canvas with Hold-to-Scrub */}
-                    <div className="relative w-full select-none bg-[#FCFDFD] rounded-xl border border-[#EDF4F1] p-1">
-                      <svg
-                        viewBox={`0 0 ${W} ${H}`}
-                        className="w-full select-none"
-                        style={{ height: 215, display: "block", touchAction: "none" }}
-                        onMouseDown={(e) => {
-                          const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-                          const relX = ((e.clientX - rect.left) / rect.width) * W - PL;
-                          const i = Math.round((relX / chartW) * (len - 1));
-                          setGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
-                        }}
-                        onMouseMove={(e) => {
-                          if (e.buttons === 1 || graphHoverIdx !== null) {
-                            const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-                            const relX = ((e.clientX - rect.left) / rect.width) * W - PL;
-                            const i = Math.round((relX / chartW) * (len - 1));
-                            setGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
-                          }
-                        }}
-                        onMouseUp={() => setGraphHoverIdx(null)}
-                        onMouseLeave={() => setGraphHoverIdx(null)}
-                        onTouchStart={(e) => {
-                          const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-                          const touch = e.touches[0];
-                          if (touch) {
-                            const relX = ((touch.clientX - rect.left) / rect.width) * W - PL;
-                            const i = Math.round((relX / chartW) * (len - 1));
-                            setGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
-                          }
-                        }}
-                        onTouchMove={(e) => {
-                          const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-                          const touch = e.touches[0];
-                          if (touch) {
-                            const relX = ((touch.clientX - rect.left) / rect.width) * W - PL;
-                            const i = Math.round((relX / chartW) * (len - 1));
-                            setGraphHoverIdx(Math.max(0, Math.min(len - 1, i)));
-                          }
-                        }}
-                        onTouchEnd={() => setGraphHoverIdx(null)}
-                        onTouchCancel={() => setGraphHoverIdx(null)}
-                      >
-                        <defs>
-                          <linearGradient
-                            id="mandiMapChartGradPrice"
-                            x1="0"
-                            y1="0"
-                            x2="0"
-                            y2="1"
-                          >
-                            <stop offset="0%" stopColor="#087F63" stopOpacity="0.22" />
-                            <stop offset="75%" stopColor="#087F63" stopOpacity="0.03" />
-                            <stop offset="100%" stopColor="#087F63" stopOpacity="0.00" />
-                          </linearGradient>
-                          <linearGradient
-                            id="mandiMapChartGradArr"
-                            x1="0"
-                            y1="0"
-                            x2="0"
-                            y2="1"
-                          >
-                            <stop offset="0%" stopColor="#D97706" stopOpacity="0.32" />
-                            <stop offset="85%" stopColor="#D97706" stopOpacity="0.04" />
-                            <stop offset="100%" stopColor="#D97706" stopOpacity="0.00" />
-                          </linearGradient>
-                        </defs>
-
-                        {/* Horizontal Gridlines + Right Y Ticks */}
-                        {currentData.yLabels.map((tick, ti) => {
-                          const y = yOf(tick.val);
-                          return (
-                            <g key={`yTick-${ti}`}>
-                              <line
-                                x1={PL}
-                                y1={y}
-                                x2={W - PR}
-                                y2={y}
-                                stroke="#E8EFEF"
-                                strokeWidth="1"
-                                strokeDasharray="3 3"
-                              />
-                              <text
-                                x={W - PR + 4}
-                                y={y + 3.5}
-                                textAnchor="start"
-                                fontSize="9.5"
-                                fontWeight="700"
-                                fill="#1E3A34"
-                              >
-                                {tick.label}
-                              </text>
-                            </g>
-                          );
-                        })}
-
-                        {/* Pane Separator Line (Line Graph vs Bar Graph) */}
-                        <line
-                          x1={PL}
-                          y1={separatorY}
-                          x2={W - PR}
-                          y2={separatorY}
-                          stroke="#94A3B8"
-                          strokeWidth="1.2"
-                          strokeDasharray="4 3"
-                        />
-                        <text
-                          x={W - PR + 4}
-                          y={separatorY + 3.5}
-                          textAnchor="start"
-                          fontSize="8.5"
-                          fontWeight="700"
-                          fill="#64748B"
-                        >
-                          {graphMode === "price" ? (lang === "ur" ? "نرخ بار" : "Bars") : (lang === "ur" ? "آمد بار" : "Bars")}
-                        </text>
-
-                        {/* Volume Baseline */}
-                        <line
-                          x1={PL}
-                          y1={volBaseY}
-                          x2={W - PR}
-                          y2={volBaseY}
-                          stroke="#C8DCD5"
-                          strokeWidth="1.4"
-                        />
-
-                        {/* X-Axis Date Labels */}
-                        {currentData.xLabels.map((lbl, i) =>
-                          lbl ? (
-                            <text
-                              key={`xTick-${i}`}
-                              x={xOf(i)}
-                              y={H - 8}
-                              textAnchor="middle"
-                              fontSize="9.5"
-                              fontWeight="700"
-                              fill="#1E3A34"
-                              fontFamily={lang === "ur" ? urduFont : "inherit"}
-                            >
-                              {lbl}
-                            </text>
-                          ) : null,
-                        )}
-
-                        {/* Bottom Bars (Pure Price Movement Bars in Price Mode, Pure Arrival Bars in Arrival Mode) */}
-                        {pts.map((vVal, i) => {
-                          const barX = xOf(i);
-                          const prevV = i > 0 ? pts[i - 1] : vVal;
-                          const isUp = vVal >= prevV;
-                          const barRatio = Math.max(0.18, (vVal - pMin) / Math.max(pMax - pMin, 1));
-                          const barH = graphMode === "price"
-                            ? Math.max(4, Math.round(barRatio * volMaxH))
-                            : Math.max(4, Math.round(((graphData.arrivals[i] || 0) / maxArr) * volMaxH));
-                          const barW = Math.max(3, Math.min(8, (chartW / len) * 0.65));
-                          const isHov = graphHoverIdx === i;
-
-                          return (
-                            <rect
-                              key={`bar-${i}`}
-                              x={barX - barW / 2}
-                              y={volBaseY - barH}
-                              width={barW}
-                              height={barH}
-                              rx={1.5}
-                              fill={graphMode === "price" ? (isUp ? "#10B981" : "#EF4444") : "#D97706"}
-                              opacity={graphHoverIdx === null ? 0.75 : isHov ? 1.0 : 0.35}
-                            />
-                          );
-                        })}
-
-                        {/* Area & Line */}
-                        {(() => {
-                          const lineCoords = pts.map((v, i) => `${i === 0 ? "M" : "L"}${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`).join(" ");
-                          const areaCoords = `${lineCoords} L${xOf(len - 1).toFixed(1)},${separatorY} L${PL},${separatorY} Z`;
-                          const strokeColor = graphMode === "price" ? "#087F63" : "#D97706";
-                          const gradId = graphMode === "price" ? "mandiMapChartGradPrice" : "mandiMapChartGradArr";
-
-                          return (
-                            <g>
-                              <path d={areaCoords} fill={`url(#${gradId})`} />
-                              <path d={lineCoords} stroke={strokeColor} strokeWidth="2.8" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                              {/* Dotted Latest Price Guideline */}
-                              <line x1={PL} y1={currentCloseY} x2={W - PR} y2={currentCloseY} stroke={strokeColor} strokeWidth="0.9" strokeDasharray="3 3" opacity="0.6" />
-                              {/* Live Pulse Dot */}
-                              <circle cx={xOf(len - 1)} cy={currentCloseY} r="4.5" fill={strokeColor} stroke="#FFFFFF" strokeWidth="2" />
-                            </g>
-                          );
-                        })()}
-
-                        {/* Interactive Hover Crosshairs */}
-                        {graphHoverIdx !== null && (
-                          <g>
-                            <line x1={xOf(graphHoverIdx)} y1={PT} x2={xOf(graphHoverIdx)} y2={volBaseY} stroke="#0284C7" strokeWidth="1.2" strokeDasharray="2 2" />
-                            <line x1={PL} y1={yOf(pts[graphHoverIdx])} x2={W - PR} y2={yOf(pts[graphHoverIdx])} stroke="#0284C7" strokeWidth="1" strokeDasharray="2 2" opacity="0.75" />
-                            <circle cx={xOf(graphHoverIdx)} cy={yOf(pts[graphHoverIdx])} r="5" fill="#0284C7" stroke="#FFFFFF" strokeWidth="2" />
-                          </g>
-                        )}
-                      </svg>
-
-                      {/* Interactive Floating Tooltip Card on Hold */}
-                      {graphHoverIdx !== null && (() => {
-                        const curP = graphData.points[graphHoverIdx] || 0;
-                        const minP = graphData.mins?.[graphHoverIdx] || Math.max(0, curP - Math.round(curP * 0.008));
-                        const maxP = graphData.maxs?.[graphHoverIdx] || (curP + Math.round(curP * 0.008));
-                        const volVal = graphData.arrivals?.[graphHoverIdx] || 0;
-                        const dateStr = currentData.dates[graphHoverIdx] || "14 Sep 2026";
-
-                        return (
-                          <div
-                            className="pointer-events-none absolute z-20 rounded-xl shadow-xl border p-2 flex flex-col gap-1 backdrop-blur-md transition-all duration-75"
-                            style={{
-                              left: `${Math.min(Math.max((xOf(graphHoverIdx) / W) * 100, 24), 76)}%`,
-                              top: 8,
-                              transform: "translateX(-50%)",
-                              background: "rgba(255, 255, 255, 0.97)",
-                              borderColor: "#38BDF8",
-                              minWidth: 150,
-                              boxShadow: "0 8px 24px -4px rgba(2, 132, 199, 0.22)",
-                            }}
-                          >
-                            <div className="flex items-center justify-between text-[10px] font-bold text-[#0284C7] border-b border-[#E0F2FE] pb-1">
-                              <span>DT:</span>
-                              <span className="font-mono text-[#0F172A]">{dateStr}</span>
-                            </div>
-                            <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10px] font-semibold text-[#334155] pt-1">
-                              <span className="text-[#64748B]">{lang === "ur" ? "کم سے کم ریٹ:" : "Min Rate:"}</span>
-                              <span className="font-mono font-bold text-right text-[#B91C1C]">Rs. {minP.toLocaleString()}</span>
-                              <span className="text-[#64748B]">{lang === "ur" ? "زیادہ سے زیادہ:" : "Max Rate:"}</span>
-                              <span className="font-mono font-bold text-right text-[#15803D]">Rs. {maxP.toLocaleString()}</span>
-                              <span className="text-[#64748B]">{lang === "ur" ? "آمد:" : "Arrivals:"}</span>
-                              <span className="font-mono font-bold text-right text-[#0284C7]">{volVal > 0 ? `${volVal.toLocaleString()} bags` : "—"}</span>
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </div>
-
-                    {/* 4. Bottom Timeframe Buttons (15m, 1h, 4h, 1D, More dropdown) */}
-                    <div className="relative pt-1">
-                      <div className="flex items-center gap-1.5 w-full">
-                        {[
-                          { id: "15m", labelEn: "15m", labelUr: "۱۵ منٹ" },
-                          { id: "1h", labelEn: "1h", labelUr: "۱ گھنٹہ" },
-                          { id: "4h", labelEn: "4h", labelUr: "۴ گھنٹے" },
-                          { id: "1D", labelEn: "1D", labelUr: "۱ دن" },
-                        ].map((tf) => {
-                          const isTfActive = timeframe === tf.id;
-                          return (
-                            <button
-                              key={tf.id}
-                              type="button"
-                              onClick={() => {
-                                setTimeframe(tf.id);
-                                setIsMoreOpen(false);
-                              }}
-                              className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition active:scale-95 text-center ${
-                                isTfActive
-                                  ? graphMode === "price"
-                                    ? "bg-[#087F63] text-white shadow-xs font-black"
-                                    : "bg-[#D97706] text-white shadow-xs font-black"
-                                  : "bg-[#F4FAF7] text-[#2F4A43] border border-[#D5E2DD] hover:bg-[#E8F2ED]"
-                              }`}
-                              style={{ fontFamily: lang === "ur" ? urduFont : "inherit" }}
-                            >
-                              {lang === "ur" ? tf.labelUr : tf.labelEn}
-                            </button>
-                          );
-                        })}
-
-                        {/* More Dropdown Button */}
-                        <div className="relative flex-1">
-                          <button
-                            type="button"
-                            onClick={() => setIsMoreOpen(!isMoreOpen)}
-                            className={`w-full py-1.5 px-2 rounded-lg text-xs font-bold transition active:scale-95 flex items-center justify-center gap-1 ${
-                              ["1W", "1M", "3M", "6M", "1Y", "CUSTOM"].includes(timeframe)
-                                ? graphMode === "price"
-                                  ? "bg-[#087F63] text-white shadow-xs font-black"
-                                  : "bg-[#D97706] text-white shadow-xs font-black"
-                                : "bg-[#F4FAF7] text-[#2F4A43] border border-[#D5E2DD] hover:bg-[#E8F2ED]"
-                            }`}
-                            style={{ fontFamily: lang === "ur" ? urduFont : "inherit" }}
-                          >
-                            <span>
-                              {["1W", "1M", "3M", "6M", "1Y"].includes(timeframe)
-                                ? timeframe
-                                : timeframe === "CUSTOM"
-                                ? (lang === "ur" ? "مخصوص" : "Custom")
-                                : (lang === "ur" ? "مزید" : "More")}
-                            </span>
-                            <span className="text-[9px] opacity-75">▾</span>
-                          </button>
-
-                          {/* Popout Menu */}
-                          {isMoreOpen && (
-                            <>
-                              <div
-                                className="fixed inset-0 z-40 bg-transparent"
-                                onClick={() => setIsMoreOpen(false)}
-                              />
-                              <div
-                                className="absolute right-0 bottom-full mb-1.5 w-36 bg-white rounded-xl shadow-2xl border border-[#D5E2DD] py-1 z-50 animate-fadeIn"
-                                style={{ boxShadow: "0 10px 25px -3px rgba(0,0,0,0.18)" }}
-                              >
-                                {[
-                                  { id: "1W", labelEn: "1 Week", labelUr: "۱ ہفتہ" },
-                                  { id: "1M", labelEn: "1 Month", labelUr: "۱ ماہ" },
-                                  { id: "3M", labelEn: "3 Months", labelUr: "۳ ماہ" },
-                                  { id: "6M", labelEn: "6 Months", labelUr: "۶ ماہ" },
-                                  { id: "1Y", labelEn: "1 Year", labelUr: "۱ سال" },
-                                ].map((opt) => (
-                                  <button
-                                    key={opt.id}
-                                    type="button"
-                                    onClick={() => {
-                                      setTimeframe(opt.id);
-                                      setIsMoreOpen(false);
-                                    }}
-                                    className={`w-full text-left px-3 py-1.5 text-xs font-bold transition flex items-center justify-between ${
-                                      timeframe === opt.id
-                                        ? "bg-[#E8F8F4] text-[#087F63]"
-                                        : "text-[#334155] hover:bg-[#F8FAF9]"
-                                    }`}
-                                    style={{ fontFamily: lang === "ur" ? urduFont : "inherit" }}
-                                  >
-                                    <span>{lang === "ur" ? opt.labelUr : opt.labelEn}</span>
-                                    {timeframe === opt.id && <span className="text-[#087F63] text-[10px]">✓</span>}
-                                  </button>
-                                ))}
-
-                                <div className="border-t border-[#EEF3F0] my-1" />
-
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setIsMoreOpen(false);
-                                    setIsCustomPickerOpen(true);
-                                  }}
-                                  className={`w-full text-left px-3 py-1.5 text-xs font-bold transition flex items-center justify-between ${
-                                    timeframe === "CUSTOM"
-                                      ? "bg-[#E8F8F4] text-[#087F63]"
-                                      : "text-[#087F63] hover:bg-[#F8FAF9]"
-                                  }`}
-                                  style={{ fontFamily: lang === "ur" ? urduFont : "inherit" }}
-                                >
-                                  <span>{lang === "ur" ? "مخصوص مدت" : "Custom Range"}</span>
-                                  <span>📅</span>
-                                </button>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Custom Range Picker Dialog */}
-                      {isCustomPickerOpen && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-                          <div className="bg-white rounded-2xl p-4 w-full max-w-xs shadow-2xl border border-[#D5E2DD] flex flex-col gap-3 animate-scaleUp">
-                            <div className="flex items-center justify-between border-b border-[#EEF3F0] pb-2">
-                              <span className="font-extrabold text-sm text-[#143B33]" style={{ fontFamily: lang === "ur" ? urduFont : "inherit" }}>
-                                {lang === "ur" ? "مخصوص مدت کا انتخاب" : "Select Date Range"}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => setIsCustomPickerOpen(false)}
-                                className="w-6 h-6 rounded-full bg-[#F1F5F3] text-[#52635F] flex items-center justify-center text-xs font-bold"
-                              >
-                                ✕
-                              </button>
-                            </div>
-
-                            <div className="flex flex-col gap-2 text-xs font-bold text-[#52635F]">
-                              <label className="flex flex-col gap-1">
-                                <span>{lang === "ur" ? "شروع کی تاریخ:" : "Start Date:"}</span>
-                                <input
-                                  type="date"
-                                  value={customRange.start}
-                                  onChange={(e) => setCustomRange((prev) => ({ ...prev, start: e.target.value }))}
-                                  className="border border-[#CBD5E1] rounded-lg p-2 text-xs font-bold text-[#0F172A]"
-                                />
-                              </label>
-
-                              <label className="flex flex-col gap-1">
-                                <span>{lang === "ur" ? "آخری تاریخ:" : "End Date:"}</span>
-                                <input
-                                  type="date"
-                                  value={customRange.end}
-                                  onChange={(e) => setCustomRange((prev) => ({ ...prev, end: e.target.value }))}
-                                  className="border border-[#CBD5E1] rounded-lg p-2 text-xs font-bold text-[#0F172A]"
-                                />
-                              </label>
-                            </div>
-
-                            <div className="flex gap-2 pt-1">
-                              <button
-                                type="button"
-                                onClick={() => setIsCustomPickerOpen(false)}
-                                className="flex-1 py-2 rounded-xl text-xs font-bold bg-[#F1F5F3] text-[#52635F]"
-                              >
-                                {lang === "ur" ? "منسوخ" : "Cancel"}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setTimeframe("CUSTOM");
-                                  setIsCustomPickerOpen(false);
-                                }}
-                                className="flex-1 py-2 rounded-xl text-xs font-black bg-[#087F63] text-white shadow-sm"
-                              >
-                                {lang === "ur" ? "لاگو کریں" : "Apply"}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
+                  )}
+                </div>
+              ) : (
+                <div className="relative">
+                  {/* Mandi Wiki / Info toggle button floating at top-right */}
+                  <div className="absolute right-12 top-3.5 z-20">
+                    <button
+                      type="button"
+                      onClick={() => setShowWiki(true)}
+                      className="tap-target px-2.5 py-1 rounded-full bg-[#E5EFEA] hover:bg-[#D5E5DE] text-[#064D40] text-[10.5px] font-bold flex items-center gap-1 transition active:scale-95 border border-[#10B981]/30"
+                      title={lang === "ur" ? "منڈی کی معلومات" : "Mandi Wiki Information"}
+                    >
+                      <Info size={12} strokeWidth={2.5} />
+                      <span>{lang === "ur" ? "معلومات" : "Info"}</span>
+                    </button>
+                  </div>
+                  <MandiTrendGraphView
+                    mandiName={selectedMandi.name}
+                    commodityName={activeCommodity}
+                    initialRateType={dominantRateType}
+                    allRows={records.map((r) => ({
+                      mandiName: r.mandiName,
+                      rateType: r.rateType,
+                      min: r.min,
+                      max: r.max,
+                      arrival: r.arrival,
+                      date: r.date,
+                    }))}
+                    availableRateTypes={priceTypesAtMandi}
+                    lang={lang}
+                    urduFont={urduFont}
+                    showCloseButton={true}
+                    showExpandButton={false}
+                    onClose={() => setView({ level: "country", province: null, mandi: null })}
+                  />
+                </div>
+              )}
             </div>
           </div>
         );

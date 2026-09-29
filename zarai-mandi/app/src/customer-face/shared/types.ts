@@ -41,6 +41,10 @@ export type Screen =
     initialCondition?: string;
     initialMoisture?: string;
     initialStatDate?: string;
+    initialAvgMin?: number;
+    initialAvgMax?: number;
+    initialTotalArrival?: number;
+    initialMarkets?: number;
   }
   | { id: "compare" }
   | { id: "news" }
