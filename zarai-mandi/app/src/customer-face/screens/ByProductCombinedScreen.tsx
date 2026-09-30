@@ -584,6 +584,7 @@ export function ByProductCombinedScreen({
           <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
             {byproductCardsData.map(({ bp, stats }) => {
               const navigateToDetail = () => {
+                const sp = stats.specialAttr;
                 push({
                   id: 'product-rates',
                   vertical: activeProduct?.vertical || 'Grains',
@@ -595,6 +596,12 @@ export function ByProductCombinedScreen({
                   initialAvgMax: stats.avgMax > 0 ? stats.avgMax : undefined,
                   initialTotalArrival: stats.totalArrival > 0 ? stats.totalArrival : undefined,
                   initialMarkets: stats.markets > 0 ? stats.markets : undefined,
+                  initialNewOld: sp?.type === 'newOld' ? sp.valueEn : undefined,
+                  initialVariety: sp?.type === 'variety' ? sp.valueEn : undefined,
+                  initialColor: sp?.type === 'color' ? sp.valueEn : undefined,
+                  initialSpec: sp?.type === 'spec' ? sp.valueEn : undefined,
+                  initialCondition: sp?.type === 'quality' ? sp.valueEn : undefined,
+                  initialMoisture: sp?.type === 'moisture' ? sp.valueEn : undefined,
                 });
               };
 

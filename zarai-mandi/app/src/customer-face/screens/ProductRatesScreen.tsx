@@ -613,6 +613,7 @@ export function ProductRatesScreen({
       const d = r.date.slice(0, 10);
       return d === curDateStr;
     });
+    const allDateRows = baseRows.filter((r) => (r.date || "").slice(0, 10) === curDateStr);
 
     const dateMins = dateFilteredRows.map((r) => r.min).filter((v) => v > 0);
     const dateMaxs = dateFilteredRows.map((r) => r.max).filter((v) => v > 0);
@@ -649,7 +650,6 @@ export function ProductRatesScreen({
       sArrival = initialTotalArrival;
     } else {
       // Total arrival volume on this date for this by-product across filtered mandis
-      const allDateRows = baseRows.filter((r) => (r.date || "").slice(0, 10) === curDateStr);
       const allDateArrs = allDateRows.map((r) => parseArrival(r.arrival)).filter((v) => v > 0);
       const totalDayArrival = allDateArrs.reduce((a, b) => a + b, 0);
       const dateArrs = dateFilteredRows.map((r) => parseArrival(r.arrival)).filter((v) => v > 0);

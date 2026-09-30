@@ -11,7 +11,7 @@ import { HomeScreen } from "./customer-face/screens/HomeScreen";
 import { LiveMarketScreen } from "./customer-face/screens/LiveMarketScreen";
 import { MandiDetailScreen } from "./customer-face/screens/MandiDetailScreen";
 import { MandiListScreen } from "./customer-face/screens/MandiListScreen";
-import { ProductRatesScreen } from "./customer-face/screens/ProductRatesScreen";
+import { ProductRatesScreen } from "./customer-face/screens/product-rates/ProductRatesScreen";
 import { ProductSelectScreen } from "./customer-face/screens/ProductSelectScreen";
 import { RatesResultScreen } from "./customer-face/screens/RatesResultScreen";
 import { RepDashboardScreen } from "./customer-face/screens/RepDashboardScreen";
@@ -552,4 +552,3 @@ export default function CustomerFaceApp(props: AppProps) {
     </LangProvider>
   );
 }
-

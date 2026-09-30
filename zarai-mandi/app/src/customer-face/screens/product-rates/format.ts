@@ -1,0 +1,68 @@
+import { toUrduDigits, URDU_FONT } from "../../shared/i18n/LangProvider";
+import { BODY_FONT, DISPLAY_FONT } from "./theme";
+
+export type Lang = "en" | "ur";
+
+const MONTHS_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTHS_EN_FULL = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const MONTHS_UR = ["جنوری", "فروری", "مارچ", "اپریل", "مئی", "جون", "جولائی", "اگست", "ستمبر", "اکتوبر", "نومبر", "دسمبر"];
+const DAYS_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DAYS_EN_FULL = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const DAYS_UR = ["اتوار", "پیر", "منگل", "بدھ", "جمعرات", "جمعہ", "ہفتہ"];
+
+/** Language-aware formatting helpers, created once per render. */
+export function makeFmt(lang: Lang) {
+  const ur = lang === "ur";
+  const digits = (v: string | number) => (ur ? toUrduDigits(v) : String(v));
+  const num = (n: number) => digits(Math.round(n).toLocaleString("en-US"));
+  const rs = (n: number) => (ur ? `روپے ${num(n)}` : `Rs ${num(n)}`);
+  const pct = (n: number) => `${digits(Math.abs(n).toFixed(1))}%`;
+  const parse = (iso: string) => {
+    const [y, m, d] = iso.split("-").map(Number);
+    return new Date(y, m - 1, d);
+  };
+  const day = (iso: string, withWeekday = false) => {
+    const d = parse(iso);
+    const wd = withWeekday ? (ur ? `${DAYS_UR[d.getDay()]}، ` : `${DAYS_EN[d.getDay()]}, `) : "";
+    return ur ? `${wd}${digits(d.getDate())} ${MONTHS_UR[d.getMonth()]}` : `${wd}${d.getDate()} ${MONTHS_EN[d.getMonth()]}`;
+  };
+  const dayYear = (iso: string) => `${day(iso, true)} ${digits(parse(iso).getFullYear())}`;
+  const dayFullYear = (iso: string) => {
+    const d = parse(iso);
+    return ur ? `${digits(d.getDate())} ${MONTHS_UR[d.getMonth()]} ${digits(d.getFullYear())}` : `${d.getDate()} ${MONTHS_EN_FULL[d.getMonth()]} ${d.getFullYear()}`;
+  };
+  const dayFullWeekdayYear = (iso: string) => {
+    const d = parse(iso);
+    const wd = ur ? `${DAYS_UR[d.getDay()]}، ` : `${DAYS_EN_FULL[d.getDay()]}, `;
+    return ur
+      ? `${wd}${digits(d.getDate())} ${MONTHS_UR[d.getMonth()]} ${digits(d.getFullYear())}`
+      : `${wd}${d.getDate()} ${MONTHS_EN_FULL[d.getMonth()]} ${d.getFullYear()}`;
+  };
+  return {
+    ur,
+    digits,
+    num,
+    rs,
+    pct,
+    day,
+    dayYear,
+    dayFullYear,
+    dayFullWeekdayYear,
+    /** Pick the English or Urdu string. */
+    tx: (en: string, urText: string) => (ur ? urText : en),
+    font: ur ? URDU_FONT : BODY_FONT,
+    display: ur ? URDU_FONT : DISPLAY_FONT,
+    /** Nastaliq needs far more line height than Latin text. */
+    lh: ur ? 1.9 : 1.3,
+    dir: (ur ? "rtl" : "ltr") as "rtl" | "ltr",
+  };
+}
+
+export type Fmt = ReturnType<typeof makeFmt>;
+
+export const stripMandi = (s?: string) => (s || "").replace(/\s*(mandi|منڈی)$/i, "").trim();
+export const normLoc = (s?: string) => stripMandi(s).toLowerCase();
+export const shortRate = (label: string) => (label || "").replace(/\s*(rates?|ریٹس?)$/i, "").trim();
+
+export const signed = (n: number) => (n > 0.05 ? 1 : n < -0.05 ? -1 : 0);
+export const arrow = (n: number) => (signed(n) > 0 ? "▲" : signed(n) < 0 ? "▼" : "●");

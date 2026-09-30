@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from "framer-motion";
 import { X, Sparkles } from "lucide-react";
 import ZaraiMandiMap, { type MapByProductRecord } from "./ZaraiMandiMap";
@@ -19,6 +20,8 @@ export interface ExpandableMandiMapCardProps {
   lang?: "ur" | "en";
   urduFont?: string;
   className?: string;
+  compact?: boolean;
+  onSelectMandi?: (name: string) => void;
 }
 
 export const ExpandableMandiMapCard: React.FC<ExpandableMandiMapCardProps> = ({
@@ -31,6 +34,8 @@ export const ExpandableMandiMapCard: React.FC<ExpandableMandiMapCardProps> = ({
   lang = "en",
   urduFont,
   className = "",
+  compact = false,
+  onSelectMandi,
 }) => {
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
@@ -74,7 +79,7 @@ export const ExpandableMandiMapCard: React.FC<ExpandableMandiMapCardProps> = ({
       {/* ── Compact 3D Spring Card with Animated Boundary & Custom Background ── */}
       <motion.div
         ref={containerRef}
-        className={`relative cursor-pointer select-none w-full mb-2.5 ${className}`}
+        className={`relative cursor-pointer select-none w-full ${compact ? "mb-0" : "mb-2.5"} ${className}`}
         style={{ perspective: 1000 }}
         onMouseMove={handleMouseMove}
         onMouseEnter={() => setIsHovered(true)}
@@ -83,7 +88,7 @@ export const ExpandableMandiMapCard: React.FC<ExpandableMandiMapCardProps> = ({
         whileTap={{ scale: 0.985 }}
       >
         {/* Continuous Animated Racetrack / Boundary Glow Frame */}
-        <div className="absolute -inset-[2px] rounded-[20px] overflow-hidden pointer-events-none z-0">
+        <div className={`absolute -inset-[2px] ${compact ? "rounded-[18px]" : "rounded-[20px]"} overflow-hidden pointer-events-none z-0`}>
           <div
             className="absolute -inset-[150%] animate-[spin_4s_linear_infinite]"
             style={{
@@ -97,10 +102,10 @@ export const ExpandableMandiMapCard: React.FC<ExpandableMandiMapCardProps> = ({
 
         {/* Main Button Container */}
         <motion.div
-          className="relative z-10 overflow-hidden flex items-center justify-between px-4 py-2"
+          className={`relative z-10 overflow-hidden flex items-center justify-between ${compact ? "px-3 py-1" : "px-4 py-2"}`}
           style={{
-            height: 76,
-            borderRadius: 18,
+            height: compact ? 50 : 76,
+            borderRadius: compact ? 16 : 18,
             backgroundImage: `url(${pakistanMapBg})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
@@ -120,36 +125,38 @@ export const ExpandableMandiMapCard: React.FC<ExpandableMandiMapCardProps> = ({
           <div className="absolute inset-0 bg-white/20 backdrop-blur-[0.5px] pointer-events-none" />
 
           {/* Left space offset for the map graphic embedded in background */}
-          <div className="w-16 flex-shrink-0" />
+          <div className={`${compact ? "w-11" : "w-16"} flex-shrink-0`} />
 
           {/* Mandi & Commodity Info */}
           <div className="flex-1 min-w-0 flex flex-col justify-center px-2 z-10">
             <div className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
-              <span className="text-[10.5px] font-bold uppercase tracking-wider text-emerald-800/90 truncate">
+              <span className={`${compact ? "text-[9.5px]" : "text-[10.5px]"} font-bold uppercase tracking-wider text-emerald-800/90 truncate`}>
                 {commodityName.replace(/\s+market$/i, "").trim()}
               </span>
             </div>
             <span
-              className="font-black text-[14px] leading-tight truncate text-emerald-950 mt-0.5"
+              className={`font-black ${compact ? "text-[12.5px]" : "text-[14px]"} leading-tight truncate text-emerald-950 mt-0.5`}
               style={{
                 fontFamily: lang === "ur" ? urduFont : "inherit",
               }}
             >
               {mandiName}
             </span>
-            <motion.div
-              className="h-0.5 rounded-full mt-1 bg-emerald-600"
-              initial={{ width: 28 }}
-              animate={{ width: isHovered ? 48 : 28 }}
-              transition={{ duration: 0.3 }}
-            />
+            {!compact && (
+              <motion.div
+                className="h-0.5 rounded-full mt-1 bg-emerald-600"
+                initial={{ width: 28 }}
+                animate={{ width: isHovered ? 48 : 28 }}
+                transition={{ duration: 0.3 }}
+              />
+            )}
           </div>
 
           {/* Map View Pill Badge */}
-          <div className="flex-shrink-0 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/95 border border-emerald-300 shadow-md backdrop-blur-sm">
+          <div className={`flex-shrink-0 z-10 flex items-center gap-1.5 ${compact ? "px-2.5 py-1" : "px-3 py-1.5"} rounded-full bg-white/95 border border-emerald-300 shadow-md backdrop-blur-sm`}>
             <div className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
-            <span className="font-extrabold text-[11px] text-emerald-950">
+            <span className={`font-extrabold ${compact ? "text-[10px]" : "text-[11px]"} text-emerald-950`}>
               {lang === "ur" ? "نقشہ دیکھیں" : "Map View"}
             </span>
           </div>
@@ -172,58 +179,48 @@ export const ExpandableMandiMapCard: React.FC<ExpandableMandiMapCardProps> = ({
         </AnimatePresence>
       </motion.div>
 
-      {/* ── Expanded Fullscreen Map Overlay (Loaded on same screen) ── */}
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            className="fixed inset-0 z-[250] flex flex-col items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-md"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            onClick={() => handleClose()}
-          >
-            {/* Cross Button OUTSIDE the parameter of the map card */}
-            <div className="w-full max-w-[440px] md:max-w-[760px] lg:max-w-[880px] flex justify-end px-1 pb-2 pt-1 pointer-events-auto">
-              <button
-                onClick={(e) => handleClose(e)}
-                className="tap-target flex items-center justify-center w-9 h-9 rounded-full bg-white text-emerald-950 shadow-2xl border border-emerald-100 hover:bg-emerald-50 active:scale-95 transition-all"
-                aria-label="Close Map"
-                title={lang === "ur" ? "بند کریں" : "Close map"}
+      {/* ── Expanded Fullscreen Map Overlay (Portalled to document.body) ── */}
+      {typeof document !== "undefined" &&
+        createPortal(
+          <AnimatePresence>
+            {isExpanded && (
+              <motion.div
+                className="fixed inset-0 z-[12000] flex flex-col bg-black/65 backdrop-blur-md"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.22 }}
+                onClick={() => handleClose()}
               >
-                <X size={19} strokeWidth={2.5} color="#166534" />
-              </button>
-            </div>
-
-            {/* Expanded Modal Box - Floating Rounded Rectangular Box */}
-            <motion.div
-              className="w-full max-w-[440px] md:max-w-[760px] lg:max-w-[880px] h-[88vh] max-h-[780px] rounded-[26px] overflow-hidden bg-white shadow-2xl relative flex flex-col pointer-events-auto border-2 border-emerald-200/90 ring-1 ring-black/5"
-              initial={{ scale: 0.92, y: 20, opacity: 0 }}
-              animate={{ scale: 1, y: 0, opacity: 1 }}
-              exit={{ scale: 0.92, y: 20, opacity: 0 }}
-              transition={{
-                type: "spring",
-                stiffness: 400,
-                damping: 32,
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Mirrors the screen's own current location filter: both
-                  focus props undefined means All Pakistan, the map's
-                  default view -- it never falls back to a hardcoded mandi. */}
-              <ZaraiMandiMap
-                onClose={() => handleClose()}
-                activeCommodity={commodityName}
-                records={records}
-                initialMandiName={focusMandiName}
-                initialProvinceName={focusProvinceName}
-                lang={lang}
-                urduFont={urduFont}
-              />
-            </motion.div>
-          </motion.div>
+                {/* Full screen modal container */}
+                <motion.div
+                  className="w-full h-full sm:max-w-[880px] sm:h-[92vh] sm:m-auto sm:rounded-[26px] overflow-hidden bg-white shadow-2xl relative flex flex-col pointer-events-auto border-0 sm:border-2 sm:border-emerald-200/90 ring-1 ring-black/5"
+                  initial={{ scale: 0.94, y: 15, opacity: 0 }}
+                  animate={{ scale: 1, y: 0, opacity: 1 }}
+                  exit={{ scale: 0.94, y: 15, opacity: 0 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 400,
+                    damping: 32,
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <ZaraiMandiMap
+                    onClose={() => handleClose()}
+                    activeCommodity={commodityName}
+                    records={records}
+                    initialMandiName={focusMandiName}
+                    initialProvinceName={focusProvinceName}
+                    lang={lang}
+                    urduFont={urduFont}
+                    onSelectMandi={onSelectMandi}
+                  />
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
     </>
   );
 };
