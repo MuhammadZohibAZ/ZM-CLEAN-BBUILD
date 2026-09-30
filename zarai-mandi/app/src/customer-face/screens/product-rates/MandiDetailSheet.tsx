@@ -104,10 +104,10 @@ export function MandiDetailSheet({
       ? `ضلع ${tm(place.district).replace(/ضلع/g, "").trim()}`
       : `${tm(place.district).replace(/\s*district$/i, "")} District`
     : mandiMeta?.district
-    ? f.ur
-      ? `ضلع ${tm(mandiMeta.district)}`
-      : `${mandiMeta.district} District`
-    : "";
+      ? f.ur
+        ? `ضلع ${tm(mandiMeta.district)}`
+        : `${mandiMeta.district} District`
+      : "";
   const provinceName = place?.province ? tm(place.province) : mandiMeta?.province ? tm(mandiMeta.province) : "";
   const dateStr = f.dayFullYear(date);
   const subtitle = [districtName, provinceName, dateStr].filter(Boolean).join(f.ur ? "، " : ", ");
@@ -213,9 +213,7 @@ export function MandiDetailSheet({
                   <span style={{ fontSize: 15, fontWeight: 700, color: "#14532D", fontFamily: f.display }}>
                     {f.tx(`About ${stripMandi(mandiName)} Mandi`, `${name} منڈی کا تعارف و پس منظر`)}
                   </span>
-                  <div style={{ fontSize: 11.5, fontWeight: 600, color: "#166534" }}>
-                    {f.tx("Location & Agricultural Profile", "مقام اور زرعی پس منظر")}
-                  </div>
+
                 </div>
               </div>
               <button
@@ -253,18 +251,6 @@ export function MandiDetailSheet({
             </p>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8 }}>
-              <div style={{ padding: "8px 10px", borderRadius: 12, background: "rgba(255, 255, 255, 0.75)", display: "flex", flexDirection: "column", gap: 2 }}>
-                <span style={{ fontSize: 11, fontWeight: 600, color: "#6B7280" }}>{f.tx("Market Status", "منڈی کی حالت")}</span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: mandiMeta?.status === "closed" ? "#DC2626" : "#16A34A" }}>
-                  {mandiMeta?.status === "closed" ? f.tx("🔴 Closed", "🔴 بند") : f.tx("🟢 Open Now", "🟢 کھلی ہے")}
-                </span>
-              </div>
-              <div style={{ padding: "8px 10px", borderRadius: 12, background: "rgba(255, 255, 255, 0.75)", display: "flex", flexDirection: "column", gap: 2 }}>
-                <span style={{ fontSize: 11, fontWeight: 600, color: "#6B7280" }}>{f.tx("Operating Hours", "اوقات کار")}</span>
-                <span style={{ fontSize: 12.5, fontWeight: 700, color: "#1F2937" }}>
-                  {mandiMeta?.openingTime || "5:30 AM"} – {mandiMeta?.closingTime || "6:30 PM"}
-                </span>
-              </div>
               <div style={{ padding: "8px 10px", borderRadius: 12, background: "rgba(255, 255, 255, 0.75)", display: "flex", flexDirection: "column", gap: 2 }}>
                 <span style={{ fontSize: 11, fontWeight: 600, color: "#6B7280" }}>{f.tx("Major Crops", "اہم فصلیں")}</span>
                 <span style={{ fontSize: 12.5, fontWeight: 700, color: "#1F2937", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
