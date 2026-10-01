@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 
 import {
-  type ReelComment,
   VIDEO_MAIN_CATEGORIES,
   VIDEO_PRODUCT_OPTIONS,
   type VideoMainCategory,
@@ -22,7 +21,7 @@ export function ZaraiReelsScreen({
   onMinimize?: (reel: ZaraiReel, isPlaying: boolean, isMuted: boolean) => void;
 }) {
   const { lang } = useLang();
-  const [feedTab, setFeedTab] = useState<"forYou" | "following" | "saved">("forYou");
+  const [feedTab, setFeedTab] = useState<"forYou" | "saved">("forYou");
   const [mainCategory, setMainCategory] = useState<VideoMainCategory>("products");
   const [selectedProductSub, setSelectedProductSub] = useState<string>("all");
   const [activeIndex, setActiveIndex] = useState(0);
@@ -31,25 +30,12 @@ export function ZaraiReelsScreen({
     new Set(["reel-1", "reel-4"]),
   );
   const [savedReelIds, setSavedReelIds] = useState<Set<string>>(new Set(["reel-2"]));
-  const [followedAuthors, setFollowedAuthors] = useState<Set<string>>(
-    new Set(["Ahmad Khan (Mandi Rep)"]),
-  );
-  const [commentsDrawerReel, setCommentsDrawerReel] = useState<ZaraiReel | null>(
-    null,
-  );
-  const [commentsMap, setCommentsMap] = useState<Record<string, ReelComment[]>>(() => {
-    const map: Record<string, ReelComment[]> = {};
-    ZARAI_REELS.forEach((r) => {
-      map[r.id] = r.comments;
-    });
-    return map;
-  });
-  const [newCommentText, setNewCommentText] = useState("");
+  const [exportToast, setExportToast] = useState<string | null>(null);
   const [flyingHearts, setFlyingHearts] = useState<
     { id: number; x: number; y: number }[]
   >([]);
   const [isPlayingMap, setIsPlayingMap] = useState<Record<string, boolean>>({});
-  const [videoErrors, setVideoErrors] = useState<Record<string, boolean>>({});
+  const [, setVideoErrors] = useState<Record<string, boolean>>({});
 
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
@@ -60,11 +46,9 @@ export function ZaraiReelsScreen({
   });
 
   const tabFilteredReels =
-    feedTab === "following"
-      ? ZARAI_REELS.filter((r) => followedAuthors.has(r.author))
-      : feedTab === "saved"
-        ? ZARAI_REELS.filter((r) => savedReelIds.has(r.id))
-        : ZARAI_REELS;
+    feedTab === "saved"
+      ? ZARAI_REELS.filter((r) => savedReelIds.has(r.id))
+      : ZARAI_REELS;
 
   const displayedReels = tabFilteredReels.filter((r) => {
     if (mainCategory === "general") {
@@ -267,39 +251,49 @@ export function ZaraiReelsScreen({
     });
   };
 
-  const toggleFollow = (author: string, e: React.MouseEvent) => {
+  const handleExportReel = async (reel: ZaraiReel, e: React.MouseEvent) => {
     e.stopPropagation();
-    setFollowedAuthors((prev) => {
-      const next = new Set(prev);
-      if (next.has(author)) {
-        next.delete(author);
-      } else {
-        next.add(author);
-      }
-      return next;
-    });
-  };
+    const title = lang === "ur" ? reel.titleUrdu : reel.title;
+    const author = lang === "ur" ? reel.authorUrdu : reel.author;
 
-  const handleAddComment = (reelId: string, textOverride?: string) => {
-    const textToPost = (textOverride || newCommentText).trim();
-    if (!textToPost) return;
-    const newC: ReelComment = {
-      id: "cm-" + Date.now(),
-      author: "You (Trader)",
-      authorUrdu: "آپ (کسان ساتھی)",
-      avatar: "YOU",
-      time: "Just now",
-      timeUrdu: "ابھی",
-      text: textToPost,
-      textUrdu: textToPost,
-      likes: 0,
-    };
-    setCommentsMap((prev) => ({
-      ...prev,
-      [reelId]: [newC, ...(prev[reelId] || [])],
-    }));
-    if (!textOverride) {
-      setNewCommentText("");
+    try {
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: title,
+            text: `${title} - ${author} | Zarai Mandi`,
+            url: window.location.href,
+          });
+          setExportToast(lang === "ur" ? "شیئر مکمل ہوا" : "Shared successfully!");
+          setTimeout(() => setExportToast(null), 3000);
+          return;
+        } catch (err: any) {
+          if (err?.name === "AbortError") return;
+        }
+      }
+
+      // Download file fallback
+      const link = document.createElement("a");
+      link.href = reel.videoPath;
+      link.download = `zarai_${reel.product.toLowerCase().replace(/\s+/g, "_")}_${reel.id}.mp4`;
+      link.target = "_blank";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setExportToast(lang === "ur" ? "ویڈیو ایکسپورٹ ہو گئی ہے!" : "Reel exported successfully!");
+      setTimeout(() => setExportToast(null), 3000);
+    } catch {
+      const link = document.createElement("a");
+      link.href = reel.videoPath;
+      link.download = `zarai_reel_${reel.id}.mp4`;
+      link.target = "_blank";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setExportToast(lang === "ur" ? "ویڈیو ڈاؤنلوڈ ہو رہی ہے..." : "Downloading reel...");
+      setTimeout(() => setExportToast(null), 3000);
     }
   };
 
@@ -320,7 +314,15 @@ export function ZaraiReelsScreen({
         color: "#fff",
       }}
     >
-      {/* Top Header: Minimize Button, Tabs (Following, For You, Saved), Mute Toggle */}
+      {/* Toast Notification */}
+      {exportToast && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-[#087F63]/95 backdrop-blur-md text-white text-xs font-bold shadow-2xl border border-white/20 animate-in fade-in zoom-in-95 flex items-center gap-2 pointer-events-none">
+          <span>✓</span>
+          <span>{exportToast}</span>
+        </div>
+      )}
+
+      {/* Top Header: Minimize Button, Tabs (For You, Saved), Mute Toggle */}
       <header
         className="absolute top-0 left-0 right-0 z-40 px-3.5 pt-9 pb-1.5 flex items-center justify-between pointer-events-none"
         style={{
@@ -343,17 +345,8 @@ export function ZaraiReelsScreen({
           </svg>
         </button>
 
-        {/* Following / For You / Saved feed tabs */}
-        <div className="flex items-center gap-3.5 text-xs font-extrabold drop-shadow pointer-events-auto">
-          <button
-            onClick={() => setFeedTab("following")}
-            className={`tap-target transition-all ${feedTab === "following"
-              ? "text-white scale-105 border-b-2 border-[#32BA46] pb-0.5 font-black"
-              : "text-white/60 hover:text-white"
-              }`}
-          >
-            {lang === "ur" ? "فالونگ" : "Following"}
-          </button>
+        {/* For You / Saved feed tabs */}
+        <div className="flex items-center gap-4 text-xs font-extrabold drop-shadow pointer-events-auto">
           <button
             onClick={() => setFeedTab("forYou")}
             className={`tap-target transition-all ${feedTab === "forYou"
@@ -413,12 +406,11 @@ export function ZaraiReelsScreen({
                     containerRef.current.scrollTo({ top: 0, behavior: "smooth" });
                   }
                 }}
-                className={`py-1.5 px-2 rounded-xl text-xs font-bold tap-target transition-all flex items-center justify-center gap-1 ${isSelected
+                className={`py-1.5 px-2 rounded-xl text-xs font-bold tap-target transition-all flex items-center justify-center ${isSelected
                   ? "bg-[#32BA46] text-[#07332F] font-black shadow-md scale-[1.02]"
                   : "text-white/80 hover:text-white hover:bg-white/10"
                   }`}
               >
-                <span className="text-xs">{cat.icon}</span>
                 <span className="truncate">{lang === "ur" ? cat.labelUrdu : cat.label}</span>
               </button>
             );
@@ -476,6 +468,7 @@ export function ZaraiReelsScreen({
           </button>
         )}
       </div>
+
       {flyingHearts.map((h) => (
         <div
           key={h.id}
@@ -490,6 +483,7 @@ export function ZaraiReelsScreen({
           ❤️
         </div>
       ))}
+
       <div
         ref={containerRef}
         onScroll={handleScroll}
@@ -535,9 +529,7 @@ export function ZaraiReelsScreen({
           displayedReels.map((reel, idx) => {
             const isLiked = likedReelIds.has(reel.id);
             const isSaved = savedReelIds.has(reel.id);
-            const isFollowing = followedAuthors.has(reel.author);
             const isPlaying = isPlayingMap[reel.id] ?? false;
-            const commentsList = commentsMap[reel.id] || reel.comments;
 
             return (
               <div
@@ -591,6 +583,7 @@ export function ZaraiReelsScreen({
                   />
                   <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/85 pointer-events-none" />
                 </div>
+
                 {!isPlaying && (
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
                     <div className="w-14 h-14 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center text-white/90 border border-white/20 shadow-2xl animate-pulse">
@@ -600,34 +593,10 @@ export function ZaraiReelsScreen({
                     </div>
                   </div>
                 )}
+
+                {/* Right Action Bar: Like, Save, Export */}
                 <div className="absolute right-3.5 bottom-16 z-30 flex flex-col items-center gap-5 pointer-events-auto">
-                  <div className="relative mb-1">
-                    <div
-                      className="rounded-full bg-[#087F63] border-2 border-white flex items-center justify-center text-sm font-black text-white shadow-2xl overflow-hidden"
-                      style={{ width: 48, height: 48 }}
-                    >
-                      {reel.avatar}
-                    </div>
-                    <button
-                      onClick={(e) => toggleFollow(reel.author, e)}
-                      className={`absolute -bottom-1.5 left-1/2 -translate-x-1/2 rounded-full font-black flex items-center justify-center shadow-lg tap-target border-2 border-white transition-transform duration-150 ${isFollowing
-                        ? "bg-[#064D40] text-white hover:bg-rose-600 scale-95 text-[11px]"
-                        : "bg-[#32BA46] text-[#07332F] hover:scale-110 text-xs font-extrabold"
-                        }`}
-                      style={{ width: 22, height: 22 }}
-                      title={
-                        isFollowing
-                          ? lang === "ur"
-                            ? "ان فالو کرنے کے لیے کلک کریں"
-                            : "Click to unfollow"
-                          : lang === "ur"
-                            ? "فالو کریں"
-                            : "Follow"
-                      }
-                    >
-                      {isFollowing ? "✓" : "+"}
-                    </button>
-                  </div>
+                  {/* Like Button */}
                   <button
                     onClick={(e) => toggleLike(reel.id, e)}
                     className="flex flex-col items-center tap-target group"
@@ -656,34 +625,8 @@ export function ZaraiReelsScreen({
                       {Math.floor((reel.likesCount + (isLiked ? 1 : 0)) / 1000)}k
                     </span>
                   </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setCommentsDrawerReel(reel);
-                    }}
-                    className="flex flex-col items-center tap-target"
-                  >
-                    <div
-                      className="rounded-full bg-black/45 backdrop-blur-md flex items-center justify-center text-white border border-white/20 shadow-lg active:scale-125 transition-transform"
-                      style={{ width: 46, height: 46 }}
-                    >
-                      <svg
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                      </svg>
-                    </div>
-                    <span className="text-[11px] font-black text-white mt-1 drop-shadow">
-                      {commentsList.length}
-                    </span>
-                  </button>
+
+                  {/* Save Button */}
                   <button
                     onClick={(e) => toggleSave(reel.id, e)}
                     className="flex flex-col items-center tap-target"
@@ -712,7 +655,39 @@ export function ZaraiReelsScreen({
                       {lang === "ur" ? "محفوظ" : "Save"}
                     </span>
                   </button>
+
+                  {/* Export Button */}
+                  <button
+                    onClick={(e) => handleExportReel(reel, e)}
+                    className="flex flex-col items-center tap-target"
+                    title={lang === "ur" ? "ایکسپورٹ کریں" : "Export Reel"}
+                  >
+                    <div
+                      className="rounded-full bg-black/45 backdrop-blur-md flex items-center justify-center text-white border border-white/20 shadow-lg active:scale-125 transition-transform"
+                      style={{ width: 46, height: 46 }}
+                    >
+                      <svg
+                        width="22"
+                        height="22"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                        <polyline points="16 6 12 2 8 6" />
+                        <line x1="12" y1="2" x2="12" y2="15" />
+                      </svg>
+                    </div>
+                    <span className="text-[11px] font-black text-white mt-1 drop-shadow">
+                      {lang === "ur" ? "ایکسپورٹ" : "Export"}
+                    </span>
+                  </button>
                 </div>
+
+                {/* Bottom author and caption info */}
                 <div className="absolute left-4 right-20 bottom-6 z-30 flex flex-col gap-0.5 text-left pointer-events-none">
                   <div className="flex items-center gap-1.5">
                     <span className="font-extrabold text-[15px] text-white drop-shadow-md">
@@ -739,6 +714,8 @@ export function ZaraiReelsScreen({
                     {lang === "ur" ? reel.titleUrdu : reel.title}
                   </p>
                 </div>
+
+                {/* Bottom playback progress bar */}
                 <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/20 z-30">
                   <div
                     className="h-full bg-[#32BA46] transition-all duration-300"
@@ -753,135 +730,6 @@ export function ZaraiReelsScreen({
           })
         )}
       </div>
-      {commentsDrawerReel && (
-        <div
-          className="fixed inset-0 z-50 flex flex-col justify-end bg-black/65 backdrop-blur-sm"
-          onClick={() => setCommentsDrawerReel(null)}
-        >
-          <div
-            className="w-full max-w-[480px] mx-auto rounded-t-3xl flex flex-col shadow-2xl border-t border-[#D5E2DD] animate-in slide-in-from-bottom duration-200 overflow-hidden"
-            style={{
-              background: "#FFFFFF",
-              height: "72vh",
-              maxHeight: "85vh",
-              color: "#183B34",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="px-5 pt-4 pb-3 flex items-center justify-between border-b border-[#E8EFEC] flex-shrink-0">
-              <div className="flex items-center gap-2">
-                <span className="font-extrabold text-sm text-[#183B34]">
-                  {lang === "ur" ? "تبصرے" : "Comments"}
-                </span>
-                <span className="px-2 py-0.5 rounded-full bg-[#E4F2EC] text-[#087F63] text-xs font-black">
-                  {(commentsMap[commentsDrawerReel.id] || []).length}
-                </span>
-              </div>
-              <button
-                onClick={() => setCommentsDrawerReel(null)}
-                className="w-8 h-8 rounded-full bg-[#F1F7F4] flex items-center justify-center text-[#52635F] tap-target text-sm font-bold hover:bg-[#E4F2EC]"
-              >
-                ✕
-              </button>
-            </div>
-            {!profileCompleted ? (
-              <div className="flex-1 p-6 flex flex-col items-center justify-center text-center gap-3">
-                <div className="w-14 h-14 rounded-full bg-[#E8F8F0] border border-[#C7E8D8] flex items-center justify-center text-2xl shadow-inner">
-                  🔒
-                </div>
-                <div className="space-y-1 max-w-xs">
-                  <p className="text-sm font-extrabold text-[#183B34]">
-                    {lang === "ur"
-                      ? "تبصرے دیکھنے اور کرنے کے لیے پروفائل مکمل کریں"
-                      : "Complete Profile & Subscribe"}
-                  </p>
-                  <p className="text-xs text-[#52635F] leading-relaxed">
-                    {lang === "ur"
-                      ? "منڈی کے کسانوں، بیوپاریوں اور نمائندوں کے تبصرے دیکھنے اور اپنی رائے دینے کے لیے پروفائل مکمل کریں۔"
-                      : "Complete your profile and subscribe to view all mandi community discussions and post your own comments."}
-                  </p>
-                </div>
-                <button
-                  onClick={() => {
-                    setCommentsDrawerReel(null);
-                    onOpenCompleteProfile?.();
-                  }}
-                  className="mt-2 px-6 py-2.5 rounded-full bg-[#087F63] text-white text-xs font-extrabold shadow-md hover:bg-[#065E49] tap-target transition-all"
-                >
-                  {lang === "ur" ? "پروفائل مکمل کریں →" : "Complete Profile & Subscribe →"}
-                </button>
-              </div>
-            ) : (
-              <>
-                {/* Comments List (High contrast, clean, theme-friendly) */}
-                <div className="flex-1 overflow-y-auto min-h-0 px-5 py-3.5 flex flex-col gap-3">
-                  {(commentsMap[commentsDrawerReel.id] || []).map((c) => (
-                    <div key={c.id} className="flex items-start gap-2.5">
-                      <div className="w-8 h-8 rounded-full bg-[#087F63] border border-[#C7E8D8] flex items-center justify-center text-[10px] font-black text-white flex-shrink-0 shadow-sm">
-                        {c.avatar}
-                      </div>
-                      <div className="flex-1 bg-[#F4FAF7] px-3 py-2 rounded-2xl border border-[#D5E2DD]">
-                        <div className="flex items-center justify-between mb-0.5">
-                          <span className="text-xs font-bold text-[#183B34]">
-                            {lang === "ur" ? c.authorUrdu || c.author : c.author}
-                          </span>
-                          <span className="text-[10px] text-[#80918B]">
-                            {lang === "ur" ? c.timeUrdu || c.time : c.time}
-                          </span>
-                        </div>
-                        <p
-                          className="text-xs text-[#2F4A43] font-medium leading-relaxed"
-                          style={{
-                            fontFamily:
-                              lang === "ur"
-                                ? "'Noto Nastaliq Urdu', serif"
-                                : "inherit",
-                          }}
-                        >
-                          {lang === "ur" ? c.textUrdu || c.text : c.text}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Comment Input Bar (Pinned at bottom for subscribed user) */}
-                <div className="flex-shrink-0 p-3 border-t border-[#E8EFEC] bg-[#FFFFFF] flex items-center gap-2 shadow-sm">
-                  <input
-                    type="text"
-                    value={newCommentText}
-                    onChange={(e) => setNewCommentText(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        handleAddComment(commentsDrawerReel.id);
-                      }
-                    }}
-                    placeholder={
-                      lang === "ur"
-                        ? "اپنی رائے یا تبصرہ لکھیں..."
-                        : "Write a comment..."
-                    }
-                    className="flex-1 bg-[#F4FAF7] border border-[#D5E2DD] rounded-full px-4 py-2.5 text-xs text-[#183B34] placeholder-[#80918B] outline-none focus:border-[#087F63] focus:bg-white transition-colors"
-                    style={{
-                      fontFamily:
-                        lang === "ur"
-                          ? "'Noto Nastaliq Urdu', serif"
-                          : "inherit",
-                    }}
-                  />
-                  <button
-                    onClick={() => handleAddComment(commentsDrawerReel.id)}
-                    className="w-10 h-10 rounded-full bg-[#087F63] text-white font-extrabold flex items-center justify-center shadow-md tap-target flex-shrink-0 text-sm hover:bg-[#065E49] active:scale-95 transition-all"
-                    title={lang === "ur" ? "پوسٹ کریں" : "Post comment"}
-                  >
-                    ➤
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

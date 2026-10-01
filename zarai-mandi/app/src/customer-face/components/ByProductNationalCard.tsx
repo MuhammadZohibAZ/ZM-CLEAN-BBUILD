@@ -184,19 +184,6 @@ export function LocationStatCell({
           <span className="text-[10px] font-bold text-[#075E4F]">
             {lang === 'ur' ? 'فعال' : 'Active'}
           </span>
-          <svg
-            width="10"
-            height="10"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#087F63"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className={`flex-shrink-0 opacity-80 ${lang === 'ur' ? 'rotate-180' : ''}`}
-          >
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
         </span>
       </div>
     </div>
@@ -206,7 +193,7 @@ export function LocationStatCell({
 export const SPECIAL_ATTR_META: Record<string, { labelEn: string; labelUr: string; dotColor: string }> = {
   multi: { labelEn: "Attributes", labelUr: "اوصاف", dotColor: "#10B981" },
   moisture: { labelEn: "Moisture", labelUr: "نمی", dotColor: "#38BDF8" },
-  newOld: { labelEn: "Type", labelUr: "معیار", dotColor: "#F59E0B" },
+  newOld: { labelEn: "Crop", labelUr: "فصل", dotColor: "#F59E0B" },
   color: { labelEn: "Color", labelUr: "رنگ", dotColor: "#FBBF24" },
   variety: { labelEn: "Variety", labelUr: "قسم", dotColor: "#10B981" },
   spec: { labelEn: "Spec", labelUr: "تفصیل", dotColor: "#10B981" },
@@ -271,10 +258,10 @@ export function ByProductNationalCard({
 
   // Resolve special attribute label and value
   const attrType = stats.specialAttr?.type || getProductSpecialAttrType(stats.byproduct, product || vertical || stats.product);
-  const attrMeta = attrType ? SPECIAL_ATTR_META[attrType] : { labelEn: "Type", labelUr: "معیار", dotColor: "#F59E0B" };
+  const attrMeta = attrType ? SPECIAL_ATTR_META[attrType] : { labelEn: "Crop", labelUr: "فصل", dotColor: "#F59E0B" };
   const specialAttrLabel = lang === 'ur'
-    ? (stats.specialAttr?.labelUr || attrMeta?.labelUr || 'معیار')
-    : (stats.specialAttr?.labelEn || attrMeta?.labelEn || 'Type');
+    ? (stats.specialAttr?.labelUr || attrMeta?.labelUr || 'فصل')
+    : (stats.specialAttr?.labelEn || attrMeta?.labelEn || 'Crop');
   const hasAttrValue = Boolean(stats.specialAttr && (stats.specialAttr.valueEn || stats.specialAttr.valueUr));
   const specialAttrValue = hasAttrValue
     ? (lang === 'ur' ? stats.specialAttr!.valueUr : stats.specialAttr!.valueEn)

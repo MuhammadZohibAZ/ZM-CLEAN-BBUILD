@@ -475,34 +475,34 @@ export function TrendsTab({
                       {arrow(isPrice ? pct : arrPct)} {isPrice ? `${absChange >= 0 ? "+" : "−"}${f.num(Math.abs(absChange))} ` : ""}({f.pct(isPrice ? pct : arrPct)})
                     </span>
                   )}
-                  {activeAttrs && activeAttrs.length > 0 && (
-                    <div style={{ display: "inline-flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
-                      {activeAttrs.map((attr) => (
-                        <span
-                          key={`${attr.key}-${attr.value}`}
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 4,
-                            padding: "2px 7.5px",
-                            borderRadius: 7,
-                            fontSize: 11,
-                            fontWeight: 700,
-                            background: "rgba(245, 158, 11, 0.12)",
-                            color: "#D97706",
-                            border: "1px solid rgba(245, 158, 11, 0.28)",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          <span>{attr.display}</span>
-                        </span>
-                      ))}
-                    </div>
-                  )}
                 </div>
                 <span style={{ fontSize: 12.5, fontWeight: 500, color: DK.faint, lineHeight: f.lh }}>
                   {f.dayFullWeekdayYear(dates[i])}
                 </span>
+                {activeAttrs && activeAttrs.length > 0 && (
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: 5, flexWrap: "wrap", marginTop: 4 }}>
+                    {activeAttrs.map((attr) => (
+                      <span
+                        key={`${attr.key}-${attr.value}`}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4,
+                          padding: "2px 7.5px",
+                          borderRadius: 7,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          background: "rgba(245, 158, 11, 0.12)",
+                          color: "#D97706",
+                          border: "1px solid rgba(245, 158, 11, 0.28)",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        <span>{attr.display}</span>
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {isPrice && compare && (
