@@ -99,7 +99,7 @@ export function BottomNav({
       {
         id: "home",
         label: t("nav.home"),
-        brandColor: "#087F63",
+        brandColor: "#0B5E4A",
         icon: (isActive) => (
           <svg
             width="22"
@@ -111,7 +111,7 @@ export function BottomNav({
             <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1V9.5z" />
             <path
               d="M9 21V12h6v9"
-              fill={isActive ? "#087F63" : "#C7D8D1"}
+              fill={isActive ? "#0B5E4A" : "#C7D8D1"}
             />
           </svg>
         ),
@@ -119,7 +119,7 @@ export function BottomNav({
       {
         id: "compare",
         label: t("nav.compare"),
-        brandColor: "#2FAE68",
+        brandColor: "#0B5E4A",
         icon: (isActive) => (
           <svg
             width="22"
@@ -147,7 +147,7 @@ export function BottomNav({
             />
             <path
               d="M6 8h1M6 13h1"
-              stroke={isActive ? "#2FAE68" : "#ffffff"}
+              stroke={isActive ? "#0B5E4A" : "#ffffff"}
               strokeWidth="2"
               strokeLinecap="round"
             />
@@ -157,7 +157,7 @@ export function BottomNav({
       {
         id: "news",
         label: t("nav.news"),
-        brandColor: "#0E645C",
+        brandColor: "#0B5E4A",
         icon: (isActive) => (
           <svg
             width="22"
@@ -192,11 +192,13 @@ export function BottomNav({
 
   return (
     <nav
-      className="zm-bottom-nav-shell flex-shrink-0 relative z-50 ltr-only w-full px-3 pt-1 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] mb-2 flex justify-center items-center gap-2.5"
+      // Floats over the bottom of the screen so each screen's background runs
+      // behind it; screens keep their content clear via --zm-nav-space.
+      className="zm-bottom-nav-shell absolute bottom-0 inset-x-0 z-50 ltr-only w-full px-3 pt-1 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] mb-2 flex justify-center items-center gap-2.5 pointer-events-none [&>*]:pointer-events-auto"
       style={{ direction: "ltr" }}
     >
       {/* Navigation Cockpit */}
-      <div className="relative flex items-center h-[50px] p-1 bg-white/95 dark:bg-[#0c1f1a]/95 backdrop-blur-xl rounded-full border border-[#087F63]/15 dark:border-emerald-500/20 shadow-[0_8px_24px_-4px_rgba(8,127,99,0.12)]">
+      <div className="relative flex items-center h-[50px] p-1 bg-white/85 backdrop-blur-xl rounded-full border border-[#087F63]/15 shadow-[0_10px_28px_-8px_rgba(6,60,48,0.28),0_2px_6px_rgba(6,60,48,0.06)]">
         <div className="flex items-center gap-1 h-full">
           {tabs.map((tab, idx) => {
             const isTabActive = currentActiveIndex === idx;
@@ -221,7 +223,7 @@ export function BottomNav({
                       mass: 0.55,
                     }}
                     style={{ backgroundColor: tab.brandColor }}
-                    className="absolute inset-0 rounded-full shadow-[0_2px_10px_rgba(8,127,99,0.28)]"
+                    className="absolute inset-0 rounded-full shadow-[0_3px_10px_rgba(8,94,74,0.35)]"
                   />
                 )}
 
@@ -241,7 +243,7 @@ export function BottomNav({
                   <span
                     className={`text-[11px] tracking-tight font-medium transition-colors duration-150 ${isTabActive
                       ? "text-white font-semibold"
-                      : "text-[#183B34] dark:text-[#C7D8D1] group-hover:text-[#087F63]"
+                      : "text-[#183B34] group-hover:text-[#087F63]"
                       }`}
                   >
                     {tab.label}
@@ -302,7 +304,7 @@ export function BottomNav({
             ? "bg-[#FEE2E2] border-2 border-[#EF4444] shadow-md animate-pulse"
             : isPressing
               ? "bg-[#087F63] border-2 border-[#86EFAC] shadow-md scale-95"
-              : "bg-[#E4F4EC] border border-[#86EFAC] shadow-sm hover:scale-105 active:scale-95"
+              : "bg-white/85 backdrop-blur-xl border border-[#087F63]/20 shadow-[0_6px_18px_-6px_rgba(6,60,48,0.3)] hover:scale-105 active:scale-95"
             }`}
         >
           {voiceActive ? (

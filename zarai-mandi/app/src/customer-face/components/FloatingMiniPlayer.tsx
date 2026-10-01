@@ -30,7 +30,7 @@ export function FloatingMiniPlayer({
   return (
     <div
       onClick={onExpand}
-      className="absolute bottom-[66px] right-3 z-40 w-44 aspect-video rounded-2xl overflow-hidden shadow-2xl border border-white/25 bg-black cursor-pointer group animate-in fade-in zoom-in-95 duration-200"
+      className="absolute bottom-[84px] right-3 z-40 w-44 aspect-video rounded-2xl overflow-hidden shadow-2xl border border-white/25 bg-black cursor-pointer group animate-in fade-in zoom-in-95 duration-200"
       style={{
         boxShadow: "0 10px 30px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.15)",
       }}

@@ -12,7 +12,9 @@ import { Sparkline, sparkTone } from "./Sparkline";
 import { Icon } from "./ui";
 
 const INTERVALS: ChangeInterval[] = [1, 3, 7, 30];
-const SORTS: SortKey[] = ["priceHigh", "priceLow", "arrivalHigh", "arrivalLow", "change"];
+const SORTS: SortKey[] = ["none", "priceHigh", "priceLow", "arrivalHigh", "arrivalLow", "change", "nameAZ", "nameZA"];
+/** Columns whose header filters by value (the rest sort). */
+type ValueCol = "rate" | AttrKey | "unit" | "quality";
 const PREVIEW = 6;
 
 export function MandiSection({
@@ -20,7 +22,7 @@ export function MandiSection({
   t,
   tm,
   tr,
-  entries,
+  entries: entriesIn,
   date,
   regionLabel,
   rateLabel,
@@ -55,7 +57,29 @@ export function MandiSection({
   mode?: "table" | "cards";
 }) {
   const [viewMode, setViewMode] = useState<"table" | "cards">(mode || "table");
-  const [picker, setPicker] = useState<"sort" | "priceSort" | "arrivalSort" | "interval" | null>(null);
+  const [picker, setPicker] = useState<string | null>(null);
+  // Per-column value filters set from the table headers (none by default).
+  const [colFilters, setColFilters] = useState<Partial<Record<ValueCol, string>>>({});
+  const cellValue = (e: MandiEntry, key: ValueCol): string => {
+    const r = e.row;
+    if (key === "rate") return r.rateType || "";
+    if (key === "unit") return (r.arrivalUnit || "").trim();
+    if (key === "quality") return (r.quality || "").trim();
+    return String(r[key] ?? "").trim();
+  };
+  const entries = useMemo(
+    () => entriesIn.filter((e) => (Object.entries(colFilters) as [ValueCol, string][]).every(([k, v]) => !v || cellValue(e, k) === v)),
+    [entriesIn, colFilters],
+  );
+  const activeColFilters = Object.values(colFilters).filter(Boolean).length;
+  const valueOptions = (key: ValueCol) => {
+    const counts = new Map<string, number>();
+    for (const e of entriesIn) {
+      const v = cellValue(e, key);
+      if (v) counts.set(v, (counts.get(v) ?? 0) + 1);
+    }
+    return [...counts].sort((a, b) => b[1] - a[1]);
+  };
   const [showAll, setShowAll] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [landscape, setLandscape] = useState(true);
@@ -114,6 +138,9 @@ export function MandiSection({
   const isSel = (e: MandiEntry) => !!selectedMandi && stripMandi(e.row.mandiName).toLowerCase() === stripMandi(selectedMandi).toLowerCase();
 
   const sortLabel: Record<SortKey, string> = {
+    none: f.tx("Sort", "ترتیب"),
+    nameAZ: f.tx("Mandi A → Z", "منڈی ا → ی"),
+    nameZA: f.tx("Mandi Z → A", "منڈی ی → ا"),
     priceHigh: f.tx("Highest Price", "سب سے زیادہ قیمت"),
     priceLow: f.tx("Lowest Price", "سب سے کم قیمت"),
     arrivalHigh: f.tx("Highest Arrivals", "سب سے زیادہ آمد"),
@@ -185,6 +212,43 @@ export function MandiSection({
     return [...withData, ...withoutData];
   }, [listForCols, primary, f]);
 
+  // Every column header is the same control: neutral by default, green when set.
+  const thBase: CSSProperties = {
+    position: "sticky",
+    top: 0,
+    zIndex: 2,
+    background: C.surfaceAlt,
+    padding: "4px 3px",
+    borderBottom: `1px solid ${C.line}`,
+    whiteSpace: "nowrap",
+    textAlign: "center",
+  };
+  const headBtn = (label: string, active: boolean, onClick: () => void) => (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 3,
+        background: active ? "rgba(16, 185, 129, 0.12)" : "transparent",
+        color: active ? C.brand : C.ink2,
+        border: active ? `1px solid ${C.brandBorder}` : "1px solid transparent",
+        borderRadius: 6,
+        padding: "3px 6px",
+        fontSize: 11,
+        fontWeight: 700,
+        fontFamily: f.font,
+        cursor: "pointer",
+        maxWidth: 150,
+      }}
+    >
+      <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{label}</span>
+      <Icon name="chevDown" size={10} width={2.4} color={active ? C.brand : C.muted} />
+    </button>
+  );
+
   const isPriceSorted = sort === "priceHigh" || sort === "priceLow";
   const isArrivalSorted = sort === "arrivalHigh" || sort === "arrivalLow" || sort === "arrival";
 
@@ -193,196 +257,49 @@ export function MandiSection({
       <table style={{ borderCollapse: "separate", borderSpacing: 0, minWidth: 640, width: "100%", fontSize: 13, fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate" }}>
         <thead>
           <tr>
-            {/* Mandi Name Header */}
-            <th
-              style={{
-                position: "sticky",
-                top: 0,
-                insetInlineStart: 0,
-                zIndex: 3,
-                background: C.surfaceAlt,
-                padding: "8px 8px",
-                fontSize: 11.5,
-                fontWeight: 700,
-                color: C.ink2,
-                borderBottom: `1px solid ${C.line}`,
-                borderInlineEnd: `1px solid ${C.line}`,
-                whiteSpace: "nowrap",
-                textAlign: "start",
-                minWidth: 85,
-                maxWidth: 105,
-              }}
-            >
-              {f.tx("Mandi", "منڈی")}
+            <th style={{ ...thBase, insetInlineStart: 0, zIndex: 3, textAlign: "start", borderInlineEnd: `1px solid ${C.line}`, minWidth: 85, maxWidth: 105, padding: "4px 5px" }}>
+              {headBtn(
+                sort === "nameAZ" ? f.tx("Mandi A→Z", "منڈی ا→ی") : sort === "nameZA" ? f.tx("Mandi Z→A", "منڈی ی→ا") : f.tx("Mandi", "منڈی"),
+                sort === "nameAZ" || sort === "nameZA",
+                () => setPicker("nameSort"),
+              )}
             </th>
-
-            {/* Min – Max Header with Highest / Lowest Sort Filter */}
-            <th
-              style={{
-                position: "sticky",
-                top: 0,
-                zIndex: 2,
-                background: C.surfaceAlt,
-                padding: "4px 3px",
-                borderBottom: `1px solid ${C.line}`,
-                whiteSpace: "nowrap",
-                textAlign: "center",
-                minWidth: 85,
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => setPicker("priceSort")}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 3,
-                  background: isPriceSorted ? "rgba(16, 185, 129, 0.12)" : "transparent",
-                  color: isPriceSorted ? C.brand : C.ink2,
-                  border: isPriceSorted ? `1px solid ${C.brandBorder}` : "1px solid transparent",
-                  borderRadius: 6,
-                  padding: "3px 6px",
-                  fontSize: 11,
-                  fontWeight: 700,
-                  fontFamily: f.font,
-                  cursor: "pointer",
-                }}
-              >
-                <span>
-                  {sort === "priceHigh"
-                    ? f.tx("Min–Max (High)", "کم–زیادہ (زیادہ)")
-                    : sort === "priceLow"
-                    ? f.tx("Min–Max (Low)", "کم–زیادہ (کم)")
-                    : f.tx("Min–Max", "کم–زیادہ")}
-                </span>
-                <Icon name="chevDown" size={10} width={2.4} color={isPriceSorted ? C.brand : C.muted} />
-              </button>
+            <th style={{ ...thBase, minWidth: 85 }}>
+              {headBtn(
+                sort === "priceHigh" ? f.tx("Min–Max (High)", "کم–زیادہ (زیادہ)") : sort === "priceLow" ? f.tx("Min–Max (Low)", "کم–زیادہ (کم)") : f.tx("Min–Max", "کم–زیادہ"),
+                isPriceSorted,
+                () => setPicker("priceSort"),
+              )}
             </th>
-
-            {/* Rate Header */}
-            <th
-              style={{
-                position: "sticky",
-                top: 0,
-                zIndex: 2,
-                background: C.surfaceAlt,
-                padding: "8px 4px",
-                fontSize: 11.5,
-                fontWeight: 700,
-                color: C.ink2,
-                borderBottom: `1px solid ${C.line}`,
-                whiteSpace: "nowrap",
-                textAlign: "center",
-                minWidth: 58,
-              }}
-            >
-              {f.tx("Rate", "ریٹ")}
+            <th style={{ ...thBase, minWidth: 58 }}>
+              {headBtn(colFilters.rate ? shortRate(tr(colFilters.rate)) : f.tx("Rate", "ریٹ"), !!colFilters.rate, () => setPicker("col:rate"))}
             </th>
-
-            {/* Change Header with 1D, 3D, 7D, 30D Filter */}
-            <th
-              style={{
-                position: "sticky",
-                top: 0,
-                zIndex: 2,
-                background: C.surfaceAlt,
-                padding: "4px 3px",
-                borderBottom: `1px solid ${C.line}`,
-                whiteSpace: "nowrap",
-                textAlign: "center",
-                minWidth: 70,
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => setPicker("interval")}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 3,
-                  background: C.chip,
-                  color: C.ink,
-                  border: "1px solid transparent",
-                  borderRadius: 6,
-                  padding: "3px 6px",
-                  fontSize: 11,
-                  fontWeight: 700,
-                  fontFamily: f.font,
-                  cursor: "pointer",
-                }}
-              >
-                <span>{f.tx(`Change (${interval}D)`, `تبدیلی (${f.digits(interval)}د)`)}</span>
-                <Icon name="chevDown" size={10} width={2.4} color={C.muted} />
-              </button>
+            <th style={{ ...thBase, minWidth: 70 }}>
+              {headBtn(
+                sort === "change" ? f.tx(`Change (${interval}D) ↕`, `تبدیلی (${f.digits(interval)}د) ↕`) : f.tx(`Change (${interval}D)`, `تبدیلی (${f.digits(interval)}د)`),
+                sort === "change",
+                () => setPicker("interval"),
+              )}
             </th>
-
-            {/* Arrival Header with Highest / Lowest Sort Filter */}
-            <th
-              style={{
-                position: "sticky",
-                top: 0,
-                zIndex: 2,
-                background: C.surfaceAlt,
-                padding: "4px 6px",
-                borderBottom: `1px solid ${C.line}`,
-                whiteSpace: "nowrap",
-                textAlign: "center",
-                minWidth: 72,
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => setPicker("arrivalSort")}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 3,
-                  background: isArrivalSorted ? "rgba(16, 185, 129, 0.12)" : "transparent",
-                  color: isArrivalSorted ? C.brand : C.ink2,
-                  border: isArrivalSorted ? `1px solid ${C.brandBorder}` : "1px solid transparent",
-                  borderRadius: 6,
-                  padding: "3px 6px",
-                  fontSize: 11,
-                  fontWeight: 700,
-                  fontFamily: f.font,
-                  cursor: "pointer",
-                }}
-              >
-                <span>
-                  {sort === "arrivalHigh" || sort === "arrival"
-                    ? f.tx("Arrival (High)", "آمد (زیادہ)")
-                    : sort === "arrivalLow"
-                    ? f.tx("Arrival (Low)", "آمد (کم)")
-                    : f.tx("Arrival", "آمد")}
-                </span>
-                <Icon name="chevDown" size={10} width={2.4} color={isArrivalSorted ? C.brand : C.muted} />
-              </button>
+            <th style={{ ...thBase, minWidth: 72 }}>
+              {headBtn(
+                sort === "arrivalHigh" || sort === "arrival" ? f.tx("Arrival (High)", "آمد (زیادہ)") : sort === "arrivalLow" ? f.tx("Arrival (Low)", "آمد (کم)") : f.tx("Arrival", "آمد"),
+                isArrivalSorted,
+                () => setPicker("arrivalSort"),
+              )}
             </th>
-
-            {/* Spec Columns */}
-            {specCols.map((c) => (
-              <th
-                key={c.key}
-                style={{
-                  position: "sticky",
-                  top: 0,
-                  zIndex: 2,
-                  background: C.surfaceAlt,
-                  padding: "8px 10px",
-                  fontSize: 11.5,
-                  fontWeight: 700,
-                  color: C.ink2,
-                  borderBottom: `1px solid ${C.line}`,
-                  whiteSpace: "nowrap",
-                  textAlign: "center",
-                }}
-              >
-                {c.label}
-              </th>
-            ))}
+            {specCols.map((c) => {
+              const v = colFilters[c.key];
+              return (
+                <th key={c.key} style={{ ...thBase }}>
+                  {headBtn(
+                    v ? (c.key === "unit" || c.key === "quality" ? v : attrValue(f, t, c.key as AttrKey, v)) : c.label,
+                    !!v,
+                    () => setPicker(`col:${c.key}`),
+                  )}
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody>
@@ -402,7 +319,10 @@ export function MandiSection({
                     {shortRate(tr(r.rateType))}
                   </span>
                 </td>
-                <td style={{ ...td, fontWeight: 700, color: changeColor(e.change), padding: "8px 4px", fontSize: 12 }}>{e.change === null ? "—" : `${arrow(e.change)} ${f.pct(e.change)}`}</td>
+                <td style={{ ...td, fontWeight: 700, color: changeColor(e.change), padding: "8px 4px", fontSize: 12 }}>{e.change === null ? (
+                  // No earlier report from this mandi in the window: its first one.
+                  <span title={f.tx("First report from this mandi", "اس منڈی کی پہلی رپورٹ")} style={{ fontWeight: 600, color: C.faint, fontSize: 11 }}>{f.tx("1st report", "پہلی رپورٹ")}</span>
+                ) : `${arrow(e.change)} ${f.pct(e.change)}`}</td>
                 <td style={{ ...td, color: r.arrival > 0 ? C.arrival : C.faint, fontWeight: 600, padding: "8px 6px", fontSize: 12.5 }}>{r.arrival > 0 ? f.num(r.arrival) : "—"}</td>
                 {specCols.map((c) => (
                   <td key={c.key} style={{ ...td, padding: "8px 10px" }}>
@@ -509,10 +429,23 @@ export function MandiSection({
         </div>
       </div>
 
+      {activeColFilters > 0 && (
+        <div style={{ padding: "0 16px 8px" }}>
+          <button
+            type="button"
+            onClick={() => setColFilters({})}
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 30, padding: "0 12px", borderRadius: 15, border: `1px solid ${C.brandBorder}`, background: "rgba(16, 185, 129, 0.1)", color: C.brand, fontSize: 12.5, fontWeight: 700, fontFamily: f.font }}
+          >
+            {f.tx(`${activeColFilters} column filter${activeColFilters > 1 ? "s" : ""} · ${entries.length} of ${entriesIn.length} rows`, `${f.digits(activeColFilters)} کالم فلٹر · ${f.digits(entries.length)} از ${f.digits(entriesIn.length)}`)}
+            <Icon name="close" size={12} width={2.6} color={C.brand} />
+          </button>
+        </div>
+      )}
+
       {viewMode === "cards" && (
         <div data-zm-hscroll className="zm-hide-scrollbar" style={{ display: "flex", gap: 8, padding: "0 16px 12px", overflowX: "auto", scrollbarWidth: "none" }}>
-          <button type="button" style={pillBtn(false)} onClick={() => setPicker("sort")}>
-            <Icon name="sort" size={14} width={2.4} color={C.muted} />
+          <button type="button" style={pillBtn(sort !== "none")} onClick={() => setPicker("sort")}>
+            <Icon name="sort" size={14} width={2.4} color={sort !== "none" ? "#FFFFFF" : C.muted} />
             {sortLabel[sort]}
             <Icon name="chevDown" size={12} width={2.6} color={C.muted} />
           </button>
@@ -539,10 +472,11 @@ export function MandiSection({
         <PickerSheet
           f={f}
           title={f.tx("Sort by Price", "قیمت کے لحاظ سے ترتیب")}
-          value={[sort === "priceHigh" || sort === "priceLow" ? sort : "priceHigh"]}
+          value={[sort === "priceHigh" || sort === "priceLow" ? sort : "none"]}
           onChange={(v) => onSort(v[0] as SortKey)}
           onClose={() => setPicker(null)}
           options={[
+            { id: "none", label: f.tx("No sorting", "ترتیب نہیں") },
             { id: "priceHigh", label: f.tx("Highest Price", "سب سے زیادہ قیمت") },
             { id: "priceLow", label: f.tx("Lowest Price", "سب سے کم قیمت") },
           ]}
@@ -553,10 +487,11 @@ export function MandiSection({
         <PickerSheet
           f={f}
           title={f.tx("Sort by Arrival", "آمد کے لحاظ سے ترتیب")}
-          value={[sort === "arrivalHigh" || sort === "arrivalLow" || sort === "arrival" ? (sort === "arrival" ? "arrivalHigh" : sort) : "arrivalHigh"]}
+          value={[sort === "arrivalHigh" || sort === "arrivalLow" || sort === "arrival" ? (sort === "arrival" ? "arrivalHigh" : sort) : "none"]}
           onChange={(v) => onSort(v[0] as SortKey)}
           onClose={() => setPicker(null)}
           options={[
+            { id: "none", label: f.tx("No sorting", "ترتیب نہیں") },
             { id: "arrivalHigh", label: f.tx("Highest Arrivals", "سب سے زیادہ آمد") },
             { id: "arrivalLow", label: f.tx("Lowest Arrivals", "سب سے کم آمد") },
           ]}
@@ -571,8 +506,54 @@ export function MandiSection({
           onChange={(v) => onInterval(Number(v[0]) as ChangeInterval)}
           onClose={() => setPicker(null)}
           options={INTERVALS.map((i) => ({ id: String(i), label: intOptionsLabel[i] }))}
+          footer={
+            <button
+              type="button"
+              onClick={() => {
+                onSort(sort === "change" ? "none" : "change");
+                setPicker(null);
+              }}
+              style={{ flex: 1, height: 48, borderRadius: 14, border: `1.5px solid ${C.brand}`, background: sort === "change" ? C.brand : C.surface, color: sort === "change" ? "#FFFFFF" : C.brandDeep, fontSize: 15, fontWeight: 600, fontFamily: f.font }}
+            >
+              {sort === "change" ? f.tx("Stop sorting by change", "تبدیلی کی ترتیب ختم کریں") : f.tx("Sort by biggest change", "سب سے بڑی تبدیلی پہلے")}
+            </button>
+          }
         />
       )}
+
+      {picker === "nameSort" && (
+        <PickerSheet
+          f={f}
+          title={f.tx("Sort by mandi name", "منڈی کے نام سے ترتیب")}
+          value={[sort === "nameAZ" || sort === "nameZA" ? sort : "none"]}
+          onChange={(v) => onSort(v[0] as SortKey)}
+          onClose={() => setPicker(null)}
+          options={[
+            { id: "none", label: f.tx("No sorting", "ترتیب نہیں") },
+            { id: "nameAZ", label: f.tx("A → Z", "ا → ی") },
+            { id: "nameZA", label: f.tx("Z → A", "ی → ا") },
+          ]}
+        />
+      )}
+
+      {picker?.startsWith("col:") && (() => {
+        const key = picker.slice(4) as ValueCol;
+        const label = key === "rate" ? f.tx("Rate", "ریٹ") : specCols.find((c) => c.key === key)?.label ?? key;
+        const show = (v: string) => (key === "rate" ? shortRate(tr(v)) : key === "unit" || key === "quality" ? v : attrValue(f, t, key as AttrKey, v));
+        return (
+          <PickerSheet
+            f={f}
+            title={f.tx(`Filter by ${label}`, `${label} سے فلٹر`)}
+            value={[colFilters[key] ?? "__all"]}
+            onChange={(v) => setColFilters((prev) => ({ ...prev, [key]: v[0] === "__all" ? undefined : v[0] }))}
+            onClose={() => setPicker(null)}
+            options={[
+              { id: "__all", label: f.tx("All", "تمام") },
+              ...valueOptions(key).map(([v, n]) => ({ id: v, label: `${show(v)} · ${f.digits(n)}` })),
+            ]}
+          />
+        );
+      })()}
 
       {loading ? (
         <div style={{ margin: "0 16px", borderRadius: 20, background: C.surface, overflow: "hidden" }}>
@@ -808,7 +789,7 @@ function MandiRow({
               {f.pct(e.change)}
             </span>
           ) : (
-            <span style={{ fontSize: 12, fontWeight: 500, color: C.faint }}>{e.change === null ? f.tx("new", "نئی") : f.tx("No change", "کوئی تبدیلی نہیں")}</span>
+            <span style={{ fontSize: 12, fontWeight: 500, color: C.faint }}>{e.change === null ? f.tx("First report", "پہلی رپورٹ") : f.tx("No change", "کوئی تبدیلی نہیں")}</span>
           )}
         </div>
       </div>

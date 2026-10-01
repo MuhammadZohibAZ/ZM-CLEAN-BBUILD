@@ -12,15 +12,23 @@ and the `current.id → <Screen />` routing.
 
 | Folder | What's in it |
 | --- | --- |
+| `screens/home/` | Pieces of the Home screen: `SearchProfilePanel` (search + Complete Your Profile card on the hero), `ProductRail` (product picker, ♥ Favorites pinned), `HomeByproductCarousel` (date + 3D ring of by-product cards), `ByproductJumpIndicator` (‹ pill ›, dots; the pill opens the radial by-product picker `src/components/ui/radial-menu.tsx`), `homeMemory` |
 | `screens/` | One file per screen: `HomeScreen`, `SearchScreen`, `ProductSelectScreen`, `ByProductSelectScreen`, `ByProductCombinedScreen`, `RatesResultScreen`, `ProductRatesScreen`, `MandiListScreen`, `MandiDetailScreen`, `ZaraiReelsScreen`, `LiveMarketScreen`, `BillingScreen`, `RepDashboardScreen`, `VoiceScreen` |
 | `sheets/` | Bottom sheets & modals: `CompleteProfileModal`, `FeedModal`, `MultiLocSheet`, `LocationScopeSheet`, `LocationSheet`, `MandiPickerSheet`, `PriceTypeSheet`, `HistoricalRequestSheet`, `DatePickerSheet`, `DeepViewLocationSheet` |
 | `navigation/` | `BottomNav`, `VoiceQueryOverlay`, `VoiceOrientationOverlay` |
-| `components/` | Small UI pieces used by more than one screen (`ProductIcon`, `RateCard`, `ScrollRow`, `CircleTile`, `ZMMessage`, `ByProductNationalCard`, `FloatingMiniPlayer`, SVG icons, …) |
+| `components/` | Small UI pieces used by more than one screen (`ProductIcon`, `RateCard`, `ScrollRow`, `CircleTile`, `ZMMessage`, `ByProductNationalCard`, `ByproductDatePill`, `FloatingMiniPlayer`, SVG icons, …) |
 | `shared/types.ts` | Shared types: `Screen` (the route list), `RateItem`, `LocationScope`, `FeedMsg`, `RichRow`, `AppProps`, `ProfileSetupData`, … |
 | `shared/i18n/` | `LangProvider` + `useLang()`, `translations.ts` (`TRANS`), `urduDictionary.ts` (`AUTO_URDU_DICT`) |
-| `shared/data/` | Static data & lookup helpers: `catalog` (verticals/products), `mandis` (locations & rows), `icons`, `rates`, `byproductStats`, `billing`, `reels` |
+| `shared/data/` | Static data & lookup helpers: `catalog` (verticals/products), `mandis` (locations & rows), `icons`, `rates`, `byproductStats`, `byproductCards` (which by-products a product has, their card stats/order, where a card opens), `billing`, `reels` |
+| `shared/hooks/` | `useDivisionCardData` — fetches a division's by-product catalog + card stats from the market API |
 | `shared/voice.ts` | `speakText` / `stopSpeaking` text-to-speech |
 | `shared/theme.ts` | Global theme CSS injected by `LangProvider` |
+
+The generic 3D ring carousel (tray, looping, drag momentum, idle sway) is
+`src/components/ui/3d-carousel.tsx` (shadcn-style `ui` folder).
+
+`ByProductCombinedScreen` and `ProductSelectScreen` are no longer reachable from the UI:
+Home's carousel replaced them. Their routes are kept in `CustomerFaceApp.tsx`.
 
 Helpers used by only one screen live **inside that screen's file** (for example,
 `ProductRatesScreen.tsx` holds `fmt`, `CompRow` and `ProvincePatternSvg`). Anything used

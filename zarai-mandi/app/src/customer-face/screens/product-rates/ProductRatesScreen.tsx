@@ -92,7 +92,8 @@ export function ProductRatesScreen({
   }));
   const [date, setDate] = useState<string>("");
   const [listProvince, setListProvince] = useState<string | null>(null);
-  const [sort, setSort] = useState<SortKey>("priceHigh");
+  // Mandi table: nothing selected by default (reports in their own order).
+  const [sort, setSort] = useState<SortKey>("none");
   const [interval, setChangeInterval] = useState<ChangeInterval>(1);
   const [locSheet, setLocSheet] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -205,23 +206,24 @@ export function ProductRatesScreen({
     );
   };
 
-  const mapRecords: MapByProductRecord[] = useMemo(
-    () =>
-      rows.map((r) => ({
-        mandiName: r.mandiName,
-        district: r.district,
-        province: r.province,
-        rateType: r.rateType,
-        min: r.min,
-        max: r.max,
-        arrival: r.arrival,
-        date: r.date,
-        newOld: r.newOld,
-        variety: r.variety,
-        color: r.color,
-      })),
-    [rows],
-  );
+  // Map pins follow the screen's filters (rate type + attributes), like the
+  // table and charts. "All" = the same by-product and rate type with every
+  // value of its special attribute (e.g. New and Old), a colour per value.
+  const toMapRecord = (r: MarketRow): MapByProductRecord => ({
+    mandiName: r.mandiName,
+    district: r.district,
+    province: r.province,
+    rateType: r.rateType,
+    min: r.min,
+    max: r.max,
+    arrival: r.arrival,
+    date: r.date,
+    newOld: r.newOld,
+    variety: r.variety,
+    color: r.color,
+  });
+  const mapRecords: MapByProductRecord[] = useMemo(() => rows.filter(keep).map(toMapRecord), [rows, filters, rate]);
+  const mapColorKey = primaryAttr(getProductSpecialAttrType(byproduct, product)) as keyof MapByProductRecord;
 
   const pickItem = {
     vertical,
@@ -414,6 +416,9 @@ export function ProductRatesScreen({
                         provinceName={province === "Pakistan" ? undefined : province}
                         commodityName={tc(name)}
                         records={mapRecords}
+                        day={day}
+                        colorKey={mapColorKey}
+                        filterBar={<FilterRail {...filterUi} showDate />}
                         focusMandiName={scope.kind === "mandi" || scope.kind === "district" ? scope.label : undefined}
                         focusProvinceName={scope.kind === "province" ? scope.label : undefined}
                         lang={lang}

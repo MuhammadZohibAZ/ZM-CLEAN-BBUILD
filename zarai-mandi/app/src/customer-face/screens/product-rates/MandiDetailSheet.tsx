@@ -307,6 +307,7 @@ export function MandiDetailSheet({
               series={[{ color, values: series.mid, lo: series.lo, hi: series.hi }]}
               idx={idx}
               onIdx={setIdx}
+              yUnit="rupees"
               ariaLabel={f.tx("Price over the month", "مہینے بھر کی قیمت")}
             />
           ) : (
@@ -320,7 +321,7 @@ export function MandiDetailSheet({
               hideSlider
               idx={idx}
               onIdx={setIdx}
-              yFormat={(v) => (v >= 1000 ? `${f.digits((v / 1000).toFixed(1))}k` : f.num(v))}
+              yUnit="bags"
               ariaLabel={f.tx("Arrivals over the month", "مہینے بھر کی آمد")}
             />
           )}

@@ -166,6 +166,109 @@ export const ZM_THEME_CSS = `
     );
     animation: zmAngleSpin 5.5s linear infinite;
   }
+  /* Search: sky blue */
+  .zm-beam-border-search::after {
+    background: conic-gradient(
+      from var(--beam-angle, 0deg) at 50% 50%,
+      transparent 0deg,
+      transparent 250deg,
+      rgba(56, 189, 248, 0.3) 285deg,
+      rgba(14, 165, 233, 0.95) 330deg,
+      rgba(2, 132, 199, 1) 360deg
+    ) !important;
+    animation: zmAngleSpin 3.5s linear infinite;
+  }
+  /* Complete Your Profile: amber / gold (attention, progress) */
+  .zm-beam-border-gold::after {
+    padding: 2px;
+    inset: -2px;
+    background: conic-gradient(
+      from var(--beam-angle, 0deg) at 50% 50%,
+      transparent 0deg,
+      transparent 240deg,
+      rgba(251, 191, 36, 0.35) 280deg,
+      rgba(245, 158, 11, 0.95) 330deg,
+      rgba(217, 119, 6, 1) 360deg
+    ) !important;
+    animation: zmAngleSpin 3s linear infinite;
+  }
+  /* Product circles: a thicker white beam with a faint green edge so it
+     reads on the light background. */
+  .zm-beam-border-white-strong::after {
+    padding: 2.5px;
+    inset: -2.5px;
+    background: conic-gradient(
+      from var(--beam-angle, 0deg) at 50% 50%,
+      transparent 0deg,
+      transparent 220deg,
+      rgba(255, 255, 255, 0.4) 270deg,
+      rgba(255, 255, 255, 0.95) 325deg,
+      rgba(255, 255, 255, 1) 360deg
+    ) !important;
+    filter: drop-shadow(0 0 1.5px rgba(8, 127, 99, 0.55));
+    animation: zmAngleSpin 3.2s linear infinite;
+  }
+
+  /* Complete Your Profile: gentle motion without moving the row */
+  @keyframes zmShimmer {
+    from { transform: translateX(-120%); }
+    to { transform: translateX(260%); }
+  }
+  @keyframes zmRingGlow {
+    0%, 100% { filter: drop-shadow(0 0 0 rgba(245, 158, 11, 0)); }
+    50% { filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.55)); }
+  }
+  @keyframes zmLeafSway {
+    0%, 100% { transform: rotate(-8deg); }
+    50% { transform: rotate(8deg); }
+  }
+  @keyframes zmNudge {
+    0%, 60%, 100% { transform: translateX(0); }
+    30% { transform: translateX(4px); }
+  }
+  .zm-shimmer { position: relative; overflow: hidden; }
+  .zm-shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    width: 40%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+    animation: zmShimmer 2.2s ease-in-out infinite;
+  }
+  .zm-ring-glow { animation: zmRingGlow 2.4s ease-in-out infinite; }
+  .zm-leaf-sway { animation: zmLeafSway 3s ease-in-out infinite; transform-origin: 50% 90%; }
+  .zm-nudge { animation: zmNudge 1.8s ease-in-out infinite; }
+  @keyframes zmNudgeRtl {
+    0%, 60%, 100% { transform: translateX(0); }
+    30% { transform: translateX(-4px); }
+  }
+  [dir="rtl"] .zm-nudge { animation-name: zmNudgeRtl; }
+  /* Complete Your Profile prompt: a ping from the step ring, a popping "!"
+     and a short nudge every few seconds. */
+  @keyframes zmPing {
+    0% { transform: scale(1); opacity: 0.75; }
+    70%, 100% { transform: scale(1.75); opacity: 0; }
+  }
+  @keyframes zmWiggle {
+    0%, 78%, 100% { transform: rotate(0deg); }
+    81% { transform: rotate(-3deg); }
+    84% { transform: rotate(3deg); }
+    87% { transform: rotate(-2deg); }
+    90% { transform: rotate(2deg); }
+    93% { transform: rotate(0deg); }
+  }
+  @keyframes zmBadgePop {
+    0%, 70%, 100% { transform: scale(1); }
+    78% { transform: scale(1.3); }
+    86% { transform: scale(0.95); }
+  }
+  .zm-ping { animation: zmPing 2s cubic-bezier(0, 0, 0.2, 1) infinite; }
+  .zm-attention-wiggle { animation: zmWiggle 5s ease-in-out infinite; transform-origin: 50% 50%; }
+  .zm-badge-pop { animation: zmBadgePop 2.5s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce) {
+    .zm-shimmer::after, .zm-ring-glow, .zm-leaf-sway, .zm-nudge, .zm-ping, .zm-attention-wiggle, .zm-badge-pop { animation: none; }
+  }
+
   [dir="rtl"] .ltr-only {
     direction: ltr;
     text-align: left;

@@ -1,10 +1,13 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { lazy, Suspense, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from "framer-motion";
 import { X, Sparkles } from "lucide-react";
-import ZaraiMandiMap, { type MapByProductRecord } from "./ZaraiMandiMap";
+import { type MapByProductRecord } from "./ZaraiMandiMap";
+import MapLoader from "./MapLoader";
+// MapLibre is large: load the map only when it is opened.
+const MandiMapGL = lazy(() => import("./MandiMapGL"));
 import pakistanMapBg from "../assets/pakistan_map_btn_bg.png";
 
 export interface ExpandableMandiMapCardProps {
@@ -22,6 +25,13 @@ export interface ExpandableMandiMapCardProps {
   className?: string;
   compact?: boolean;
   onSelectMandi?: (name: string) => void;
+  /** Pins show mandis that reported on this day (default: latest). */
+  day?: string;
+  /** Pins are coloured per value of this attribute (e.g. New / Old) when the
+   *  screen's filters leave more than one value on the map. */
+  colorKey?: keyof MapByProductRecord;
+  /** The screen's own filter bar, shown inside the map so filters can change there. */
+  filterBar?: React.ReactNode;
 }
 
 export const ExpandableMandiMapCard: React.FC<ExpandableMandiMapCardProps> = ({
@@ -36,7 +46,13 @@ export const ExpandableMandiMapCard: React.FC<ExpandableMandiMapCardProps> = ({
   className = "",
   compact = false,
   onSelectMandi,
+  day,
+  colorKey,
+  filterBar,
 }) => {
+  const mapRecords = records ?? [];
+  const isUr = lang === "ur";
+  const n = (v: number) => (isUr ? String(v).replace(/[0-9]/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[+d]) : String(v));
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -185,7 +201,9 @@ export const ExpandableMandiMapCard: React.FC<ExpandableMandiMapCardProps> = ({
           <AnimatePresence>
             {isExpanded && (
               <motion.div
-                className="fixed inset-0 z-[12000] flex flex-col bg-black/65 backdrop-blur-md"
+                // Below the app's sheets (9999+), so filter sheets opened from the
+                // map's filter bar appear on top. No backdrop blur: costly on phones.
+                className="fixed inset-0 z-[9000] flex flex-col bg-black/65"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -205,16 +223,18 @@ export const ExpandableMandiMapCard: React.FC<ExpandableMandiMapCardProps> = ({
                   }}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <ZaraiMandiMap
+                  <Suspense fallback={<MapLoader lang={isUr ? "ur" : "en"} title={isUr ? `${commodityName} کا نقشہ لوڈ ہو رہا ہے` : `Loading ${commodityName} map`} />}>
+                  <MandiMapGL
                     onClose={() => handleClose()}
-                    activeCommodity={commodityName}
-                    records={records}
-                    initialMandiName={focusMandiName}
-                    initialProvinceName={focusProvinceName}
-                    lang={lang}
-                    urduFont={urduFont}
-                    onSelectMandi={onSelectMandi}
+                    commodity={commodityName}
+                    records={mapRecords}
+                    day={day}
+                    colorKey={colorKey}
+                    focusMandiName={focusMandiName}
+                    focusProvinceName={focusProvinceName}
+                    header={filterBar}
                   />
+                  </Suspense>
                 </motion.div>
               </motion.div>
             )}

@@ -19,13 +19,16 @@ export type MarketRow = {
   newOld?: string;
   quality?: string;
   moisture?: string;
+  /** "HH:MM" the report came in, when the source records it. */
+  reportedAt?: string;
 };
 
 export type AttrKey = "newOld" | "variety" | "moisture" | "color" | "spec" | "origin";
 export type AttrFilters = Partial<Record<AttrKey, string>>;
 
 export type ChangeInterval = 1 | 3 | 7 | 30;
-export type SortKey = "priceHigh" | "priceLow" | "arrivalHigh" | "arrivalLow" | "arrival" | "change";
+/** "none" = the reports' own order (nothing selected). */
+export type SortKey = "none" | "nameAZ" | "nameZA" | "priceHigh" | "priceLow" | "arrivalHigh" | "arrivalLow" | "arrival" | "change";
 
 export type ProductRatesProps = {
   vertical: string;

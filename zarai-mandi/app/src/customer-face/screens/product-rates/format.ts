@@ -66,3 +66,30 @@ export const shortRate = (label: string) => (label || "").replace(/\s*(rates?|ر
 
 export const signed = (n: number) => (n > 0.05 ? 1 : n < -0.05 ? -1 : 0);
 export const arrow = (n: number) => (signed(n) > 0 ? "▲" : signed(n) < 0 ? "▼" : "●");
+
+/**
+ * Y-axis convention shared by every chart in the app: prices on a "Rupees"
+ * axis; arrivals on a "Bags" axis, counted in thousands once the scale reaches
+ * 1,000 (45,000 bags reads "45" on a "Bags (k)" axis).
+ */
+export type AxisUnit = "rupees" | "bags";
+export function axisSpec(f: Fmt, unit: AxisUnit, top: number): { title: string; format: (v: number) => string } {
+  if (unit === "rupees") return { title: f.tx("Rupees", "روپے"), format: (v) => f.num(v) };
+  const k = top >= 1000;
+  return {
+    title: k ? f.tx("Bags (k)", "بوریاں (ہزار)") : f.tx("Bags", "بوریاں"),
+    format: (v) => (k ? f.digits(Number((v / 1000).toFixed(v < 10000 ? 1 : 0))) : f.num(v)),
+  };
+}
+
+/** Round tick values (1, 2, 5 × 10ⁿ steps) from 0 up to `top`, at most `count` of them. */
+export function niceTicks(top: number, count = 3): number[] {
+  if (!(top > 0)) return [];
+  const raw = top / (count + 1);
+  const p = 10 ** Math.floor(Math.log10(raw));
+  const m = raw / p;
+  const step = (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * p;
+  const out: number[] = [];
+  for (let v = step; v < top && out.length < count + 1; v += step) out.push(v);
+  return out;
+}

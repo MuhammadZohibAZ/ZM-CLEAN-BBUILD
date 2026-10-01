@@ -2,7 +2,7 @@
 // every number on screen can be traced to one small function.
 
 import type { LocationScope } from "../../shared/types";
-import { normLoc } from "./format";
+import { normLoc, stripMandi } from "./format";
 import type { AttrFilters, AttrKey, ChangeInterval, MarketRow, SortKey } from "./types";
 
 export const ALL_RATES = "All";
@@ -113,7 +113,11 @@ export function mandiEntries(
 }
 
 export function sortEntries(list: MandiEntry[], sort: SortKey, pinMandi?: string): MandiEntry[] {
+  const byName = (a: MandiEntry, b: MandiEntry) => stripMandi(a.row.mandiName).localeCompare(stripMandi(b.row.mandiName));
   const by: Record<SortKey, (a: MandiEntry, b: MandiEntry) => number> = {
+    none: () => 0,
+    nameAZ: byName,
+    nameZA: (a, b) => byName(b, a),
     priceHigh: (a, b) => b.row.max - a.row.max || b.row.min - a.row.min,
     priceLow: (a, b) => (a.row.min || Infinity) - (b.row.min || Infinity) || (a.row.max || Infinity) - (b.row.max || Infinity),
     arrivalHigh: (a, b) => b.row.arrival - a.row.arrival,
@@ -121,7 +125,7 @@ export function sortEntries(list: MandiEntry[], sort: SortKey, pinMandi?: string
     arrival: (a, b) => b.row.arrival - a.row.arrival,
     change: (a, b) => Math.abs(b.change ?? 0) - Math.abs(a.change ?? 0),
   };
-  const sorter = by[sort] || by.priceHigh;
+  const sorter = by[sort] || by.none;
   const sorted = [...list].sort(sorter);
   if (!pinMandi) return sorted;
   const pin = normLoc(pinMandi);

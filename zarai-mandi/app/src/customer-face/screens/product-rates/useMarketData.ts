@@ -149,6 +149,7 @@ function toRow(r: {
   new_old: string | null;
   quality: string | null;
   moisture_raw: string | null;
+  reported_at?: string | null;
 }): MarketRow {
   const unit = Number(r.arrivals_unit);
   return {
@@ -170,5 +171,16 @@ function toRow(r: {
     newOld: r.new_old || undefined,
     quality: r.quality || undefined,
     moisture: r.moisture_raw || undefined,
+    reportedAt: reportTime(r.reported_at, r.record_date),
   };
+}
+
+/** "HH:MM" a report came in, when the source carries a time (today it only has dates). */
+function reportTime(reportedAt: string | null | undefined, recordDate: string | null | undefined): string | undefined {
+  const m = /[T ](\d{2}):(\d{2})/.exec(reportedAt || "");
+  if (m) return `${m[1]}:${m[2]}`;
+  const d = /[T ](\d{2}):(\d{2})(?::(\d{2}))?/.exec(recordDate || "");
+  // A bare midnight on a date-only export is not a real report time.
+  if (d && !(d[1] === "00" && d[2] === "00" && (d[3] ?? "00") === "00")) return `${d[1]}:${d[2]}`;
+  return undefined;
 }

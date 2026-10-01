@@ -1,6 +1,6 @@
 import { useId, useRef, useState } from "react";
 
-import type { Fmt } from "./format";
+import { axisSpec, niceTicks, type AxisUnit, type Fmt } from "./format";
 import { C } from "./theme";
 
 export type Series = { color: string; values: number[]; lo?: number[]; hi?: number[] };
@@ -31,6 +31,7 @@ export function TrendChart({
   onPanDays,
   animKey,
   yFormat,
+  yUnit,
   tooltip,
   ariaLabel,
 }: {
@@ -56,6 +57,8 @@ export function TrendChart({
   /** Replays the draw-in animation only when this changes (not while panning). */
   animKey?: string;
   yFormat?: (v: number) => string;
+  /** Y-axis title and number style (Rupees / Bags (k)); see axisSpec. */
+  yUnit?: AxisUnit;
   /** Text for the bubble shown while a finger is on the chart. */
   tooltip?: (i: number) => { title: string; value: string } | null;
   ariaLabel: string;
@@ -81,7 +84,8 @@ export function TrendChart({
     setTouching(false);
   };
   const W = 340;
-  const axisW = compact ? 0 : 44;
+  const titleW = yUnit && !compact ? 14 : 0;
+  const axisW = compact ? 0 : 44 + titleW;
   const plotW = W - axisW;
   const H = height;
   const bottomAxis = compact ? 4 : 22;
@@ -207,7 +211,9 @@ export function TrendChart({
     onIdx(i);
   };
 
-  const ticks = compact ? [] : [0.2, 0.5, 0.8].map((p) => lo + (hi - lo) * p);
+  const axis = yUnit && !compact ? axisSpec(f, yUnit, hi) : null;
+  const fmtY = yFormat ?? axis?.format ?? f.num;
+  const ticks = compact ? [] : barsOnly ? niceTicks(hi) : [0.2, 0.5, 0.8].map((p) => lo + (hi - lo) * p);
   const labelIdx = n > 1 ? [...new Set([0, Math.round((n - 1) / 3), Math.round(((n - 1) * 2) / 3), n - 1])] : [0];
   const barMax = bars ? Math.max(...bars, 1) : 1;
   const bw = Math.max(3, Math.min(barsOnly ? 14 : 8, (plotW / Math.max(n, 1)) * 0.6));
@@ -333,11 +339,26 @@ export function TrendChart({
         {ticks.map((v) => (
           <g key={v}>
             <line x1={f.ur ? axisW : 0} x2={f.ur ? W : plotW} y1={y(v)} y2={y(v)} stroke="#EEF1EF" strokeDasharray="3 4" />
-            <text x={f.ur ? 0 : W} y={y(v) + 4} textAnchor={f.ur ? "start" : "end"} fontSize="11.5" fontWeight="500" fill={C.faint} style={{ fontVariantNumeric: "tabular-nums" }}>
-              {yFormat ? yFormat(v) : f.num(v)}
+            <text x={f.ur ? titleW : W - titleW} y={y(v) + 4} textAnchor={f.ur ? "start" : "end"} fontSize="11.5" fontWeight="500" fill={C.faint} style={{ fontVariantNumeric: "tabular-nums" }}>
+              {fmtY(v)}
             </text>
           </g>
         ))}
+        {axis && (
+          <text
+            x={f.ur ? 5 : W - 5}
+            y={(lineTop + lineBottom) / 2}
+            transform={`rotate(${f.ur ? -90 : 90} ${f.ur ? 5 : W - 5} ${(lineTop + lineBottom) / 2})`}
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontSize="11"
+            fontWeight="700"
+            fill={C.muted}
+            letterSpacing="0.02em"
+          >
+            {axis.title}
+          </text>
+        )}
 
         <g key={`bars-${drawKey}`}>
           {bars &&

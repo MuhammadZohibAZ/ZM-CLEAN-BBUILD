@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
 import type { TimelineResult } from "../../../data/realCommodityData";
 import { ALL_RATE_TYPES } from "../../shared/data/rates";
@@ -11,11 +12,15 @@ import { ALL_RATES, passesFilters, statsFor } from "./selectors";
 import { Sparkline } from "./Sparkline";
 import { C, COMPARE_TONES, PROVINCES } from "./theme";
 import { TrendChart, type Series } from "./TrendChart";
+import { IntradayChart, type IntradayPoint } from "./IntradayChart";
 import type { AttrFilters, MarketRow } from "./types";
 import { Card, Icon, Segmented, useCountUp } from "./ui";
 import { TIMELINE } from "./useMarketData";
 
-type Range = "1W" | "2W" | "1M" | "CUSTOM";
+// 1D shows the same two weeks as 2W (so any bar can be picked) but its
+// High / Low / Average are for the selected day only.
+type Range = "1D" | "1W" | "2W" | "1M" | "6M" | "1Y" | "CUSTOM";
+const RANGE_DAYS: Record<Exclude<Range, "CUSTOM">, number> = { "1D": 14, "1W": 7, "2W": 14, "1M": 30, "6M": 182, "1Y": 365 };
 const isPriceMode = (m: "price" | "arrival") => m === "price";
 const MAX_COMPARE = 4;
 const MOVERS = 5;
@@ -93,7 +98,7 @@ export function TrendsTab({
       setSpanState(Math.max(2, e - s));
       setOffset(TL - e);
     } else {
-      setSpanState(range === "1W" ? 7 : range === "2W" ? 14 : TL);
+      setSpanState(Math.min(TL, RANGE_DAYS[range]));
       setOffset(0);
     }
   }, [range, custom, TL]);
@@ -105,7 +110,14 @@ export function TrendsTab({
   const dates = TIMELINE.slice(start, end);
   const len = dates.length;
   const i = idx === null || idx >= len ? len - 1 : idx;
-  useEffect(() => setIdx(null), [range, custom, mode]);
+  // Keep the picked day when only switching between 2W and 1D (same window).
+  const prevRange = useRef(range);
+  useEffect(() => {
+    const sameWindow = (a: Range, b: Range) => (a === "1D" || a === "2W") && (b === "1D" || b === "2W");
+    if (!sameWindow(prevRange.current, range)) setIdx(null);
+    prevRange.current = range;
+  }, [range]);
+  useEffect(() => setIdx(null), [custom, mode]);
   const panDays = (d: number) => setOffset((o) => Math.max(0, Math.min(maxOffset, o + d)));
   const setSpanKeepRight = (s: number) => setSpanState(Math.max(MIN_SPAN, Math.min(TL, s)));
   const canPan = maxOffset > 0;
@@ -242,6 +254,40 @@ export function TrendsTab({
   const hasPrice = valid.length > 0;
   const headValue = useCountUp(isPrice ? activePrice : arr[i] || 0);
 
+  // 1D: the selected day's reports on a 24-hour axis. Reports carrying a time
+  // are placed at it; otherwise the day's figure is one bar at the day close.
+  const intraday = useMemo<IntradayPoint[]>(() => {
+    if (range !== "1D") return [];
+    const day = dates[i];
+    const rows = allRows.filter(
+      (r) =>
+        r.date === day &&
+        scopeProvinceFilter(r) &&
+        (isPrice ? focus === ALL_RATES || r.rateType === focus : true) &&
+        passesFilters(r, filters, isPrice ? focus : ALL_RATES),
+    );
+    const timed = rows.filter((r) => r.reportedAt);
+    if (timed.length) {
+      const byMinute = new Map<number, MarketRow[]>();
+      for (const r of timed) {
+        const [h, m] = r.reportedAt!.split(":").map(Number);
+        const k = h * 60 + m;
+        const list = byMinute.get(k);
+        if (list) list.push(r);
+        else byMinute.set(k, [r]);
+      }
+      return [...byMinute].map(([minute, list]) => {
+        const st = statsFor(list);
+        return isPrice
+          ? { minute, value: st.mid, lo: st.min, hi: st.max }
+          : { minute, value: list.reduce((s, x) => s + x.arrival, 0) };
+      });
+    }
+    return isPrice
+      ? [{ minute: null, value: prices[i] || 0, lo: mins[i], hi: maxs[i] }]
+      : [{ minute: null, value: arr[i] || 0 }];
+  }, [range, dates, i, allRows, scopeProvinceFilter, isPrice, focus, filters, prices, mins, maxs, arr]);
+
   // ── Records in range + location (for movers and province split) ──
   const inRange = useMemo(() => new Set(dates), [dates]);
   const rangeRows = useMemo(
@@ -251,6 +297,23 @@ export function TrendsTab({
 
   const provArr = PROVINCES.map((p) => ({ p, v: rangeRows.filter((r) => r.province === p).reduce((a, r) => a + r.arrival, 0) })).filter((o) => o.v > 0);
   const provTotal = provArr.reduce((a, o) => a + o.v, 0);
+
+  // Station-wise arrivals inside each province (same rows and period), shown
+  // when a province row is expanded.
+  const [openProv, setOpenProv] = useState<string | null>(null);
+  const stationsByProv = useMemo(() => {
+    const out = new Map<string, { name: string; v: number }[]>();
+    const sums = new Map<string, Map<string, number>>();
+    for (const r of rangeRows) {
+      if (!(r.arrival > 0)) continue;
+      const name = stripMandi(r.mandiName) || r.district || "—";
+      const m = sums.get(r.province) ?? new Map<string, number>();
+      m.set(name, (m.get(name) ?? 0) + r.arrival);
+      sums.set(r.province, m);
+    }
+    for (const [prov, m] of sums) out.set(prov, [...m].map(([name, v]) => ({ name, v })).sort((a, b) => b.v - a.v));
+    return out;
+  }, [rangeRows]);
 
   // Top movers: first vs last report in the range, per mandi + rate type.
   const movers = useMemo(() => {
@@ -284,9 +347,12 @@ export function TrendsTab({
   const moverList = moverSide === "up" ? gainers : losers;
 
   const rangeLabel: Record<Range, string> = {
+    "1D": f.tx("1D", "۱د"),
     "1W": f.tx("1W", "۱ہ"),
     "2W": f.tx("2W", "۲ہ"),
     "1M": f.tx("1M", "۱م"),
+    "6M": f.tx("6M", "۶م"),
+    "1Y": f.tx("1Y", "۱س"),
     CUSTOM: f.tx("Custom", "مخصوص"),
   };
   const rateActive = compare || focus !== ALL_RATES;
@@ -359,7 +425,7 @@ export function TrendsTab({
               ))}
             </div>
             <div role="group" aria-label={f.tx("Period", "مدت")} style={{ display: "flex", alignItems: "center", gap: 2 }}>
-              {(["1W", "2W", "1M"] as Range[]).map((r) => {
+              {(["1D", "1W", "2W", "1M", "6M", "1Y"] as Range[]).map((r) => {
                 const on = range === r;
                 return (
                   <button
@@ -369,8 +435,8 @@ export function TrendsTab({
                     onClick={() => setRange(r)}
                     style={{
                       height: 28,
-                      minWidth: 34,
-                      padding: "0 8px",
+                      minWidth: 30,
+                      padding: "0 6px",
                       border: "none",
                       borderRadius: 14,
                       fontSize: 12.5,
@@ -538,7 +604,51 @@ export function TrendsTab({
                     )}
                   </div>
                 )}
-                {isPrice && chartType === "candles" && !compare ? (
+                {range === "1D" ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+                      {[-1, 1].map((step) => {
+                        const back = step < 0;
+                        const can = back ? i > 0 || off < maxOffset : i < len - 1 || off > 0;
+                        const go = () => {
+                          if (back) {
+                            if (i > 0) setIdx(i - 1);
+                            else panDays(1);
+                          } else if (i < len - 1) setIdx(i + 1);
+                          else panDays(-1);
+                        };
+                        const btn = (
+                          <button
+                            key={step}
+                            type="button"
+                            disabled={!can}
+                            onClick={go}
+                            aria-label={back ? f.tx("Previous day", "پچھلا دن") : f.tx("Next day", "اگلا دن")}
+                            style={{ width: 30, height: 30, borderRadius: 15, border: `1px solid ${C.line}`, background: C.surface, color: can ? C.ink : C.faint, fontSize: 16, fontWeight: 700, opacity: can ? 1 : 0.5 }}
+                          >
+                            {(back ? !f.ur : f.ur) ? "‹" : "›"}
+                          </button>
+                        );
+                        return back ? (
+                          <span key="b" style={{ display: "contents" }}>
+                            {btn}
+                            <span style={{ minWidth: 120, textAlign: "center", fontSize: 13, fontWeight: 700, color: C.ink }}>{f.day(dates[i], true)}</span>
+                          </span>
+                        ) : (
+                          btn
+                        );
+                      })}
+                    </div>
+                    <IntradayChart
+                      key={`${dates[i]}|${mode}|${focus}`}
+                      f={f}
+                      unit={isPrice ? "rupees" : "bags"}
+                      color={C.brand}
+                      points={intraday}
+                      ariaLabel={f.tx("The selected day on a 24-hour axis", "منتخب دن ۲۴ گھنٹے کے محور پر")}
+                    />
+                  </div>
+                ) : isPrice && chartType === "candles" && !compare ? (
                   <CandleChart
                     f={f}
                     data={candleData}
@@ -565,6 +675,7 @@ export function TrendsTab({
                     animKey={`${range}|${focus}|${compare}|${set.join(",")}|${chartType}|${custom.start}|${custom.end}`}
                     idx={i}
                     onIdx={setIdx}
+                    yUnit="rupees"
                     tooltip={(k) => {
                       if (prices[k] > 0) {
                         return {
@@ -603,7 +714,7 @@ export function TrendsTab({
                     barsOnly
                     idx={i}
                     onIdx={setIdx}
-                    yFormat={(v) => (v >= 1000 ? `${f.digits((v / 1000).toFixed(1))}k` : f.num(v))}
+                    yUnit="bags"
                     tooltip={(k) => ({ title: f.day(dates[k], true), value: arr[k] > 0 ? `${f.num(arr[k])} ${f.tx("bags", "بوریاں")}` : f.tx("no report", "رپورٹ نہیں") })}
                     ariaLabel={f.tx("Arrivals trend. Drag to see any day.", "آمد کا رجحان")}
                   />
@@ -611,7 +722,35 @@ export function TrendsTab({
               </div>
 
               <div style={{ position: "relative", display: "flex", gap: 10, padding: "12px 16px 14px", borderTop: `1px solid ${DK.line}` }}>
-                {isPrice ? (
+                {isPrice && range === "1D" ? (
+                  <>
+                    {/* 1D: the selected day only (highest max, lowest min, average across mandis). */}
+                    {(() => {
+                      const dayHi = showCandles ? candleData.high[i] : maxs[i];
+                      const dayLo = showCandles ? candleData.low[i] : mins[i];
+                      const dayAvg = prices[i];
+                      const label = f.day(dates[i]);
+                      const none = f.tx("no report", "رپورٹ نہیں");
+                      return (
+                        <>
+                          {darkStat(f.tx("High", "زیادہ"), dayHi > 0 ? f.num(dayHi) : "—", dayHi > 0 ? label : none)}
+                          {darkStat(f.tx("Low", "کم"), dayLo > 0 ? f.num(dayLo) : "—", dayLo > 0 ? label : none)}
+                          {darkStat(f.tx("Average", "اوسط"), dayAvg > 0 ? f.num(dayAvg) : "—", dayAvg > 0 ? label : none)}
+                        </>
+                      );
+                    })()}
+                  </>
+                ) : !isPrice && range === "1D" ? (
+                  <>
+                    {darkStat(f.tx("That day", "اس دن"), f.num(arr[i] || 0), f.day(dates[i]))}
+                    {darkStat(f.tx("Day before", "پچھلا دن"), i > 0 ? f.num(arr[i - 1] || 0) : "—", i > 0 ? f.day(dates[i - 1]) : undefined)}
+                    {darkStat(
+                      f.tx("Change", "تبدیلی"),
+                      i > 0 && arr[i - 1] > 0 ? `${arrow(arrPct)} ${f.pct(arrPct)}` : "—",
+                      f.tx("bags", "بوریاں"),
+                    )}
+                  </>
+                ) : isPrice ? (
                   <>
                     {(() => {
                       // Candle mode: High / Low are the wicks (match the chart's markers).
@@ -644,7 +783,9 @@ export function TrendsTab({
           )}
         </div>
         <p style={{ margin: "8px 4px 0", fontSize: 11.5, fontWeight: 500, color: C.faint, textAlign: "center" }}>
-          {canPan
+          {range === "1D"
+            ? f.tx("Use ‹ › to change the day · bar = when the rate came in", "دن بدلنے کے لیے ‹ › استعمال کریں · بار = ریٹ آنے کا وقت")
+            : canPan
             ? f.tx(
                 showCandles ? "Drag for earlier days · pinch to zoom · tap for details" : "Drag for earlier days · hold to read values",
                 `پچھلے دنوں کے لیے چارٹ کھسکائیں · قیمت دیکھنے کے لیے دبائے رکھیں`,
@@ -800,17 +941,88 @@ export function TrendsTab({
             <Card style={{ padding: "6px 16px 14px" }}>
               {[...provArr].sort((a, b) => b.v - a.v).map((o) => {
                 const share = (o.v / provTotal) * 100;
+                const open = openProv === o.p;
+                const stations = stationsByProv.get(o.p) ?? [];
                 return (
-                  <div key={o.p} style={{ display: "flex", flexDirection: "column", gap: 7, paddingTop: 12 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8 }}>
-                      <span style={{ fontSize: 15, fontWeight: 600 }}>{tm(o.p)}</span>
-                      <span style={{ fontSize: 13, fontWeight: 500, color: C.muted, fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate" }}>
-                        <span style={{ fontWeight: 700, color: C.ink }}>{f.digits(Math.round(share))}%</span> · {f.num(o.v)}
-                      </span>
-                    </div>
-                    <div style={{ height: 8, borderRadius: 4, background: C.chip, overflow: "hidden" }}>
-                      <div style={{ height: 8, borderRadius: 4, background: "linear-gradient(90deg, #087F63, #2FB58A)", width: `${share}%` }} />
-                    </div>
+                  <div key={o.p} style={{ paddingTop: 12 }}>
+                    {/* Province: tap to show / hide its stations */}
+                    <button
+                      type="button"
+                      onClick={() => setOpenProv(open ? null : o.p)}
+                      aria-expanded={open}
+                      style={{ display: "flex", flexDirection: "column", gap: 7, width: "100%", background: "none", border: "none", padding: 0, textAlign: "start", color: "inherit", fontFamily: f.font, cursor: "pointer" }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, width: "100%" }}>
+                        <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 15, fontWeight: 600 }}>
+                          {tm(o.p)}
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              width: 22,
+                              height: 22,
+                              borderRadius: 11,
+                              background: open ? C.brand : C.chip,
+                              transform: open ? "rotate(180deg)" : "none",
+                              transition: "transform 0.25s ease, background 0.2s ease",
+                            }}
+                          >
+                            <Icon name="chevDown" size={13} width={2.6} color={open ? "#fff" : C.muted} />
+                          </span>
+                        </span>
+                        <span style={{ fontSize: 13, fontWeight: 500, color: C.muted, fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate" }}>
+                          <span style={{ fontWeight: 700, color: C.ink }}>{f.digits(Math.round(share))}%</span> · {f.num(o.v)}
+                        </span>
+                      </div>
+                      <div style={{ height: 8, width: "100%", borderRadius: 4, background: C.chip, overflow: "hidden" }}>
+                        <div style={{ height: 8, borderRadius: 4, background: "linear-gradient(90deg, #087F63, #2FB58A)", width: `${share}%` }} />
+                      </div>
+                    </button>
+
+                    {/* Its stations, share of this province's arrivals */}
+                    <AnimatePresence initial={false}>
+                      {open && (
+                        <motion.div
+                          key="stations"
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+                          style={{ overflow: "hidden" }}
+                        >
+                          <div
+                            style={{
+                              margin: "10px 0 2px",
+                              padding: "4px 12px 10px",
+                              borderRadius: 14,
+                              background: "#F5F8F6",
+                              borderInlineStart: `3px solid ${C.brand}`,
+                            }}
+                          >
+                            <div style={{ fontSize: 11.5, fontWeight: 600, color: C.muted, padding: "6px 0 2px" }}>
+                              {f.tx(`${f.digits(stations.length)} stations · share of ${tm(o.p)}`, `${f.digits(stations.length)} منڈیاں · ${tm(o.p)} میں حصہ`)}
+                            </div>
+                            {stations.map((st) => {
+                              const sShare = o.v > 0 ? (st.v / o.v) * 100 : 0;
+                              return (
+                                <div key={st.name} style={{ display: "flex", flexDirection: "column", gap: 5, paddingTop: 9 }}>
+                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8 }}>
+                                    <span style={{ fontSize: 13.5, fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{tm(st.name)}</span>
+                                    <span style={{ flexShrink: 0, fontSize: 12, fontWeight: 500, color: C.muted, fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate" }}>
+                                      <span style={{ fontWeight: 700, color: C.ink }}>{f.digits(sShare >= 1 ? Math.round(sShare) : Number(sShare.toFixed(1)))}%</span> · {f.num(st.v)}
+                                    </span>
+                                  </div>
+                                  <div style={{ height: 5, borderRadius: 3, background: "#E3ECE7", overflow: "hidden" }}>
+                                    <div style={{ height: 5, borderRadius: 3, background: "#5FB894", width: `${sShare}%` }} />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 );
               })}
