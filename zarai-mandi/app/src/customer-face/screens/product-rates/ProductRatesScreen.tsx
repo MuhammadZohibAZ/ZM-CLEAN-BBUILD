@@ -426,7 +426,7 @@ export function ProductRatesScreen({
                         records={mapRecords}
                         day={day}
                         colorKey={mapColorKey}
-                        filterBar={<FilterRail {...filterUi} showDate />}
+                        filterBar={<FilterRail {...filterUi} showDate variant="map" />}
                         focusMandiName={scope.kind === "mandi" || scope.kind === "district" ? scope.label : undefined}
                         focusProvinceName={scope.kind === "province" ? scope.label : undefined}
                         lang={lang}

@@ -34,7 +34,8 @@ export function FilterRail({
   locationActive = false,
   onClearLocation,
   showDate = true,
-}: FilterUiProps & { showDate?: boolean }) {
+  variant = "bar",
+}: FilterUiProps & { showDate?: boolean; variant?: "bar" | "map" }) {
   const [open, setOpen] = useState<Open>(null);
   const qualityCount = Object.values(filters).filter(Boolean).length;
   const allRates = rates[0]?.id;
@@ -42,7 +43,7 @@ export function FilterRail({
   const isLatest = date === latest;
 
   const parts: { key: string; caption: string; value: string; active: boolean; grow: number; onClick: () => void; onClear?: () => void }[] = [
-    { key: "loc", caption: f.tx("Location", "مقام"), value: locationLabel, active: locationActive, grow: 1.25, onClick: onOpenLocation, onClear: onClearLocation },
+    { key: "loc", caption: f.tx("Location", "مقام"), value: locationLabel, active: locationActive, grow: 1.15, onClick: onOpenLocation, onClear: onClearLocation },
   ];
   if (showDate && date) {
     parts.push({
@@ -50,7 +51,7 @@ export function FilterRail({
       caption: isLatest ? f.tx("Day · latest", "دن · تازہ") : f.tx("Day", "دن"),
       value: f.day(date),
       active: !isLatest,
-      grow: 0.95,
+      grow: 1.0,
       onClick: () => setOpen("day"),
       onClear: () => onDate(latest),
     });
@@ -60,7 +61,7 @@ export function FilterRail({
     caption: f.tx("Rate", "ریٹ"),
     value: rateLabel,
     active: rate !== allRates,
-    grow: 1.1,
+    grow: 0.95,
     onClick: () => setOpen("rate"),
     onClear: () => allRates && onRate(allRates),
   });
@@ -70,15 +71,46 @@ export function FilterRail({
       caption: f.tx("Attribute", "خصوصیات"),
       value: qualityCount ? f.tx(`${qualityCount} selected`, `${f.digits(qualityCount)} منتخب`) : f.tx("Any", "کوئی بھی"),
       active: qualityCount > 0,
-      grow: 0.9,
+      grow: 1.05,
       onClick: () => setOpen("quality"),
       onClear: () => onFilters({}),
     });
   }
 
   return (
-    <div dir={f.dir} style={{ display: "flex", alignItems: "stretch", background: C.surface, padding: "10px 16px 12px", borderBottom: `1px solid ${C.lineSoft}`, fontFamily: f.font }}>
-      <div role="group" aria-label={f.tx("Filters", "فلٹر")} style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "stretch", borderRadius: 16, background: C.surfaceAlt, border: `1px solid ${C.line}`, overflow: "hidden" }}>
+    <div
+      dir={f.dir}
+      style={{
+        display: "flex",
+        alignItems: "stretch",
+        background: variant === "map" ? "#FFFFFF" : C.surface,
+        padding: variant === "map" ? "4px" : "10px 16px 12px",
+        borderRadius: variant === "map" ? 18 : 0,
+        boxShadow: variant === "map" ? "0 2px 10px rgba(0,0,0,0.08)" : "none",
+        borderBottom: variant === "map" ? "none" : `1px solid ${C.lineSoft}`,
+        fontFamily: f.font,
+        width: "100%",
+        minWidth: 0,
+      }}
+    >
+      <div
+        role="group"
+        aria-label={f.tx("Filters", "فلٹر")}
+        className="zm-hide-scrollbar"
+        style={{
+          flex: 1,
+          minWidth: 0,
+          display: "flex",
+          alignItems: "stretch",
+          borderRadius: variant === "map" ? 14 : 16,
+          background: C.surfaceAlt,
+          border: `1px solid ${C.line}`,
+          overflowX: "auto",
+          overflowY: "hidden",
+          scrollbarWidth: "none",
+          WebkitOverflowScrolling: "touch",
+        }}
+      >
         {parts.map((p, i) => {
           const clearable = p.active && !!p.onClear;
           return (
@@ -87,7 +119,7 @@ export function FilterRail({
               style={{
                 position: "relative",
                 flex: `${p.grow} 1 0`,
-                minWidth: 0,
+                minWidth: "max-content",
                 borderInlineStart: i ? `1px solid ${C.line}` : "none",
                 background: p.active ? C.brandTint : "transparent",
                 transition: "background 200ms",
@@ -104,18 +136,42 @@ export function FilterRail({
                   alignItems: "flex-start",
                   justifyContent: "center",
                   gap: 1,
-                  height: 54,
-                  padding: "0 10px",
+                  height: variant === "map" ? 50 : 54,
+                  paddingInlineStart: 8,
+                  paddingInlineEnd: clearable ? 26 : 8,
+                  paddingTop: 0,
+                  paddingBottom: 0,
                   border: "none",
                   background: "transparent",
                   fontFamily: f.font,
                   textAlign: "start",
+                  whiteSpace: "nowrap",
                 }}
               >
-                <span style={{ fontSize: 11.5, fontWeight: 500, color: p.active ? C.brandDeep : C.muted, lineHeight: f.lh, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>{p.caption}</span>
-                <span style={{ display: "flex", alignItems: "center", gap: 4, maxWidth: "100%" }}>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: p.active ? C.brandDeep : C.ink, lineHeight: f.lh, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}>{p.value}</span>
-                  {!clearable && <Icon name="chevDown" size={11} width={2.8} color={C.faint} />}
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 500,
+                    color: p.active ? C.brandDeep : C.muted,
+                    lineHeight: 1.2,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {p.caption}
+                </span>
+                <span style={{ display: "flex", alignItems: "center", gap: 3, whiteSpace: "nowrap" }}>
+                  <span
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: p.active ? C.brandDeep : C.ink,
+                      lineHeight: 1.2,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {p.value}
+                  </span>
+                  {!clearable && <Icon name="chevDown" size={10} width={2.6} color={C.faint} />}
                 </span>
               </button>
               {clearable && (
@@ -124,10 +180,34 @@ export function FilterRail({
                   onClick={p.onClear}
                   aria-label={f.tx(`Clear ${p.caption}`, `${p.caption} صاف کریں`)}
                   className="zm-fadein"
-                  style={{ position: "absolute", top: 1, insetInlineEnd: 1, width: 30, height: 30, padding: 0, border: "none", background: "transparent", display: "flex", alignItems: "center", justifyContent: "center" }}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    bottom: 0,
+                    margin: "auto 0",
+                    insetInlineEnd: 4,
+                    width: 24,
+                    height: 24,
+                    padding: 0,
+                    border: "none",
+                    background: "transparent",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
                 >
-                  <span style={{ width: 18, height: 18, borderRadius: 9, background: "rgba(8,127,99,0.16)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <Icon name="close" size={10} width={3} color={C.brandDeep} />
+                  <span
+                    style={{
+                      width: 17,
+                      height: 17,
+                      borderRadius: 9,
+                      background: "rgba(8,127,99,0.16)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Icon name="close" size={9} width={2.8} color={C.brandDeep} />
                   </span>
                 </button>
               )}
