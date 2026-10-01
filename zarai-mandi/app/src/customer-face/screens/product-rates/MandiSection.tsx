@@ -685,7 +685,7 @@ function changeColor(c: number | null) {
 
 function colLabel(f: Fmt, k: AttrKey) {
   const L: Record<AttrKey, [string, string]> = {
-    newOld: ["New / Old", "نئی / پرانی"],
+    newOld: ["Crop", "فصل"],
     variety: ["Variety", "قسم"],
     moisture: ["Moisture", "نمی"],
     color: ["Color", "رنگ"],

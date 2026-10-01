@@ -260,8 +260,8 @@ export function ByProductNationalCard({
   const attrType = stats.specialAttr?.type || getProductSpecialAttrType(stats.byproduct, product || vertical || stats.product);
   const attrMeta = attrType ? SPECIAL_ATTR_META[attrType] : { labelEn: "Crop", labelUr: "فصل", dotColor: "#F59E0B" };
   const specialAttrLabel = lang === 'ur'
-    ? (stats.specialAttr?.labelUr || attrMeta?.labelUr || 'فصل')
-    : (stats.specialAttr?.labelEn || attrMeta?.labelEn || 'Crop');
+    ? (attrType === 'newOld' ? 'فصل' : (stats.specialAttr?.labelUr || attrMeta?.labelUr || 'فصل'))
+    : (attrType === 'newOld' ? 'Crop' : (stats.specialAttr?.labelEn || attrMeta?.labelEn || 'Crop'));
   const hasAttrValue = Boolean(stats.specialAttr && (stats.specialAttr.valueEn || stats.specialAttr.valueUr));
   const specialAttrValue = hasAttrValue
     ? (lang === 'ur' ? stats.specialAttr!.valueUr : stats.specialAttr!.valueEn)
