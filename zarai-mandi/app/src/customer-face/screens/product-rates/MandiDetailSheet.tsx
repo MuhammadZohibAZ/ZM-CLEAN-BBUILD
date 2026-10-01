@@ -284,7 +284,7 @@ export function MandiDetailSheet({
               diffYesterday !== null ? `${diffYesterday >= 0 ? "+" : "−"}${f.rs(Math.abs(diffYesterday))}` : "—",
               diffYesterday !== null ? (diffYesterday > 0 ? C.up : diffYesterday < 0 ? C.down : C.ink) : C.ink,
             )}
-            {box(f.tx("Rank today", "آج کا درجہ"), rank > 0 && mids.length > 1 ? f.tx(`${rank} of ${mids.length}`, `${f.digits(mids.length)} میں ${f.digits(rank)}`) : f.tx("Only one", "واحد"))}
+            {box(f.tx("Today's Mandi Rank", "آج کی منڈی رینک"), rank > 0 && mids.length > 1 ? f.tx(`${rank} of ${mids.length}`, `${f.digits(mids.length)} میں ${f.digits(rank)}`) : f.tx("Only one", "واحد"))}
           </div>
           <Segmented
             label={f.tx("Chart", "چارٹ")}

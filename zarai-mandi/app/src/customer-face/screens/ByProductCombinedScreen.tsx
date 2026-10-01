@@ -99,11 +99,11 @@ export function ByProductCombinedScreen({
         }}
       >
         {/* Title row */}
-        <div className="px-3 pt-9 pb-2.5 flex items-center justify-between gap-2 w-full">
-          <div className="flex items-center gap-2 flex-1 min-w-0">
+        <div className="px-3 pt-9 pb-2.5 flex items-center justify-between gap-1.5 w-full">
+          <div className="flex items-center gap-1.5 flex-1 min-w-0">
             <button
               onClick={onBack}
-              className="tap-target zm-beam-border w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0 text-[#183B34] transition active:scale-95"
+              className="tap-target zm-beam-border w-8 h-8 rounded-xl flex items-center justify-center text-sm flex-shrink-0 text-[#183B34] transition active:scale-95"
               style={{
                 background: 'rgba(255, 255, 255, 0.7)',
                 border: '1.2px solid rgba(16, 185, 129, 0.4)',
@@ -115,17 +115,17 @@ export function ByProductCombinedScreen({
             <ProductIcon
               name={activeProduct?.product || 'Wheat'}
               vertical={activeProduct?.vertical}
-              size={32}
+              size={28}
               style={{ flexShrink: 0 }}
             />
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <h2
                 className="font-black text-[#183B34] text-base leading-tight truncate"
                 style={{ fontFamily: lang === 'ur' ? URDU_FONT : 'inherit' }}
               >
                 {tcL(activeProduct?.product || 'Wheat')}
               </h2>
-              <p className="text-[11px] font-semibold text-[#52635F] leading-tight">
+              <p className="text-[11px] font-semibold text-[#52635F] leading-tight whitespace-nowrap">
                 {lang === 'ur'
                   ? `${toUrduDigits(byproducts.length)} ضمنی مصنوعات`
                   : `${byproducts.length} By-products`}
@@ -184,8 +184,8 @@ export function ByProductCombinedScreen({
 
       {/* By-Product Cards — 4-card visible grid (2 columns x 2 rows fit comfortably on screen) */}
       <div
-        className="flex-1 overflow-y-auto px-2.5 sm:px-3 pt-2 pb-6"
-        style={{ scrollbarWidth: 'none' }}
+        className="flex-1 overflow-y-auto px-2.5 sm:px-3 pt-2"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 96px)', scrollbarWidth: 'none' }}
       >
         {byproductCardsData.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 opacity-50 px-4">

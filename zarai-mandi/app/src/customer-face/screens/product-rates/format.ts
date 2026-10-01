@@ -69,16 +69,17 @@ export const arrow = (n: number) => (signed(n) > 0 ? "▲" : signed(n) < 0 ? "�
 
 /**
  * Y-axis convention shared by every chart in the app: prices on a "Rupees"
- * axis; arrivals on a "Bags" axis, counted in thousands once the scale reaches
- * 1,000 (45,000 bags reads "45" on a "Bags (k)" axis).
+ * axis; arrivals on a "Bags" axis, counted in thousands only once the scale
+ * reaches above 99,999 (e.g. 120,000 bags reads "120" on a "Bags (k)" axis).
+ * Otherwise the whole number is represented on the y-axis and "(k)" is omitted.
  */
 export type AxisUnit = "rupees" | "bags";
 export function axisSpec(f: Fmt, unit: AxisUnit, top: number): { title: string; format: (v: number) => string } {
   if (unit === "rupees") return { title: f.tx("Rupees", "روپے"), format: (v) => f.num(v) };
-  const k = top >= 1000;
+  const k = top > 99999;
   return {
     title: k ? f.tx("Bags (k)", "بوریاں (ہزار)") : f.tx("Bags", "بوریاں"),
-    format: (v) => (k ? f.digits(Number((v / 1000).toFixed(v < 10000 ? 1 : 0))) : f.num(v)),
+    format: (v) => (k ? f.digits(Number((v / 1000).toFixed(0))) : f.num(v)),
   };
 }
 

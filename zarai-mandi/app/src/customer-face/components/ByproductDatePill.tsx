@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 
 import { toUrduDigits, URDU_FONT, useLang } from "../shared/i18n/LangProvider";
 
@@ -44,94 +45,94 @@ export function ByproductDatePill({
   return (
     <>
       {compact ? (
-      <button
-        type="button"
-        onClick={() => setIsDateCalOpen(true)}
-        className="tap-target flex items-center gap-2 transition active:scale-95"
-        style={{
-          padding: '4px 10px',
-          borderRadius: 999,
-          color: '#183B34',
-          fontSize: lang === 'ur' ? 15 : 14.5,
-          fontWeight: 700,
-          fontFamily: lang === 'ur' ? URDU_FONT : 'inherit',
-          whiteSpace: 'nowrap',
-        }}
-      >
-        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#183B34" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-          <line x1="16" y1="2" x2="16" y2="6" />
-          <line x1="8" y1="2" x2="8" y2="6" />
-          <line x1="3" y1="10" x2="21" y2="10" />
-        </svg>
-        <span>{dateInfo.gregDayMonth} · {dateInfo.hijriDayMonth}</span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#183B34" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
-          <path d="M6 9l6 6 6-6" />
-        </svg>
-      </button>
+        <button
+          type="button"
+          onClick={() => setIsDateCalOpen(true)}
+          className="tap-target flex items-center gap-2 transition active:scale-95"
+          style={{
+            padding: '4px 10px',
+            borderRadius: 999,
+            color: '#183B34',
+            fontSize: lang === 'ur' ? 15 : 14.5,
+            fontWeight: 700,
+            fontFamily: lang === 'ur' ? URDU_FONT : 'inherit',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#183B34" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+          </svg>
+          <span>{dateInfo.gregDayMonth} · {dateInfo.hijriDayMonth}</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#183B34" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
       ) : (
-      <>
-      {/* Gregorian + Lunar Islamic Date Pill (Clickable Date Filter) */}
-      <button
-        type="button"
-        onClick={() => setIsDateCalOpen(true)}
-        className="tap-target flex items-center gap-1.5 px-2.5 py-1 rounded-2xl flex-shrink-0 cursor-pointer transition active:scale-95 text-left"
-        style={{
-          background: 'rgba(255, 255, 255, 0.92)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          border: '1.2px solid rgba(16, 185, 129, 0.45)',
-          boxShadow: '0 2px 8px rgba(16, 185, 129, 0.12)',
-        }}
-      >
-        <svg
-          width="13"
-          height="13"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="#075E4F"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="flex-shrink-0"
-        >
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-          <line x1="16" y1="2" x2="16" y2="6" />
-          <line x1="8" y1="2" x2="8" y2="6" />
-          <line x1="3" y1="10" x2="21" y2="10" />
-        </svg>
+        <>
+          {/* Gregorian + Lunar Islamic Date Pill (Clickable Date Filter) */}
+          <button
+            type="button"
+            onClick={() => setIsDateCalOpen(true)}
+            className="tap-target flex items-center gap-1 px-2 py-0.5 rounded-2xl flex-shrink-0 cursor-pointer transition active:scale-95 text-left"
+            style={{
+              background: 'rgba(255, 255, 255, 0.92)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              border: '1.2px solid rgba(16, 185, 129, 0.45)',
+              boxShadow: '0 2px 8px rgba(16, 185, 129, 0.12)',
+            }}
+          >
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#075E4F"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="flex-shrink-0"
+            >
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
 
-        <div
-          className="flex items-center gap-1.5 text-[#075E4F]"
-          style={{ fontFamily: lang === 'ur' ? URDU_FONT : 'inherit' }}
-        >
-          {/* Left Column: Gregorian Date & Year */}
-          <div className="flex flex-col items-center leading-none">
-            <span className="text-[10px] font-extrabold whitespace-nowrap">
-              {dateInfo.gregDayMonth}
-            </span>
-            <span className="text-[8.5px] font-bold text-[#087F63]/80 tracking-wide mt-0.5 whitespace-nowrap">
-              {dateInfo.gregYear}
-            </span>
-          </div>
+            <div
+              className="flex items-center gap-1 text-[#075E4F]"
+              style={{ fontFamily: lang === 'ur' ? URDU_FONT : 'inherit' }}
+            >
+              {/* Left Column: Gregorian Date & Year */}
+              <div className="flex flex-col items-center leading-none">
+                <span className="text-[9.5px] font-extrabold whitespace-nowrap">
+                  {dateInfo.gregDayMonth}
+                </span>
+                <span className="text-[8px] font-bold text-[#087F63]/80 tracking-wide mt-0.5 whitespace-nowrap">
+                  {dateInfo.gregYear}
+                </span>
+              </div>
 
-          {/* Dash separator */}
-          <span className="text-xs font-bold text-[#10B981] pb-0.5">-</span>
+              {/* Dash separator */}
+              <span className="text-[10px] font-bold text-[#10B981] pb-0.5">-</span>
 
-          {/* Right Column: Hijri Date & Year */}
-          <div className="flex flex-col items-center leading-none">
-            <span className="text-[10px] font-extrabold whitespace-nowrap">
-              {dateInfo.hijriDayMonth}
-            </span>
-            <span className="text-[8.5px] font-bold text-[#087F63]/80 tracking-wide mt-0.5 whitespace-nowrap">
-              {dateInfo.hijriYear}
-            </span>
-          </div>
-        </div>
+              {/* Right Column: Hijri Date & Year */}
+              <div className="flex flex-col items-center leading-none">
+                <span className="text-[9.5px] font-extrabold whitespace-nowrap">
+                  {dateInfo.hijriDayMonth}
+                </span>
+                <span className="text-[8px] font-bold text-[#087F63]/80 tracking-wide mt-0.5 whitespace-nowrap">
+                  {dateInfo.hijriYear}
+                </span>
+              </div>
+            </div>
 
-        <span className="text-[9px] text-[#075E4F] font-bold opacity-70 ml-0.5">▾</span>
-      </button>
-      </>
+            <span className="text-[8.5px] text-[#075E4F] font-bold opacity-70 ml-0.5">▾</span>
+          </button>
+        </>
       )}
 
       {/* Date Calendar Modal */}
@@ -154,7 +155,9 @@ export function ByproductDatePill({
           a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
         const sdIsRef = (d: Date) => sdIsSame(d, new Date(2026, 8, 14));
 
-        return (
+        if (typeof document === "undefined") return null;
+
+        return createPortal(
           <div
             className="fixed inset-0 z-[150] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
             onClick={() => setIsDateCalOpen(false)}
@@ -280,7 +283,8 @@ export function ByproductDatePill({
                 </div>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         );
       })()}
     </>

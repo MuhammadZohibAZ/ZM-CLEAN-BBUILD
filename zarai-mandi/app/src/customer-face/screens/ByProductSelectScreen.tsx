@@ -223,8 +223,8 @@ export function ByProductSelectScreen({
 
       {/* Footer CTA */}
       <div
-        className="flex-shrink-0 px-4 pb-6 pt-3"
-        style={{ borderTop: "1px solid #D5E2DD", background: "#F4FAF7" }}
+        className="flex-shrink-0 px-4 pt-3"
+        style={{ borderTop: "1px solid #D5E2DD", background: "#F4FAF7", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 84px)" }}
       >
         {selected.length > 0 ? (
           <button

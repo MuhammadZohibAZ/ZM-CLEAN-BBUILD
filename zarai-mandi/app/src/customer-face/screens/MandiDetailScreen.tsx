@@ -271,7 +271,10 @@ export function MandiDetailScreen({
           })}
         </ScrollRow>
       </header>
-      <div className="flex-1 overflow-y-auto min-h-0 px-4 pt-3 pb-4 flex flex-col gap-3">
+      <div
+        className="flex-1 overflow-y-auto min-h-0 px-4 pt-3 flex flex-col gap-3"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 96px)" }}
+      >
         {displayed.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 opacity-50">
             <span style={{ fontSize: 40 }}></span>

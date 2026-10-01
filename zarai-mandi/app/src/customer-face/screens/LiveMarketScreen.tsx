@@ -512,7 +512,7 @@ export function LiveMarketScreen({ onBack }: { onBack: () => void }) {
         </span>
       </header>
 
-      <div className="flex-1 overflow-y-auto" style={{ paddingBottom: 16 }}>
+      <div className="flex-1 overflow-y-auto" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 96px)" }}>
         {/*  Section 1: product Futures  */}
         <div className="px-3 pt-4 pb-1">
           <div className="flex items-center gap-2 mb-2">

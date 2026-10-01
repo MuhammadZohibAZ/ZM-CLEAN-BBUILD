@@ -345,7 +345,15 @@ export function ProductRatesScreen({
           const on = e.currentTarget.scrollTop > 330;
           if (on !== headerCompact) setHeaderCompact(on);
         }}
-        style={{ flex: 1, minHeight: 0, minWidth: 0, overflowY: "auto", overflowX: "hidden", WebkitOverflowScrolling: "touch" }}
+        style={{
+          flex: 1,
+          minHeight: 0,
+          minWidth: 0,
+          overflowY: "auto",
+          overflowX: "hidden",
+          WebkitOverflowScrolling: "touch",
+          paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 96px)",
+        }}
       >
         {FILTER_UI === "rail" && <FilterRail {...filterUi} showDate={tab === "overview"} />}
         {tab === "overview" && FILTER_UI === "drawer" && <FilterDrawer {...filterUi} scrollRef={scrollRef} />}
@@ -396,7 +404,7 @@ export function ProductRatesScreen({
                 },
                 {
                   key: "best-map",
-                  label: f.tx("Best places & Map", "بہترین منڈیاں اور نقشہ"),
+                  label: f.tx("Best Places & Map", "بہترین منڈیاں اور نقشہ"),
                   node: (
                     <div style={{ padding: "16px 16px 0", display: "flex", flexDirection: "column", gap: 6 }}>
                       {!loading && (
@@ -457,10 +465,10 @@ export function ProductRatesScreen({
                 );
               }}
             />
-            <div style={{ height: FILTER_UI === "dock" ? 104 : 32 }} />
+            <div style={{ height: FILTER_UI === "dock" ? 116 : "calc(env(safe-area-inset-bottom, 0px) + 96px)" }} />
           </div>
         ) : (
-          <div key="trends" className="zm-tab-in">
+          <div key="trends" className="zm-tab-in" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 96px)" }}>
             <TrendsTab
               f={f}
               tr={tr}

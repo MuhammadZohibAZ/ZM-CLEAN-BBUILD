@@ -106,6 +106,8 @@ export function HomeScreen({
 
   const [favLockModalOpen, setFavLockModalOpen] = useState(false);
   const [todayOnlyUnlocked, setTodayOnlyUnlocked] = useState<string[]>([]);
+  const favScrollRef = useRef<HTMLDivElement>(null);
+  const [favPageIndex, setFavPageIndex] = useState(0);
 
   // Persistent Profile Setup Data
   const totalSteps = 3;
@@ -897,10 +899,11 @@ export function HomeScreen({
           ===================================================== */}
 
       <div
-        className="flex-1 min-h-0 overflow-hidden relative flex flex-col justify-between"
+        className="flex-1 min-h-0 overflow-y-auto relative flex flex-col"
         style={{
           background: "linear-gradient(180deg, #EAF6F0 0%, #F4FAF7 45%, #EEF7F2 100%)",
           position: "relative",
+          scrollbarWidth: "none",
         }}
       >
         {/* Soft Mint Waves Ambient Layer */}
@@ -921,12 +924,9 @@ export function HomeScreen({
         />
 
         <div
-          className={`relative z-10 flex-1 flex flex-col ${profileCompleted ? "justify-around" : "justify-between"
-            }`}
+          className="relative z-10 flex-1 flex flex-col justify-start gap-2"
           style={{
-            paddingBottom: profileCompleted
-              ? "clamp(8px, 1.6vh, 16px)"
-              : "clamp(8px, 1.8vh, 20px)",
+            paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 96px)",
           }}
         >
           {/* ===================================================
@@ -934,7 +934,7 @@ export function HomeScreen({
               (Only visible when profile is NOT yet completed)
               =================================================== */}
           {!profileCompleted && (
-            <div className="px-4 pt-7">
+            <div className="px-4 pt-8">
               <div
                 onClick={() => setCompleteProfileOpen(true)}
                 className="tap-target zm-beam-border zm-beam-border-card cursor-pointer transition active:scale-[0.99] relative overflow-hidden"
@@ -1471,250 +1471,292 @@ export function HomeScreen({
               </button>
             </div>
 
-            {/* Favorite cards — 3 cards visible at a time with swipe */}
-            <div
-              className="flex gap-2 overflow-x-auto"
-              style={{
-                scrollbarWidth: "none",
-                scrollSnapType: "x mandatory",
-                paddingTop: "6px",
-                paddingBottom: "8px",
-                paddingLeft: "2px",
-                paddingRight: "2px",
-              }}
-            >
-              {(() => {
-                const defaultMandiName =
-                  profileCity || initialUserData?.city || "Pakpattan Mandi";
-                const favoriteCardsList =
-                  pickedByproducts && pickedByproducts.length > 0
-                    ? pickedByproducts.map((p) => ({
-                      vertical: p.vertical || "Grains",
-                      product: p.product || "Wheat",
-                      byproduct: p.byproduct,
-                      mandiName: p.mandiName || defaultMandiName,
-                      rateType: p.rateType || "Mill",
-                    }))
-                    : FAVE_BPS.map((bp) => ({
-                      vertical: "Grains",
-                      product: "Wheat",
-                      byproduct: bp,
-                      mandiName: defaultMandiName,
-                      rateType: "Mill",
-                    }));
+            {/* Favorite cards — 3 cards visible at a time with page swipe and curved layout */}
+            {(() => {
+              const defaultMandiName =
+                profileCity || initialUserData?.city || "Pakpattan Mandi";
+              const favoriteCardsList =
+                pickedByproducts && pickedByproducts.length > 0
+                  ? pickedByproducts.map((p) => ({
+                    vertical: p.vertical || "Grains",
+                    product: p.product || "Wheat",
+                    byproduct: p.byproduct,
+                    mandiName: p.mandiName || defaultMandiName,
+                    rateType: p.rateType || "Mill",
+                  }))
+                  : FAVE_BPS.map((bp) => ({
+                    vertical: "Grains",
+                    product: "Wheat",
+                    byproduct: bp,
+                    mandiName: defaultMandiName,
+                    rateType: "Mill",
+                  }));
 
-                const rotAngles =
-                  lang === "ur"
-                    ? [4, 0, -4]
-                    : [-4, 0, 4];
-                const yOffsets = [4, 0, 4];
+              // Group into pages of 3 cards each
+              const favPages: (typeof favoriteCardsList)[] = [];
+              for (let i = 0; i < favoriteCardsList.length; i += 3) {
+                favPages.push(favoriteCardsList.slice(i, i + 3));
+              }
 
-                return favoriteCardsList.map((item, idx) => {
-                  const imgSrc = getFavoriteImage(item.byproduct);
-                  const cleanMandi = item.mandiName
-                    .replace(/\s*Mandi\s*/i, "")
-                    .replace(/\s*منڈی\s*/g, "")
-                    .trim();
+              const handleFavScroll = (e: React.UIEvent<HTMLDivElement>) => {
+                const el = e.currentTarget;
+                if (!el.clientWidth) return;
+                const scrollPos = Math.abs(el.scrollLeft);
+                const pIdx = Math.round(scrollPos / el.clientWidth);
+                if (pIdx !== favPageIndex && pIdx >= 0 && pIdx < favPages.length) {
+                  setFavPageIndex(pIdx);
+                }
+              };
 
-                  const cardRot = rotAngles[idx % 3];
-                  const cardY = yOffsets[idx % 3];
-
-                  return (
-                    <button
-                      key={`${item.byproduct}-${item.mandiName}-${idx}`}
-                      onClick={() => {
-                        const spokenName =
-                          lang === "ur"
-                            ? `${tc(item.byproduct)} ${tm(item.mandiName)}`
-                            : `${item.byproduct} ${item.mandiName}`;
-                        handleOrientationTap("favorite-card", spokenName, () => {
-                          push({
-                            id: "product-rates",
-                            vertical: item.vertical,
-                            product: item.product,
-                            byproduct: item.byproduct,
-                            initialMandi: item.mandiName,
-                            initialRateType: item.rateType,
-                          });
-                        });
-                      }}
-                      className="flex-shrink-0 zm-beam-border zm-beam-border-card flex flex-col items-center relative tap-target"
-                      style={{
-                        width: "calc((100% - 16px) / 3)",
-                        minWidth: "calc((100% - 16px) / 3)",
-                        maxWidth: "calc((100% - 16px) / 3)",
-                        height: "clamp(152px, 19.5vh, 176px)",
-                        padding: "6px 5px 8px",
-                        borderRadius: 18,
-                        background: "#FFFFFF",
-                        border: "1.2px solid #D5E5DE",
-                        boxShadow: "0 4px 14px rgba(18,65,48,0.08)",
-                        scrollSnapAlign: "start",
-                        transform: `translateY(${cardY}px) rotate(${cardRot}deg)`,
-                        transformOrigin: "center bottom",
-                        transition: "transform 0.2s ease, box-shadow 0.2s ease",
-                      }}
-                    >
-                      {/* Inner Image Frame */}
-                      <div
-                        style={{
-                          width: "100%",
-                          height: "clamp(74px, 9.6vh, 88px)",
-                          borderRadius: 13,
-                          background: "#F2F7F4",
-                          border: "1px solid #E1ECE6",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          position: "relative",
-                          overflow: "hidden",
-                        }}
-                      >
-                        {/* Heart Badge in Top Corner */}
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: 4,
-                            right: lang === "ur" ? "auto" : 4,
-                            left: lang === "ur" ? 4 : "auto",
-                            width: 19,
-                            height: 19,
-                            borderRadius: "50%",
-                            background: "rgba(255, 255, 255, 0.95)",
-                            backdropFilter: "blur(4px)",
-                            boxShadow: "0 1.5px 4px rgba(0,0,0,0.12)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            zIndex: 3,
-                          }}
-                        >
-                          <svg
-                            width="11"
-                            height="11"
-                            viewBox="0 0 24 24"
-                            fill="#E11D48"
-                            stroke="#E11D48"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                          </svg>
-                        </div>
-
-                        {/* By-product Icon/Image */}
-                        {imgSrc ? (
-                          <img
-                            src={imgSrc}
-                            alt={item.byproduct}
-                            loading="lazy"
-                            style={{
-                              width: "78%",
-                              height: "78%",
-                              objectFit: "contain",
-                              display: "block",
-                              filter: "none",
-                              opacity: 1,
-                            }}
-                          />
-                        ) : (
-                          <ProductIcon
-                            name={item.byproduct}
-                            vertical={item.vertical || "Grains"}
-                            size={44}
-                            style={{
-                              filter: "none",
-                              opacity: 1,
-                            }}
-                          />
-                        )}
-                      </div>
-
-                      {/* Name: By-product & Mandi Badge */}
-                      <div className="mt-auto w-full px-0.5 flex flex-col items-center justify-center pt-1">
-                        <span
-                          className="text-center font-extrabold truncate w-full text-[#183B34]"
-                          style={{
-                            fontSize: "clamp(11.5px, 1.5vh, 13.5px)",
-                            lineHeight: 1.2,
-                            fontFamily:
-                              lang === "ur"
-                                ? URDU_FONT
-                                : "'Poppins', sans-serif",
-                          }}
-                          title={lang === "ur" ? tc(item.byproduct) : item.byproduct}
-                        >
-                          {lang === "ur" ? tc(item.byproduct) : item.byproduct}
-                        </span>
-
-                        {/* Mandi Location Badge */}
-                        <div
-                          className="flex items-center justify-center gap-1 mt-1 px-1.5 py-0.5 rounded-full"
-                          style={{
-                            background: "#EAF5F0",
-                            border: "1px solid #C7E8D8",
-                            maxWidth: "100%",
-                          }}
-                          title={lang === "ur" ? tm(cleanMandi) : cleanMandi}
-                        >
-                          <svg
-                            width="8"
-                            height="8"
-                            viewBox="0 0 24 24"
-                            fill="#087F63"
-                            className="flex-shrink-0"
-                          >
-                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
-                            <circle cx="12" cy="9" r="2.5" fill="#EAF5F0" />
-                          </svg>
-                          <span
-                            className="font-bold text-[9px] text-[#075E4F] truncate"
-                            style={{
-                              lineHeight: 1.15,
-                              fontFamily:
-                                lang === "ur"
-                                  ? URDU_FONT
-                                  : "inherit",
-                            }}
-                          >
-                            {lang === "ur" ? tm(cleanMandi) : cleanMandi}
-                          </span>
-                        </div>
-                      </div>
-                    </button>
-                  );
+              const scrollFavToPage = (idx: number) => {
+                if (!favScrollRef.current) return;
+                const el = favScrollRef.current;
+                const targetX = idx * el.clientWidth;
+                el.scrollTo({
+                  left: lang === "ur" ? -targetX : targetX,
+                  behavior: "smooth",
                 });
-              })()}
-            </div>
+                setFavPageIndex(idx);
+              };
 
-            {/* Pagination Dots Indicator — 3 swipe pages */}
-            <div className="flex items-center justify-center gap-1.5 mt-2">
-              <div
-                style={{
-                  width: 18,
-                  height: 3.5,
-                  borderRadius: 999,
-                  background: "#087F63",
-                }}
-              />
-              <div
-                style={{
-                  width: 5.5,
-                  height: 3.5,
-                  borderRadius: 999,
-                  background: "#C6DFD4",
-                }}
-              />
-              <div
-                style={{
-                  width: 5.5,
-                  height: 3.5,
-                  borderRadius: 999,
-                  background: "#C6DFD4",
-                }}
-              />
-            </div>
+              return (
+                <>
+                  <div
+                    ref={favScrollRef}
+                    onScroll={handleFavScroll}
+                    className="flex overflow-x-auto w-full"
+                    style={{
+                      scrollbarWidth: "none",
+                      scrollSnapType: "x mandatory",
+                      paddingTop: "6px",
+                      paddingBottom: "8px",
+                    }}
+                  >
+                    {favPages.map((pageCards, pageIdx) => {
+                      return (
+                        <div
+                          key={`fav-page-${pageIdx}`}
+                          className="w-full flex-shrink-0 flex items-center justify-between gap-2 px-0.5"
+                          style={{
+                            scrollSnapAlign: "start",
+                            scrollSnapStop: "always",
+                            minWidth: "100%",
+                            width: "100%",
+                            boxSizing: "border-box",
+                          }}
+                        >
+                          {pageCards.map((item, inPageIdx) => {
+                            const imgSrc = getFavoriteImage(item.byproduct);
+                            const cleanMandi = item.mandiName
+                              .replace(/\s*Mandi\s*/i, "")
+                              .replace(/\s*منڈی\s*/g, "")
+                              .trim();
+
+                            // Curved fan/arc transformation across the 3 visible cards
+                            const cardRot = inPageIdx === 0
+                              ? (lang === "ur" ? 4 : -4)
+                              : inPageIdx === 2
+                                ? (lang === "ur" ? -4 : 4)
+                                : 0;
+                            const cardY = inPageIdx === 1 ? 0 : 4;
+
+                            return (
+                              <button
+                                key={`${item.byproduct}-${item.mandiName}-${pageIdx * 3 + inPageIdx}`}
+                                onClick={() => {
+                                  const spokenName =
+                                    lang === "ur"
+                                      ? `${tc(item.byproduct)} ${tm(item.mandiName)}`
+                                      : `${item.byproduct} ${item.mandiName}`;
+                                  handleOrientationTap("favorite-card", spokenName, () => {
+                                    push({
+                                      id: "product-rates",
+                                      vertical: item.vertical,
+                                      product: item.product,
+                                      byproduct: item.byproduct,
+                                      initialMandi: item.mandiName,
+                                      initialRateType: item.rateType,
+                                    });
+                                  });
+                                }}
+                                className="flex-shrink-0 zm-beam-border zm-beam-border-card flex flex-col items-center relative tap-target"
+                                style={{
+                                  width: "calc((100% - 16px) / 3)",
+                                  minWidth: "calc((100% - 16px) / 3)",
+                                  maxWidth: "calc((100% - 16px) / 3)",
+                                  height: "clamp(152px, 19.5vh, 176px)",
+                                  padding: "6px 5px 8px",
+                                  borderRadius: 18,
+                                  background: "#FFFFFF",
+                                  border: "1.2px solid #D5E5DE",
+                                  boxShadow: "0 4px 14px rgba(18,65,48,0.08)",
+                                  transform: `translateY(${cardY}px) rotate(${cardRot}deg)`,
+                                  transformOrigin: "center bottom",
+                                  transition: "transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease",
+                                }}
+                              >
+                                {/* Inner Image Frame */}
+                                <div
+                                  style={{
+                                    width: "100%",
+                                    height: "clamp(74px, 9.6vh, 88px)",
+                                    borderRadius: 13,
+                                    background: "#F2F7F4",
+                                    border: "1px solid #E1ECE6",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    position: "relative",
+                                    overflow: "hidden",
+                                  }}
+                                >
+                                  {/* Heart Badge in Top Corner */}
+                                  <div
+                                    style={{
+                                      position: "absolute",
+                                      top: 4,
+                                      right: lang === "ur" ? "auto" : 4,
+                                      left: lang === "ur" ? 4 : "auto",
+                                      width: 19,
+                                      height: 19,
+                                      borderRadius: "50%",
+                                      background: "rgba(255, 255, 255, 0.95)",
+                                      backdropFilter: "blur(4px)",
+                                      boxShadow: "0 1.5px 4px rgba(0,0,0,0.12)",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      zIndex: 3,
+                                    }}
+                                  >
+                                    <svg
+                                      width="11"
+                                      height="11"
+                                      viewBox="0 0 24 24"
+                                      fill="#E11D48"
+                                      stroke="#E11D48"
+                                      strokeWidth="1.5"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    >
+                                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                                    </svg>
+                                  </div>
+
+                                  {/* By-product Icon/Image */}
+                                  {imgSrc ? (
+                                    <img
+                                      src={imgSrc}
+                                      alt={item.byproduct}
+                                      loading="lazy"
+                                      style={{
+                                        width: "78%",
+                                        height: "78%",
+                                        objectFit: "contain",
+                                        display: "block",
+                                        filter: "none",
+                                        opacity: 1,
+                                      }}
+                                    />
+                                  ) : (
+                                    <ProductIcon
+                                      name={item.byproduct}
+                                      vertical={item.vertical || "Grains"}
+                                      size={44}
+                                      style={{
+                                        filter: "none",
+                                        opacity: 1,
+                                      }}
+                                    />
+                                  )}
+                                </div>
+
+                                {/* Name: By-product & Mandi Badge */}
+                                <div className="mt-auto w-full px-0.5 flex flex-col items-center justify-center pt-1">
+                                  <span
+                                    className="text-center font-extrabold truncate w-full text-[#183B34]"
+                                    style={{
+                                      fontSize: "clamp(11.5px, 1.5vh, 13.5px)",
+                                      lineHeight: 1.2,
+                                      fontFamily:
+                                        lang === "ur"
+                                          ? URDU_FONT
+                                          : "'Poppins', sans-serif",
+                                    }}
+                                    title={lang === "ur" ? tc(item.byproduct) : item.byproduct}
+                                  >
+                                    {lang === "ur" ? tc(item.byproduct) : item.byproduct}
+                                  </span>
+
+                                  {/* Mandi Location Badge */}
+                                  <div
+                                    className="flex items-center justify-center gap-1 mt-1 px-1.5 py-0.5 rounded-full"
+                                    style={{
+                                      background: "#EAF5F0",
+                                      border: "1px solid #C7E8D8",
+                                      maxWidth: "100%",
+                                    }}
+                                    title={lang === "ur" ? tm(cleanMandi) : cleanMandi}
+                                  >
+                                    <svg
+                                      width="8"
+                                      height="8"
+                                      viewBox="0 0 24 24"
+                                      fill="#087F63"
+                                      className="flex-shrink-0"
+                                    >
+                                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+                                      <circle cx="12" cy="9" r="2.5" fill="#EAF5F0" />
+                                    </svg>
+                                    <span
+                                      className="font-bold text-[9px] text-[#075E4F] truncate"
+                                      style={{
+                                        lineHeight: 1.15,
+                                        fontFamily:
+                                          lang === "ur"
+                                            ? URDU_FONT
+                                            : "inherit",
+                                      }}
+                                    >
+                                      {lang === "ur" ? tm(cleanMandi) : cleanMandi}
+                                    </span>
+                                  </div>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Pagination Dots Indicator — 3 swipe pages */}
+                  <div className="flex items-center justify-center gap-1.5 mt-2">
+                    {favPages.map((_, pIdx) => {
+                      const isActive = (favPageIndex % favPages.length) === pIdx;
+                      return (
+                        <button
+                          key={pIdx}
+                          type="button"
+                          onClick={() => scrollFavToPage(pIdx)}
+                          aria-label={`Page ${pIdx + 1}`}
+                          className="transition-all duration-300 tap-target"
+                          style={{
+                            width: isActive ? 18 : 5.5,
+                            height: 3.5,
+                            borderRadius: 999,
+                            background: isActive ? "#087F63" : "#C6DFD4",
+                            border: "none",
+                            padding: 0,
+                            cursor: "pointer",
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+                </>
+              );
+            })()}
           </section>
         </div>
 

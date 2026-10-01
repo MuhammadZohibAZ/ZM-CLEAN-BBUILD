@@ -312,11 +312,11 @@ function AppInner({
 
   return (
     <div
-      className={`flex justify-center items-stretch ${lang === "ur" ? "lang-ur" : ""}`}
+      className={`zm-shell relative flex flex-col w-full h-full overflow-hidden ${lang === "ur" ? "lang-ur" : ""}`}
       dir={lang === "ur" ? "rtl" : "ltr"}
       style={{
-        background: "#C7D6D0",
-        height: "100dvh",
+        height: "100%",
+        background: "#F1F7F4",
         fontFamily:
           lang === "ur"
             ? "'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', -apple-system, sans-serif"
@@ -324,17 +324,9 @@ function AppInner({
       }}
     >
       <div
-        className="zm-shell relative flex flex-col w-full max-w-md overflow-hidden"
-        style={{
-          height: "100dvh",
-          background: "#F1F7F4",
-          boxShadow: "0 0 80px rgba(0,0,0,0.18)",
-        }}
+        className="relative flex-1 overflow-hidden flex flex-col"
+        style={{ minHeight: 0 }}
       >
-        <div
-          className="relative flex-1 overflow-hidden flex flex-col"
-          style={{ minHeight: 0 }}
-        >
           <PageCurtain controller={curtain} />
           {current.id === "home" && (
             activeRole === "representative" ? (
@@ -541,7 +533,6 @@ function AppInner({
           />
         )}
       </div>
-    </div>
   );
 }
 

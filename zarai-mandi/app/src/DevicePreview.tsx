@@ -15,7 +15,7 @@ import { onDeviceOrientationRequest, type DeviceOrientation } from "./lib/device
  * like iOS (status bar hidden, side safe areas for the Dynamic Island).
  */
 
-const MODEL = "15-pro-max" as const;
+const MODEL = "15-pro" as const;
 const spec = DEVICE_SPECS[MODEL];
 const SCREEN_W = spec.w;
 const SCREEN_H = spec.h;
@@ -26,7 +26,7 @@ const LANDSCAPE_INSET = 48; // Dynamic Island side / symmetric safe area
 const ROTATE_MS = 650;
 
 function fitScale(orientation: DeviceOrientation) {
-  const margin = 32;
+  const margin = 20;
   const [w, h] = orientation === "portrait" ? [OUTER_W, OUTER_H] : [OUTER_H, OUTER_W];
   return Math.min(1, (window.innerHeight - margin * 2) / h, (window.innerWidth - margin * 2) / w);
 }

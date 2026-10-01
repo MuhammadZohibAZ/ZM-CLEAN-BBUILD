@@ -67,53 +67,53 @@ export default function App() {
           boxShadow: "0 4px 16px rgba(0,0,0,0.25)",
         }}
       >
-        <span
-          style={{
-            fontSize: 10,
-            fontWeight: 800,
-            color: "#B4E6D2",
-            letterSpacing: "0.03em",
-          }}
-        >
-          {stage === "onboarding"
-            ? initialRole === "representative"
-              ? "Rep Onboarding"
-              : authMode === "signin"
-                ? "Sign In"
-                : "Onboarding"
-            : activeRole === "representative"
-              ? "Rep Dashboard"
-              : "Customer App"}
-        </span>
-        <button
-          onClick={() => {
-            if (stage === "onboarding") {
-              setStage("customer_face")
-            } else {
-              setAuthMode("register")
-              setInitialRole("customer")
-              setStage("onboarding")
-            }
-          }}
-          className="tap-target"
-          style={{
-            background: "#2FAE68",
-            color: "#fff",
-            border: "none",
-            borderRadius: 14,
-            padding: "2px 8px",
-            fontSize: 9.5,
-            fontWeight: 800,
-            cursor: "pointer",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 2,
-          }}
-          title={stage === "onboarding" ? "Skip to Customer App" : "Restart Onboarding"}
-        >
-          {stage === "onboarding" ? "Skip ➔" : "↺ Reset"}
-        </button>
-      </div>
+          <span
+            style={{
+              fontSize: 10,
+              fontWeight: 800,
+              color: "#B4E6D2",
+              letterSpacing: "0.03em",
+            }}
+          >
+            {stage === "onboarding"
+              ? initialRole === "representative"
+                ? "Rep Onboarding"
+                : authMode === "signin"
+                  ? "Sign In"
+                  : "Onboarding"
+              : activeRole === "representative"
+                ? "Rep Dashboard"
+                : "Customer App"}
+          </span>
+          <button
+            onClick={() => {
+              if (stage === "onboarding") {
+                setStage("customer_face")
+              } else {
+                setAuthMode("register")
+                setInitialRole("customer")
+                setStage("onboarding")
+              }
+            }}
+            className="tap-target"
+            style={{
+              background: "#2FAE68",
+              color: "#fff",
+              border: "none",
+              borderRadius: 14,
+              padding: "2px 8px",
+              fontSize: 9.5,
+              fontWeight: 800,
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 2,
+            }}
+            title={stage === "onboarding" ? "Skip to Customer App" : "Restart Onboarding"}
+          >
+            {stage === "onboarding" ? "Skip ➔" : "↺ Reset"}
+          </button>
+        </div>
 
       {/* Responsive Mobile Container — fits any screen width/height */}
       <div

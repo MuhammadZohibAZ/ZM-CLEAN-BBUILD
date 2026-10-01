@@ -352,7 +352,10 @@ export function RatesResultScreen({
       </div>
 
       {/*  Results  */}
-      <div className="flex-1 overflow-y-auto px-4 pt-3 pb-4">
+      <div
+        className="flex-1 overflow-y-auto px-4 pt-3"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 96px)" }}
+      >
         <div className="flex flex-col gap-3">
           {displayed.length === 0 && (
             <div className="flex flex-col items-center justify-center py-16 opacity-50">
