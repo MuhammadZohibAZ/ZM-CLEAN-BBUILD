@@ -691,3 +691,9 @@
 .zm-mandi-scroll{scrollbar-width:thin;scrollbar-color:#C7D6D0 transparent;-webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 18px),transparent);mask-image:linear-gradient(180deg,#000 calc(100% - 18px),transparent)}
 .zm-mandi-scroll::-webkit-scrollbar{width:3px}
 .zm-mandi-scroll::-webkit-scrollbar-thumb{background:#C7D6D0;border-radius:3px}
+
+/* Inside the customer app the bottom nav floats over the screen: the compare
+   page scrolls only down to the nav, so nothing shows through behind it and
+   the selection footer (Continue / Compare now) rests right above it. */
+.zm-shell .zm-embedded{height:calc(100% - var(--zm-nav-space))}
+.zm-shell .zm-embedded .zm-select-footer{background:#F1F7F4}

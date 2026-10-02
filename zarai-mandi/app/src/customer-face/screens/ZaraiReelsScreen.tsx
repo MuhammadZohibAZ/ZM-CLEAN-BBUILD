@@ -322,133 +322,153 @@ export function ZaraiReelsScreen({
         </div>
       )}
 
-      {/* Top Header: Minimize Button, Tabs (For You, Saved), Mute Toggle */}
-      <header
-        className="absolute top-0 left-0 right-0 z-40 px-3.5 pb-1.5 flex items-center justify-between pointer-events-none"
-        style={{
-          paddingTop: "max(36px, calc(var(--zm-bleed-top) + 8px))",
-          background:
-            "linear-gradient(180deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.3) 70%, rgba(0,0,0,0) 100%)",
-        }}
-      >
-        {/* Minimize button to picture-in-picture mini-player */}
-        <button
-          onClick={() => {
-            const curReel = displayedReels[activeIndex] || ZARAI_REELS[0];
-            const isP = isPlayingMap[curReel.id] ?? true;
-            onMinimize?.(curReel, isP, isMuted);
-          }}
-          className="tap-target w-8 h-8 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/20 text-white pointer-events-auto shadow-md hover:scale-105 active:scale-95 transition"
-          title={lang === "ur" ? "ویڈیو نیچے کریں" : "Minimize to mini player"}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-        </button>
-
-        {/* For You / Saved feed tabs */}
-        <div className="flex items-center gap-4 text-xs font-extrabold drop-shadow pointer-events-auto">
-          <button
-            onClick={() => setFeedTab("forYou")}
-            className={`tap-target transition-all ${feedTab === "forYou"
-              ? "text-white scale-105 border-b-2 border-[#32BA46] pb-0.5 font-black"
-              : "text-white/60 hover:text-white"
-              }`}
-          >
-            {lang === "ur" ? "آپ کے لیے" : "For You"}
-          </button>
-          <button
-            onClick={() => setFeedTab("saved")}
-            className={`tap-target transition-all ${feedTab === "saved"
-              ? "text-white scale-105 border-b-2 border-[#32BA46] pb-0.5 font-black"
-              : "text-white/60 hover:text-white"
-              }`}
-          >
-            {lang === "ur" ? "محفوظ شدہ" : "Saved"}
-          </button>
-        </div>
-
-        {/* Sound mute/unmute button */}
-        <button
-          onClick={toggleMute}
-          className="tap-target w-8 h-8 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/20 text-white pointer-events-auto shadow-md"
-          title={isMuted ? "Unmute Voice" : "Mute Voice"}
-        >
-          {isMuted ? (
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27l4.73 4.73H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
-            </svg>
-          ) : (
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
-            </svg>
-          )}
-        </button>
-      </header>
-
-      {/* 3 Main Category Option Tabs: Products | General Info | Harvesting */}
+      {/* Top overlay, TikTok style: floats over the full-screen video with a
+          soft scrim instead of solid bars.
+          Row 1: minimise · content type (Products / General Info / Baithak) · sound.
+          Row 2: feed (For You / Saved) · product filter. */}
       <div
-        className="absolute left-0 right-0 z-40 px-3 py-1 flex flex-col gap-1.5 pointer-events-auto"
+        className="absolute top-0 left-0 right-0 z-40 pointer-events-none"
         style={{
-          // Follows the header, which grows when running under the status bar.
-          top: "calc(68px + max(0px, var(--zm-bleed-top) - 28px))",
-          background: "linear-gradient(180deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.25) 75%, rgba(0,0,0,0) 100%)",
+          paddingTop: "max(10px, env(safe-area-inset-top, 0px), calc(var(--zm-bleed-top) + 2px))",
+          paddingBottom: 28,
+          background: "linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.28) 55%, rgba(0,0,0,0) 100%)",
         }}
       >
-        {/* Main 3 Options Bar (Fixed 3 grid columns) */}
-        <div className="grid grid-cols-3 gap-1.5 bg-black/45 backdrop-blur-md p-1 rounded-2xl border border-white/20">
-          {VIDEO_MAIN_CATEGORIES.map((cat) => {
-            const isSelected = mainCategory === cat.id;
-            return (
-              <button
-                key={cat.id}
-                onClick={() => {
-                  setMainCategory(cat.id);
-                  setActiveIndex(0);
-                  if (containerRef.current) {
-                    containerRef.current.scrollTo({ top: 0, behavior: "smooth" });
-                  }
-                }}
-                className={`py-1.5 px-2 rounded-xl text-xs font-bold tap-target transition-all flex items-center justify-center ${isSelected
-                  ? "bg-[#32BA46] text-[#07332F] font-black shadow-md scale-[1.02]"
-                  : "text-white/80 hover:text-white hover:bg-white/10"
-                  }`}
-              >
-                <span className="truncate">{lang === "ur" ? cat.labelUrdu : cat.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Sub-product Horizontal Filter (Shown when Products is selected) */}
-        {mainCategory === "products" && (
-          <div
-            className="flex items-center gap-1.5 overflow-x-auto py-0.5 animate-in fade-in duration-150"
-            style={{ scrollbarWidth: "none" }}
+        <div className="flex items-center justify-between px-3" style={{ height: 40 }}>
+          <button
+            onClick={() => {
+              const curReel = displayedReels[activeIndex] || ZARAI_REELS[0];
+              const isP = isPlayingMap[curReel.id] ?? true;
+              onMinimize?.(curReel, isP, isMuted);
+            }}
+            className="tap-target w-9 h-9 rounded-full flex items-center justify-center text-white pointer-events-auto active:scale-90 transition"
+            style={{ filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.6))" }}
+            title={lang === "ur" ? "ویڈیو نیچے کریں" : "Minimize to mini player"}
+            aria-label={lang === "ur" ? "ویڈیو نیچے کریں" : "Minimize to mini player"}
           >
-            {VIDEO_PRODUCT_OPTIONS.map((prod) => {
-              const isSelected = selectedProductSub === prod.id;
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+
+          <div className="flex items-center gap-4 pointer-events-auto" role="tablist">
+            {VIDEO_MAIN_CATEGORIES.map((cat) => {
+              const on = mainCategory === cat.id;
               return (
                 <button
-                  key={prod.id}
+                  key={cat.id}
+                  role="tab"
+                  aria-selected={on}
                   onClick={() => {
-                    setSelectedProductSub(prod.id);
+                    setMainCategory(cat.id);
                     setActiveIndex(0);
-                    if (containerRef.current) {
-                      containerRef.current.scrollTo({ top: 0, behavior: "smooth" });
-                    }
+                    containerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
                   }}
-                  className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap tap-target transition-all flex items-center gap-1 flex-shrink-0 ${isSelected
-                    ? "bg-white text-[#07332F] font-black shadow-md scale-105"
-                    : "bg-black/55 text-white/80 backdrop-blur-md border border-white/15 hover:bg-black/75 hover:text-white"
-                    }`}
+                  className="tap-target relative flex flex-col items-center transition-colors"
+                  style={{
+                    fontSize: lang === "ur" ? 16 : 15.5,
+                    fontWeight: on ? 800 : 600,
+                    color: on ? "#FFFFFF" : "rgba(255,255,255,0.62)",
+                    textShadow: "0 1px 4px rgba(0,0,0,0.55)",
+                    letterSpacing: "-0.01em",
+                    paddingBottom: 6,
+                  }}
                 >
-                  <span>{lang === "ur" ? prod.labelUrdu : prod.label}</span>
+                  {lang === "ur" ? cat.labelUrdu : cat.label}
+                  <span
+                    className="absolute bottom-0 rounded-full transition-all"
+                    style={{ height: 3, width: on ? 22 : 0, background: "#FFFFFF", opacity: on ? 1 : 0 }}
+                  />
                 </button>
               );
             })}
           </div>
-        )}
+
+          <button
+            onClick={toggleMute}
+            className="tap-target w-9 h-9 rounded-full flex items-center justify-center text-white pointer-events-auto active:scale-90 transition"
+            style={{ filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.6))" }}
+            title={isMuted ? "Unmute Voice" : "Mute Voice"}
+            aria-label={isMuted ? "Unmute" : "Mute"}
+          >
+            {isMuted ? (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27l4.73 4.73H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
+              </svg>
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+              </svg>
+            )}
+          </button>
+        </div>
+
+        <div className="flex items-center gap-1.5 mt-1.5 px-3 overflow-x-auto pointer-events-auto" style={{ scrollbarWidth: "none" }}>
+          {/* Feed: For You / Saved */}
+          <div className="flex-shrink-0 flex items-center rounded-full p-0.5" style={{ background: "rgba(0,0,0,0.28)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.16)" }}>
+            {(["forYou", "saved"] as const).map((tab) => {
+              const on = feedTab === tab;
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setFeedTab(tab)}
+                  aria-pressed={on}
+                  className="tap-target flex items-center gap-1 rounded-full transition-all"
+                  style={{
+                    height: 26,
+                    padding: "0 10px",
+                    fontSize: 12,
+                    fontWeight: on ? 800 : 600,
+                    background: on ? "rgba(255,255,255,0.22)" : "transparent",
+                    color: on ? "#FFFFFF" : "rgba(255,255,255,0.7)",
+                  }}
+                >
+                  {tab === "saved" && (
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill={on ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                    </svg>
+                  )}
+                  {tab === "forYou" ? (lang === "ur" ? "آپ کے لیے" : "For You") : lang === "ur" ? "محفوظ" : "Saved"}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Product filter (Products only) */}
+          {mainCategory === "products" && (
+            <>
+              <span className="flex-shrink-0" style={{ width: 1, height: 18, background: "rgba(255,255,255,0.3)", margin: "0 2px" }} />
+              {VIDEO_PRODUCT_OPTIONS.map((prod) => {
+                const on = selectedProductSub === prod.id;
+                return (
+                  <button
+                    key={prod.id}
+                    onClick={() => {
+                      setSelectedProductSub(prod.id);
+                      setActiveIndex(0);
+                      containerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    aria-pressed={on}
+                    className="tap-target flex-shrink-0 rounded-full whitespace-nowrap transition-all"
+                    style={{
+                      height: 28,
+                      padding: "0 12px",
+                      fontSize: 12.5,
+                      fontWeight: on ? 800 : 600,
+                      background: on ? "#FFFFFF" : "rgba(0,0,0,0.28)",
+                      color: on ? "#07332F" : "rgba(255,255,255,0.9)",
+                      border: on ? "1px solid #FFFFFF" : "1px solid rgba(255,255,255,0.16)",
+                      backdropFilter: on ? undefined : "blur(10px)",
+                      WebkitBackdropFilter: on ? undefined : "blur(10px)",
+                    }}
+                  >
+                    {lang === "ur" ? prod.labelUrdu : prod.label}
+                  </button>
+                );
+              })}
+            </>
+          )}
+        </div>
       </div>
 
       <div className="absolute left-2.5 top-1/2 -translate-y-1/2 z-30 flex flex-col gap-2.5 opacity-50 hover:opacity-100 transition-opacity pointer-events-auto">
@@ -490,8 +510,15 @@ export function ZaraiReelsScreen({
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        className="reels-snap-container w-full h-full"
+        className="reels-snap-container w-full"
         style={{
+          // Full-screen from the top (under the floating tabs, TikTok style)
+          // down to the bottom nav, never underneath it.
+          position: "absolute",
+          left: 0,
+          right: 0,
+          top: 0,
+          bottom: "var(--zm-nav-space)",
           scrollSnapType: "y mandatory",
         }}
       >
