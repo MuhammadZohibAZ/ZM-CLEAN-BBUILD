@@ -93,6 +93,21 @@
   box-sizing: border-box;
 }
 
+/* Status bar inset for full-bleed screens (lib/device-bridge.ts). In the
+   desktop phone mockup the screen runs under the 54px status bar; elsewhere
+   the browser owns the status bar, so it is 0. */
+:root {
+  --zm-bleed-top: 0px;
+}
+html.zm-device[data-zm-bleed] {
+  --zm-bleed-top: 54px;
+}
+/* Headers that reserve their own room for a status bar (pt-9…pt-12). The
+   mockup draws the status bar above the app, so keep only a normal gap. */
+html.zm-device .zm-status-gap {
+  padding-top: 12px !important;
+}
+
 html,
 body {
   height: 100%;

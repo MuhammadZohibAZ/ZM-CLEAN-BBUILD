@@ -14,6 +14,8 @@ export interface IPhoneMockupProps {
 
   // Frame
   bezel?: number;             // bezel thickness (px)
+  band?: number;              // metal band outside a black bezel (px); 0 = one-piece coloured bezel
+  buttons?: boolean;          // side buttons (action, volume, power)
   radius?: number;            // inner corner radius (screen, px)
   shadow?: boolean | string;  // outer drop shadow
 
@@ -135,6 +137,8 @@ export const IPhoneMockup: React.FC<IPhoneMockupProps> = ({
   scale = 1,
 
   bezel,
+  band = 0,
+  buttons = false,
   radius,
   shadow = true,
 
@@ -185,9 +189,9 @@ export const IPhoneMockup: React.FC<IPhoneMockupProps> = ({
   const screenWidth = isLandscape ? H : W;
   const screenHeight = isLandscape ? W : H;
 
-  const outerWidth = screenWidth + resolvedBezel * 2;
-  const outerHeight = screenHeight + resolvedBezel * 2;
-  const outerRadius = resolvedRadius + resolvedBezel;
+  const outerWidth = screenWidth + (resolvedBezel + band) * 2;
+  const outerHeight = screenHeight + (resolvedBezel + band) * 2;
+  const outerRadius = resolvedRadius + resolvedBezel + band;
 
   const colorHex = PRESET_COLORS[color] ?? color;
   const frameGradient = `linear-gradient(135deg, ${shade(colorHex, 8)} 0%, ${colorHex} 40%, ${shade(colorHex, -14)} 100%)`;
@@ -225,6 +229,7 @@ export const IPhoneMockup: React.FC<IPhoneMockupProps> = ({
   const wrapperStyle: CSSProperties = {
     boxSizing: 'border-box',
     display: 'inline-block',
+    position: 'relative',
     transform: `scale(${scale})`,
     transformOrigin: 'top left',
     ...style
@@ -235,9 +240,12 @@ export const IPhoneMockup: React.FC<IPhoneMockupProps> = ({
     height: outerHeight,
     borderRadius: outerRadius,
     background: frameGradient,
-    padding: resolvedBezel,
+    padding: band > 0 ? band : resolvedBezel,
     boxSizing: 'border-box',
-    boxShadow: outerShadow,
+    // With a band: a polished edge highlight on the metal, like a real frame.
+    boxShadow: band > 0
+      ? `${outerShadow === 'none' ? '' : `${outerShadow}, `}inset 0 0 0 1px rgba(255,255,255,0.45), inset 0 0 0 2px rgba(0,0,0,0.18), inset 0 1px 2px rgba(255,255,255,0.6)`
+      : outerShadow,
     position: 'relative',
     overflow: 'hidden',
     ...frameStyle
@@ -312,9 +320,44 @@ export const IPhoneMockup: React.FC<IPhoneMockupProps> = ({
         flexDirection: 'column'
       };
 
-  return (
-    <div className={className} style={wrapperStyle}>
-      <div style={frameBoxStyle} aria-label={`iPhone mockup (${model})`}>
+  // Black glass bezel between the metal band and the screen.
+  const bezelBoxStyle: CSSProperties = {
+    width: '100%',
+    height: '100%',
+    borderRadius: resolvedRadius + resolvedBezel,
+    padding: resolvedBezel,
+    boxSizing: 'border-box',
+    background: '#050607',
+    boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.07), 0 0 0 0.5px rgba(0,0,0,0.6)'
+  };
+
+  // Side buttons in portrait frame coordinates: [side, top, height] (iPhone 15 Pro).
+  const sideButtons: Array<['left' | 'right', number, number]> = [
+    ['left', 0.135, 0.038],
+    ['left', 0.215, 0.072],
+    ['left', 0.305, 0.072],
+    ['right', 0.245, 0.118]
+  ];
+  const buttonEls = buttons && !isLandscape
+    ? sideButtons.map(([side, top, height], i) => (
+        <span
+          key={i}
+          aria-hidden
+          style={{
+            position: 'absolute',
+            [side]: -3,
+            top: outerHeight * top,
+            width: 5,
+            height: outerHeight * height,
+            borderRadius: side === 'left' ? '3px 0 0 3px' : '0 3px 3px 0',
+            background: `linear-gradient(${side === 'left' ? 90 : 270}deg, ${shade(colorHex, -22)}, ${colorHex} 55%, ${shade(colorHex, 10)})`,
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,0,0,0.25)'
+          }}
+        />
+      ))
+    : null;
+
+  const screen = (
         <div style={screenBoxStyle}>
           {wallpaper && <div aria-hidden style={wallpaperStyle} />}
 
@@ -356,6 +399,13 @@ export const IPhoneMockup: React.FC<IPhoneMockupProps> = ({
             <div aria-hidden style={homeIndicatorStyle} />
           )}
         </div>
+  );
+
+  return (
+    <div className={className} style={wrapperStyle}>
+      {buttonEls}
+      <div style={frameBoxStyle} aria-label={`iPhone mockup (${model})`}>
+        {band > 0 ? <div style={bezelBoxStyle}>{screen}</div> : screen}
       </div>
     </div>
   );

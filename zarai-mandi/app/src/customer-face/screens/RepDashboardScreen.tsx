@@ -33,7 +33,8 @@ export function RepDashboardScreen({
         style={{
           background: "linear-gradient(170deg, #04362C 0%, #064D40 50%, #087F63 100%)",
           padding: "16px 16px 36px",
-          minHeight: 180,
+          paddingTop: "calc(16px + var(--zm-bleed-top))",
+          minHeight: "calc(180px + var(--zm-bleed-top))",
           borderBottomLeftRadius: 28,
           borderBottomRightRadius: 28,
           boxShadow: "0 8px 30px rgba(4,54,44,0.3)",

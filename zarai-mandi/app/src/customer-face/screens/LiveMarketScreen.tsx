@@ -460,7 +460,7 @@ export function LiveMarketScreen({ onBack }: { onBack: () => void }) {
     <div className="flex flex-col h-full" style={{ background: "#EFF8F3" }}>
       {/* Header */}
       <header
-        className="flex-shrink-0 flex items-center gap-3 px-4 py-3"
+        className="zm-status-gap flex-shrink-0 flex items-center gap-3 px-4 py-3"
         style={{
           background: "#075E4F",
           paddingTop: "max(52px, env(safe-area-inset-top, 52px))",

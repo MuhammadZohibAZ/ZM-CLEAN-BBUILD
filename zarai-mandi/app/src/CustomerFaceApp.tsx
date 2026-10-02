@@ -35,6 +35,7 @@ import {
   type Screen,
 } from "./customer-face/shared/types";
 import { speakText } from "./customer-face/shared/voice";
+import { setFullBleed } from "./lib/device-bridge";
 import { CompleteProfileModal } from "./customer-face/sheets/CompleteProfileModal";
 import { FeedModal } from "./customer-face/sheets/FeedModal";
 import { LocationScopeSheet } from "./customer-face/sheets/LocationScopeSheet";
@@ -204,6 +205,14 @@ function AppInner({
   });
 
   const current = stack[stack.length - 1];
+
+  // Home's photo hero and Reels' video run under the status bar in the
+  // desktop phone mockup.
+  const fullBleed = current.id === "home" || current.id === "news";
+  useEffect(() => {
+    setFullBleed(fullBleed);
+    return () => setFullBleed(false);
+  }, [fullBleed]);
   const push = (s: Screen) => {
     if (activeNav === "news" || current.id === "news") {
       setFloatingVideo({ ...currentVideoStateRef.current });

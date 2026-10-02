@@ -431,7 +431,7 @@ export function HomeScreen({
         className="relative flex-shrink-0 w-full"
         style={{
           margin: 0,
-          height: 172,
+          height: "calc(172px + var(--zm-bleed-top))",
           borderRadius: "0 0 24px 24px",
           position: "relative",
           zIndex: 20,
@@ -467,7 +467,10 @@ export function HomeScreen({
         </div>
 
         {/* Content Layer */}
-        <div className="relative h-full flex flex-col justify-between px-4 pt-3.5 pb-7 z-10">
+        <div
+          className="relative h-full flex flex-col justify-between px-4 pb-7 z-10"
+          style={{ paddingTop: "calc(14px + var(--zm-bleed-top))" }}
+        >
           {/* Top Row: Language, Voice, Notifications, Profile */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -3632,8 +3635,9 @@ export function HomeScreen({
           style={{ zIndex: 340, background: "#F1F7F4" }}
         >
           <header
-            className="flex-shrink-0 flex items-center gap-2 px-4 pt-9 pb-3"
+            className="flex-shrink-0 flex items-center gap-2 px-4 pb-3"
             style={{
+              paddingTop: "max(36px, calc(var(--zm-bleed-top) + 10px))",
               background: "rgba(244, 250, 247, 0.95)",
               backdropFilter: "blur(12px)",
               WebkitBackdropFilter: "blur(12px)",

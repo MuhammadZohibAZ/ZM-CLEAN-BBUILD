@@ -1,4 +1,6 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import { inDevicePreview } from "./lib/device-orientation"
+import { onDevCommand, publishDevControls } from "./lib/device-bridge"
 import OnboardingFlow, { type OnboardingUserData } from "./OnboardingFlow"
 import CustomerFaceApp from "./CustomerFaceApp"
 
@@ -38,6 +40,38 @@ export default function App() {
     setActiveRole(newRole)
   }
 
+  // Testing pill: label + Skip/Reset. In the desktop phone mockup it is drawn
+  // outside the phone (DevicePreview), so here it only reports its state.
+  const devLabel =
+    stage === "onboarding"
+      ? initialRole === "representative"
+        ? "Rep Onboarding"
+        : authMode === "signin"
+          ? "Sign In"
+          : "Onboarding"
+      : activeRole === "representative"
+        ? "Rep Dashboard"
+        : "Customer App"
+  const devAction = stage === "onboarding" ? "Skip ➔" : "↺ Reset"
+  const devTitle = stage === "onboarding" ? "Skip to Customer App" : "Restart Onboarding"
+  const handleDevAction = () => {
+    if (stage === "onboarding") {
+      setStage("customer_face")
+    } else {
+      setAuthMode("register")
+      setInitialRole("customer")
+      setStage("onboarding")
+    }
+  }
+  const devActionRef = useRef(handleDevAction)
+  devActionRef.current = handleDevAction
+  const inDevice = inDevicePreview()
+
+  useEffect(() => {
+    publishDevControls({ label: devLabel, action: devAction, title: devTitle })
+  }, [devLabel, devAction, devTitle])
+  useEffect(() => onDevCommand(() => devActionRef.current()), [])
+
   return (
     <main
       className="w-full h-full min-h-screen flex justify-center bg-[#F1F7F4] overflow-hidden"
@@ -50,23 +84,24 @@ export default function App() {
       }}
     >
       {/* Floating Mode Toggle Pill for Testing & Role Switching */}
-      <div
-        style={{
-          position: "fixed",
-          top: 10,
-          right: 14,
-          zIndex: 9999,
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-          background: "rgba(6, 45, 36, 0.92)",
-          backdropFilter: "blur(12px)",
-          padding: "4px 10px",
-          borderRadius: 24,
-          border: "1px solid rgba(255, 255, 255, 0.2)",
-          boxShadow: "0 4px 16px rgba(0,0,0,0.25)",
-        }}
-      >
+      {!inDevice && (
+        <div
+          style={{
+            position: "fixed",
+            top: 10,
+            right: 14,
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            background: "rgba(6, 45, 36, 0.92)",
+            backdropFilter: "blur(12px)",
+            padding: "4px 10px",
+            borderRadius: 24,
+            border: "1px solid rgba(255, 255, 255, 0.2)",
+            boxShadow: "0 4px 16px rgba(0,0,0,0.25)",
+          }}
+        >
           <span
             style={{
               fontSize: 10,
@@ -75,26 +110,10 @@ export default function App() {
               letterSpacing: "0.03em",
             }}
           >
-            {stage === "onboarding"
-              ? initialRole === "representative"
-                ? "Rep Onboarding"
-                : authMode === "signin"
-                  ? "Sign In"
-                  : "Onboarding"
-              : activeRole === "representative"
-                ? "Rep Dashboard"
-                : "Customer App"}
+            {devLabel}
           </span>
           <button
-            onClick={() => {
-              if (stage === "onboarding") {
-                setStage("customer_face")
-              } else {
-                setAuthMode("register")
-                setInitialRole("customer")
-                setStage("onboarding")
-              }
-            }}
+            onClick={handleDevAction}
             className="tap-target"
             style={{
               background: "#2FAE68",
@@ -109,11 +128,12 @@ export default function App() {
               alignItems: "center",
               gap: 2,
             }}
-            title={stage === "onboarding" ? "Skip to Customer App" : "Restart Onboarding"}
+            title={devTitle}
           >
-            {stage === "onboarding" ? "Skip ➔" : "↺ Reset"}
+            {devAction}
           </button>
         </div>
+      )}
 
       {/* Responsive Mobile Container — fits any screen width/height */}
       <div

@@ -96,7 +96,7 @@ export function ProductSelectScreen({
     >
       {/* Header */}
       <header
-        className="px-4 pt-10 pb-3 flex-shrink-0"
+        className="zm-status-gap px-4 pt-10 pb-3 flex-shrink-0"
         style={{ background: "#F4FAF7", borderBottom: "1px solid #D5E2DD" }}
       >
         <div className="flex items-center gap-3">

@@ -99,7 +99,7 @@ export function ByProductCombinedScreen({
         }}
       >
         {/* Title row */}
-        <div className="px-3 pt-9 pb-2.5 flex items-center justify-between gap-1.5 w-full">
+        <div className="zm-status-gap px-3 pt-9 pb-2.5 flex items-center justify-between gap-1.5 w-full">
           <div className="flex items-center gap-1.5 flex-1 min-w-0">
             <button
               onClick={onBack}

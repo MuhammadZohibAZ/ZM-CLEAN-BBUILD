@@ -324,8 +324,9 @@ export function ZaraiReelsScreen({
 
       {/* Top Header: Minimize Button, Tabs (For You, Saved), Mute Toggle */}
       <header
-        className="absolute top-0 left-0 right-0 z-40 px-3.5 pt-9 pb-1.5 flex items-center justify-between pointer-events-none"
+        className="absolute top-0 left-0 right-0 z-40 px-3.5 pb-1.5 flex items-center justify-between pointer-events-none"
         style={{
+          paddingTop: "max(36px, calc(var(--zm-bleed-top) + 8px))",
           background:
             "linear-gradient(180deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.3) 70%, rgba(0,0,0,0) 100%)",
         }}
@@ -387,8 +388,10 @@ export function ZaraiReelsScreen({
 
       {/* 3 Main Category Option Tabs: Products | General Info | Harvesting */}
       <div
-        className="absolute top-[68px] left-0 right-0 z-40 px-3 py-1 flex flex-col gap-1.5 pointer-events-auto"
+        className="absolute left-0 right-0 z-40 px-3 py-1 flex flex-col gap-1.5 pointer-events-auto"
         style={{
+          // Follows the header, which grows when running under the status bar.
+          top: "calc(68px + max(0px, var(--zm-bleed-top) - 28px))",
           background: "linear-gradient(180deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.25) 75%, rgba(0,0,0,0) 100%)",
         }}
       >

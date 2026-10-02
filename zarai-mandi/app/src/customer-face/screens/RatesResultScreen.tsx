@@ -181,7 +181,7 @@ export function RatesResultScreen({
         style={{ background: "#F4FAF7", borderBottom: "1px solid #D5E2DD" }}
       >
         {/* Title bar */}
-        <div className="px-4 pt-10 pb-2 flex items-center gap-3">
+        <div className="zm-status-gap px-4 pt-10 pb-2 flex items-center gap-3">
           <button
             onClick={onBack}
             className="tap-target w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"

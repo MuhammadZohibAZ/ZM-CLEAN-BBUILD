@@ -618,7 +618,7 @@ export default function ZaraiMandiCompare(props: ZaraiMandiCompareProps) {
 
   return <main className={`zm-module zm-embedded ${stage === 'report' ? 'zm-report-layout' : ''}`} ref={root}>
     <div className={`zm-phone ${stage === 'report' ? 'zm-report-phone' : ''}`}>
-      <header className="zm-header" ref={headerRef}>
+      <header className="zm-header zm-status-gap" ref={headerRef}>
         {(stage !== 'select' || onExit) && <button className="zm-icon-button" aria-label="Back" onClick={() => stage === 'report' ? setStage('refine') : stage === 'refine' ? setStage('select') : onExit?.()}><Icon name="back" /></button>}
         <div>{stage === 'report' && <span className="zm-header-kicker">Comparison report</span>}<h1 ref={heading} tabIndex={-1}>{stage === 'select' ? 'Compare' : stage === 'refine' ? 'Refine Comparison' : selectedProducts.map(p => p.name).join(' vs ')}</h1><p>{stage === 'select' ? 'Select products to compare.' : stage === 'refine' ? 'Choose byproducts, price types and locations.' : ''}</p></div>
         {stage === 'report' && <button className="zm-edit" aria-label="Edit comparison" onClick={() => setStage('refine')}><Pencil size={18} /> <span>Edit</span></button>}

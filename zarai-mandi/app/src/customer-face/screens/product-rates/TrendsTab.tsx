@@ -399,8 +399,8 @@ export function TrendsTab({
           />
 
           {/* Card top bar: what (price / arrivals) on the left, when (period) on the right */}
-          <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "12px 12px 0" }}>
-            <div role="group" aria-label={f.tx("Chart", "چارٹ")} style={{ display: "flex", padding: 3, borderRadius: 12, background: DK.chip }}>
+          <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6, padding: "12px 10px 0" }}>
+            <div role="group" aria-label={f.tx("Chart", "چارٹ")} style={{ display: "flex", padding: 2.5, borderRadius: 10, background: DK.chip, flexShrink: 0 }}>
               {(["price", "arrival"] as const).map((m) => (
                 <button
                   key={m}
@@ -408,23 +408,38 @@ export function TrendsTab({
                   aria-pressed={mode === m}
                   onClick={() => setMode(m)}
                   style={{
-                    height: 28,
-                    padding: "0 12px",
+                    height: 27,
+                    padding: "0 8px",
                     border: "none",
-                    borderRadius: 9,
-                    fontSize: 12.5,
+                    borderRadius: 8,
+                    fontSize: 12,
                     fontWeight: 600,
                     fontFamily: f.font,
                     background: mode === m ? C.surface : "transparent",
                     color: mode === m ? C.ink : C.muted,
                     boxShadow: mode === m ? "0 1px 3px rgba(15,26,23,0.12)" : "none",
+                    whiteSpace: "nowrap",
                   }}
                 >
                   {m === "price" ? f.tx("Price", "قیمت") : f.tx("Arrivals", "آمد")}
                 </button>
               ))}
             </div>
-            <div role="group" aria-label={f.tx("Period", "مدت")} style={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <div
+              role="group"
+              aria-label={f.tx("Period", "مدت")}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1.5,
+                minWidth: 0,
+                overflowX: "auto",
+                scrollbarWidth: "none",
+                msOverflowStyle: "none",
+                WebkitOverflowScrolling: "touch",
+                paddingRight: 2,
+              }}
+            >
               {(["1D", "1W", "2W", "1M", "6M", "1Y"] as Range[]).map((r) => {
                 const on = range === r;
                 return (
@@ -434,16 +449,17 @@ export function TrendsTab({
                     aria-pressed={on}
                     onClick={() => setRange(r)}
                     style={{
-                      height: 28,
-                      minWidth: 30,
-                      padding: "0 6px",
+                      height: 27,
+                      minWidth: 25,
+                      padding: "0 3.5px",
                       border: "none",
-                      borderRadius: 14,
-                      fontSize: 12.5,
+                      borderRadius: 13,
+                      fontSize: 11.5,
                       fontWeight: 600,
                       fontFamily: f.font,
                       background: on ? C.ink : "transparent",
                       color: on ? "#FFFFFF" : C.muted,
+                      flexShrink: 0,
                     }}
                   >
                     {rangeLabel[r]}
@@ -457,17 +473,18 @@ export function TrendsTab({
                 title={f.tx("Custom period", "مخصوص مدت")}
                 onClick={() => setPickerOpen(true)}
                 style={{
-                  width: 30,
-                  height: 28,
+                  width: 26,
+                  height: 27,
                   border: "none",
-                  borderRadius: 14,
+                  borderRadius: 13,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   background: range === "CUSTOM" ? C.ink : "transparent",
+                  flexShrink: 0,
                 }}
               >
-                <Icon name="calendar" size={15} width={2.2} color={range === "CUSTOM" ? "#FFFFFF" : C.muted} />
+                <Icon name="calendar" size={14} width={2.2} color={range === "CUSTOM" ? "#FFFFFF" : C.muted} />
               </button>
             </div>
           </div>

@@ -75,7 +75,7 @@ export const arrow = (n: number) => (signed(n) > 0 ? "▲" : signed(n) < 0 ? "�
  */
 export type AxisUnit = "rupees" | "bags";
 export function axisSpec(f: Fmt, unit: AxisUnit, top: number): { title: string; format: (v: number) => string } {
-  if (unit === "rupees") return { title: f.tx("Rupees", "روپے"), format: (v) => f.num(v) };
+  if (unit === "rupees") return { title: f.tx("Rs", "روپے"), format: (v) => f.num(v) };
   const k = top > 99999;
   return {
     title: k ? f.tx("Bags (k)", "بوریاں (ہزار)") : f.tx("Bags", "بوریاں"),

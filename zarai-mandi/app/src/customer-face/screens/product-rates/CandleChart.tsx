@@ -59,8 +59,7 @@ export function CandleChart({
 }) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const W = 360;
-  const TITLE_W = 14; // rotated "Rupees" axis title
-  const AX = 50 + TITLE_W; // right price axis
+  const AX = 50; // right price axis
   const plotW = W - AX;
   const H = height;
   const priceTop = 10;
@@ -170,8 +169,8 @@ export function CandleChart({
 
   const tag = (yy: number, text: string, fill: string) => (
     <g>
-      <rect x={W - AX + 2} y={yy - 9} width={AX - TITLE_W - 4} height={18} rx={4} fill={fill} />
-      <text x={W - TITLE_W - (AX - TITLE_W) / 2} y={yy + 4} textAnchor="middle" fontSize="11" fontWeight="600" fill="#fff" style={{ fontVariantNumeric: "tabular-nums" }}>
+      <rect x={W - AX + 2} y={yy - 9} width={AX - 4} height={18} rx={4} fill={fill} />
+      <text x={W - AX / 2} y={yy + 4} textAnchor="middle" fontSize="11" fontWeight="600" fill="#fff" style={{ fontVariantNumeric: "tabular-nums" }}>
         {text}
       </text>
     </g>
@@ -277,24 +276,26 @@ export function CandleChart({
         <line x1={0} x2={plotW} y1={volTop - 6} y2={volTop - 6} stroke={CANDLE.grid} />
 
         <text
-          x={W - 5}
-          y={(priceTop + priceBottom) / 2}
-          transform={`rotate(90 ${W - 5} ${(priceTop + priceBottom) / 2})`}
-          textAnchor="middle"
-          dominantBaseline="central"
+          x={W - 2}
+          y={13}
+          textAnchor="end"
           fontSize="11"
           fontWeight="700"
           fill={CANDLE.axis}
+          letterSpacing="0.02em"
         >
           {axisSpec(f, "rupees", rawHi).title}
         </text>
         {/* right price axis labels */}
         {ticks.map((v, k) => {
-          // Hide an axis label that would collide with the live-price or crosshair tag.
+          // Hide an axis label that would collide with the live-price, crosshair tag, or top title.
           const ty = y(v);
-          const clash = (latestY !== null && Math.abs(ty - latestY) < 16) || (crossActive && Math.abs(ty - (crossY ?? y(data.close[ci] || lo))) < 16);
+          const clash =
+            (latestY !== null && Math.abs(ty - latestY) < 16) ||
+            (crossActive && Math.abs(ty - (crossY ?? y(data.close[ci] || lo))) < 16) ||
+            Math.abs(ty - 13) < 14;
           return clash ? null : (
-            <text key={`t${k}`} x={W - TITLE_W - 2} y={ty + 4} textAnchor="end" fontSize="11" fontWeight="500" fill={CANDLE.axis} style={{ fontVariantNumeric: "tabular-nums" }}>
+            <text key={`t${k}`} x={W - 2} y={ty + 4} textAnchor="end" fontSize="11" fontWeight="500" fill={CANDLE.axis} style={{ fontVariantNumeric: "tabular-nums" }}>
               {f.num(v)}
             </text>
           );

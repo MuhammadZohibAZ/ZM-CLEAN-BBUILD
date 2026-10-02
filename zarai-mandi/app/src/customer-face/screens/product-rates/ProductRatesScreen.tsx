@@ -449,6 +449,9 @@ export function ProductRatesScreen({
               date={day}
               regionLabel={listProvince ? tm(listProvince) : undefined}
               rateLabel={rate === ALL_RATES ? "" : rateLabel}
+              rate={rate}
+              rates={filterUi.rates}
+              onRate={setRate}
               sort={sort}
               onSort={setSort}
               interval={interval}

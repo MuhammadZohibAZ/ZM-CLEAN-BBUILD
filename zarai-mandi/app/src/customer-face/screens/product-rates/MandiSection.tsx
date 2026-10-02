@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import { inDevicePreview, requestDeviceOrientation } from "../../../lib/device-orientation";
 import { attrValue } from "./Filters";
 import { arrow, shortRate, signed, stripMandi, type Fmt } from "./format";
-import type { MandiEntry } from "./selectors";
+import { ALL_RATES, type MandiEntry } from "./selectors";
 import { C } from "./theme";
 import type { AttrKey, ChangeInterval, SortKey } from "./types";
 import { PickerSheet } from "./PickerSheet";
@@ -16,6 +16,7 @@ const SORTS: SortKey[] = ["none", "priceHigh", "priceLow", "arrivalHigh", "arriv
 /** Columns whose header filters by value (the rest sort). */
 type ValueCol = "rate" | AttrKey | "unit" | "quality";
 const PREVIEW = 6;
+const cleanQuality = (q?: string | null) => (q || "").replace(/\s*(Quality|معیار)$/i, "").trim();
 
 export function MandiSection({
   f,
@@ -35,6 +36,9 @@ export function MandiSection({
   onOpen,
   loading,
   mode,
+  rate,
+  rates,
+  onRate,
 }: {
   f: Fmt;
   t: (s: string) => string;
@@ -55,9 +59,15 @@ export function MandiSection({
   loading: boolean;
   /** Which view this slide shows (default: "table"). */
   mode?: "table" | "cards";
+  rate?: string;
+  rates?: Array<{ id: string; label: string; count?: number; disabled?: boolean }>;
+  onRate?: (r: string) => void;
 }) {
   const [viewMode, setViewMode] = useState<"table" | "cards">(mode || "table");
   const [picker, setPicker] = useState<string | null>(null);
+  const activeRate = rate || ALL_RATES;
+  const isRateFiltered = activeRate !== ALL_RATES;
+  const rateHeaderLabel = isRateFiltered ? shortRate(tr(activeRate)) : f.tx("Rate", "ریٹ");
   // Per-column value filters set from the table headers (none by default).
   const [colFilters, setColFilters] = useState<Partial<Record<ValueCol, string>>>({});
   const cellValue = (e: MandiEntry, key: ValueCol): string => {
@@ -196,7 +206,7 @@ export function MandiSection({
     const raw: { key: AttrKey | "unit" | "quality"; label: string }[] = [
       { key: primary, label: colLabel(f, primary) },
       ...(["newOld", "moisture", "color", "variety", "origin", "spec"] as AttrKey[]).filter((k) => k !== primary).map((k) => ({ key: k, label: colLabel(f, k) })),
-      { key: "quality", label: f.tx("Attribute", "خصوصیات") },
+      { key: "quality", label: f.tx("Quality", "معیار") },
       { key: "unit", label: f.tx("Unit", "اکائی") },
     ];
     const hasData = (key: AttrKey | "unit" | "quality") =>
@@ -272,7 +282,7 @@ export function MandiSection({
               )}
             </th>
             <th style={{ ...thBase, minWidth: 58 }}>
-              {headBtn(colFilters.rate ? shortRate(tr(colFilters.rate)) : f.tx("Rate", "ریٹ"), !!colFilters.rate, () => setPicker("col:rate"))}
+              {headBtn(rateHeaderLabel, isRateFiltered, () => setPicker("col:rate"))}
             </th>
             <th style={{ ...thBase, minWidth: 70 }}>
               {headBtn(
@@ -293,7 +303,7 @@ export function MandiSection({
               return (
                 <th key={c.key} style={{ ...thBase }}>
                   {headBtn(
-                    v ? (c.key === "unit" || c.key === "quality" ? v : attrValue(f, t, c.key as AttrKey, v)) : c.label,
+                    v ? (c.key === "unit" ? v : c.key === "quality" ? cleanQuality(v) : attrValue(f, t, c.key as AttrKey, v)) : c.label,
                     !!v,
                     () => setPicker(`col:${c.key}`),
                   )}
@@ -326,7 +336,7 @@ export function MandiSection({
                 <td style={{ ...td, color: r.arrival > 0 ? C.arrival : C.faint, fontWeight: 600, padding: "8px 6px", fontSize: 12.5 }}>{r.arrival > 0 ? f.num(r.arrival) : "—"}</td>
                 {specCols.map((c) => (
                   <td key={c.key} style={{ ...td, padding: "8px 10px" }}>
-                    {c.key === "unit" ? r.arrivalUnit : c.key === "quality" ? r.quality || "—" : r[c.key] ? attrValue(f, t, c.key, r[c.key] as string) : "—"}
+                    {c.key === "unit" ? r.arrivalUnit : c.key === "quality" ? cleanQuality(r.quality) || "—" : r[c.key] ? attrValue(f, t, c.key, r[c.key] as string) : "—"}
                   </td>
                 ))}
               </tr>
@@ -536,10 +546,37 @@ export function MandiSection({
         />
       )}
 
-      {picker?.startsWith("col:") && (() => {
+      {picker === "col:rate" && (
+        <PickerSheet
+          f={f}
+          title={f.tx("Rate type", "ریٹ کی قسم")}
+          value={[activeRate]}
+          onChange={(v) => {
+            const next = v[0];
+            onRate?.(next);
+            setPicker(null);
+          }}
+          onClose={() => setPicker(null)}
+          options={
+            rates && rates.length > 0
+              ? rates.map((r) => ({
+                  id: r.id,
+                  label: r.id === ALL_RATES ? f.tx("All", "تمام") : r.label,
+                  meta: r.count ? f.tx(`${r.count} location${r.count === 1 ? "" : "s"}`, `${f.digits(r.count)} مقامات`) : f.tx("no reports", "رپورٹ نہیں"),
+                  disabled: !r.count && r.id !== activeRate,
+                }))
+              : [
+                  { id: ALL_RATES, label: f.tx("All", "تمام") },
+                  ...valueOptions("rate").map(([v, n]) => ({ id: v, label: `${shortRate(tr(v))} · ${f.digits(n)}` })),
+                ]
+          }
+        />
+      )}
+
+      {picker?.startsWith("col:") && picker !== "col:rate" && (() => {
         const key = picker.slice(4) as ValueCol;
-        const label = key === "rate" ? f.tx("Rate", "ریٹ") : specCols.find((c) => c.key === key)?.label ?? key;
-        const show = (v: string) => (key === "rate" ? shortRate(tr(v)) : key === "unit" || key === "quality" ? v : attrValue(f, t, key as AttrKey, v));
+        const label = specCols.find((c) => c.key === key)?.label ?? key;
+        const show = (v: string) => (key === "unit" ? v : key === "quality" ? cleanQuality(v) : attrValue(f, t, key as AttrKey, v));
         return (
           <PickerSheet
             f={f}

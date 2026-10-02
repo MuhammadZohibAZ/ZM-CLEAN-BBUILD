@@ -84,8 +84,7 @@ export function TrendChart({
     setTouching(false);
   };
   const W = 340;
-  const titleW = yUnit && !compact ? 14 : 0;
-  const axisW = compact ? 0 : 44 + titleW;
+  const axisW = compact ? 0 : 44;
   const plotW = W - axisW;
   const H = height;
   const bottomAxis = compact ? 4 : 22;
@@ -336,21 +335,11 @@ export function TrendChart({
           </linearGradient>
         </defs>
 
-        {ticks.map((v) => (
-          <g key={v}>
-            <line x1={f.ur ? axisW : 0} x2={f.ur ? W : plotW} y1={y(v)} y2={y(v)} stroke="#EEF1EF" strokeDasharray="3 4" />
-            <text x={f.ur ? titleW : W - titleW} y={y(v) + 4} textAnchor={f.ur ? "start" : "end"} fontSize="11.5" fontWeight="500" fill={C.faint} style={{ fontVariantNumeric: "tabular-nums" }}>
-              {fmtY(v)}
-            </text>
-          </g>
-        ))}
         {axis && (
           <text
-            x={f.ur ? 5 : W - 5}
-            y={(lineTop + lineBottom) / 2}
-            transform={`rotate(${f.ur ? -90 : 90} ${f.ur ? 5 : W - 5} ${(lineTop + lineBottom) / 2})`}
-            textAnchor="middle"
-            dominantBaseline="central"
+            x={f.ur ? 2 : W - 2}
+            y={13}
+            textAnchor={f.ur ? "start" : "end"}
             fontSize="11"
             fontWeight="700"
             fill={C.muted}
@@ -359,6 +348,18 @@ export function TrendChart({
             {axis.title}
           </text>
         )}
+        {ticks.map((v) => {
+          const ty = y(v);
+          if (axis && Math.abs(ty - 13) < 14) return null;
+          return (
+            <g key={v}>
+              <line x1={f.ur ? axisW : 0} x2={f.ur ? W : plotW} y1={ty} y2={ty} stroke="#EEF1EF" strokeDasharray="3 4" />
+              <text x={f.ur ? 2 : W - 2} y={ty + 4} textAnchor={f.ur ? "start" : "end"} fontSize="11.5" fontWeight="500" fill={C.faint} style={{ fontVariantNumeric: "tabular-nums" }}>
+                {fmtY(v)}
+              </text>
+            </g>
+          );
+        })}
 
         <g key={`bars-${drawKey}`}>
           {bars &&

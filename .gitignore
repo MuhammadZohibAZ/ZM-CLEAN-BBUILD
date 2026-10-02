@@ -1,4 +1,4 @@
-﻿# Dependencies
+# Dependencies
 node_modules/
 **/node_modules/
 
@@ -26,6 +26,8 @@ Thumbs.db
 *.log
 .vscode/
 .idea/
+.vs/
+.claude/
 
 # SQLite Database Temporary Lock Files (keeps main .sqlite intact)
 *.sqlite-wal

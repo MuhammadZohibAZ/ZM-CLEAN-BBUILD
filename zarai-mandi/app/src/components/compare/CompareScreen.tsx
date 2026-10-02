@@ -257,7 +257,7 @@ export default function CompareScreen({
   if (!catalog) {
     return (
       <div className="flex h-full flex-col" style={{ background: "#F1F7F4" }}>
-        <header className="flex-shrink-0 px-4 pb-3 pt-10" style={{ background: "#F4FAF7", borderBottom: "1px solid #D5E2DD" }}>
+        <header className="zm-status-gap flex-shrink-0 px-4 pb-3 pt-10" style={{ background: "#F4FAF7", borderBottom: "1px solid #D5E2DD" }}>
           <h1 className="text-xl font-extrabold text-[#183B34]">Compare</h1>
         </header>
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-8 text-center">

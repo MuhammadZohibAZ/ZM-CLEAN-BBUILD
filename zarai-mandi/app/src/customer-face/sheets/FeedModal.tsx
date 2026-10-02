@@ -71,8 +71,8 @@ export function FeedModal({
     >
       {/* Header */}
       <div
-        className="flex items-center gap-3 px-4 pt-10 pb-3 flex-shrink-0"
-        style={{ background: "#075E4F" }}
+        className="flex items-center gap-3 px-4 pb-3 flex-shrink-0"
+        style={{ background: "#075E4F", paddingTop: "max(40px, calc(var(--zm-bleed-top) + 10px))" }}
       >
         <button
           onClick={onClose}

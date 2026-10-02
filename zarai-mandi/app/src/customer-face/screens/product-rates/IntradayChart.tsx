@@ -34,14 +34,12 @@ export function IntradayChart({
   ariaLabel: string;
 }) {
   const W = 340;
-  const titleW = 14;
-  const axisW = 44 + titleW;
+  const axisW = 44;
   const plotW = W - axisW;
   const H = height;
   const top = 26;
   const bottom = H - 22;
   const shown = points.filter((p) => p.value > 0);
-  const untimed = shown.some((p) => p.minute === null);
   const peak = Math.max(0, ...shown.map((p) => Math.max(p.value, p.hi || 0)));
   const hiV = peak * 1.15 || 1;
   const axis = axisSpec(f, unit, hiV);
@@ -54,32 +52,37 @@ export function IntradayChart({
   };
   const ticks = niceTicks(hiV);
   const peakIdx = shown.reduce((best, p, k) => (p.value > shown[best].value ? k : best), 0);
-  const hh = (h: number) => `${f.digits(String(h).padStart(2, "0"))}:${f.digits("00")}`;
+  const hh = (h: number) => (h === 24 ? `${f.digits("23")}:${f.digits("59")}` : `${f.digits(String(h).padStart(2, "0"))}:${f.digits("00")}`);
   const timeLabel = (m: number) => `${f.digits(String(Math.floor(m / 60)).padStart(2, "0"))}:${f.digits(String(m % 60).padStart(2, "0"))}`;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} role="img" aria-label={ariaLabel} style={{ display: "block" }}>
-        {ticks.map((v) => (
-          <g key={v}>
-            <line x1={f.ur ? axisW : 0} x2={f.ur ? W : plotW} y1={y(v)} y2={y(v)} stroke="#EEF1EF" strokeDasharray="3 4" />
-            <text x={f.ur ? titleW : W - titleW} y={y(v) + 4} textAnchor={f.ur ? "start" : "end"} fontSize="11.5" fontWeight="500" fill={C.faint} style={{ fontVariantNumeric: "tabular-nums" }}>
-              {axis.format(v)}
-            </text>
-          </g>
-        ))}
-        <text
-          x={f.ur ? 5 : W - 5}
-          y={(top + bottom) / 2}
-          transform={`rotate(${f.ur ? -90 : 90} ${f.ur ? 5 : W - 5} ${(top + bottom) / 2})`}
-          textAnchor="middle"
-          dominantBaseline="central"
-          fontSize="11"
-          fontWeight="700"
-          fill={C.muted}
-        >
-          {axis.title}
-        </text>
+        {axis && (
+          <text
+            x={f.ur ? 2 : W - 2}
+            y={13}
+            textAnchor={f.ur ? "start" : "end"}
+            fontSize="11"
+            fontWeight="700"
+            fill={C.muted}
+            letterSpacing="0.02em"
+          >
+            {axis.title}
+          </text>
+        )}
+        {ticks.map((v) => {
+          const ty = y(v);
+          if (axis && Math.abs(ty - 13) < 14) return null;
+          return (
+            <g key={v}>
+              <line x1={f.ur ? axisW : 0} x2={f.ur ? W : plotW} y1={ty} y2={ty} stroke="#EEF1EF" strokeDasharray="3 4" />
+              <text x={f.ur ? 2 : W - 2} y={ty + 4} textAnchor={f.ur ? "start" : "end"} fontSize="11.5" fontWeight="500" fill={C.faint} style={{ fontVariantNumeric: "tabular-nums" }}>
+                {axis.format(v)}
+              </text>
+            </g>
+          );
+        })}
 
         {/* 24-hour axis */}
         <line x1={f.ur ? axisW : 0} x2={f.ur ? W : plotW} y1={bottom} y2={bottom} stroke={C.line} />
@@ -101,7 +104,7 @@ export function IntradayChart({
         ))}
 
         {shown.map((p, k) => {
-          const cx = xAt(p.minute ?? DAY);
+          const cx = xAt(p.minute ?? 12 * 60);
           const isPeak = k === peakIdx;
           const py = y(p.value);
           return (
@@ -135,13 +138,9 @@ export function IntradayChart({
           );
         })}
       </svg>
-      {shown.length === 0 ? (
+      {shown.length === 0 && (
         <p style={{ margin: 0, textAlign: "center", fontSize: 12, fontWeight: 500, color: C.muted }}>{f.tx("No report on this day", "اس دن کوئی رپورٹ نہیں")}</p>
-      ) : untimed ? (
-        <p style={{ margin: 0, textAlign: "center", fontSize: 11.5, fontWeight: 500, color: C.faint }}>
-          {f.tx("Report time not recorded · shown at day close", "رپورٹ کا وقت درج نہیں · دن کے اختتام پر دکھایا گیا")}
-        </p>
-      ) : null}
+      )}
     </div>
   );
 }
