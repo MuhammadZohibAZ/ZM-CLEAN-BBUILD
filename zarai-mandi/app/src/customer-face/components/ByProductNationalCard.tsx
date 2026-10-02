@@ -288,10 +288,12 @@ export function ByProductNationalCard({
         border: '1.5px solid #D1E5DC',
       }}
     >
-      {/* Top Header: Full Width Title & Rate Type */}
+      {/* Top Header: Full Width Title & Rate Type (Always visible so by-product name is identifiable) */}
       <div className="relative z-10 w-full mb-1.5">
         <h3
-          className="text-[14px] sm:text-[15px] font-black text-[#143B33] leading-tight tracking-tight truncate"
+          className={`text-[14px] sm:text-[15px] font-black leading-tight tracking-tight truncate ${
+            !stats.hasData ? 'text-[#143B33]/90' : 'text-[#143B33]'
+          }`}
           style={{
             fontFamily: lang === 'ur' ? URDU_FONT : "'Inter', sans-serif",
           }}
@@ -300,107 +302,112 @@ export function ByProductNationalCard({
           {tc(stats.byproduct)}
         </h3>
         <p
-          className="text-[10.5px] sm:text-[11px] font-bold text-[#087F63] mt-0.5 leading-none truncate"
+          className={`text-[10.5px] sm:text-[11px] font-bold mt-0.5 leading-none truncate ${
+            !stats.hasData ? 'text-[#087F63]/75' : 'text-[#087F63]'
+          }`}
           style={{ fontFamily: lang === 'ur' ? URDU_FONT : 'inherit' }}
         >
           {tr(stats.mostOccurringRateType)}
         </p>
       </div>
 
-      {/* Metric rows: 3 clean rows */}
-      <div className="relative z-10 w-full">
-        {/* Row 1: Avg min | Avg max */}
-        <div className="flex w-full">
-          <CardStatCell
-            label={lang === 'ur' ? 'اوسط کم' : 'Avg min'}
-            value={
-              stats.hasData && stats.avgMin > 0
-                ? lang === 'ur'
-                  ? `روپے\u00A0${toUrduDigits(Math.round(stats.avgMin).toLocaleString())}`
-                  : `Rs\u00A0${Math.round(stats.avgMin).toLocaleString()}`
-                : '—'
-            }
-            caption={lang === 'ur' ? 'فی ۴۰ کلو' : 'per 40 kg'}
-          />
-          <CardStatCell
-            divider
-            label={lang === 'ur' ? 'اوسط زیادہ' : 'Avg max'}
-            value={
-              stats.hasData && stats.avgMax > 0
-                ? lang === 'ur'
-                  ? `روپے\u00A0${toUrduDigits(Math.round(stats.avgMax).toLocaleString())}`
-                  : `Rs\u00A0${Math.round(stats.avgMax).toLocaleString()}`
-                : '—'
-            }
-            caption={lang === 'ur' ? 'فی ۴۰ کلو' : 'per 40 kg'}
-          />
-        </div>
+      {/* Metric rows: 3 clean rows with overlay container */}
+      <div className="relative z-10 w-full flex-1 flex flex-col justify-between">
+        <div className={!stats.hasData ? 'opacity-35 select-none filter blur-[0.5px]' : ''}>
+          {/* Row 1: Avg min | Avg max */}
+          <div className="flex w-full">
+            <CardStatCell
+              label={lang === 'ur' ? 'اوسط کم' : 'Avg min'}
+              value={
+                stats.hasData && stats.avgMin > 0
+                  ? lang === 'ur'
+                    ? `روپے\u00A0${toUrduDigits(Math.round(stats.avgMin).toLocaleString())}`
+                    : `Rs\u00A0${Math.round(stats.avgMin).toLocaleString()}`
+                  : '—'
+              }
+              caption={lang === 'ur' ? 'فی ۴۰ کلو' : 'per 40 kg'}
+            />
+            <CardStatCell
+              divider
+              label={lang === 'ur' ? 'اوسط زیادہ' : 'Avg max'}
+              value={
+                stats.hasData && stats.avgMax > 0
+                  ? lang === 'ur'
+                    ? `روپے\u00A0${toUrduDigits(Math.round(stats.avgMax).toLocaleString())}`
+                    : `Rs\u00A0${Math.round(stats.avgMax).toLocaleString()}`
+                  : '—'
+              }
+              caption={lang === 'ur' ? 'فی ۴۰ کلو' : 'per 40 kg'}
+            />
+          </div>
 
-        <div className="h-px w-full my-1.5" style={{ background: '#E7F0EB' }} />
+          <div className="h-px w-full my-1.5" style={{ background: '#E7F0EB' }} />
 
-        {/* Row 2: Total arrival | Special Attribute */}
-        <div className="flex w-full">
-          <CardStatCell
-            label={lang === 'ur' ? 'کل آمد' : 'Total arrival'}
-            value={arrivalValue}
-            caption={lang === 'ur' ? 'فی ۴۰ کلو' : 'per 40 kg'}
-          />
-          <CardStatCell
-            divider
-            label={specialAttrLabel}
-            value={specialAttrValue}
-            valueColor={specialAttrColor}
-          />
-        </div>
+          {/* Row 2: Total arrival | Special Attribute */}
+          <div className="flex w-full">
+            <CardStatCell
+              label={lang === 'ur' ? 'کل آمد' : 'Total arrival'}
+              value={arrivalValue}
+              caption={lang === 'ur' ? 'فی ۴۰ کلو' : 'per 40 kg'}
+            />
+            <CardStatCell
+              divider
+              label={specialAttrLabel}
+              value={specialAttrValue}
+              valueColor={specialAttrColor}
+            />
+          </div>
 
-        <div className="h-px w-full my-1.5" style={{ background: '#E7F0EB' }} />
+          <div className="h-px w-full my-1.5" style={{ background: '#E7F0EB' }} />
 
-        {/* Row 3: Locations on Left + Time Pill on Bottom-Right */}
-        <div className="flex items-end justify-between w-full">
-          <LocationStatCell
-            marketCount={stats.markets}
-            lang={lang}
-          />
+          {/* Row 3: Locations on Left + Time Pill on Bottom-Right */}
+          <div className="flex items-end justify-between w-full">
+            <LocationStatCell
+              marketCount={stats.markets}
+              lang={lang}
+            />
 
-          {/* Time Pill on Bottom-Right */}
-          <div
-            className="flex-shrink-0 flex items-center gap-1 text-[8.5px] sm:text-[9px] font-bold text-[#065F46] bg-[#E8F8F3] border border-[#BCE8D8] py-0.5 px-1.5 sm:px-2 rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.03)] mb-0.5"
-            style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-          >
-            <svg
-              width="10"
-              height="10"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#087F63"
-              strokeWidth="2.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="flex-shrink-0"
+            {/* Time Pill on Bottom-Right */}
+            <div
+              className="flex-shrink-0 flex items-center gap-1 text-[8.5px] sm:text-[9px] font-bold text-[#065F46] bg-[#E8F8F3] border border-[#BCE8D8] py-0.5 px-1.5 sm:px-2 rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.03)] mb-0.5"
+              style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
             >
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-            <span className="truncate">
-              {getCardUpdatedAgo(stats.catalogId || stats.byproduct, lang, selectedDate)}
-            </span>
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#087F63"
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="flex-shrink-0"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+              <span className="truncate">
+                {getCardUpdatedAgo(stats.catalogId || stats.byproduct, lang, selectedDate)}
+              </span>
+            </div>
           </div>
         </div>
+
+        {/* No Data Overlay covering only the metrics section */}
+        {!stats.hasData && (
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-1.5 rounded-[12px] bg-white/65 backdrop-blur-[2px] pointer-events-none">
+            <div className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-white/95 border border-[#D1E5DC] text-center shadow-[0_2px_8px_rgba(6,77,64,0.06)] flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]/50 flex-shrink-0" />
+              <span
+                className="text-[11px] sm:text-xs font-bold text-[#143B33]"
+                style={{ fontFamily: lang === 'ur' ? URDU_FONT : 'inherit' }}
+              >
+                {lang === 'ur' ? 'ڈیٹا دستیاب نہیں ہے' : 'No Data Available'}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
-
-      {/* No Data Overlay if hasData is false */}
-      {!stats.hasData && (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-2 rounded-[16px] sm:rounded-[18px] bg-white/90 backdrop-blur-[2px] pointer-events-none">
-          <div className="px-3 py-1.5 rounded-xl bg-[#F1F7F4] border border-[#D1E5DC] text-center shadow-sm">
-            <span
-              className="text-xs font-bold text-[#143B33]"
-              style={{ fontFamily: lang === 'ur' ? URDU_FONT : 'inherit' }}
-            >
-              {lang === 'ur' ? 'ڈیٹا دستیاب نہیں ہے' : 'No Data Available'}
-            </span>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
