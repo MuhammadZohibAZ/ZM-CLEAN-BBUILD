@@ -50,6 +50,8 @@ export function makeFmt(lang: Lang) {
     dayFullWeekdayYear,
     /** Pick the English or Urdu string. */
     tx: (en: string, urText: string) => (ur ? urText : en),
+    /** Arrival unit from the data ("50 kg") in the current language. */
+    unit: (u: string) => (ur ? u.replace(/kgs?/gi, "کلو") : u),
     font: ur ? URDU_FONT : BODY_FONT,
     display: ur ? URDU_FONT : DISPLAY_FONT,
     /** Nastaliq needs far more line height than Latin text. */

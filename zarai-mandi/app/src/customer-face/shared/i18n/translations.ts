@@ -50,7 +50,7 @@ export const TRANS: Record<string, { en: string; ur: string }> = {
     ur: "ٹیپ کریں · مزید شامل کریں",
   },
   "prodsel.products": { en: "Products", ur: "مصنوعات" },
-  "prodsel.viewSingle": { en: "View 1 Product →", ur: "۱ مصنوع دیکھیں ←" },
+  "prodsel.viewSingle": { en: "View 1 Product →", ur: "1 مصنوع دیکھیں ←" },
 
   // Rate types
   "rate.Mill Rate": { en: "Mill Rate", ur: "مل ریٹ" },
@@ -64,7 +64,7 @@ export const TRANS: Record<string, { en: string; ur: string }> = {
   "c.Maize": { en: "Maize", ur: "مکئی" },
   "c.Cotton": { en: "Cotton", ur: "کپاس" },
   "c.Rice": { en: "Rice", ur: "چاول" },
-  "c.Paddy": { en: "Paddy", ur: "پھٹی" },
+  "c.Paddy": { en: "Paddy", ur: "دھان" },
   "c.Millet": { en: "Millet", ur: "باجرہ" },
   "c.Sesame": { en: "Sesame", ur: "تل" },
   "c.Fertilizer": { en: "Fertilizer", ur: "کھاد" },

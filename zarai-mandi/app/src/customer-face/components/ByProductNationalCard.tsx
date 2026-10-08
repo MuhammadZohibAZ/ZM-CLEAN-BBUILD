@@ -65,16 +65,16 @@ export function AnimatedCounter({
 // ─── REVAMPED FIGMA BY-PRODUCT NATIONAL CARD COMPONENT (2*2 GRID) ───────────
 
 export const CARD_UPDATED_PRESETS = [
-  { mins: 1, en: '1m ago', ur: '۱ منٹ پہلے' },
-  { mins: 4, en: '4m ago', ur: '۴ منٹ پہلے' },
-  { mins: 7, en: '7m ago', ur: '۷ منٹ پہلے' },
-  { mins: 10, en: '10m ago', ur: '۱۰ منٹ پہلے' },
-  { mins: 15, en: '15m ago', ur: '۱۵ منٹ پہلے' },
-  { mins: 22, en: '22m ago', ur: '۲۲ منٹ پہلے' },
-  { mins: 35, en: '35m ago', ur: '۳۵ منٹ پہلے' },
-  { mins: 45, en: '45m ago', ur: '۴۵ منٹ پہلے' },
-  { mins: 60, en: '1hr ago', ur: '۱ گھنٹہ پہلے' },
-  { mins: 120, en: '2hr ago', ur: '۲ گھنٹے پہلے' },
+  { mins: 1, en: '1m ago', ur: '1 منٹ پہلے' },
+  { mins: 4, en: '4m ago', ur: '4 منٹ پہلے' },
+  { mins: 7, en: '7m ago', ur: '7 منٹ پہلے' },
+  { mins: 10, en: '10m ago', ur: '10 منٹ پہلے' },
+  { mins: 15, en: '15m ago', ur: '15 منٹ پہلے' },
+  { mins: 22, en: '22m ago', ur: '22 منٹ پہلے' },
+  { mins: 35, en: '35m ago', ur: '35 منٹ پہلے' },
+  { mins: 45, en: '45m ago', ur: '45 منٹ پہلے' },
+  { mins: 60, en: '1hr ago', ur: '1 گھنٹہ پہلے' },
+  { mins: 120, en: '2hr ago', ur: '2 گھنٹے پہلے' },
 ];
 
 export function getCardUpdatedPreset(seed: string | number | undefined) {
@@ -102,7 +102,7 @@ export function getCardUpdatedAgo(
 
     if (diffDays > 0) {
       if (diffDays === 1) {
-        return lang === 'ur' ? '۱ دن پہلے' : '1 day ago';
+        return lang === 'ur' ? '1 دن پہلے' : '1 day ago';
       }
       return lang === 'ur' ? `${toUrduDigits(diffDays)} دن پہلے` : `${diffDays} days ago`;
     }
@@ -126,21 +126,21 @@ export function CardStatCell({
 }) {
   return (
     <div
-      className={`flex-1 min-w-0 flex flex-col justify-center py-0.5 ${divider ? 'pl-2 ml-1 border-l' : 'pr-1'}`}
+      className={`flex-1 min-w-0 flex flex-col justify-start py-0.5 ${divider ? 'ps-2 ms-1 border-s' : 'pe-1'}`}
       style={divider ? { borderColor: '#D9E7E1' } : undefined}
     >
-      <span className="block text-[10px] font-bold text-[#52635F] leading-tight truncate">
+      <span className="block text-[10px] font-bold text-[#52635F] leading-tight break-words">
         {label}
       </span>
       <span
-        className="block font-black tracking-tight leading-tight my-0.5 whitespace-nowrap"
+        className="block font-black tracking-tight leading-tight my-0.5 break-words"
         style={{ color: valueColor, fontSize: 'clamp(11px, 3.2vw, 13px)' }}
         title={typeof value === 'string' ? value : undefined}
       >
         {value}
       </span>
       {caption !== undefined && (
-        <span className="block text-[8.5px] font-bold text-[#087F63] leading-none truncate">
+        <span className="block text-[8.5px] font-bold text-[#087F63] leading-tight break-words">
           {caption}
         </span>
       )}
@@ -167,10 +167,10 @@ export function LocationStatCell({
 
   return (
     <div
-      className={`flex-1 min-w-0 flex flex-col justify-center py-0.5 ${divider ? 'pl-2 ml-1 border-l' : 'pr-1'} ${fullWidth ? 'w-full' : ''}`}
+      className={`flex-1 min-w-0 flex flex-col justify-center py-0.5 ${divider ? 'ps-2 ms-1 border-s' : 'pe-1'} ${fullWidth ? 'w-full' : ''}`}
       style={divider ? { borderColor: '#D9E7E1' } : undefined}
     >
-      <span className="block text-[10px] font-bold text-[#52635F] leading-tight truncate">
+      <span className="block text-[10px] font-bold text-[#52635F] leading-tight break-words">
         {lang === 'ur' ? 'مقامات' : 'Locations'}
       </span>
 
@@ -180,7 +180,7 @@ export function LocationStatCell({
           className="font-black tracking-tight text-[#087F63] leading-none flex items-center gap-1"
           style={{ fontSize: 'clamp(11.5px, 3.2vw, 13px)' }}
         >
-          <span>{countDisplay}</span>
+          <bdi dir="ltr">{countDisplay}</bdi>
           <span className="text-[10px] font-bold text-[#075E4F]">
             {lang === 'ur' ? 'فعال' : 'Active'}
           </span>
@@ -215,6 +215,15 @@ export const SPECIAL_ATTR_SPEC_URDU: Record<string, string> = {
   Dry: "خشک",
   Fresh: "تازہ",
 };
+
+/**
+ * Urdu for a special attribute value. Values come from the data in English
+ * ("Seed Quality", "Storage", "Punjab"); use the dictionary's Urdu when it has one.
+ */
+export function specialAttrValueUr(attr: SpecialAttrInfo, tc: (name: string) => string): string {
+  const translated = tc(attr.valueEn);
+  return translated !== attr.valueEn ? translated : attr.valueUr;
+}
 
 export function apiSpecialAttrToUi(attr: CardSpecialAttr | null): SpecialAttrInfo | null {
   if (!attr) return null;
@@ -264,16 +273,20 @@ export function ByProductNationalCard({
     : (attrType === 'newOld' ? 'Crop' : (stats.specialAttr?.labelEn || attrMeta?.labelEn || 'Crop'));
   const hasAttrValue = Boolean(stats.specialAttr && (stats.specialAttr.valueEn || stats.specialAttr.valueUr));
   const specialAttrValue = hasAttrValue
-    ? (lang === 'ur' ? stats.specialAttr!.valueUr : stats.specialAttr!.valueEn)
+    ? (lang === 'ur' ? specialAttrValueUr(stats.specialAttr!, tc) : stats.specialAttr!.valueEn)
     : '—';
   const specialAttrColor = hasAttrValue ? '#ff7b00ff' : undefined;
 
   // Arrival value: show bags count if > 0, otherwise show '—'
   const hasArrival = stats.hasData && stats.totalArrival > 0;
+  // The unit is set smaller so long counts still fit beside the attribute cell.
   const arrivalValue = hasArrival
-    ? (lang === 'ur'
-      ? `${toUrduDigits(stats.totalArrival.toLocaleString())}\u00A0تھیلے`
-      : `${stats.totalArrival.toLocaleString()}\u00A0Bags`)
+    ? (
+      <>
+        {lang === 'ur' ? toUrduDigits(stats.totalArrival.toLocaleString()) : stats.totalArrival.toLocaleString()}
+        <span className="text-[10px] font-bold">{'\u00A0'}{lang === 'ur' ? 'تھیلے' : 'Bags'}</span>
+      </>
+    )
     : '—';
 
   return (
@@ -291,7 +304,7 @@ export function ByProductNationalCard({
       {/* Top Header: Full Width Title & Rate Type (Always visible so by-product name is identifiable) */}
       <div className="relative z-10 w-full mb-1.5">
         <h3
-          className={`text-[14px] sm:text-[15px] font-black leading-tight tracking-tight truncate ${
+          className={`text-[14px] sm:text-[15px] font-black leading-tight tracking-tight break-words ${
             !stats.hasData ? 'text-[#143B33]/90' : 'text-[#143B33]'
           }`}
           style={{
@@ -302,7 +315,7 @@ export function ByProductNationalCard({
           {tc(stats.byproduct)}
         </h3>
         <p
-          className={`text-[10.5px] sm:text-[11px] font-bold mt-0.5 leading-none truncate ${
+          className={`text-[10.5px] sm:text-[11px] font-bold mt-0.5 leading-tight break-words ${
             !stats.hasData ? 'text-[#087F63]/75' : 'text-[#087F63]'
           }`}
           style={{ fontFamily: lang === 'ur' ? URDU_FONT : 'inherit' }}
@@ -325,7 +338,7 @@ export function ByProductNationalCard({
                     : `Rs\u00A0${Math.round(stats.avgMin).toLocaleString()}`
                   : '—'
               }
-              caption={lang === 'ur' ? 'فی ۴۰ کلو' : 'per 40 kg'}
+              caption={lang === 'ur' ? 'فی 40 کلو' : 'per 40 kg'}
             />
             <CardStatCell
               divider
@@ -337,7 +350,7 @@ export function ByProductNationalCard({
                     : `Rs\u00A0${Math.round(stats.avgMax).toLocaleString()}`
                   : '—'
               }
-              caption={lang === 'ur' ? 'فی ۴۰ کلو' : 'per 40 kg'}
+              caption={lang === 'ur' ? 'فی 40 کلو' : 'per 40 kg'}
             />
           </div>
 
@@ -348,7 +361,7 @@ export function ByProductNationalCard({
             <CardStatCell
               label={lang === 'ur' ? 'کل آمد' : 'Total arrival'}
               value={arrivalValue}
-              caption={lang === 'ur' ? 'فی ۴۰ کلو' : 'per 40 kg'}
+              caption={lang === 'ur' ? 'فی 40 کلو' : 'per 40 kg'}
             />
             <CardStatCell
               divider
@@ -386,7 +399,7 @@ export function ByProductNationalCard({
                 <circle cx="12" cy="12" r="10" />
                 <polyline points="12 6 12 12 16 14" />
               </svg>
-              <span className="truncate">
+              <span className="whitespace-nowrap">
                 {getCardUpdatedAgo(stats.catalogId || stats.byproduct, lang, selectedDate)}
               </span>
             </div>

@@ -19,8 +19,8 @@ export function passesFilters(r: MarketRow, f: AttrFilters, rateType: string): b
   if (rateType !== ALL_RATES && r.rateType !== rateType) return false;
   for (const [k, v] of Object.entries(f) as [AttrKey, string | undefined][]) {
     if (!v) continue;
-    const val = (r[k] || "").toString().toLowerCase().replace(/[%٪]/g, "").trim();
-    if (val !== v.toLowerCase().replace(/[%٪]/g, "").trim()) return false;
+    const val = (r[k] || "").toString().toLowerCase().replace(/[%%]/g, "").trim();
+    if (val !== v.toLowerCase().replace(/[%%]/g, "").trim()) return false;
   }
   return true;
 }

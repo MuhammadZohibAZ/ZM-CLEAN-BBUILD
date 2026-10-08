@@ -1,5 +1,4 @@
 import { lazy, Suspense, useState, useRef, useEffect } from "react";
-import { PageCurtain, usePageCurtain } from "./components/ui/page-curtain";
 
 import { FloatingMiniPlayer } from "./customer-face/components/FloatingMiniPlayer";
 import { BottomNav } from "./customer-face/navigation/BottomNav";
@@ -43,13 +42,6 @@ import { MultiLocSheet } from "./customer-face/sheets/MultiLocSheet";
 
 // Compare (with its live-data adapter) is split out of the main bundle.
 const CompareScreen = lazy(() => import("./components/compare/CompareScreen"));
-
-const NAV_ORDER: Record<NavTab, number> = { home: 0, compare: 1, news: 2, voice: 3 };
-const NAV_CURTAIN: Partial<Record<NavTab, { en: string; ur: string; color: string }>> = {
-  home: { en: "Home", ur: "ہوم", color: "#087F63" },
-  compare: { en: "Compare", ur: "موازنہ", color: "#07332F" },
-  news: { en: "Reels", ur: "ویڈیوز", color: "#B9822E" },
-};
 
 function AppInner({
   initialUserData,
@@ -230,10 +222,7 @@ function AppInner({
   };
   const replace = (s: Screen) => setStack((p) => [...p.slice(0, -1), s]);
 
-  const curtain = usePageCurtain();
-
   const handleNav = (tab: NavTab) => {
-    if (curtain.isPending) return;
     setVoicePhase("idle");
     const doNav = () => {
       if (activeNav === "news" && tab !== "news") {
@@ -249,35 +238,16 @@ function AppInner({
       }
     };
 
-    // Curtain names the destination, then the page swaps while it is covered.
-    const curtainInfo = NAV_CURTAIN[tab];
-    const alreadyThere = tab === activeNav && stack.length === 1;
-    const navigate = () => {
-      if (!curtainInfo || alreadyThere) {
-        doNav();
-        return;
-      }
-      curtain.play(
-        {
-          title: lang === "ur" ? curtainInfo.ur : curtainInfo.en,
-          subtitle: lang === "ur" ? curtainInfo.en : curtainInfo.ur,
-          color: curtainInfo.color,
-          direction: NAV_ORDER[tab] > NAV_ORDER[navActive] ? 1 : -1,
-        },
-        doNav,
-      );
-    };
-
     if (voiceEnabled) {
       let speech = "";
       if (tab === "home") speech = lang === "ur" ? "مرکزی صفحہ" : "Home";
       else if (tab === "compare") speech = lang === "ur" ? "موازنہ" : "Compare";
       else if (tab === "news") speech = lang === "ur" ? "ویڈیوز" : "Videos";
       if (speech) speakText(speech);
-      setTimeout(navigate, 850);
+      setTimeout(doNav, 850);
       return;
     }
-    navigate();
+    doNav();
   };
 
   const openFeed = (filter?: Partial<FeedFilter>) => {
@@ -336,7 +306,6 @@ function AppInner({
         className="relative flex-1 overflow-hidden flex flex-col"
         style={{ minHeight: 0 }}
       >
-          <PageCurtain controller={curtain} />
           {current.id === "home" && (
             activeRole === "representative" ? (
               <RepDashboardScreen

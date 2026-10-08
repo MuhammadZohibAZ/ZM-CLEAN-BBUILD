@@ -6,10 +6,12 @@ import { ZM_THEME_CSS } from "../theme";
 
 export const URDU_FONT = "'Noto Sans Arabic', 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', sans-serif";
 
-// ─── Urdu digit converter helper ──────────────────────────────
+// ─── Numbers in Urdu text ─────────────────────────────────────
+// Urdu screens use English digits (0-9): they read more clearly than the
+// Urdu numeral glyphs in our Nastaliq font. Kept as a function so every
+// number in Urdu text still goes through one place.
 export function toUrduDigits(n: number | string): string {
-  const urduDigits = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
-  return String(n).replace(/[0-9]/g, (w) => urduDigits[+w]);
+  return String(n);
 }
 
 export type Lang = "en" | "ur";

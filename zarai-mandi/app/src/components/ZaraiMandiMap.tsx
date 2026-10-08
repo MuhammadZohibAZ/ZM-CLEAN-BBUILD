@@ -281,10 +281,8 @@ export default function ZaraiMandiMap({
   const [showWiki, setShowWiki] = useState(false);
   const svgRef = useRef<SVGSVGElement>(null);
 
-  const toUrduDigits = (n: number | string): string => {
-    const urduDigits = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
-    return String(n).replace(/[0-9]/g, (w) => urduDigits[+w]);
-  };
+  // Urdu text uses English digits (see LangProvider's toUrduDigits).
+  const toUrduDigits = (n: number | string): string => String(n);
 
   const normStation = (s: string) =>
     (s || "").toLowerCase().replace(/\s*(mandi|منڈی)$/i, "").trim();

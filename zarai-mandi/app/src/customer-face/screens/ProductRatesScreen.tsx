@@ -466,13 +466,13 @@ export function ProductRatesScreen({
       arrivalUnit:
         r.arrivals_unit && Number(r.arrivals_unit) > 0
           ? Number(r.arrivals_unit) === 1
-            ? (lang === "ur" ? "۱ کلو" : "1 kg")
+            ? (lang === "ur" ? "1 کلو" : "1 kg")
             : Number(r.arrivals_unit) === 1000
-              ? (lang === "ur" ? "۱ ٹن" : "1 MT")
+              ? (lang === "ur" ? "1 ٹن" : "1 MT")
               : lang === "ur"
                 ? `${toUrduDigits(r.arrivals_unit)} کلو`
                 : `${r.arrivals_unit} kg`
-          : (lang === "ur" ? "۴۰ کلو" : "40 kg"),
+          : (lang === "ur" ? "40 کلو" : "40 kg"),
       min: Number(r.minimum),
       max: Number(r.maximum),
       trend: "stable" as const,
@@ -557,9 +557,9 @@ export function ProductRatesScreen({
       res = res.filter((r) => r.rateType === attrRateType);
     }
     if (attrMoisture) {
-      const cleanM = attrMoisture.replace(/[%٪]/g, "").trim().toLowerCase();
+      const cleanM = attrMoisture.replace(/[%%]/g, "").trim().toLowerCase();
       res = res.filter((r) => {
-        const rowM = (r.moisture || "").replace(/[%٪]/g, "").trim().toLowerCase();
+        const rowM = (r.moisture || "").replace(/[%%]/g, "").trim().toLowerCase();
         return rowM === cleanM || rowM.includes(cleanM) || cleanM.includes(rowM);
       });
     }
@@ -801,7 +801,7 @@ export function ProductRatesScreen({
       const monthsEn = ["Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep"];
       const monthsUr = ["اکتوبر", "نومبر", "دسمبر", "جنوری", "فروری", "مارچ", "اپریل", "مئی", "جون", "جولائی", "اگست", "ستمبر"];
       const fullEn = ["Oct 2025", "Nov 2025", "Dec 2025", "Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026"];
-      const fullUr = ["اکتوبر ۲۰۲۵", "نومبر ۲۰۲۵", "دسمبر ۲۰۲۵", "جنوری ۲۰۲۶", "فروری ۲۰۲۶", "مارچ ۲۰۲۶", "اپریل ۲۰۲۶", "مئی ۲۰۲۶", "جون ۲۰۲۶", "جولائی ۲۰۲۶", "اگست ۲۰۲۶", "ستمبر ۲۰۲۶"];
+      const fullUr = ["اکتوبر 2025", "نومبر 2025", "دسمبر 2025", "جنوری 2026", "فروری 2026", "مارچ 2026", "اپریل 2026", "مئی 2026", "جون 2026", "جولائی 2026", "اگست 2026", "ستمبر 2026"];
       const seasonalFactors = [0.93, 0.94, 0.95, 0.96, 0.98, 1.01, 1.04, 1.02, 0.99, 0.97, 0.99, 1.0];
       const arrivalFactors = [0.8, 0.85, 0.9, 0.95, 1.1, 1.3, 1.4, 1.2, 0.9, 0.85, 1.0, 1.0];
       return {
@@ -820,7 +820,7 @@ export function ProductRatesScreen({
       const monthsEn = ["Apr", "May", "Jun", "Jul", "Aug", "Sep"];
       const monthsUr = ["اپریل", "مئی", "جون", "جولائی", "اگست", "ستمبر"];
       const fullEn = ["Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026"];
-      const fullUr = ["اپریل ۲۰۲۶", "مئی ۲۰۲۶", "جون ۲۰۲۶", "جولائی ۲۰۲۶", "اگست ۲۰۲۶", "ستمبر ۲۰۲۶"];
+      const fullUr = ["اپریل 2026", "مئی 2026", "جون 2026", "جولائی 2026", "اگست 2026", "ستمبر 2026"];
       const seasonalFactors = [1.03, 1.02, 0.99, 0.98, 0.99, 1.0];
       const arrivalFactors = [1.3, 1.2, 0.9, 0.85, 1.0, 1.0];
       return {
@@ -837,9 +837,9 @@ export function ProductRatesScreen({
       };
     } else if (stockTimeframe === "3M") {
       const weeksEn = ["27 Jun", "4 Jul", "11 Jul", "18 Jul", "25 Jul", "1 Aug", "8 Aug", "15 Aug", "22 Aug", "29 Aug", "5 Sep", "14 Sep"];
-      const weeksUr = ["۲۷ جون", "۴ جولائی", "۱۱ جولائی", "۱۸ جولائی", "۲۵ جولائی", "۱ اگست", "۸ اگست", "۱۵ اگست", "۲۲ اگست", "۲۹ اگست", "۵ ستمبر", "۱۴ ستمبر"];
+      const weeksUr = ["27 جون", "4 جولائی", "11 جولائی", "18 جولائی", "25 جولائی", "1 اگست", "8 اگست", "15 اگست", "22 اگست", "29 اگست", "5 ستمبر", "14 ستمبر"];
       const fullEn = weeksEn.map((w, i) => `Week ${i + 1}: ${w} 2026 (Weekly Avg)`);
-      const fullUr = weeksUr.map((w, i) => `ہفتہ ${toUrduDigits(i + 1)}: ${w} ۲۰۲۶ (ہفتہ وار اوسط)`);
+      const fullUr = weeksUr.map((w, i) => `ہفتہ ${toUrduDigits(i + 1)}: ${w} 2026 (ہفتہ وار اوسط)`);
       const seasonalFactors = [0.97, 0.975, 0.98, 0.985, 0.99, 0.992, 0.995, 0.998, 1.0, 1.002, 0.999, 1.0];
       const arrivalFactors = [0.85, 0.9, 0.92, 0.95, 0.98, 1.0, 1.02, 1.05, 1.0, 0.98, 0.95, 1.0];
       return {
@@ -880,7 +880,7 @@ export function ProductRatesScreen({
         }
 
         const fullDate = lang === "ur"
-          ? `${dayStr} ${mName} ۲۰۲۶ (${dayName})`
+          ? `${dayStr} ${mName} 2026 (${dayName})`
           : `${d} ${enMonthsShort[m]} 2026 (${enDays[dt.getDay()]})`;
 
         list.push({ tickLabel, fullDate, dayName });
@@ -1954,7 +1954,7 @@ export function ProductRatesScreen({
                                 : "—"}
                             </span>
                             <span className="text-[8.5px] font-semibold text-[#80918B] leading-none mt-0.5">
-                              {statMax > 0 ? (lang === "ur" ? "(۴۰ کلو)" : "(40 KG)") : ""}
+                              {statMax > 0 ? (lang === "ur" ? "(40 کلو)" : "(40 KG)") : ""}
                             </span>
                           </div>
 
@@ -1988,7 +1988,7 @@ export function ProductRatesScreen({
                                 : "—"}
                             </span>
                             <span className="text-[8.5px] font-semibold text-[#80918B] leading-none mt-0.5">
-                              {statMin > 0 ? (lang === "ur" ? "(۴۰ کلو)" : "(40 KG)") : ""}
+                              {statMin > 0 ? (lang === "ur" ? "(40 کلو)" : "(40 KG)") : ""}
                             </span>
                           </div>
 
@@ -2024,7 +2024,7 @@ export function ProductRatesScreen({
                                 : "—"}
                             </span>
                             <span className="text-[8.5px] font-semibold text-[#80918B] leading-none mt-0.5">
-                              {statArrival > 0 ? (lang === "ur" ? "(۴۰ کلو)" : "(40 KG)") : ""}
+                              {statArrival > 0 ? (lang === "ur" ? "(40 کلو)" : "(40 KG)") : ""}
                             </span>
                           </div>
                         </div>
@@ -2109,7 +2109,7 @@ export function ProductRatesScreen({
                             >
                               {isAttrPanelOpen
                                 ? (lang === "ur" ? "چھپائیں" : "Hide")
-                                : (lang === "ur" ? "+۵ مزید اوصاف" : "+5 More Specs")}
+                                : (lang === "ur" ? "+5 مزید اوصاف" : "+5 More Specs")}
                             </span>
                             <svg
                               width="9"
@@ -2315,7 +2315,7 @@ export function ProductRatesScreen({
                               label: lang === "ur" ? "نمی" : "Moisture",
                               val: attrMoisture
                                 ? (lang === "ur"
-                                  ? `${toUrduDigits(attrMoisture)}${attrMoisture.includes("٪") || attrMoisture.includes("%") ? "" : "٪"}`
+                                  ? `${toUrduDigits(attrMoisture)}${attrMoisture.includes("%") || attrMoisture.includes("%") ? "" : "%"}`
                                   : `${attrMoisture}${attrMoisture.includes("%") ? "" : "%"}`)
                                 : "--",
                               rawVal: attrMoisture,
@@ -2413,7 +2413,7 @@ export function ProductRatesScreen({
                             if (k === "variety") return tc(opt);
                             if (k === "moisture") {
                               return lang === "ur"
-                                ? `${toUrduDigits(opt)}${opt.includes("٪") || opt.includes("%") ? "" : "٪"}`
+                                ? `${toUrduDigits(opt)}${opt.includes("%") || opt.includes("%") ? "" : "%"}`
                                 : `${opt}${opt.includes("%") ? "" : "%"}`;
                             }
                             return t(opt);
@@ -4172,7 +4172,7 @@ export function ProductRatesScreen({
                                                   : "inherit",
                                             }}
                                           >
-                                            {rowArr > 0 ? ((r as any).arrivalUnit || (lang === "ur" ? "۴۰ کلو" : "40 kg")) : "—"}
+                                            {rowArr > 0 ? ((r as any).arrivalUnit || (lang === "ur" ? "40 کلو" : "40 kg")) : "—"}
                                           </td>
 
                                           {/* Remaining Spec Columns */}
@@ -5232,7 +5232,7 @@ export function ProductRatesScreen({
                               }}
                             >
                               {lang === "ur"
-                                ? "یونٹ = روپے · فی ۴۰ کلو"
+                                ? "یونٹ = روپے · فی 40 کلو"
                                 : "Unit = Rs. · Unit = (40 kg)"}
                             </span>
                             <button
@@ -5520,10 +5520,10 @@ export function ProductRatesScreen({
                   <div className="relative flex items-center justify-between gap-1.5 w-full pb-2 border-b border-[#E8EFEC]">
                     <div className="flex items-center gap-1.5 flex-1">
                       {[
-                        { id: "15m", labelEn: "15m", labelUr: "۱۵ منٹ" },
-                        { id: "1h", labelEn: "1h", labelUr: "۱ گھنٹہ" },
-                        { id: "4h", labelEn: "4h", labelUr: "۴ گھنٹے" },
-                        { id: "1D", labelEn: "1D", labelUr: "۱ دن" },
+                        { id: "15m", labelEn: "15m", labelUr: "15 منٹ" },
+                        { id: "1h", labelEn: "1h", labelUr: "1 گھنٹہ" },
+                        { id: "4h", labelEn: "4h", labelUr: "4 گھنٹے" },
+                        { id: "1D", labelEn: "1D", labelUr: "1 دن" },
                       ].map((tf) => {
                         const isTfActive = stockTimeframe === tf.id;
                         return (
@@ -5578,11 +5578,11 @@ export function ProductRatesScreen({
                               style={{ boxShadow: "0 10px 25px -3px rgba(0,0,0,0.18)" }}
                             >
                               {[
-                                { id: "1W", labelEn: "1 Week", labelUr: "۱ ہفتہ" },
-                                { id: "1M", labelEn: "1 Month", labelUr: "۱ ماہ" },
-                                { id: "3M", labelEn: "3 Months", labelUr: "۳ ماہ" },
-                                { id: "6M", labelEn: "6 Months", labelUr: "۶ ماہ" },
-                                { id: "1Y", labelEn: "1 Year", labelUr: "۱ سال" },
+                                { id: "1W", labelEn: "1 Week", labelUr: "1 ہفتہ" },
+                                { id: "1M", labelEn: "1 Month", labelUr: "1 ماہ" },
+                                { id: "3M", labelEn: "3 Months", labelUr: "3 ماہ" },
+                                { id: "6M", labelEn: "6 Months", labelUr: "6 ماہ" },
+                                { id: "1Y", labelEn: "1 Year", labelUr: "1 سال" },
                               ].map((opt) => (
                                 <button
                                   key={opt.id}
@@ -6422,10 +6422,10 @@ export function ProductRatesScreen({
                   <div className="relative flex items-center justify-between gap-1.5 w-full pb-2 border-b border-[#E8EFEC]">
                     <div className="flex items-center gap-1.5 flex-1">
                       {[
-                        { id: "15m", labelEn: "15m", labelUr: "۱۵ منٹ" },
-                        { id: "1h", labelEn: "1h", labelUr: "۱ گھنٹہ" },
-                        { id: "4h", labelEn: "4h", labelUr: "۴ گھنٹے" },
-                        { id: "1D", labelEn: "1D", labelUr: "۱ دن" },
+                        { id: "15m", labelEn: "15m", labelUr: "15 منٹ" },
+                        { id: "1h", labelEn: "1h", labelUr: "1 گھنٹہ" },
+                        { id: "4h", labelEn: "4h", labelUr: "4 گھنٹے" },
+                        { id: "1D", labelEn: "1D", labelUr: "1 دن" },
                       ].map((tf) => {
                         const isTfActive = stockTimeframe === tf.id;
                         return (
@@ -6479,11 +6479,11 @@ export function ProductRatesScreen({
                               style={{ boxShadow: "0 10px 25px -3px rgba(0,0,0,0.18)" }}
                             >
                               {[
-                                { id: "1W", labelEn: "1 Week", labelUr: "۱ ہفتہ" },
-                                { id: "1M", labelEn: "1 Month", labelUr: "۱ ماہ" },
-                                { id: "3M", labelEn: "3 Months", labelUr: "۳ ماہ" },
-                                { id: "6M", labelEn: "6 Months", labelUr: "۶ ماہ" },
-                                { id: "1Y", labelEn: "1 Year", labelUr: "۱ سال" },
+                                { id: "1W", labelEn: "1 Week", labelUr: "1 ہفتہ" },
+                                { id: "1M", labelEn: "1 Month", labelUr: "1 ماہ" },
+                                { id: "3M", labelEn: "3 Months", labelUr: "3 ماہ" },
+                                { id: "6M", labelEn: "6 Months", labelUr: "6 ماہ" },
+                                { id: "1Y", labelEn: "1 Year", labelUr: "1 سال" },
                               ].map((opt) => (
                                 <button
                                   key={opt.id}
@@ -7043,7 +7043,7 @@ export function ProductRatesScreen({
                     label: lang === "ur" ? "آج" : "Today",
                     dateLabel:
                       lang === "ur"
-                        ? "۱۷ اگست ۲۰۲۶ · منگل"
+                        ? "17 اگست 2026 · منگل"
                         : "14 Sep 2026 · Monday",
                     sub:
                       lang === "ur"
@@ -7056,7 +7056,7 @@ export function ProductRatesScreen({
                     label: lang === "ur" ? "گزشتہ کل" : "Yesterday",
                     dateLabel:
                       lang === "ur"
-                        ? "۱۶ اگست ۲۰۲۶ · پیر"
+                        ? "16 اگست 2026 · پیر"
                         : "13 Sep 2026 · Sunday",
                     sub: lang === "ur" ? "پچھلے دن کے نرخ" : "Previous day rates",
                     icon: "",
@@ -7065,7 +7065,7 @@ export function ProductRatesScreen({
                     id: "range" as const,
                     label: lang === "ur" ? "اس ہفتے" : "This Week",
                     dateLabel:
-                      lang === "ur" ? "۰۸ تا ۱۴ ستمبر ۲۰۲۶" : "08 – 14 Sep 2026",
+                      lang === "ur" ? "08 تا 14 ستمبر 2026" : "08 – 14 Sep 2026",
                     sub:
                       lang === "ur"
                         ? "متعدد دنوں کا موازنہ"

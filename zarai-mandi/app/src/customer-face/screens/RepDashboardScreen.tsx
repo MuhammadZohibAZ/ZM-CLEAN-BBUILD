@@ -228,7 +228,7 @@ export function RepDashboardScreen({
             </span>
             <h3 className="text-xl font-black text-[#087F63]">PKR 14,200</h3>
             <span className="text-[10px] text-[#52635F] font-semibold">
-              {lang === "ur" ? "۱۵ فیصد ریونیو شیئر" : "15% Revenue Share"}
+              {lang === "ur" ? "15 فیصد ریونیو شیئر" : "15% Revenue Share"}
             </span>
           </div>
 
@@ -291,7 +291,7 @@ export function RepDashboardScreen({
                 {lang === "ur" ? "نیا ممبر شامل کریں" : "Onboard Member"}
               </p>
               <p className="text-[10px] text-[#52635F]">
-                {lang === "ur" ? "۱۵ فیصد کمیشن کمائیں" : "Earn 15% commission"}
+                {lang === "ur" ? "15 فیصد کمیشن کمائیں" : "Earn 15% commission"}
               </p>
             </button>
           </div>

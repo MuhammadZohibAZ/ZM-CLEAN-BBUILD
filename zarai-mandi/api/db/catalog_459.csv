@@ -2,10 +2,10 @@ id,division,by_product
 1,Wheat,Barley
 2,Wheat,Wheat Bran
 3,Wheat,Flour
-4,Wheat,Flour Special
+4,Wheat,Special Flour
 5,Wheat,Oat
-6,Wheat,Refined Flour
-7,Wheat,Sooji
+6,Wheat,Maida
+7,Wheat,Semolina
 8,Wheat,Sorghum
 9,Wheat,Straw
 10,Wheat,Wheat
@@ -23,13 +23,13 @@ id,division,by_product
 22,Millet,Millet - Grade A
 23,Millet,Millet - Grade B
 24,Millet,Millet Grade C
-25,Cotton,Cottonseed
-26,Cotton,Cottonseed Cake
-27,Cotton,Cottonseed Oil
+25,Cotton,Banola
+26,Cotton,Banola Khal
+27,Cotton,Banola Oil
 28,Cotton,Lint Cotton
-29,Cotton,Seed Cotton - Grade A
-30,Cotton,Seed Cotton - Grade B
-31,Cotton,Seed Cotton - Grade C
+29,Cotton,Phutti Grade A
+30,Cotton,Phutti Grade B
+31,Cotton,Phutti Grade C
 32,Paddy,Paddy
 33,Paddy,Paddy 1509
 34,Paddy,Paddy 1692
@@ -93,9 +93,9 @@ id,division,by_product
 92,Dates,Rangkat Nar Chuara
 93,Dates,Sharifa Dates
 94,Dates,Zahidi Dates
-95,Mustard,Mustard Cake
-96,Mustard,Mustard Oil
-97,Mustard,Mustard Seed
+95,Mustard,Sarson Khal
+96,Mustard,Sarson Oil
+97,Mustard,Sarson Seed
 98,Spices,Black Pepper
 99,Spices,Black Pepper Powder
 100,Spices,Cinnamon
@@ -147,22 +147,22 @@ id,division,by_product
 146,Pulses,Yellow Peas
 147,Sugarcane/Sugar,Akbari Mandi - Sugar (Cheeni)
 148,Sugarcane/Sugar,Jaggery
-149,Sugarcane/Sugar,Refined Sugar
-150,Sugarcane/Sugar,Shakkar
+149,Sugarcane/Sugar,Cheeni
+150,Sugarcane/Sugar,Shakar
 151,Sugarcane/Sugar,Sugar Cane
 152,Sugarcane/Sugar,sugar(mill)
 153,Sugarcane/Sugar,sugar(retail)
 154,Sugarcane/Sugar,sugar(wholesale)
 155,Edible Oil,Taara Meera-Oil
-156,Edible Oil,Taara Meera
+156,Edible Oil,Taara Meera Seed
 157,Edible Oil,Canola Meal
 158,Edible Oil,Canola Oil
 159,Edible Oil,Canola Seed
 160,Edible Oil,Castor Bean
-161,Edible Oil,Soybean Meal
-162,Edible Oil,Soybean Oil
-163,Edible Oil,Soybean Oil - Washed
-164,Edible Oil,Soyabean/Soyabean Seed
+161,Edible Oil,Soyabean Meal
+162,Edible Oil,Soyabean Oil
+163,Edible Oil,Soyabean Oil - Washed
+164,Edible Oil,Soyabean Seed
 165,Edible Oil,Sunflower Meal
 166,Edible Oil,Sunflower Oil
 167,Edible Oil,Sunflower Seed
@@ -216,7 +216,7 @@ id,division,by_product
 215,Livestock,Feed / Moong Katta
 216,Livestock,Feed / Mustard Seed Cake
 217,Livestock,Feed / Mustard Seed Cake Cutter (Sarson Khal Cutter)
-218,Livestock,Rhode Grass
+218,Livestock,Rhodes Grass
 219,Livestock,Feed / Rice Polish (Chawal Polish)
 220,Livestock,Feed / Sorghum
 221,Livestock,Sorghum (Jowar) - Feed
@@ -310,18 +310,18 @@ id,division,by_product
 309,Fruits,Kharbooza
 310,Fruits,Mandrin Orange
 311,Fruits,Mango Almas
-312,Fruits,Mango Anwer Ratul
-313,Fruits,Mango Black Chunsa
-314,Fruits,Mango Dasheri
+312,Fruits,Mango Anwar Ratol
+313,Fruits,Mango Black Chausa
+314,Fruits,Mango Daseri
 315,Fruits,Mango Fajri
 316,Fruits,Mango Langra
 317,Fruits,Mango Saroli
 318,Fruits,Mango Sindhri
 319,Fruits,Mango Surmai
-320,Fruits,Mango White Chunsa
+320,Fruits,Mango White Chausa
 321,Fruits,Mausambi
 322,Fruits,Nashpati
-323,Fruits,Oranges
+323,Fruits,Orange
 324,Fruits,Papaya
 325,Fruits,Peach
 326,Fruits,Pineapple
@@ -342,16 +342,16 @@ id,division,by_product
 341,Vegetable,Red Desi Chilli
 342,Vegetable,Chinese Carrot
 343,Vegetable,Cucumber
-344,Vegetable,Garlic Desi
-345,Vegetable,Lemon Desi
+344,Vegetable,Desi Garlic
+345,Vegetable,Desi Lemon
 346,Vegetable,Galic Harni
 347,Vegetable,Garlic China
 348,Vegetable,Garlic G1
 349,Vegetable,Ginger
-350,Vegetable,Brinjal Gol
+350,Vegetable,Gol Brinjal
 351,Vegetable,Guar
 352,Vegetable,Lemon China
-353,Vegetable,Brinjal Lamba
+353,Vegetable,Long Brinjal
 354,Vegetable,Okra
 355,Vegetable,Onion - Grade A
 356,Vegetable,Onion - Grade B
@@ -383,9 +383,8 @@ id,division,by_product
 382,Vegetable,Potato (Sufaid)
 383,Vegetable,Ridge Gourd
 384,Vegetable,Round Gourd
-385,Vegetable,Salad Leaves
+385,Vegetable,Salad Leaf
 386,Vegetable,Spinach
-387,Vegetable,Shakar Qandi
 388,Vegetable,Sweet Potato
 389,Vegetable,Tomato (Grade A)
 390,Vegetable,Tomato (Grade B)

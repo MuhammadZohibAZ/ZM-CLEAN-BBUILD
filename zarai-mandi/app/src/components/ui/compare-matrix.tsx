@@ -2,6 +2,14 @@ import * as React from "react";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { cn } from "@/lib/utils";
+import { useLang } from "@/customer-face/shared/i18n/LangProvider";
+
+/** English/Urdu UI text, plus Urdu for names from the data (byproducts, attribute values). */
+function useMatrixText() {
+  const { lang, tc } = useLang();
+  const ur = lang === "ur";
+  return { L: (en: string, urText: string) => (ur ? urText : en), N: (name: string) => (ur ? tc(name) : name) };
+}
 
 /**
  * Comparison matrix — a table of tables, adapted from the "DarkMatrix" plan
@@ -313,19 +321,20 @@ function SyncScroller({
 }
 
 function SpecialChip({ special, color, byproduct, compact = false }: { special: MatrixSpecial; color: string; byproduct: string; compact?: boolean }) {
+  const { L, N } = useMatrixText();
   const choosable = (special.options?.length ?? 0) > 1 && !!special.onChange;
   return (
     <span
       className="relative inline-flex max-w-full items-center gap-1 self-start rounded-full py-[2px] pl-[3px] pr-2 text-[10.5px] font-extrabold leading-tight"
       style={{ background: `${color}1f`, color, boxShadow: `inset 0 0 0 1px ${color}40` }}
-      title={`${special.label}: ${special.value}`}
+      title={`${N(special.label)}: ${N(special.value)}`}
     >
       {!compact && (
         <span className="shrink-0 rounded-full px-1.5 py-px text-[8.5px] font-bold uppercase tracking-[0.04em] text-white" style={{ background: color }}>
-          {special.label}
+          {N(special.label)}
         </span>
       )}
-      <span className="truncate">{special.value}</span>
+      <span className="truncate">{N(special.value)}</span>
       {choosable && (
         <>
           <ChevronDown className="size-3 shrink-0" aria-hidden />
@@ -337,7 +346,7 @@ function SpecialChip({ special, color, byproduct, compact = false }: { special: 
           >
             {special.options!.map((o) => (
               <option key={o.value} value={o.value}>
-                {o.value} · {o.count} report{o.count === 1 ? "" : "s"}
+                {N(o.value)} · {L(`${o.count} report${o.count === 1 ? "" : "s"}`, `${o.count} رپورٹ`)}
               </option>
             ))}
           </select>
@@ -516,6 +525,7 @@ function ColumnHeads({
   sync: Sync;
   showIndicator: boolean;
 }) {
+  const { L, N } = useMatrixText();
   return (
     <div className="relative">
       <SyncScroller sync={sync} group={group} columnWidth={columnWidth} style={{ height }}>
@@ -527,18 +537,18 @@ function ColumnHeads({
           >
             <span
               className={cn("block font-extrabold leading-tight text-[#183B34]", narrow ? "line-clamp-2 text-[10.5px] [overflow-wrap:anywhere]" : cn("truncate", compact ? "text-[11px]" : "text-[12px]"))}
-              title={c.title}
+              title={N(c.title)}
             >
-              {c.title}
+              {N(c.title)}
             </span>
             {c.special ? (
               <SpecialChip special={c.special} color={color} byproduct={c.title} compact={narrow} />
             ) : (
-              <span className="block truncate text-[9.5px] font-medium leading-tight text-[#8A9A95]">{c.subtitle || (narrow ? "—" : "No special attribute")}</span>
+              <span className="block truncate text-[9.5px] font-medium leading-tight text-[#8A9A95]">{c.subtitle || (narrow ? "—" : L("No special attribute", "کوئی خاص وصف نہیں"))}</span>
             )}
           </div>
         ))}
-        {!columns.length && <div className="px-2 py-2 text-[10.5px] text-[#7A8A85]">No reports</div>}
+        {!columns.length && <div className="px-2 py-2 text-[10.5px] text-[#7A8A85]">{L("No reports", "کوئی رپورٹ نہیں")}</div>}
       </SyncScroller>
       {showIndicator && (
         <div className="pointer-events-none absolute inset-x-0 bottom-0">
@@ -687,6 +697,7 @@ function SectionShell({
 }
 
 export function CompareMatrix({ groups, sections, eyebrow, title, context, stickyTop = 0, className }: CompareMatrixProps) {
+  const text = useMatrixText();
   const [ref, width] = useContainerWidth<HTMLDivElement>();
   const { sync, indexes } = useScrollSync();
   // Section body has 4px side padding.
@@ -787,7 +798,7 @@ export function CompareMatrix({ groups, sections, eyebrow, title, context, stick
               </SectionShell>
             );
           })}
-          {!shownSections.length && <p className="rounded-[18px] border border-[#D5E2DD] bg-white px-4 py-5 text-center text-[12px] text-[#52635F]">No reports on this date.</p>}
+          {!shownSections.length && <p className="rounded-[18px] border border-[#D5E2DD] bg-white px-4 py-5 text-center text-[12px] text-[#52635F]">{text.L("No reports on this date.", "اس تاریخ کی کوئی رپورٹ نہیں۔")}</p>}
         </div>
       )}
     </div>
@@ -871,6 +882,7 @@ function MandiTile({
   const body = React.useRef<HTMLElement | null>(null);
   const count = pane.columns.length;
   const tight = columnWidth < 120;
+  const text = useMatrixText();
   return (
     <div
       className="min-w-0 shrink-0 overflow-hidden rounded-[12px] bg-white"
@@ -918,11 +930,11 @@ function MandiTile({
                     </div>
                   );
                 })}
-                {!c.entries.length && <p className="px-2 py-3 text-[10.5px] text-[#7A8A85]">No mandi reports</p>}
+                {!c.entries.length && <p className="px-2 py-3 text-[10.5px] text-[#7A8A85]">{text.L("No mandi reports", "منڈی کی کوئی رپورٹ نہیں")}</p>}
               </div>
               <div className="border-t border-[#EEF3F0] bg-[#F4FAF7] px-1.5 py-1 text-[9px] font-semibold text-[#52635F]">
-                {c.entries.length} mandi{c.entries.length === 1 ? "" : "s"}
-                {c.entries.length > MANDI_LIST_ROWS ? " · scroll" : ""}
+                {text.L(`${c.entries.length} mandi${c.entries.length === 1 ? "" : "s"}`, `${c.entries.length} منڈیاں`)}
+                {c.entries.length > MANDI_LIST_ROWS ? text.L(" · scroll", " · سکرول کریں") : ""}
               </div>
             </div>
           );

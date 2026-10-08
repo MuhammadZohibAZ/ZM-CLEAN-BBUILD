@@ -3,6 +3,9 @@ import { useState, useMemo } from "react";
 import { ByproductDatePill } from "../components/ByproductDatePill";
 import { ByProductNationalCard } from "../components/ByProductNationalCard";
 import { ProductIcon } from "../components/ProductIcon";
+import { ByProductAttributeFilterScreen } from "./byproduct-testers/ByProductAttributeFilterScreen";
+import { ByProductRateTypeFilterScreen } from "./byproduct-testers/ByProductRateTypeFilterScreen";
+import { ScreenVariantSwitch, useByproductScreenVariant } from "./byproduct-testers/ScreenVariantSwitch";
 import {
   buildByproductCards,
   byproductsForSelection,
@@ -54,6 +57,10 @@ export function ByProductCombinedScreen({
   const isVerticalLevelEntry = products.length > 1;
 
   const { voiceEnabled, lang, tc: tcL, tm: tmL } = useLang();
+
+  // Testing: switch the card area between the original grid and the two
+  // filter variants in ./byproduct-testers (remove with that folder).
+  const [screenVariant, setScreenVariant] = useByproductScreenVariant();
 
   const currentLocScope: LocationScope = locationScope || { kind: 'pakistan', label: 'All Pakistan' };
 
@@ -182,7 +189,24 @@ export function ByProductCombinedScreen({
         )}
       </header>
 
+      {screenVariant !== 'original' && (() => {
+        const testerProps = {
+          dbDivision,
+          activeProduct,
+          byproducts,
+          curDate,
+          curDateStr,
+          locationScope: currentLocScope,
+          push,
+        };
+        const testerKey = `${dbDivision}-${activeProduct?.product}`;
+        return screenVariant === 'attribute'
+          ? <ByProductAttributeFilterScreen key={testerKey} {...testerProps} />
+          : <ByProductRateTypeFilterScreen key={testerKey} {...testerProps} />;
+      })()}
+
       {/* By-Product Cards — 4-card visible grid (2 columns x 2 rows fit comfortably on screen) */}
+      {screenVariant === 'original' && (
       <div
         className="flex-1 overflow-y-auto px-2.5 sm:px-3 pt-2"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 96px)', scrollbarWidth: 'none' }}
@@ -216,6 +240,9 @@ export function ByProductCombinedScreen({
           </div>
         )}
       </div>
+      )}
+
+      <ScreenVariantSwitch variant={screenVariant} onChange={setScreenVariant} />
     </div>
   );
 }

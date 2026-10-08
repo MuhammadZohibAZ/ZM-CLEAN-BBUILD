@@ -65,6 +65,38 @@ export function productByproducts(vertical: string, product: string): string[] {
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
 
+// Main by-products of a product, shown first (in this order) on its by-product
+// screen. Products not listed fall back to mainByproductRank's naming rule.
+const MAIN_BYPRODUCTS: Record<string, string[]> = {
+  cotton: ['Phutti Grade A', 'Phutti Grade B', 'Phutti Grade C'],
+  mustard: ['Sarson Seed', 'Sarson Oil', 'Sarson Khal'],
+  canola: ['Canola Seed', 'Canola Oil', 'Canola Meal'],
+  sunflower: ['Sunflower Seed', 'Sunflower Oil', 'Sunflower Meal'],
+  soybean: ['Soyabean Seed', 'Soyabean Oil', 'Soyabean Meal'],
+  sugar: ['Sugar Cane', 'Cheeni'],
+  paddy: ['Paddy 1509', 'Paddy Irri 6', 'Paddy Irri 9'],
+  rice: ['1121 Steam', 'Sella 1121-1', '1121 Basmati-1'],
+};
+
+/**
+ * Sort rank of a by-product within its product: listed main by-products first,
+ * otherwise the by-product named like the product (Wheat -> Wheat), then its
+ * grades in order (Maize - Grade A, B, C, ...). Everything else ranks last.
+ */
+export function mainByproductRank(product: string | undefined, byproduct: string): number {
+  const p = norm(product || '');
+  const b = norm(byproduct);
+  const listed = MAIN_BYPRODUCTS[p];
+  if (listed) {
+    const i = listed.findIndex((x) => norm(x) === b);
+    return i === -1 ? Number.MAX_SAFE_INTEGER : i;
+  }
+  if (!p) return Number.MAX_SAFE_INTEGER;
+  if (b === p) return 0;
+  const grade = b.match(new RegExp(`^${p}grade([a-d])$`));
+  return grade ? 1 + grade[1].charCodeAt(0) - 97 : Number.MAX_SAFE_INTEGER;
+}
+
 /** Catalog by-products that belong to one sub-product of a vertical (e.g. Fruits -> Mango). */
 function filterCatalogForSubProduct(rawCatalog: ByProductCatalogRow[], sel: ProductSel | undefined): string[] {
   const subProd = sel?.product || '';
@@ -154,8 +186,12 @@ export function buildByproductCards(
     return { sel: cardSel, bp, stats };
   });
 
-  // Sort by updated time: 1m ago (most recent) first, followed by 4m, 7m, 10m, etc.
+  // Main by-products first (Wheat, Phutti Grade A/B/C, ...), then by updated
+  // time: 1m ago (most recent) first, followed by 4m, 7m, 10m, etc.
   return list.sort((a, b) => {
+    const rankA = mainByproductRank(a.sel.product, a.bp);
+    const rankB = mainByproductRank(b.sel.product, b.bp);
+    if (rankA !== rankB) return rankA - rankB;
     // Prioritize cards with data first
     if (a.stats.hasData !== b.stats.hasData) {
       return a.stats.hasData ? -1 : 1;

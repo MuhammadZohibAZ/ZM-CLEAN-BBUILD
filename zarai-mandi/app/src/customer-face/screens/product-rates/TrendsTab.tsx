@@ -347,12 +347,12 @@ export function TrendsTab({
   const moverList = moverSide === "up" ? gainers : losers;
 
   const rangeLabel: Record<Range, string> = {
-    "1D": f.tx("1D", "۱د"),
-    "1W": f.tx("1W", "۱ہ"),
-    "2W": f.tx("2W", "۲ہ"),
-    "1M": f.tx("1M", "۱م"),
-    "6M": f.tx("6M", "۶م"),
-    "1Y": f.tx("1Y", "۱س"),
+    "1D": f.tx("1D", "1د"),
+    "1W": f.tx("1W", "1ہ"),
+    "2W": f.tx("2W", "2ہ"),
+    "1M": f.tx("1M", "1م"),
+    "6M": f.tx("6M", "6م"),
+    "1Y": f.tx("1Y", "1س"),
     CUSTOM: f.tx("Custom", "مخصوص"),
   };
   const rateActive = compare || focus !== ALL_RATES;
@@ -500,8 +500,8 @@ export function TrendsTab({
                   <span style={{ fontSize: 12.5, fontWeight: 500, color: DK.sub, lineHeight: f.lh, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {isPrice
                       ? compare
-                        ? f.tx(`${shortRate(tr(set[0]))} · average per 40 kg`, `${shortRate(tr(set[0]))} · اوسط فی ۴۰ کلو`)
-                        : `${focus === ALL_RATES ? f.tx("All rates", "تمام ریٹ") : shortRate(tr(focus))} · ${f.tx("average per 40 kg", "اوسط فی ۴۰ کلو")}`
+                        ? f.tx(`${shortRate(tr(set[0]))} · average per 40 kg`, `${shortRate(tr(set[0]))} · اوسط فی 40 کلو`)
+                        : `${focus === ALL_RATES ? f.tx("All rates", "تمام ریٹ") : shortRate(tr(focus))} · ${f.tx("average per 40 kg", "اوسط فی 40 کلو")}`
                       : f.tx("Arrivals · all rate types", "آمد · تمام ریٹ")}
                   </span>
                   {isPrice && !compare && (
@@ -662,7 +662,7 @@ export function TrendsTab({
                       unit={isPrice ? "rupees" : "bags"}
                       color={C.brand}
                       points={intraday}
-                      ariaLabel={f.tx("The selected day on a 24-hour axis", "منتخب دن ۲۴ گھنٹے کے محور پر")}
+                      ariaLabel={f.tx("The selected day on a 24-hour axis", "منتخب دن 24 گھنٹے کے محور پر")}
                     />
                   </div>
                 ) : isPrice && chartType === "candles" && !compare ? (

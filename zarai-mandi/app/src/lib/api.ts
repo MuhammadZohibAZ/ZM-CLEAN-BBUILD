@@ -25,7 +25,11 @@ export interface CardStats {
   arrivalCoverage?: number;
   specialAttr: CardSpecialAttr | null;
   specialAttrs?: CardSpecialAttr[];
+  /** Set on split cards (tester screens): the attribute value or rate type this card covers. */
+  split?: { by: CardSplitBy; value: string } | null;
 }
+
+export type CardSplitBy = "attribute" | "rateType";
 
 export interface ByProductCatalogRow {
   id: number;
@@ -120,6 +124,18 @@ export function fetchVerticalCardStats(division: string, opts: LocationFilter = 
   const query = qs({ date: opts.date, locationKind: opts.locationKind, locationLabel: opts.locationLabel });
   return cached(`card-stats:${division}:${query}`, () =>
     getJson<CardStats[]>(`/api/verticals/${encodeURIComponent(division)}/card-stats${query}`)
+  );
+}
+
+/** One card per by-product x special-attribute value, or per by-product x rate type. */
+export function fetchVerticalSplitCardStats(
+  division: string,
+  by: CardSplitBy,
+  opts: LocationFilter = {},
+): Promise<CardStats[]> {
+  const query = qs({ by, date: opts.date, locationKind: opts.locationKind, locationLabel: opts.locationLabel });
+  return cached(`card-stats-split:${division}:${query}`, () =>
+    getJson<CardStats[]>(`/api/verticals/${encodeURIComponent(division)}/card-stats-split${query}`)
   );
 }
 

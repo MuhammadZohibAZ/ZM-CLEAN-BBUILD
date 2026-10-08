@@ -159,13 +159,13 @@ export function MandiSection({
     change: f.tx("Biggest change", "سب سے بڑی تبدیلی"),
   };
   const intLabel = (i: ChangeInterval) =>
-    i === 1 ? f.tx("Change: 1 day", "تبدیلی: ۱ دن") : f.tx(`Change: ${i} days`, `تبدیلی: ${f.digits(i)} دن`);
+    i === 1 ? f.tx("Change: 1 day", "تبدیلی: 1 دن") : f.tx(`Change: ${i} days`, `تبدیلی: ${f.digits(i)} دن`);
 
   const intOptionsLabel: Record<ChangeInterval, string> = {
-    1: f.tx("1 day", "۱ دن"),
-    3: f.tx("3 days", "۳ دن"),
-    7: f.tx("7 days", "۷ دن"),
-    30: f.tx("30 days", "۳۰ دن"),
+    1: f.tx("1 day", "1 دن"),
+    3: f.tx("3 days", "3 دن"),
+    7: f.tx("7 days", "7 دن"),
+    30: f.tx("30 days", "30 دن"),
   };
 
   const pillBtn = (active: boolean): CSSProperties => ({
@@ -263,7 +263,9 @@ export function MandiSection({
   const isArrivalSorted = sort === "arrivalHigh" || sort === "arrivalLow" || sort === "arrival";
 
   const table = (
-    <div data-zm-hscroll className="zm-hide-scrollbar" style={{ overflow: "auto", maxHeight: fullscreen ? "none" : 440, flex: fullscreen ? 1 : undefined, minHeight: 0, paddingBottom: fullscreen ? "env(safe-area-inset-bottom)" : undefined, overscrollBehavior: "contain" }}>
+    // The table is laid out left-to-right in both languages (mandi pinned on the
+    // left); the scroll box must match or Urdu opens it scrolled to the far end.
+    <div data-zm-hscroll className="zm-hide-scrollbar" style={{ direction: "ltr", overflow: "auto", maxHeight: fullscreen ? "none" : 440, flex: fullscreen ? 1 : undefined, minHeight: 0, paddingBottom: fullscreen ? "env(safe-area-inset-bottom)" : undefined, overscrollBehavior: "contain" }}>
       <table style={{ borderCollapse: "separate", borderSpacing: 0, minWidth: 640, width: "100%", fontSize: 13, fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate" }}>
         <thead>
           <tr>
@@ -286,7 +288,7 @@ export function MandiSection({
             </th>
             <th style={{ ...thBase, minWidth: 70 }}>
               {headBtn(
-                sort === "change" ? f.tx(`Change (${interval}D) ↕`, `تبدیلی (${f.digits(interval)}د) ↕`) : f.tx(`Change (${interval}D)`, `تبدیلی (${f.digits(interval)}د)`),
+                sort === "change" ? f.tx(`Change (${interval}D) ↕`, `تبدیلی (${f.digits(interval)} دن) ↕`) : f.tx(`Change (${interval}D)`, `تبدیلی (${f.digits(interval)} دن)`),
                 sort === "change",
                 () => setPicker("interval"),
               )}
@@ -303,7 +305,7 @@ export function MandiSection({
               return (
                 <th key={c.key} style={{ ...thBase }}>
                   {headBtn(
-                    v ? (c.key === "unit" ? v : c.key === "quality" ? cleanQuality(v) : attrValue(f, t, c.key as AttrKey, v)) : c.label,
+                    v ? (c.key === "unit" ? f.unit(v) : c.key === "quality" ? t(cleanQuality(v)) : attrValue(f, t, c.key as AttrKey, v)) : c.label,
                     !!v,
                     () => setPicker(`col:${c.key}`),
                   )}
@@ -336,7 +338,7 @@ export function MandiSection({
                 <td style={{ ...td, color: r.arrival > 0 ? C.arrival : C.faint, fontWeight: 600, padding: "8px 6px", fontSize: 12.5 }}>{r.arrival > 0 ? f.num(r.arrival) : "—"}</td>
                 {specCols.map((c) => (
                   <td key={c.key} style={{ ...td, padding: "8px 10px" }}>
-                    {c.key === "unit" ? r.arrivalUnit : c.key === "quality" ? cleanQuality(r.quality) || "—" : r[c.key] ? attrValue(f, t, c.key, r[c.key] as string) : "—"}
+                    {c.key === "unit" ? f.unit(r.arrivalUnit || "") || "—" : c.key === "quality" ? t(cleanQuality(r.quality)) || "—" : r[c.key] ? attrValue(f, t, c.key, r[c.key] as string) : "—"}
                   </td>
                 ))}
               </tr>
@@ -370,8 +372,8 @@ export function MandiSection({
           <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700, letterSpacing: "-0.01em", lineHeight: f.ur ? 1.6 : 1.2 }}>{sectionHeading}</h2>
           <span style={{ fontSize: 12, fontWeight: 500, color: C.muted, lineHeight: f.lh }}>
             {regionLabel
-              ? f.tx(`${mandiCount} location${mandiCount === 1 ? "" : "s"} in ${regionLabel} · PKR per 40 kg`, `${regionLabel} میں ${f.digits(mandiCount)} مقامات · روپے فی ۴۰ کلو`)
-              : f.tx(`${mandiCount} location${mandiCount === 1 ? "" : "s"} · PKR per 40 kg`, `${f.digits(mandiCount)} مقامات · روپے فی ۴۰ کلو`)}
+              ? f.tx(`${mandiCount} location${mandiCount === 1 ? "" : "s"} in ${regionLabel} · PKR per 40 kg`, `${regionLabel} میں ${f.digits(mandiCount)} مقامات · روپے فی 40 کلو`)
+              : f.tx(`${mandiCount} location${mandiCount === 1 ? "" : "s"} · PKR per 40 kg`, `${f.digits(mandiCount)} مقامات · روپے فی 40 کلو`)}
           </span>
         </div>
 
@@ -576,7 +578,7 @@ export function MandiSection({
       {picker?.startsWith("col:") && picker !== "col:rate" && (() => {
         const key = picker.slice(4) as ValueCol;
         const label = specCols.find((c) => c.key === key)?.label ?? key;
-        const show = (v: string) => (key === "unit" ? v : key === "quality" ? cleanQuality(v) : attrValue(f, t, key as AttrKey, v));
+        const show = (v: string) => (key === "unit" ? f.unit(v) : key === "quality" ? t(cleanQuality(v)) : attrValue(f, t, key as AttrKey, v));
         return (
           <PickerSheet
             f={f}
@@ -671,7 +673,7 @@ export function MandiSection({
               <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
                 <span style={{ fontWeight: 700, fontSize: 15, lineHeight: f.lh, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{f.tx("Mandi rates", "منڈی ریٹس")}</span>
                 <span style={{ fontWeight: 500, fontSize: 12, color: C.muted, lineHeight: f.lh, whiteSpace: "nowrap" }}>
-                  {f.tx(`${f.day(date)} · ${entries.length} rows · PKR per 40 kg`, `${f.day(date)} · ${f.digits(entries.length)} قطاریں · روپے فی ۴۰ کلو`)}
+                  {f.tx(`${f.day(date)} · ${entries.length} rows · PKR per 40 kg`, `${f.day(date)} · ${f.digits(entries.length)} قطاریں · روپے فی 40 کلو`)}
                 </span>
               </div>
               <div role="group" aria-label={f.tx("Orientation", "رخ")} style={{ display: "flex", gap: 2, padding: 3, borderRadius: 12, background: C.track, flexShrink: 0 }}>

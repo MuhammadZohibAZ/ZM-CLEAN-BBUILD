@@ -697,3 +697,5 @@
    the selection footer (Continue / Compare now) rests right above it. */
 .zm-shell .zm-embedded{height:calc(100% - var(--zm-nav-space))}
 .zm-shell .zm-embedded .zm-select-footer{background:#F1F7F4}
+/* Direction icons point the reading way in Urdu */
+:dir(rtl) :is(.zm-icon-arrow, .zm-icon-back, .zm-icon-chevron) { transform: scaleX(-1); }

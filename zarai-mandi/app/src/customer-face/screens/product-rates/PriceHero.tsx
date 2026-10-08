@@ -144,7 +144,7 @@ export function PriceHero({
                 )}
               </div>
               <span style={{ fontSize: 11.5, fontWeight: 500, color: DK.faint, lineHeight: f.lh }}>
-                {f.tx("Average per 40 kg", "اوسط فی ۴۰ کلو")}
+                {f.tx("Average per 40 kg", "اوسط فی 40 کلو")}
                 {change !== null && prevDate ? f.tx(` · vs ${f.day(prevDate)}`, ` · ${f.day(prevDate)} سے`) : ""}
                 {!isLatest ? ` · ${f.day(date, true)}` : ""}
               </span>

@@ -244,7 +244,7 @@ export const ICON_PATHS: Record<string, string> = {
   //  By-product icons – Spices (no spices/ subfolder — fall back to products)
   "Red-Chilli": `${PRODUCTS_PATH}/chillies200.png`,
   "Red-Chilli-Powder": `${PRODUCTS_PATH}/chillies200.png`,
-  "Green-Chilli": `${PRODUCTS_PATH}/chillies200.png`,
+  "Green-Chilli": `${BYPRODUCTS_PATH}/vegetables/Green-Chilli.png`,
   "White-Cumin": `${PRODUCTS_PATH}/spices200.png`,
   "Black-Cumin": `${PRODUCTS_PATH}/spices200.png`,
   Turmeric: `${PRODUCTS_PATH}/spices200.png`,
@@ -378,6 +378,9 @@ export const ICON_PATHS: Record<string, string> = {
   milk2: `${PRODUCTS_PATH}/livestock200.png`,
   "rhode-grass2": `${PRODUCTS_PATH}/livestock200.png`,
   slaughter2: `${PRODUCTS_PATH}/livestock200.png`,
+
+  // Data names for the entries above
+  "Kharbooza": `${PRODUCTS_PATH}/fruits200.png`,
 };
 
 // Map friendly product names to sprite keys
@@ -705,7 +708,95 @@ export const product_SPRITE_KEY: Record<string, string> = {
   // Kiryana specific
   "Rice Polish": "rice",
   "Broken Irri 6": "rice",
+
+  // Data names for the entries above
+  "Phutti Grade A": "Cotton-A",
+  "Phutti Grade B": "Cotton-B",
+  "Phutti Grade C": "Cotton-C",
+  "Banola": "Cotton-Seed",
+  "Banola Oil": "Cotton-Seed-Oil",
+  "Banola Khal": "Cotton-Seed-Cake",
+  "Sarson Seed": "Mustard-Seed",
+  "Sarson Oil": "Mustard-Oil",
+  "Sarson Khal": "Mustard-Cake",
+  "Soyabean Seed": "soybean",
+  "Soyabean Oil": "soybean",
+  "Soyabean Meal": "soybean",
+  "Mango White Chausa": "Mango-White-Chaunsa",
+  "Mango Black Chausa": "Mango-Black-Chaunsa",
+  "Mango Anwar Ratol": "Mango-Anwar-Ratul",
+  "Mango Daseri": "mango",
+  "Mausambi": "Mausambi",
+  "Mandrin Orange": "Oranges",
+  "Kharbooza": "melon",
+  "Potato (Laal)": "Potato-Red",
+  "Potato (Sufaid)": "Potato-White",
+  "Potato (Beej)": "Potato-Seed",
+  "Desi Garlic": "Garlic-Desi",
+  "Garlic China": "Garlic-Chinese",
+  "Galic Harni": "garlic",
+  "Gol Brinjal": "Brinjal-Round",
+  "Long Brinjal": "Brinjal-Long",
+  "Pea": "peas",
+  "Desi Lemon": "lemon",
 };
+
+// Names the keyword rules below get wrong or leave on a generic/wheat icon,
+// matched first. Checked visually against every catalog name.
+const ICONS_ROOT = "/src/icons";
+const NAMED_ICON_RULES: [RegExp, string][] = [
+  [/^edible oils?$/, `${PRODUCTS_PATH}/edible200.png`],
+  [/\b(banola|binola)\b.*\b(khal|cake)\b/, `${BYPRODUCTS_PATH}/cotton/Cotton-Seed-Cake.png`],
+  [/\b(banola|binola)\b.*\b(oil|tail)\b/, `${BYPRODUCTS_PATH}/cotton/Cotton-Seed-Oil.png`],
+  [/^(banola|binola)$/, `${BYPRODUCTS_PATH}/cotton/Cotton-Seed.png`],
+  [/^millet\b/, `${PRODUCTS_PATH}/millet200.png`],
+  [/^(shakar|shakkar)$/, `${BYPRODUCTS_PATH}/sugar/Brown-Sugar.png`],
+  // Milled rice varieties (paddy keeps its own icon)
+  [/^(?!.*paddy).*(\b(basmati|sella|sila|irri|supri|punia|silky|sortex|tota|kernel|kainat)\b|\b(1121|1509|386)\b|\bc-9\b|^pp-7$)/, `${PRODUCTS_PATH}/rice200.png`],
+  [/black pepper|coriander|cumin|cardamom|jaifal|nutmeg/, `${PRODUCTS_PATH}/spices200.png`],
+  [/\b(gram|mash|masoor|moong|moongi|lubya|lentil|chickpea|kidney bean|pigeon pea|yellow peas)\b/, `${PRODUCTS_PATH}/pulses200.png`],
+  [/\bpeach\b/, `${PRODUCTS_PATH}/fruits200.png`],
+  [/\bmango\b/, `${BYPRODUCTS_PATH}/fruits/mango.jpg`],
+  [/\bbanana\b/, `${BYPRODUCTS_PATH}/fruits/banana.jpg`],
+  [/^grapes?$/, `${BYPRODUCTS_PATH}/fruits/grapes.jpg`],
+  [/\bapple\b/, `${ICONS_ROOT}/apple.jpg`],
+  [/green chill?i/, `${BYPRODUCTS_PATH}/vegetables/Green-Chilli.png`],
+  [/\b(galic|garlic) (harni|harnai)\b/, `${BYPRODUCTS_PATH}/vegetables/Garlic-Desi.png`],
+  [/^potato$/, `${BYPRODUCTS_PATH}/vegetables/Potato-White.png`],
+  [/\b(sorghum|jowar)\b/, `${BYPRODUCTS_PATH}/wheat/Sorghum.png`],
+  [/\begg/, `${PRODUCTS_PATH}/livestock200.png`],
+];
+
+// Fertilizers, pesticides and weedicides. Checked before every other rule:
+// names like "Fertilizer" contain "til" (sesame) and "Pak Arab Guara" contains
+// "guar" (vegetable). Codes match whole words so "CAN" never matches "Canola".
+const FERTILIZER_ICON_RULES: [RegExp, string][] = [
+  [/zabardast/, "Zabardast-Urea"],
+  [/urea/, "Urea"],
+  [/\bdap\b/, "DAP"],
+  [/\bnpk\b/, "NPK"],
+  [/\bnp\b/, "NP"],
+  [/\bssp\b/, "SSP"],
+  [/\bmop\b/, "MOP"],
+  [/\btsp\b/, "TSP"],
+  [/\bsop\b/, "SOP-G"],
+  [/ammonium sulphate|amonium sulphate/, "Ammonium-Sulphate"],
+  [/nitrate/, "Ammonium-Nitrate"],
+  [/\bcan\b/, "CAN"],
+  [/guara/, "Pak-Arab-Guara"],
+  [/enrich/, "Enrich"],
+];
+// Agri inputs without their own artwork use the Fertilizer product icon.
+const AGRI_INPUT_NAMES = /fertili|pesticide|weedicide|herbicide|agri.?inputs?|chlorphenapyr|clothianidin|mesotrione|atrazine|metolachlor|glyphosate|zarkhez|\bzinc\b|phosphate/;
+const AGRI_INPUT_VERTICALS = /^(agri.?inputs?|fertili[sz]ers?|pesticides?|weedicides?)$/;
+
+function fertilizerIconSrc(lower: string, vertical?: string | null): string | null {
+  const isAgriInput = AGRI_INPUT_NAMES.test(lower) || AGRI_INPUT_VERTICALS.test((vertical || "").toLowerCase().trim());
+  const rule = FERTILIZER_ICON_RULES.find(([pattern]) => pattern.test(lower));
+  // A bare code ("CAN", "NP") is only a fertilizer when nothing else claims the name.
+  if (rule && (isAgriInput || lower.split(/\s+/).length <= 4)) return ICON_PATHS[rule[1]];
+  return isAgriInput ? ICON_PATHS.fertilizer : null;
+}
 
 export function getproductIconSrc(
   name?: string | null,
@@ -714,9 +805,15 @@ export function getproductIconSrc(
   if (!name && !vertical)
     return ICON_PATHS.wheat || `${PRODUCTS_PATH}/wheat200.png`;
 
-  const n = (name || "").trim();
+  // Catalog keys like "Bottle_Gourd" use underscores for spaces.
+  const n = (name || "").replace(/_/g, " ").trim();
   const lower = n.toLowerCase();
   const clean = lower.replace(/[^a-z0-9]+/g, "");
+
+  const fertilizerIcon = fertilizerIconSrc(lower, vertical);
+  if (fertilizerIcon) return fertilizerIcon;
+  const named = NAMED_ICON_RULES.find(([pattern]) => pattern.test(lower));
+  if (named) return named[1];
 
   // 1. COTTON SPECIALIZED MATCHING
   if (
@@ -992,27 +1089,7 @@ export function getproductIconSrc(
     return ICON_PATHS["Soybean"];
   if (lower.includes("camelina")) return ICON_PATHS["Canola-Seed"];
 
-  // 10. FERTILIZERS SPECIALIZED MATCHING
-  if (lower.includes("urea")) {
-    if (lower.includes("zabardast")) return ICON_PATHS["Zabardast-Urea"];
-    return ICON_PATHS["Urea"];
-  }
-  if (lower.includes("dap")) return ICON_PATHS["DAP"];
-  if (lower.includes("npk")) return ICON_PATHS["NPK"];
-  if (lower.includes("np")) return ICON_PATHS["NP"];
-  if (lower.includes("ssp")) return ICON_PATHS["SSP"];
-  if (lower.includes("mop")) return ICON_PATHS["MOP"];
-  if (lower.includes("tsp")) return ICON_PATHS["TSP"];
-  if (lower.includes("can")) return ICON_PATHS["CAN"];
-  if (lower.includes("sop")) return ICON_PATHS["SOP-G"];
-  if (
-    lower.includes("ammonium sulphate") ||
-    lower.includes("ammonium-sulphate")
-  )
-    return ICON_PATHS["Ammonium-Sulphate"];
-  if (lower.includes("nitrate")) return ICON_PATHS["Ammonium-Nitrate"];
-  if (lower.includes("guara")) return ICON_PATHS["Pak-Arab-Guara"];
-  if (lower.includes("enrich")) return ICON_PATHS["Enrich"];
+  // 10. FERTILIZERS: matched first, see fertilizerIconSrc.
 
   // 11. VEGETABLES SPECIALIZED MATCHING
   if (lower.includes("potato") || lower.includes("aloo")) {

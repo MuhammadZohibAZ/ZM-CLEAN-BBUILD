@@ -303,9 +303,9 @@ export function HomeScreen({
 
   const FAVE_BPS = [
     "Wheat",
-    "Fine Flour",
+    "Maida",
     "Flour",
-    "Bran",
+    "Wheat Bran",
     "Semolina",
     "Straw",
     "Sorghum",
@@ -378,7 +378,10 @@ export function HomeScreen({
         className="relative flex-shrink-0 w-full"
         style={{
           margin: 0,
-          height: "calc(172px + var(--zm-bleed-top))",
+          // Shorter on small screens while the profile banner is shown (172px at 844px tall).
+          height: profileCompleted
+            ? "calc(172px + var(--zm-bleed-top))"
+            : "calc(clamp(136px, 20.34vh, 172px) + var(--zm-bleed-top))",
           borderRadius: "0 0 24px 24px",
           position: "relative",
           zIndex: 20,
@@ -764,6 +767,8 @@ export function HomeScreen({
                   </svg>
                 )}
                 <p
+                  // A phone number reads left-to-right even in Urdu ("0300 1234567").
+                  dir="ltr"
                   style={{
                     color: "#FFFFFF",
                     fontSize: 12.5,
@@ -876,7 +881,8 @@ export function HomeScreen({
               (Only visible when profile is NOT yet completed)
               =================================================== */}
           {!profileCompleted && (
-            <div className="px-4 pt-8">
+            // Top gap shrinks on short screens so Favorites stays above the nav (32px at 844px tall).
+            <div className="px-4" style={{ paddingTop: "clamp(24px, calc(4.5vh - 6px), 32px)" }}>
               <div
                 onClick={() => setCompleteProfileOpen(true)}
                 className="tap-target zm-beam-border zm-beam-border-card cursor-pointer transition active:scale-[0.99] relative overflow-hidden"
@@ -954,7 +960,7 @@ export function HomeScreen({
                         : "Complete Your Profile"}
                     </h3>
                     <p
-                      className="text-[#475F57] leading-snug mt-0.5"
+                      className="text-[#475F57] leading-snug mt-0.5 [@media(max-height:760px)]:truncate"
                       style={{
                         fontSize: lang === "ur" ? 11.5 : 10,
                         fontFamily:
@@ -1123,10 +1129,10 @@ export function HomeScreen({
                       style={{
                         width: profileCompleted
                           ? "clamp(100px, 13vh, 116px)"
-                          : "clamp(92px, 12.2vh, 104px)",
+                          : "clamp(64px, calc(21.47vh - 77px), 104px)",
                         height: profileCompleted
                           ? "clamp(100px, 13vh, 116px)"
-                          : "clamp(92px, 12.2vh, 104px)",
+                          : "clamp(64px, calc(21.47vh - 77px), 104px)",
                         borderRadius: "50%",
                         border: "3px solid #087F63",
                         background: "#F4FAF7",
@@ -1239,10 +1245,10 @@ export function HomeScreen({
                       style={{
                         width: profileCompleted
                           ? "clamp(68px, 8.8vh, 80px)"
-                          : "clamp(62px, 8vh, 74px)",
+                          : "clamp(52px, calc(11.3vh - 22px), 74px)",
                         height: profileCompleted
                           ? "clamp(68px, 8.8vh, 80px)"
-                          : "clamp(62px, 8vh, 74px)",
+                          : "clamp(52px, calc(11.3vh - 22px), 74px)",
                         marginTop: profileCompleted ? 18 : 14,
                         borderRadius: "50%",
                         background: "#E4EFE9",
@@ -1346,7 +1352,7 @@ export function HomeScreen({
             style={{
               position: "relative",
               zIndex: voiceGuideActive ? 45 : 10,
-              paddingTop: profileCompleted ? "10px" : "4px",
+              paddingTop: profileCompleted ? "10px" : "0px",
             }}
           >
             {/* Favorites heading */}
@@ -1470,7 +1476,7 @@ export function HomeScreen({
                     style={{
                       scrollbarWidth: "none",
                       scrollSnapType: "x mandatory",
-                      paddingTop: "6px",
+                      paddingTop: profileCompleted ? "6px" : "2px",
                       paddingBottom: "8px",
                     }}
                   >
@@ -1523,10 +1529,13 @@ export function HomeScreen({
                                 }}
                                 className="flex-shrink-0 zm-beam-border zm-beam-border-card flex flex-col items-center relative tap-target"
                                 style={{
-                                  width: "calc((100% - 16px) / 3)",
-                                  minWidth: "calc((100% - 16px) / 3)",
-                                  maxWidth: "calc((100% - 16px) / 3)",
-                                  height: "clamp(152px, 19.5vh, 176px)",
+                                  // 24px = two 8px gaps + room for the outer cards' tilt
+                                  width: "calc((100% - 24px) / 3)",
+                                  minWidth: "calc((100% - 24px) / 3)",
+                                  maxWidth: "calc((100% - 24px) / 3)",
+                                  height: profileCompleted
+                                    ? "clamp(152px, 19.5vh, 176px)"
+                                    : "clamp(106px, calc(32.2vh - 107px), 176px)",
                                   padding: "6px 5px 8px",
                                   borderRadius: 18,
                                   background: "#FFFFFF",
@@ -1541,7 +1550,9 @@ export function HomeScreen({
                                 <div
                                   style={{
                                     width: "100%",
-                                    height: "clamp(74px, 9.6vh, 88px)",
+                                    height: profileCompleted
+                                      ? "clamp(74px, 9.6vh, 88px)"
+                                      : "clamp(48px, calc(17.5vh - 67px), 88px)",
                                     borderRadius: 13,
                                     background: "#F2F7F4",
                                     border: "1px solid #E1ECE6",

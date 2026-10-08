@@ -121,7 +121,7 @@ export function MandiDetailSheet({
     ...specKeys.map((k) => ({ label: attrLabel(f, k), vals: join(cur.map((r) => r[k])).map((v) => attrValue(f, t, k, v)) })),
     { label: f.tx("Attribute", "خصوصیات"), vals: join(cur.map((r) => r.quality)) },
     { label: f.tx("Arrival", "آمد"), vals: s.arrival > 0 ? [`${f.num(s.arrival)} ${f.tx("bags", "بوریاں")}`] : [] },
-    { label: f.tx("Arrival unit", "آمد کی اکائی"), vals: join(cur.map((r) => r.arrivalUnit)) },
+    { label: f.tx("Arrival unit", "آمد کی اکائی"), vals: join(cur.map((r) => f.unit(r.arrivalUnit || ""))) },
   ].filter((x) => x.vals.length > 0);
 
   const box = (label: string, value: string, valColor: string = C.ink, bg: string = C.surfaceAlt) => (
@@ -270,7 +270,7 @@ export function MandiDetailSheet({
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: C.ink2 }}>
-                <span style={{ color: C.ink, fontWeight: 700 }}>{shortRate(tr(rate))}</span> · {f.tx("per 40 kg", "فی ۴۰ کلو")}
+                <span style={{ color: C.ink, fontWeight: 700 }}>{shortRate(tr(rate))}</span> · {f.tx("per 40 kg", "فی 40 کلو")}
               </span>
               <span style={{ fontFamily: f.display, fontSize: 30, fontWeight: 700, letterSpacing: "-0.02em", lineHeight: f.ur ? 1.8 : 1.1, fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate" }}>
                 {s.min > 0 ? `${f.rs(s.min)} – ${f.num(s.max)}` : "—"}

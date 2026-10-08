@@ -16,6 +16,22 @@ import { CompareMatrix, MandiMatrix, matrixCellKey, matrixSectionId, type MandiE
 import type { PdfBoard, PdfMandiTable } from './report-pdf';
 import { inDevicePreview, requestDeviceOrientation } from '../../lib/device-orientation';
 import './compare.css';
+import { URDU_FONT, useLang } from '../../customer-face/shared/i18n/LangProvider';
+
+/** English/Urdu UI text, Urdu for names from the data, and dates in the current language. */
+function useCompareText() {
+  const { lang, tc } = useLang();
+  const ur = lang === 'ur';
+  const L = (en: string, urText: string) => (ur ? urText : en);
+  const N = (name: string) => (ur ? tc(name) : name);
+  /** Price type ("Mandi") as shown: "Mandi" / "منڈی ریٹ". */
+  const rate = (type: string) => (ur ? tc(`${type} Rate`) : type);
+  const date = (day: string, opts: Intl.DateTimeFormatOptions) =>
+    new Date(day + 'T12:00:00Z').toLocaleDateString(ur ? 'ur-PK-u-nu-latn' : 'en-GB', opts);
+  return { ur, L, N, rate, date };
+}
+/** Language-dependent text used to build the report (screen: current language; PDF: English). */
+interface ReportText { ur: boolean; L: (en: string, urText: string) => string; N: (name: string) => string; rate: (type: string) => string; dayLabel: string }
 function cn(...inputs: ClassValue[]) { return twMerge(clsx(inputs)); }
 
 // Price channels as reported in the market export ("Mandi Rate" → "Mandi"), in display order.
@@ -83,7 +99,7 @@ function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
     news: <><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M7 8h10M7 12h10M7 16h6" /></>, voice: <><rect x="9" y="2" width="6" height="13" rx="3" /><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-4 0h8" /></>,
     chart: <><path d="M3 21h19M5 17V9h3v8m3 0V5h3v12m3 0V2h3v15" /></>, close: <path d="m6 6 12 12M18 6 6 18" />, chevron: <path d="m8 4 8 8-8 8" />,
   };
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
+  return <svg className={`zm-icon-${name}`} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
 }
 
 const unique = <T,>(items: T[]) => [...new Set(items)];
@@ -155,8 +171,9 @@ function downloadFile(name: string, text: string, type = 'text/plain') {
 }
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null), id = useId();
+  const { ur } = useCompareText();
   useEffect(() => { const el = ref.current; el?.showModal(); return () => el?.close(); }, []);
-  return <dialog className="zm-modal" ref={ref} aria-labelledby={id} onCancel={e => { e.preventDefault(); onClose(); }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+  return <dialog className="zm-modal" dir={ur ? 'rtl' : 'ltr'} style={ur ? { fontFamily: URDU_FONT } : undefined} ref={ref} aria-labelledby={id} onCancel={e => { e.preventDefault(); onClose(); }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
     <div className="zm-modal-title"><h2 id={id}>{title}</h2><button className="zm-icon-button" onClick={onClose} aria-label="Close dialog"><Icon name="close" /></button></div>{children}
   </dialog>;
 }
@@ -248,6 +265,7 @@ function HeadingNavigator({ headings, activeId, onSelect, kind }: { headings: Re
   const rail = useRef<HTMLElement>(null), marks = useRef<HTMLDivElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null), gesture = useRef(false), suppress = useRef(false), selected = useRef(-1), point = useRef({ x: 0, y: 0 }), start = useRef({ x: 0, y: 0 });
   const tooltipId = useId();
+  const { L } = useCompareText();
   const clearTimer = () => { if (timer.current) clearTimeout(timer.current); timer.current = null; };
   const choose = (i: number) => { selected.current = i; setCandidate(i); const button = marks.current?.querySelector<HTMLElement>(`[data-heading="${i}"]`); const r = rail.current?.getBoundingClientRect(); if (button && r) setPreviewTop(Math.max(12, Math.min(r.height - 12, button.getBoundingClientRect().top - r.top + 12))); };
   const close = () => { clearTimer(); gesture.current = false; setHolding(false); choose(-1); };
@@ -266,7 +284,7 @@ function HeadingNavigator({ headings, activeId, onSelect, kind }: { headings: Re
       onPointerDown={e => down(e, i)} onPointerMove={move} onPointerUp={up} onPointerCancel={() => { suppress.current = true; close(); }} onContextMenu={e => e.preventDefault()}
       onClick={() => { if (suppress.current) { suppress.current = false; return; } jump(i); }}
       onKeyDown={(e: ReactKeyboardEvent) => { let next = i; if (e.key === 'ArrowDown') next = Math.min(headings.length - 1, i + 1); else if (e.key === 'ArrowUp') next = Math.max(0, i - 1); else if (e.key === 'Home') next = 0; else if (e.key === 'End') next = headings.length - 1; else return; e.preventDefault(); const button = marks.current?.querySelector<HTMLButtonElement>(`[data-heading="${next}"]`); button?.scrollIntoView({ block: 'nearest' }); button?.focus({ preventScroll: true }); }}><span aria-hidden="true" /><strong>{h.label}</strong></button>)}</div>
-    {candidate >= 0 && headings[candidate] && <div id={tooltipId} className="zm-heading-preview" role="tooltip" style={{ top: previewTop }}><strong>{headings[candidate].shortLabel}</strong><small>{holding ? 'Release to jump · move away to cancel' : `${kind} · click or hold and slide`}</small></div>}
+    {candidate >= 0 && headings[candidate] && <div id={tooltipId} className="zm-heading-preview" role="tooltip" style={{ top: previewTop }}><strong>{headings[candidate].shortLabel}</strong><small>{holding ? L('Release to jump · move away to cancel', 'چھوڑیں تو جائیں · ہٹائیں تو منسوخ') : L(`${kind} · click or hold and slide`, `${kind} · ٹیپ کریں یا دبا کر سرکائیں`)}</small></div>}
   </aside>;
 }
 
@@ -278,34 +296,36 @@ function FilterChoice({ active, onClick, children }: { active: boolean; onClick:
 }
 function ReportFilterFields({ mode, selection, products, rows, onApply }: { mode: ReportFilterMode; selection: CompareSelection; products: Product[]; rows: MarketRow[]; onApply: (s: CompareSelection) => void }) {
   const [draft, setDraft] = useState<CompareSelection>(() => JSON.parse(JSON.stringify(selection))), [error, setError] = useState('');
+  const { L, N, rate } = useCompareText();
   const change = (id: string, next: ProductFilter) => { setDraft(prev => ({ ...prev, filters: { ...prev.filters, [id]: next } })); setError(''); };
-  function choose(p: Product, key: 'priceTypes' | 'byproductIds', value: string, all: string[]) { const f = draft.filters[p.id], current = f[key] as string[]; const next = all.every(v => current.includes(v)) ? [value] : current.includes(value) ? current.filter(v => v !== value) : [...current, value]; if (!next.length) { setError('Keep at least one option for each product.'); return; } change(p.id, { ...f, [key]: next }); }
+  function choose(p: Product, key: 'priceTypes' | 'byproductIds', value: string, all: string[]) { const f = draft.filters[p.id], current = f[key] as string[]; const next = all.every(v => current.includes(v)) ? [value] : current.includes(value) ? current.filter(v => v !== value) : [...current, value]; if (!next.length) { setError(L('Keep at least one option for each product.', 'ہر پروڈکٹ کے لیے کم از کم ایک آپشن رکھیں۔')); return; } change(p.id, { ...f, [key]: next }); }
   function attribute(p: Product, b: Byproduct, key: string, next: AttributeFilter | undefined) { const f = draft.filters[p.id], byproduct = { ...f.attributes?.[b.id] }; if (next) byproduct[key] = next; else delete byproduct[key]; change(p.id, { ...f, grades: key === '$grade' ? [] : f.grades, attributes: { ...f.attributes, [b.id]: byproduct } }); }
   function apply() {
     for (const p of products) for (const b of p.byproducts.filter(b => draft.filters[p.id].byproductIds.includes(b.id))) for (const f of Object.values(draft.filters[p.id].attributes?.[b.id] ?? {})) {
       if (f.kind !== 'number') continue;
-      if ((f.min && !decimalParts(f.min)) || (f.max && !decimalParts(f.max))) { setError('Enter valid decimal bounds, without units.'); return; }
-      if (f.min && f.max && compareDecimal(f.min, f.max) > 0) { setError('Minimum cannot be greater than maximum.'); return; }
+      if ((f.min && !decimalParts(f.min)) || (f.max && !decimalParts(f.max))) { setError(L('Enter valid decimal bounds, without units.', 'درست عددی حد درج کریں، اکائی کے بغیر۔')); return; }
+      if (f.min && f.max && compareDecimal(f.min, f.max) > 0) { setError(L('Minimum cannot be greater than maximum.', 'کم از کم قدر زیادہ سے زیادہ سے بڑی نہیں ہو سکتی۔')); return; }
     }
     onApply(draft);
   }
-  return <div className="zm-filter-fields"><p className="zm-subtle">{mode === 'attribute' ? 'Quality filters apply to each byproduct.' : mode === 'price' ? 'Applies to every product in this comparison.' : 'Choose the byproducts to show.'}</p>
-    {mode === 'price' ? <fieldset className="zm-filter-group" aria-label="Price types"><legend className="zm-sr-only">Price types</legend><div className="zm-option-list"><FilterChoice active={draft.filters[products[0].id].priceTypes.length === PRICE_TYPES.length} onClick={() => setDraft(prev => withSharedPriceTypes(prev, [...PRICE_TYPES]))}>All price types</FilterChoice>{PRICE_TYPES.map(type => <FilterChoice key={type} active={draft.filters[products[0].id].priceTypes.includes(type)} onClick={() => { const current = draft.filters[products[0].id].priceTypes; const next = current.length === PRICE_TYPES.length ? [type] : current.includes(type) ? current.filter(t => t !== type) : [...current, type]; if (!next.length) { setError("Keep at least one price type."); return; } setError(""); setDraft(prev => withSharedPriceTypes(prev, next)); }}>{type}</FilterChoice>)}</div></fieldset> : products.map(p => {
-      const f = draft.filters[p.id]; return <section className="zm-dialog-product" key={p.id} aria-label={`${p.name} report filters`}><h3>{p.name}</h3>
-        {mode === 'byproduct' ? <fieldset className="zm-filter-group"><legend>Byproducts</legend><div className="zm-option-list"><FilterChoice active={f.byproductIds.length === p.byproducts.length} onClick={() => change(p.id, { ...f, byproductIds: p.byproducts.map(b => b.id) })}>All</FilterChoice>{p.byproducts.map(option => <FilterChoice key={option.id} active={f.byproductIds.includes(option.id)} onClick={() => choose(p, 'byproductIds', option.id, p.byproducts.map(b => b.id))}>{option.name}</FilterChoice>)}</div></fieldset> :
+  return <div className="zm-filter-fields"><p className="zm-subtle">{mode === 'attribute' ? L('Quality filters apply to each byproduct.', 'معیار کے فلٹر ہر ضمنی مصنوع پر لاگو ہوتے ہیں۔') : mode === 'price' ? L('Applies to every product in this comparison.', 'اس موازنے کی ہر پروڈکٹ پر لاگو ہوتا ہے۔') : L('Choose the byproducts to show.', 'دکھانے کے لیے ضمنی مصنوعات منتخب کریں۔')}</p>
+    {mode === 'price' ? <fieldset className="zm-filter-group" aria-label="Price types"><legend className="zm-sr-only">Price types</legend><div className="zm-option-list"><FilterChoice active={draft.filters[products[0].id].priceTypes.length === PRICE_TYPES.length} onClick={() => setDraft(prev => withSharedPriceTypes(prev, [...PRICE_TYPES]))}>{L('All price types', 'تمام ریٹ کی اقسام')}</FilterChoice>{PRICE_TYPES.map(type => <FilterChoice key={type} active={draft.filters[products[0].id].priceTypes.includes(type)} onClick={() => { const current = draft.filters[products[0].id].priceTypes; const next = current.length === PRICE_TYPES.length ? [type] : current.includes(type) ? current.filter(t => t !== type) : [...current, type]; if (!next.length) { setError(L("Keep at least one price type.", "کم از کم ایک ریٹ کی قسم رکھیں۔")); return; } setError(""); setDraft(prev => withSharedPriceTypes(prev, next)); }}>{rate(type)}</FilterChoice>)}</div></fieldset> : products.map(p => {
+      const f = draft.filters[p.id]; return <section className="zm-dialog-product" key={p.id} aria-label={`${p.name} report filters`}><h3>{N(p.name)}</h3>
+        {mode === 'byproduct' ? <fieldset className="zm-filter-group"><legend>{L('Byproducts', 'ضمنی مصنوعات')}</legend><div className="zm-option-list"><FilterChoice active={f.byproductIds.length === p.byproducts.length} onClick={() => change(p.id, { ...f, byproductIds: p.byproducts.map(b => b.id) })}>{L('All', 'سب')}</FilterChoice>{p.byproducts.map(option => <FilterChoice key={option.id} active={f.byproductIds.includes(option.id)} onClick={() => choose(p, 'byproductIds', option.id, p.byproducts.map(b => b.id))}>{N(option.name)}</FilterChoice>)}</div></fieldset> :
           p.byproducts.filter(b => f.byproductIds.includes(b.id)).map(b => {
-            const own = rows.filter(r => r.productId === p.id && r.byproductId === b.id); const definitions = attributeDefinitions(b, own); if (own.some(r => r.grade)) definitions.unshift({ key: '$grade', label: 'Grade', kind: 'category' });
-            return <section key={b.id} className="zm-attribute-section" aria-label={`${p.name} ${b.name} attributes`}><h4>{b.name}</h4>{!definitions.length && <p className="zm-subtle">No special attributes reported for this byproduct.</p>}{definitions.map(d => { const value = f.attributes?.[b.id]?.[d.key] ?? (d.key === '$grade' && f.grades.length ? { kind: 'category' as const, values: f.grades } : undefined), label = d.label ?? d.key; return <fieldset key={d.key} className="zm-filter-group" aria-label={`${label}${d.unit ? ` (${d.unit})` : ""}`}><legend>{label}{d.unit ? ` (${d.unit})` : ''}</legend>{d.kind === 'category' ? <div className="zm-option-list"><FilterChoice active={!value || value.kind === 'category' && !value.values.length} onClick={() => attribute(p, b, d.key, undefined)}>All</FilterChoice>{unique([...(d.options ?? []), ...own.map(r => (d.key === '$grade' ? r.grade : r.quality?.[d.key])?.trim() || MISSING_ATTRIBUTE)]).map(option => <FilterChoice key={option} active={value?.kind === 'category' && value.values.includes(option)} onClick={() => { const values = value?.kind === 'category' ? value.values : []; attribute(p, b, d.key, { kind: 'category', values: values.includes(option) ? values.filter(v => v !== option) : [...values, option] }); }}>{option === MISSING_ATTRIBUTE ? 'Not reported' : option}</FilterChoice>)}</div> : <div className="zm-range-fields"><label>Minimum<input inputMode="decimal" aria-label={`${label} minimum${d.unit ? ' (' + d.unit + ')' : ''}`} value={value?.kind === 'number' ? value.min ?? '' : ''} placeholder="Any" onChange={e => attribute(p, b, d.key, { kind: 'number', min: e.target.value, max: value?.kind === 'number' ? value.max : undefined })} /></label><span>to</span><label>Maximum<input inputMode="decimal" aria-label={`${label} maximum${d.unit ? ' (' + d.unit + ')' : ''}`} value={value?.kind === 'number' ? value.max ?? '' : ''} placeholder="Any" onChange={e => attribute(p, b, d.key, { kind: 'number', min: value?.kind === 'number' ? value.min : undefined, max: e.target.value })} /></label></div>}</fieldset>; })}
+            const own = rows.filter(r => r.productId === p.id && r.byproductId === b.id); const definitions = attributeDefinitions(b, own); if (own.some(r => r.grade)) definitions.unshift({ key: '$grade', label: L('Grade', 'گریڈ'), kind: 'category' });
+            return <section key={b.id} className="zm-attribute-section" aria-label={`${p.name} ${b.name} attributes`}><h4>{N(b.name)}</h4>{!definitions.length && <p className="zm-subtle">{L('No special attributes reported for this byproduct.', 'اس ضمنی مصنوع کے لیے کوئی خاص وصف رپورٹ نہیں ہوا۔')}</p>}{definitions.map(d => { const value = f.attributes?.[b.id]?.[d.key] ?? (d.key === '$grade' && f.grades.length ? { kind: 'category' as const, values: f.grades } : undefined), label = N(d.label ?? d.key); return <fieldset key={d.key} className="zm-filter-group" aria-label={`${label}${d.unit ? ` (${d.unit})` : ""}`}><legend>{label}{d.unit ? ` (${d.unit})` : ''}</legend>{d.kind === 'category' ? <div className="zm-option-list"><FilterChoice active={!value || value.kind === 'category' && !value.values.length} onClick={() => attribute(p, b, d.key, undefined)}>{L('All', 'سب')}</FilterChoice>{unique([...(d.options ?? []), ...own.map(r => (d.key === '$grade' ? r.grade : r.quality?.[d.key])?.trim() || MISSING_ATTRIBUTE)]).map(option => <FilterChoice key={option} active={value?.kind === 'category' && value.values.includes(option)} onClick={() => { const values = value?.kind === 'category' ? value.values : []; attribute(p, b, d.key, { kind: 'category', values: values.includes(option) ? values.filter(v => v !== option) : [...values, option] }); }}>{option === MISSING_ATTRIBUTE ? L('Not reported', 'رپورٹ نہیں') : N(option)}</FilterChoice>)}</div> : <div className="zm-range-fields"><label>{L('Minimum', 'کم از کم')}<input inputMode="decimal" aria-label={`${label} minimum${d.unit ? ' (' + d.unit + ')' : ''}`} value={value?.kind === 'number' ? value.min ?? '' : ''} placeholder={L('Any', 'کوئی بھی')} onChange={e => attribute(p, b, d.key, { kind: 'number', min: e.target.value, max: value?.kind === 'number' ? value.max : undefined })} /></label><span>{L('to', 'تا')}</span><label>{L('Maximum', 'زیادہ سے زیادہ')}<input inputMode="decimal" aria-label={`${label} maximum${d.unit ? ' (' + d.unit + ')' : ''}`} value={value?.kind === 'number' ? value.max ?? '' : ''} placeholder={L('Any', 'کوئی بھی')} onChange={e => attribute(p, b, d.key, { kind: 'number', min: value?.kind === 'number' ? value.min : undefined, max: e.target.value })} /></label></div>}</fieldset>; })}
             </section>;
           })}
       </section>;
     })}
-    {error && <p role="alert" className="zm-error">{error}</p>}<div className="zm-filter-actions"><button className="zm-chip" onClick={() => { setError(''); setDraft(prev => ({ ...prev, filters: Object.fromEntries(Object.entries(prev.filters).map(([id, f]) => [id, mode === 'attribute' ? { ...f, attributes: {}, grades: [] } : mode === 'price' ? { ...f, priceTypes: [...PRICE_TYPES] } : { ...f, byproductIds: products.find(p => p.id === id)?.byproducts.map(b => b.id) ?? f.byproductIds }])) })); }}>Reset {mode === 'attribute' ? 'attributes' : mode === 'price' ? 'price types' : 'byproducts'}</button><button className="zm-primary" onClick={apply}>Apply filters</button></div>
+    {error && <p role="alert" className="zm-error">{error}</p>}<div className="zm-filter-actions"><button className="zm-chip" onClick={() => { setError(''); setDraft(prev => ({ ...prev, filters: Object.fromEntries(Object.entries(prev.filters).map(([id, f]) => [id, mode === 'attribute' ? { ...f, attributes: {}, grades: [] } : mode === 'price' ? { ...f, priceTypes: [...PRICE_TYPES] } : { ...f, byproductIds: products.find(p => p.id === id)?.byproducts.map(b => b.id) ?? f.byproductIds }])) })); }}>{mode === 'attribute' ? L('Reset attributes', 'اوصاف ری سیٹ کریں') : mode === 'price' ? L('Reset price types', 'ریٹ کی اقسام ری سیٹ کریں') : L('Reset byproducts', 'ضمنی مصنوعات ری سیٹ کریں')}</button><button className="zm-primary" onClick={apply}>{L('Apply filters', 'فلٹر لاگو کریں')}</button></div>
   </div>;
 }
 
 export default function ZaraiMandiCompare(props: ZaraiMandiCompareProps) {
   const { categories, locations, rows, onProductIdsChange, rowsLoading = false, rowsError, dataLabel, ownedCategoryIds, accessNote, renderLocationPicker, onDecisionRequest, onExit, storageKey = 'zarai-mandi-compare-v1' } = props;
+  const { ur, L, N, rate, date } = useCompareText();
   const availableCategories = useMemo(() => categories.filter(c => !ownedCategoryIds || ownedCategoryIds.includes(c.id)), [categories, ownedCategoryIds]);
   const products = useMemo(() => availableCategories.flatMap(c => c.products), [availableCategories]);
   const [selection, setSelection] = useState<CompareSelection>(defaultSelection);
@@ -323,8 +343,8 @@ export default function ZaraiMandiCompare(props: ZaraiMandiCompareProps) {
       if (!document.documentElement.requestFullscreen) throw new Error('Fullscreen unavailable');
       await document.documentElement.requestFullscreen();
       if (orientation?.lock) await orientation.lock('landscape');
-      else if (innerHeight > innerWidth) setNotice('Turn your phone sideways for a wider comparison.');
-    } catch { setNotice('Turn your phone sideways for a wider comparison. Your browser controls screen rotation.'); }
+      else if (innerHeight > innerWidth) setNotice(L('Turn your phone sideways for a wider comparison.', 'وسیع موازنے کے لیے فون افقی کریں۔'));
+    } catch { setNotice(L('Turn your phone sideways for a wider comparison. Your browser controls screen rotation.', 'وسیع موازنے کے لیے فون افقی کریں۔ اسکرین گھمانا براؤزر کے اختیار میں ہے۔')); }
   }
   const [reportFilter, setReportFilter] = useState<ReportFilterMode | null>(null);
   const reportId = useId().replace(/:/g, '');
@@ -389,12 +409,13 @@ export default function ZaraiMandiCompare(props: ZaraiMandiCompareProps) {
   const reportingLocations = unique(filteredRows.map(r => r.locationId));
   const typeList = PRICE_TYPES.filter(t => selectedProducts.some(p => effective.filters[p.id]?.priceTypes.includes(t)));
   const byproductCount = selectedProducts.reduce((n, p) => n + (effective.filters[p.id]?.byproductIds.length ?? 0), 0);
-  const scopeLabel = (s: LocationScope) => s.kind === 'country' ? 'All Pakistan' : s.kind === 'mandi' ? locations.find(l => l.id === s.value)?.name ?? s.value : s.kind === 'district' ? `${s.value} District, ${s.province}` : s.value;
+  const scopeLabelWith = ({ L, N }: Pick<ReportText, 'L' | 'N'>) => (s: LocationScope) => s.kind === 'country' ? L('All Pakistan', 'پورا پاکستان') : s.kind === 'mandi' ? N(locations.find(l => l.id === s.value)?.name ?? s.value) : s.kind === 'district' ? L(`${s.value} District, ${s.province}`, `ضلع ${N(s.value)}، ${N(s.province ?? '')}`) : N(s.value);
+  const scopeLabel = scopeLabelWith({ L, N });
   const selectionLabel = effective.scopes.map(scopeLabel).join(', ');
   useEffect(() => { if (!storageKey) { setSaved(null); return; } try { const raw = localStorage.getItem(storageKey); setSaved(raw ? cleanSelection(JSON.parse(raw), products, locations) : null); } catch { setSaved(null); } }, [storageKey, products, locations]);
   useEffect(() => { root.current?.scrollTo({ top: 0 }); root.current?.querySelector('.zm-report-phone')?.scrollTo({ top: 0 }); heading.current?.focus({ preventScroll: true }); }, [stage]);
   useEffect(() => { if (!notice) return; const id = setTimeout(() => setNotice(''), 5000); return () => clearTimeout(id); }, [notice]);
-  const persist = (s: CompareSelection) => { if (!storageKey) { setNotice('Saving is disabled for this session.'); return; } try { localStorage.setItem(storageKey, JSON.stringify(s)); setSaved(s); setNotice('Comparison saved on this device.'); } catch { setNotice('Could not save on this device. You can still compare.'); } };
+  const persist = (s: CompareSelection) => { if (!storageKey) { setNotice(L('Saving is disabled for this session.', 'اس سیشن میں محفوظ کرنا بند ہے۔')); return; } try { localStorage.setItem(storageKey, JSON.stringify(s)); setSaved(s); setNotice(L('Comparison saved on this device.', 'موازنہ اس ڈیوائس پر محفوظ ہو گیا۔')); } catch { setNotice(L('Could not save on this device. You can still compare.', 'اس ڈیوائس پر محفوظ نہیں ہو سکا۔ آپ پھر بھی موازنہ کر سکتے ہیں۔')); } };
   const toggleProduct = (p: Product) => setSelection(prev => prev.productIds.includes(p.id) ? { ...prev, productIds: prev.productIds.filter(id => id !== p.id) } : { ...prev, productIds: [...prev.productIds, p.id], filters: { ...prev.filters, [p.id]: { ...(prev.filters[p.id] ?? defaultFilter(p)), priceTypes: prev.filters[prev.productIds[0]]?.priceTypes ?? [...PRICE_TYPES] } } });
   const updateFilter = (id: string, key: 'priceTypes' | 'byproductIds' | 'grades', values: string[]) => setSelection(prev => ({ ...prev, filters: { ...prev.filters, [id]: { ...prev.filters[id], [key]: values } } }));
   const toggleFilter = (p: Product, key: 'priceTypes' | 'byproductIds' | 'grades', value: string) => {
@@ -402,7 +423,7 @@ export default function ZaraiMandiCompare(props: ZaraiMandiCompareProps) {
     const allOptions = key === 'priceTypes' ? PRICE_TYPES : key === 'byproductIds' ? p.byproducts.map(b => b.id) : [];
     const wasAll = key !== 'grades' && allOptions.every(option => current.includes(option));
     const next = wasAll ? [value] : current.includes(value) ? current.filter(x => x !== value) : [...current, value];
-    if (key !== 'grades' && !next.length) { setNotice('Keep at least one option selected.'); return; }
+    if (key !== 'grades' && !next.length) { setNotice(L('Keep at least one option selected.', 'کم از کم ایک آپشن منتخب رکھیں۔')); return; }
     updateFilter(p.id, key, next);
   };
   /** Maps the app's location sheet selection onto compare scopes (mandis matched by name). */
@@ -415,7 +436,7 @@ export default function ZaraiMandiCompare(props: ZaraiMandiCompareProps) {
       else if (l.kind === 'mandi') { const loc = locations.find(x => norm(x.name) === norm(l.label)); if (loc) scopes.push({ kind: 'mandi', value: loc.id, province: loc.province }); else skipped++; }
     }
     setSelection(prev => ({ ...prev, scopes: scopes.length ? unique(scopes.map(scopeKey)).map(k => scopes.find(x => scopeKey(x) === k)!) : [{ kind: 'country', value: 'Pakistan' }] }));
-    if (skipped) setNotice(`${skipped} location${skipped === 1 ? ' has' : 's have'} no market reports this period and ${skipped === 1 ? 'was' : 'were'} skipped.`);
+    if (skipped) setNotice(L(`${skipped} location${skipped === 1 ? ' has' : 's have'} no market reports this period and ${skipped === 1 ? 'was' : 'were'} skipped.`, `${skipped} مقامات کی اس مدت میں کوئی رپورٹ نہیں، اس لیے انہیں چھوڑ دیا گیا۔`));
   }
   const openReport = () => { if (!selectedProducts.length) return; setSelection(effective); setStage('report'); };
   const jump = (ref: { current: HTMLElement | null }) => { ref.current?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' }); ref.current?.focus({ preventScroll: true }); };
@@ -424,18 +445,18 @@ export default function ZaraiMandiCompare(props: ZaraiMandiCompareProps) {
   async function submitDecision(e: FormEvent<HTMLFormElement>) {
     e.preventDefault(); setDecisionError(''); const data = new FormData(e.currentTarget);
     const request: DecisionRequest = { name: String(data.get('name') ?? '').trim(), phone: String(data.get('phone') ?? '').trim(), note: String(data.get('note') ?? '').trim(), selection: effective, reportDate: activeDay, createdAt: new Date().toISOString() };
-    if (!request.name || request.phone.replace(/\D/g, '').length < 7) { setDecisionError('Enter your name and a valid contact number.'); return; }
-    if (!onDecisionRequest) { downloadFile('Zarai-Mandi-Decision-Request.json', JSON.stringify(request, null, 2), 'application/json'); setShowDecision(false); setNotice('Request downloaded. It has not been sent to a team.'); return; }
-    setSending(true); try { await onDecisionRequest(request); setShowDecision(false); setNotice('Your request has been sent to the market team.'); } catch { setDecisionError('The request could not be sent. Please try again.'); } finally { setSending(false); }
+    if (!request.name || request.phone.replace(/\D/g, '').length < 7) { setDecisionError(L('Enter your name and a valid contact number.', 'اپنا نام اور درست رابطہ نمبر درج کریں۔')); return; }
+    if (!onDecisionRequest) { downloadFile('Zarai-Mandi-Decision-Request.json', JSON.stringify(request, null, 2), 'application/json'); setShowDecision(false); setNotice(L('Request downloaded. It has not been sent to a team.', 'درخواست ڈاؤن لوڈ ہو گئی۔ یہ ٹیم کو نہیں بھیجی گئی۔')); return; }
+    setSending(true); try { await onDecisionRequest(request); setShowDecision(false); setNotice(L('Your request has been sent to the market team.', 'آپ کی درخواست منڈی ٹیم کو بھیج دی گئی۔')); } catch { setDecisionError(L('The request could not be sent. Please try again.', 'درخواست نہیں بھیجی جا سکی۔ دوبارہ کوشش کریں۔')); } finally { setSending(false); }
   }
   function filterGroup(p: Product, label: string, key: 'priceTypes' | 'byproductIds' | 'grades', options: { id: string; label: string }[]) {
     const values = effective.filters[p.id][key] as string[], all = key === 'grades' ? values.length === 0 : options.every(o => values.includes(o.id));
     return <fieldset className="zm-filter-group"><legend>{label}</legend><div className="zm-chips">
-      <Chip active={all} onClick={() => updateFilter(p.id, key, key === 'grades' ? [] : options.map(o => o.id))}>All</Chip>
+      <Chip active={all} onClick={() => updateFilter(p.id, key, key === 'grades' ? [] : options.map(o => o.id))}>{L('All', 'سب')}</Chip>
       {options.map(o => <Chip key={o.id} active={!all && values.includes(o.id)} onClick={() => toggleFilter(p, key, o.id)}>{o.label}</Chip>)}
     </div></fieldset>;
   }
-  const scopeColumns = useMemo(() => comparisonScopes.map(scope => ({ scope, key: scopeKey(scope), label: scopeLabel(scope), ids: new Set(locations.filter(l => matchesScope(l, scope)).map(l => l.id)) })), [comparisonScopes, locations]);
+  const scopeColumns = useMemo(() => comparisonScopes.map(scope => ({ scope, key: scopeKey(scope), label: scopeLabel(scope), ids: new Set(locations.filter(l => matchesScope(l, scope)).map(l => l.id)) })), [comparisonScopes, locations, ur]); // eslint-disable-line react-hooks/exhaustive-deps
   const hasOverlap = scopeColumns.some((c, i) => scopeColumns.slice(i + 1).some(other => [...c.ids].some(id => other.ids.has(id))));
   // One column per byproduct. Only its special attribute separates observations:
   // the chosen value (default: the one with most reports) applies everywhere.
@@ -462,10 +483,10 @@ export default function ZaraiMandiCompare(props: ZaraiMandiCompareProps) {
   // The only filter on the refine screen and the report: price type (byproducts are
   // picked per product; quality is each byproduct's special attribute in the sheet).
   function filterControls() {
-    const summary = typeList.length === PRICE_TYPES.length ? 'All' : typeList.length === 1 ? typeList[0] : `${typeList.length} selected`;
+    const summary = typeList.length === PRICE_TYPES.length ? L('All', 'سب') : typeList.length === 1 ? rate(typeList[0]) : L(`${typeList.length} selected`, `${typeList.length} منتخب`);
     return <div className="zm-report-filters zm-price-filter" role="group" aria-label="Report filters">
-      <SmoothDropdown label="Price type" summary={summary} ariaLabel="Filter price types" icon={<Tag size={16} />} className="zm-filter-price" open={reportFilter === 'price'} onOpenChange={open => setReportFilter(open ? 'price' : null)}>
-        {reportFilter === 'price' && <ReportFilterFields mode="price" selection={effective} products={selectedProducts} rows={eligibleRows} onApply={next => { setSelection(next); setReportFilter(null); setNotice('Price types applied.'); }} />}
+      <SmoothDropdown label={L('Price type', 'ریٹ کی قسم')} summary={summary} ariaLabel="Filter price types" icon={<Tag size={16} />} className="zm-filter-price" open={reportFilter === 'price'} onOpenChange={open => setReportFilter(open ? 'price' : null)}>
+        {reportFilter === 'price' && <ReportFilterFields mode="price" selection={effective} products={selectedProducts} rows={eligibleRows} onApply={next => { setSelection(next); setReportFilter(null); setNotice(L('Price types applied.', 'ریٹ کی اقسام لاگو ہو گئیں۔')); }} />}
       </SmoothDropdown>
     </div>;
   }
@@ -474,36 +495,43 @@ export default function ZaraiMandiCompare(props: ZaraiMandiCompareProps) {
     try {
       const { downloadComparisonPdf } = await import('./report-pdf');
       const single = selectedProducts.length === 1;
+      // The PDF is always English: its font (Helvetica) can't draw Urdu.
+      const groups = ur ? buildGroups(enText) : reportGroups;
       const boards: PdfBoard[] = single
-        ? [{ id: 'all', title: selectedProducts[0].name, panes: reportGroups.map(g => ({ ...g.panes[0], title: g.title })) }]
-        : reportGroups.map(g => ({ id: g.id, title: g.title, context: `All prices below are for ${g.title}`, panes: g.panes }));
-      await downloadComparisonPdf(boards, reportSections, mandiPdfTables(), {
+        ? [{ id: 'all', title: selectedProducts[0].name, panes: groups.map(g => ({ ...g.panes[0], title: g.title })) }]
+        : groups.map(g => ({ id: g.id, title: g.title, context: `All prices below are for ${g.title}`, panes: g.panes }));
+      await downloadComparisonPdf(boards, ur ? buildSections(enText) : reportSections, mandiPdfTables(ur ? buildMandiGroups(enText) : mandiGroups), {
         title: selectedProducts.map(p => p.name).join(' vs '),
-        locations: scopeColumns.map(c => c.label).join(', '),
+        locations: scopeColumns.map(c => scopeLabelWith(enText)(c.scope)).join(', '),
         date: activeDay ? new Date(activeDay + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '',
         priceTypes: typeList.length === PRICE_TYPES.length ? 'All' : typeList.join(', '),
         generatedAt: new Date().toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
       }, `Zarai-Mandi-Comparison-${activeDay || 'report'}.pdf`);
-      setNotice('PDF report downloaded.');
-    } catch { setNotice('The PDF could not be created. Please try again.'); } finally { setPdfBusy(false); }
+      setNotice(L('PDF report downloaded.', 'PDF رپورٹ ڈاؤن لوڈ ہو گئی۔'));
+    } catch { setNotice(L('The PDF could not be created. Please try again.', 'PDF نہیں بن سکی۔ دوبارہ کوشش کریں۔')); } finally { setPdfBusy(false); }
   }
   // ── Report matrix: price type sections × tiles (locations → products) ──
   const typeKey = typeList.join('|');
-  const dayLabel = activeDay ? new Date(activeDay + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '';
-  const reportSections: MatrixSectionDef[] = useMemo(() => {
+  const dayLabel = activeDay ? date(activeDay, { day: 'numeric', month: 'short' }) : '';
+  const uiText: ReportText = { ur, L, N, rate, dayLabel };
+  const enText: ReportText = { ur: false, L: en => en, N: name => name, rate: type => type, dayLabel: activeDay ? new Date(activeDay + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '' };
+  const buildSections = (t: ReportText): MatrixSectionDef[] => {
+    const { ur, L, rate, dayLabel } = t;
     const unit = variants[0]?.unit ?? '40 kg';
-    return typeList.map(type => ({ id: `rate:${type}`, label: `${type} rate`, hint: `Rs / ${unit} · ${dayLabel}`, rows: [
-      { id: 'min', label: 'Avg min', hint: 'Rs/40kg', compare: true },
-      { id: 'max', label: 'Avg max', hint: 'Rs/40kg', compare: true },
-      { id: 'arrivals', label: 'Arrivals', hint: 'MT/report', compare: true },
-      { id: 'mandis', label: 'Mandis', hint: 'reporting' },
-      { id: 'change', label: 'Change', hint: 'vs prev.' },
+    return typeList.map(type => ({ id: `rate:${type}`, label: ur ? rate(type) : `${type} rate`, hint: L(`Rs / ${unit} · ${dayLabel}`, `روپے / ${unit.replace(/kg/i, 'کلو')} · ${dayLabel}`), rows: [
+      { id: 'min', label: L('Avg min', 'کم'), hint: L('Rs/40kg', 'روپے/40 کلو'), compare: true },
+      { id: 'max', label: L('Avg max', 'زیادہ'), hint: L('Rs/40kg', 'روپے/40 کلو'), compare: true },
+      { id: 'arrivals', label: L('Arrivals', 'آمد'), hint: L('MT/report', 'ٹن/رپورٹ'), compare: true },
+      { id: 'mandis', label: L('Mandis', 'منڈیاں'), hint: L('reporting', 'رپورٹنگ') },
+      { id: 'change', label: L('Change', 'تبدیلی'), hint: L('vs prev.', 'پچھلے سے') },
     ] }));
-  }, [typeKey, variants, dayLabel]); // eslint-disable-line react-hooks/exhaustive-deps
+  };
+  const reportSections = useMemo(() => buildSections(uiText), [typeKey, variants, dayLabel, ur]); // eslint-disable-line react-hooks/exhaustive-deps // eslint-disable-line react-hooks/exhaustive-deps
   // Busiest locations first (left, then top).
   const orderedScopes = useMemo(() => scopeColumns.map((c, i) => ({ c, i, n: filteredRows.filter(r => c.ids.has(r.locationId)).length })).sort((a, b) => b.n - a.n), [scopeColumns, filteredRows]);
-  const reportGroups: MatrixGroup[] = useMemo(() => {
-    const reports = (n: number) => `${n} rep.`;
+  const buildGroups = (t: ReportText): MatrixGroup[] => {
+    const { L, N } = t, label = scopeLabelWith(t);
+    const reports = (n: number) => L(`${n} rep.`, `${n} رپورٹ`);
     const empty: MatrixCell = { value: null, empty: true };
     const column = (v: typeof variants[number], scopeIndex: number, mandis: number): MatrixColumn => {
       const cells: Record<string, MatrixCell> = {};
@@ -515,8 +543,8 @@ export default function ZaraiMandiCompare(props: ZaraiMandiCompareProps) {
         cells[key('min')] = r?.min.value != null ? { value: priceText(r.min), text: meanText(r.min), numeric: Number(r.min.value), note: reports(r.min.count) } : empty;
         cells[key('max')] = r?.max.value != null ? { value: priceText(r.max), text: meanText(r.max), numeric: Number(r.max.value), note: reports(r.max.count) } : empty;
         cells[key('arrivals')] = r?.arrivals.value != null ? { value: meanText(r.arrivals), text: meanText(r.arrivals), numeric: Number(r.arrivals.value), note: reports(r.arrivals.count) } : empty;
-        cells[key('mandis')] = r?.count ? { value: r.priceLocations, text: `${r.priceLocations} of ${mandis}`, note: `of ${mandis}` } : empty;
-        cells[key('change')] = change ? { value: change, text: change, note: `avg ${reports(t!.mean.count)}` } : empty;
+        cells[key('mandis')] = r?.count ? { value: r.priceLocations, text: L(`${r.priceLocations} of ${mandis}`, `${mandis} میں سے ${r.priceLocations}`), note: L(`of ${mandis}`, `${mandis} میں سے`) } : empty;
+        cells[key('change')] = change ? { value: change, text: change, note: L(`avg ${reports(t!.mean.count)}`, `اوسط ${reports(t!.mean.count)}`) } : empty;
       }
       const special = v.special && { ...v.special, onChange: v.special.options.length > 1 ? (value: string) => setSpecialChoice(prev => ({ ...prev, [v.byproduct.id]: value })) : undefined };
       return { id: `${v.key}@${scopeIndex}`, matchKey: v.key, title: v.byproduct.name, special, unit: v.unit, cells };
@@ -526,49 +554,52 @@ export default function ZaraiMandiCompare(props: ZaraiMandiCompareProps) {
     // Locations are the outer divisions; inside each, one tile per product.
     // One product: its tiles move together across locations. Several: every tile scrolls on its own.
     return orderedScopes.map(({ c, i }, k) => ({
-      id: c.key, title: c.label, subtitle: `${c.ids.size} mandis`, color: LOCATION_TONES[k % LOCATION_TONES.length],
+      id: c.key, title: label(c.scope), subtitle: L(`${c.ids.size} mandis`, `${c.ids.size} منڈیاں`), color: LOCATION_TONES[k % LOCATION_TONES.length],
       panes: selectedProducts.map((p, pk) => ({
-        id: `${p.id}@${c.key}`, syncKey: single ? `product:${p.id}` : `${p.id}@${c.key}`, title: p.name,
+        id: `${p.id}@${c.key}`, syncKey: single ? `product:${p.id}` : `${p.id}@${c.key}`, title: N(p.name),
         color: single ? LOCATION_TONES[k % LOCATION_TONES.length] : PRODUCT_TONES[pk % PRODUCT_TONES.length],
         columns: ofProduct(p).map(v => column(v, i, c.ids.size)),
       })),
     }));
-  }, [variants, selectedProducts, orderedScopes, typeKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  };
+  const reportGroups = useMemo(() => buildGroups(uiText), [variants, selectedProducts, orderedScopes, typeKey, ur]); // eslint-disable-line react-hooks/exhaustive-deps
   const matrixIntro = useMemo(() => {
-    const products = selectedProducts.map(p => p.name).join(' vs '), n = orderedScopes.length;
-    if (n === 1) return { eyebrow: `${selectedProducts.length} product${selectedProducts.length === 1 ? '' : 's'} · ${dayLabel}`, title: products, context: `All prices below are for ${orderedScopes[0].c.label}` };
-    return { eyebrow: `${n} locations${selectedProducts.length > 1 ? ` × ${selectedProducts.length} products` : ''} · ${dayLabel}`, title: products,
-      context: selectedProducts.length > 1 ? 'Each location holds every product; each tile scrolls on its own.' : 'Locations side by side — swipe and they move together.' };
-  }, [selectedProducts, orderedScopes, dayLabel]);
+    const products = selectedProducts.map(p => N(p.name)).join(L(' vs ', ' بمقابلہ ')), n = orderedScopes.length, np = selectedProducts.length;
+    if (n === 1) return { eyebrow: L(`${np} product${np === 1 ? '' : 's'} · ${dayLabel}`, `${np} پروڈکٹس · ${dayLabel}`), title: products, context: L(`All prices below are for ${orderedScopes[0].c.label}`, `نیچے تمام قیمتیں ${orderedScopes[0].c.label} کی ہیں`) };
+    return { eyebrow: L(`${n} locations${np > 1 ? ` × ${np} products` : ''} · ${dayLabel}`, `${n} مقامات${np > 1 ? ` × ${np} پروڈکٹس` : ''} · ${dayLabel}`), title: products,
+      context: np > 1 ? L('Each location holds every product; each tile scrolls on its own.', 'ہر مقام میں تمام پروڈکٹس ہیں؛ ہر ٹائل الگ سکرول ہوتی ہے۔') : L('Locations side by side — swipe and they move together.', 'مقامات ساتھ ساتھ ہیں — سوائپ کریں تو سب ساتھ چلتے ہیں۔') };
+  }, [selectedProducts, orderedScopes, dayLabel, ur]); // eslint-disable-line react-hooks/exhaustive-deps
   // ── Mandi breakdown: same boxes/cards, every mandi per byproduct for one price type ──
   const [mandiTypeChoice, setMandiTypeChoice] = useState('');
   const [mandiSort, setMandiSort] = useState<'max-desc' | 'max-asc' | 'name'>('max-desc');
   const mandiTypeCounts = useMemo(() => typeList.map(t => ({ t, n: variants.reduce((sum, v) => sum + v.observations.filter(r => r.priceType === t).length, 0) })).filter(x => x.n > 0), [variants, typeKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const mandiType = mandiTypeCounts.find(x => x.t === mandiTypeChoice)?.t ?? [...mandiTypeCounts].sort((a, b) => b.n - a.n)[0]?.t;
-  const mandiGroups: MandiGroup[] = useMemo(() => {
+  const buildMandiGroups = (t: ReportText): MandiGroup[] => {
+    const { L, N } = t, label = scopeLabelWith(t);
     if (!mandiType) return [];
     const single = selectedProducts.length === 1;
     const change = (r: AggregateResult) => { const t = r.trends.find(x => x.mean.value !== null); return t?.mean.value != null ? `${t.mean.value.startsWith('-') ? '' : '+'}${meanText(t.mean)}%` : undefined; };
     const sortEntries = (entries: MandiEntry[]) => entries.sort((a, b) => mandiSort === 'name' ? a.name.localeCompare(b.name) : ((mandiSort === 'max-asc' ? 1 : -1) * ((a.max ?? (mandiSort === 'max-asc' ? Infinity : -Infinity)) - (b.max ?? (mandiSort === 'max-asc' ? Infinity : -Infinity)))));
     return orderedScopes.map(({ c }, k) => ({ c, k })).filter(({ c }) => c.ids.size > 1).map(({ c, k }) => ({
-      id: `m:${c.key}`, title: c.label, subtitle: `${c.ids.size} mandis`, color: LOCATION_TONES[k % LOCATION_TONES.length],
+      id: `m:${c.key}`, title: label(c.scope), subtitle: L(`${c.ids.size} mandis`, `${c.ids.size} منڈیاں`), color: LOCATION_TONES[k % LOCATION_TONES.length],
       panes: selectedProducts.map((p, pk) => ({
-        id: `m:${p.id}@${c.key}`, syncKey: single ? `m:product:${p.id}` : `m:${p.id}@${c.key}`, title: p.name,
+        id: `m:${p.id}@${c.key}`, syncKey: single ? `m:product:${p.id}` : `m:${p.id}@${c.key}`, title: N(p.name),
         color: single ? LOCATION_TONES[k % LOCATION_TONES.length] : PRODUCT_TONES[pk % PRODUCT_TONES.length],
         columns: variants.filter(v => v.product.id === p.id).map(v => {
           const byMandi = new Map<string, MarketRow[]>();
           for (const r of v.observations) if (r.priceType === mandiType && c.ids.has(r.locationId)) byMandi.set(r.locationId, [...(byMandi.get(r.locationId) ?? []), r]);
           const entries = sortEntries([...byMandi].map(([id, rs]): MandiEntry => {
             const loc = locations.find(l => l.id === id), res = aggregateObservations(rs, []);
-            return { id, name: loc?.name ?? id, district: loc?.district, min: res.min.value === null ? null : Number(res.min.value), max: res.max.value === null ? null : Number(res.max.value), minText: meanText(res.min), maxText: meanText(res.max), reports: res.count, change: change(res) };
+            return { id, name: N(loc?.name ?? id), district: loc?.district ? N(loc.district) : undefined, min: res.min.value === null ? null : Number(res.min.value), max: res.max.value === null ? null : Number(res.max.value), minText: meanText(res.min), maxText: meanText(res.max), reports: res.count, change: change(res) };
           }));
           const special = v.special && { ...v.special, onChange: v.special.options.length > 1 ? (value: string) => setSpecialChoice(prev => ({ ...prev, [v.byproduct.id]: value })) : undefined };
           return { id: `m:${v.key}@${c.key}`, matchKey: v.key, title: v.byproduct.name, special, entries };
         }),
       })),
     }));
-  }, [variants, selectedProducts, orderedScopes, mandiType, mandiSort, locations]);
-  const mandiPdfTables = (): PdfMandiTable[] => mandiGroups.flatMap(g => g.panes.flatMap(p => p.columns.filter(c => c.entries.length).map(c => ({
+  };
+  const mandiGroups = useMemo(() => buildMandiGroups(uiText), [variants, selectedProducts, orderedScopes, mandiType, mandiSort, locations, ur]); // eslint-disable-line react-hooks/exhaustive-deps
+  const mandiPdfTables = (groups: MandiGroup[]): PdfMandiTable[] => groups.flatMap(g => g.panes.flatMap(p => p.columns.filter(c => c.entries.length).map(c => ({
     title: `${g.title} · ${p.title} ${c.title}${c.special ? ` (${c.special.label}: ${c.special.value})` : ''}`,
     subtitle: `${mandiType} rate · ${c.entries.length} of ${g.subtitle} reporting`,
     head: ['Mandi', 'District', 'Avg min', 'Avg max', 'Reports', 'Change'],
@@ -577,8 +608,8 @@ export default function ZaraiMandiCompare(props: ZaraiMandiCompareProps) {
   const navigationItems: ReportHeading[] = useMemo(() => {
     const has = (sectionId: string) => reportGroups.some(g => g.panes.some(p => p.columns.some(col => ['min', 'max', 'arrivals', 'mandis', 'change'].some(r => { const cell = col.cells[matrixCellKey(sectionId, r)]; return !!cell && !cell.empty; }))));
     const items = reportSections.filter(sec => has(sec.id)).map(sec => ({ id: matrixSectionId(sec.id), label: sec.label, shortLabel: sec.label }));
-    return [...items, ...(mandiGroups.length ? [{ id: 'mandis', label: 'Mandi breakdown', shortLabel: 'Mandis' }] : []), { id: 'summary', label: 'Summary', shortLabel: 'Summary' }];
-  }, [reportGroups, reportSections, mandiGroups.length]);
+    return [...items, ...(mandiGroups.length ? [{ id: 'mandis', label: L('Mandi breakdown', 'منڈی وار تفصیل'), shortLabel: L('Mandis', 'منڈیاں') }] : []), { id: 'summary', label: L('Summary', 'خلاصہ'), shortLabel: L('Summary', 'خلاصہ') }];
+  }, [reportGroups, reportSections, mandiGroups.length, ur]); // eslint-disable-line react-hooks/exhaustive-deps
   const activeView = navigationItems.find(item => item.id === viewKey) ?? navigationItems[0];
   const navigateView = (key: string) => {
     const node = Array.from(root.current?.querySelectorAll<HTMLElement>('[data-matrix-section]') ?? []).find(el => el.dataset.matrixSection === key);
@@ -603,109 +634,109 @@ export default function ZaraiMandiCompare(props: ZaraiMandiCompareProps) {
   }, [stage, navigationKey]);
   function matrixReport() {
     if (!variants.length || !filteredRows.length) return null;
-    return <section className="zm-matrix-report" aria-label="Comparison data">
+    return <section className="zm-matrix-report" aria-label={L('Comparison data', 'موازنہ ڈیٹا')}>
       <CompareMatrix groups={reportGroups} sections={reportSections} eyebrow={matrixIntro.eyebrow} title={matrixIntro.title} context={matrixIntro.context} stickyTop={stage === 'report' ? headerHeight : 0} />
-      <p className="zm-ledger-foot">— Not reported. Prices are means of every valid report on the selected day. % chips compare the same byproduct with the first location; they are not recommendations.</p>
+      <p className="zm-ledger-foot">{L('— Not reported. Prices are means of every valid report on the selected day. % chips compare the same byproduct with the first location; they are not recommendations.', '— رپورٹ نہیں۔ قیمتیں منتخب دن کی تمام درست رپورٹس کا اوسط ہیں۔ % نشان اسی ضمنی مصنوع کا پہلے مقام سے موازنہ ہیں؛ یہ مشورہ نہیں ہیں۔')}</p>
       {mandiGroups.length > 0 && <div className="zm-mandi-breakdown">
-        <MandiMatrix groups={mandiGroups} id="mandis" label="Mandi breakdown" hint={`${mandiType} rate · ${dayLabel}`} stickyTop={stage === 'report' ? headerHeight : 0}
+        <MandiMatrix groups={mandiGroups} id="mandis" label={L('Mandi breakdown', 'منڈی وار تفصیل')} hint={ur ? `${rate(mandiType)} · ${dayLabel}` : `${mandiType} rate · ${dayLabel}`} stickyTop={stage === 'report' ? headerHeight : 0}
           controls={<div className="zm-mandi-controls">
-            <div className="zm-mandi-types" role="radiogroup" aria-label="Price type for mandis">{mandiTypeCounts.map(({ t, n }) => <button key={t} type="button" role="radio" aria-checked={t === mandiType} className={t === mandiType ? 'on' : ''} onClick={() => setMandiTypeChoice(t)}>{t}<small>{n}</small></button>)}</div>
-            <div className="zm-mandi-sorts" role="radiogroup" aria-label="Sort mandis">{([['max-desc', 'Highest'], ['max-asc', 'Lowest'], ['name', 'A–Z']] as const).map(([value, text]) => <button key={value} type="button" role="radio" aria-checked={mandiSort === value} className={mandiSort === value ? 'on' : ''} onClick={() => setMandiSort(value)}>{text}</button>)}</div>
+            <div className="zm-mandi-types" role="radiogroup" aria-label="Price type for mandis">{mandiTypeCounts.map(({ t, n }) => <button key={t} type="button" role="radio" aria-checked={t === mandiType} className={t === mandiType ? 'on' : ''} onClick={() => setMandiTypeChoice(t)}>{rate(t)}<small>{n}</small></button>)}</div>
+            <div className="zm-mandi-sorts" role="radiogroup" aria-label="Sort mandis">{([['max-desc', L('Highest', 'سب سے زیادہ')], ['max-asc', L('Lowest', 'سب سے کم')], ['name', L('A–Z', 'ا–ی')]] as const).map(([value, text]) => <button key={value} type="button" role="radio" aria-checked={mandiSort === value} className={mandiSort === value ? 'on' : ''} onClick={() => setMandiSort(value)}>{text}</button>)}</div>
           </div>} />
       </div>}
     </section>;
   }
 
-  return <main className={`zm-module zm-embedded ${stage === 'report' ? 'zm-report-layout' : ''}`} ref={root}>
+  return <main className={`zm-module zm-embedded ${stage === 'report' ? 'zm-report-layout' : ''}`} ref={root} style={ur ? { fontFamily: URDU_FONT } : undefined}>
     <div className={`zm-phone ${stage === 'report' ? 'zm-report-phone' : ''}`}>
       <header className="zm-header zm-status-gap" ref={headerRef}>
-        {(stage !== 'select' || onExit) && <button className="zm-icon-button" aria-label="Back" onClick={() => stage === 'report' ? setStage('refine') : stage === 'refine' ? setStage('select') : onExit?.()}><Icon name="back" /></button>}
-        <div>{stage === 'report' && <span className="zm-header-kicker">Comparison report</span>}<h1 ref={heading} tabIndex={-1}>{stage === 'select' ? 'Compare' : stage === 'refine' ? 'Refine Comparison' : selectedProducts.map(p => p.name).join(' vs ')}</h1><p>{stage === 'select' ? 'Select products to compare.' : stage === 'refine' ? 'Choose byproducts, price types and locations.' : ''}</p></div>
-        {stage === 'report' && <button className="zm-edit" aria-label="Edit comparison" onClick={() => setStage('refine')}><Pencil size={18} /> <span>Edit</span></button>}
+        {(stage !== 'select' || onExit) && <button className="zm-icon-button" aria-label={L('Back', 'واپس')} onClick={() => stage === 'report' ? setStage('refine') : stage === 'refine' ? setStage('select') : onExit?.()}><Icon name="back" /></button>}
+        <div>{stage === 'report' && <span className="zm-header-kicker">{L('Comparison report', 'موازنہ رپورٹ')}</span>}<h1 ref={heading} tabIndex={-1}>{stage === 'select' ? L('Compare', 'موازنہ') : stage === 'refine' ? L('Refine Comparison', 'موازنہ ترتیب دیں') : selectedProducts.map(p => N(p.name)).join(L(' vs ', ' بمقابلہ '))}</h1><p>{stage === 'select' ? L('Select products to compare.', 'موازنے کے لیے پروڈکٹس منتخب کریں۔') : stage === 'refine' ? L('Choose byproducts, price types and locations.', 'ضمنی مصنوعات، ریٹ کی اقسام اور مقامات منتخب کریں۔') : ''}</p></div>
+        {stage === 'report' && <button className="zm-edit" aria-label={L('Edit comparison', 'موازنہ تبدیل کریں')} onClick={() => setStage('refine')}><Pencil size={18} /> <span>{L('Edit', 'تبدیل کریں')}</span></button>}
       </header>
       {dataLabel && stage !== 'report' && <div className="zm-demo zm-data-label"><span />{dataLabel}</div>}
 
       {stage === 'select' && <div className="zm-content">
-        <p className="zm-access">{accessNote ?? (ownedCategoryIds ? 'Only your purchased categories are shown.' : 'Choose one or more products, then compare their byproducts.')}</p>
-        {saved?.productIds.length ? <button className="zm-repeat" onClick={() => { setSelection(saved); setStage('report'); }}><Icon name="bookmark" size={17} /><span>Repeat saved comparison<small>{saved.productIds.map(id => products.find(p => p.id === id)?.name).join(' + ')}</small></span><Icon name="arrow" size={17} /></button> : null}
-        <label className="zm-search"><Icon name="search" size={18} /><input aria-label="Search products" placeholder="Search products…" value={query} onChange={e => setQuery(e.target.value)} /></label>
-        <div className="zm-circle-grid">{products.filter(p => p.name.toLowerCase().includes(query.toLowerCase())).map(p => { const on = effective.productIds.includes(p.id); return <button key={p.id} className={`zm-circle-card ${on ? 'selected' : ''}`} aria-pressed={on} onClick={() => toggleProduct(p)}><span className="zm-circle">{p.imageUrl ? <img src={p.imageUrl} alt="" loading="lazy" /> : <Icon name="leaf" size={28} />}{on && <span className="zm-circle-check"><Icon name="check" size={11} /></span>}</span><strong>{p.name}</strong></button>; })}</div>
-        {!products.some(p => p.name.toLowerCase().includes(query.toLowerCase())) && !availableCategories.some(c => c.kind === 'vertical' && c.name.toLowerCase().includes(query.toLowerCase())) && <div className="zm-empty">No matching products in your access.</div>}
-        <div className="zm-select-footer"><strong>{selectedProducts.length} product{selectedProducts.length === 1 ? '' : 's'} selected</strong><div className="zm-chips">{selectedProducts.map(p => <button className="zm-chip soft" key={p.id} onClick={() => removeProduct(p.id)} aria-label={`Remove ${p.name}`}>{p.name} ×</button>)}</div><button className="zm-primary" disabled={!selectedProducts.length} onClick={() => setStage('refine')}>Continue <Icon name="arrow" /></button><button className="zm-quick-compare" disabled={!selectedProducts.length} onClick={openReport}>Compare now · {selectionLabel}</button></div>
+        <p className="zm-access">{accessNote ?? (ownedCategoryIds ? L('Only your purchased categories are shown.', 'صرف آپ کی خریدی گئی اقسام دکھائی گئی ہیں۔') : L('Choose one or more products, then compare their byproducts.', 'ایک یا زیادہ پروڈکٹس منتخب کریں، پھر ان کی ضمنی مصنوعات کا موازنہ کریں۔'))}</p>
+        {saved?.productIds.length ? <button className="zm-repeat" onClick={() => { setSelection(saved); setStage('report'); }}><Icon name="bookmark" size={17} /><span>{L('Repeat saved comparison', 'محفوظ موازنہ دوبارہ دیکھیں')}<small>{saved.productIds.map(id => N(products.find(p => p.id === id)?.name ?? '')).join(' + ')}</small></span><Icon name="arrow" size={17} /></button> : null}
+        <label className="zm-search"><Icon name="search" size={18} /><input aria-label={L('Search products', 'پروڈکٹس تلاش کریں')} placeholder={L('Search products…', 'پروڈکٹس تلاش کریں…')} value={query} onChange={e => setQuery(e.target.value)} /></label>
+        <div className="zm-circle-grid">{products.filter(p => p.name.toLowerCase().includes(query.toLowerCase()) || N(p.name).includes(query.trim())).map(p => { const on = effective.productIds.includes(p.id); return <button key={p.id} className={`zm-circle-card ${on ? 'selected' : ''}`} aria-pressed={on} onClick={() => toggleProduct(p)}><span className="zm-circle">{p.imageUrl ? <img src={p.imageUrl} alt="" loading="lazy" /> : <Icon name="leaf" size={28} />}{on && <span className="zm-circle-check"><Icon name="check" size={11} /></span>}</span><strong>{N(p.name)}</strong></button>; })}</div>
+        {!products.some(p => p.name.toLowerCase().includes(query.toLowerCase()) || N(p.name).includes(query.trim())) && !availableCategories.some(c => c.kind === 'vertical' && c.name.toLowerCase().includes(query.toLowerCase())) && <div className="zm-empty">{L('No matching products in your access.', 'آپ کی رسائی میں کوئی ملتی جلتی پروڈکٹ نہیں۔')}</div>}
+        <div className="zm-select-footer"><strong>{L(`${selectedProducts.length} product${selectedProducts.length === 1 ? '' : 's'} selected`, `${selectedProducts.length} پروڈکٹس منتخب`)}</strong><div className="zm-chips">{selectedProducts.map(p => <button className="zm-chip soft" key={p.id} onClick={() => removeProduct(p.id)} aria-label={`Remove ${p.name}`}>{N(p.name)} ×</button>)}</div><button className="zm-primary" disabled={!selectedProducts.length} onClick={() => setStage('refine')}>{L('Continue', 'جاری رکھیں')} <Icon name="arrow" /></button><button className="zm-quick-compare" disabled={!selectedProducts.length} onClick={openReport}>{L('Compare now', 'ابھی موازنہ کریں')} · {selectionLabel}</button></div>
       </div>}
 
       {stage === 'refine' && <div className="zm-content">
-        {!selectedProducts.length ? <div className="zm-empty">Select a product to continue.<button className="zm-primary" onClick={() => setStage('select')}>Choose products</button></div> : <>
+        {!selectedProducts.length ? <div className="zm-empty">{L('Select a product to continue.', 'جاری رکھنے کے لیے پروڈکٹ منتخب کریں۔')}<button className="zm-primary" onClick={() => setStage('select')}>{L('Choose products', 'پروڈکٹس منتخب کریں')}</button></div> : <>
           {filterControls()}
           {selectedProducts.map(p => {
             const category = availableCategories.find(c => c.products.some(x => x.id === p.id)); return <section className="zm-product-filters" key={p.id} aria-label={`${p.name} filters`}>
-              <div className="zm-product-heading"><Crop product={p} size={43} /><div><h2>{p.name} Filters</h2>{category?.kind === 'vertical' && <small>{category.name} → {p.name}</small>}</div></div>
-              <div className="zm-white-card">{filterGroup(p, 'Byproducts', 'byproductIds', p.byproducts.map(b => ({ id: b.id, label: b.name })))}</div>
+              <div className="zm-product-heading"><Crop product={p} size={43} /><div><h2>{L(`${p.name} Filters`, `${N(p.name)} فلٹرز`)}</h2>{category?.kind === 'vertical' && <small>{N(category.name)} → {N(p.name)}</small>}</div></div>
+              <div className="zm-white-card">{filterGroup(p, L('Byproducts', 'ضمنی مصنوعات'), 'byproductIds', p.byproducts.map(b => ({ id: b.id, label: N(b.name) })))}</div>
             </section>;
           })}
-          <section className="zm-location-section"><h2>Location <small>for all products</small></h2>
+          <section className="zm-location-section"><h2>{L('Location', 'مقام')} <small>{L('for all products', 'تمام پروڈکٹس کے لیے')}</small></h2>
             <button type="button" className="zm-loc-pill" onClick={() => setLocationPickerOpen(true)} aria-haspopup="dialog">
               <span className="zm-loc-pill-icon" aria-hidden="true"><MapPin size={16} /></span>
-              <span className="zm-loc-pill-text"><b>{selectionLabel}</b><small>{selectedLocations.length} mandis · tap to change</small></span>
+              <span className="zm-loc-pill-text"><b>{selectionLabel}</b><small>{L(`${selectedLocations.length} mandis · tap to change`, `${selectedLocations.length} منڈیاں · تبدیل کرنے کے لیے ٹیپ کریں`)}</small></span>
               <ChevronDown size={16} aria-hidden="true" />
             </button>
           </section>
-          <div className="zm-selection-summary"><Icon name="compare" size={18} /><div><strong>Your Selection</strong><p>{selectedProducts.map(p => p.name).join(', ')}<br />{selectionLabel}</p></div><div><strong>{byproductCount} byproducts</strong><p>{typeList.length} price types<br />{selectedLocations.length} mandis</p></div></div>
-          <button className="zm-primary" onClick={openReport}>Compare <Icon name="arrow" /></button>
+          <div className="zm-selection-summary"><Icon name="compare" size={18} /><div><strong>{L('Your Selection', 'آپ کا انتخاب')}</strong><p>{selectedProducts.map(p => N(p.name)).join('، ')}<br />{selectionLabel}</p></div><div><strong>{L(`${byproductCount} byproducts`, `${byproductCount} ضمنی مصنوعات`)}</strong><p>{L(`${typeList.length} price types`, `${typeList.length} ریٹ کی اقسام`)}<br />{L(`${selectedLocations.length} mandis`, `${selectedLocations.length} منڈیاں`)}</p></div></div>
+          <button className="zm-primary" onClick={openReport}>{L('Compare', 'موازنہ کریں')} <Icon name="arrow" /></button>
         </>}
       </div>}
 
       {stage === 'report' && <div className="zm-content zm-report">
-        <section className="zm-hero" aria-label="Report summary">
+        <section className="zm-hero" aria-label={L('Report summary', 'رپورٹ کا خلاصہ')}>
           <div className="zm-hero-glow" aria-hidden="true" />
           <div className="zm-hero-top">
             <div className="zm-hero-avatars" aria-hidden="true">{selectedProducts.slice(0, 4).map(p => <span key={p.id}>{p.imageUrl ? <img src={p.imageUrl} alt="" /> : <Icon name="leaf" size={16} />}</span>)}</div>
-            <span className="zm-hero-kicker">Market comparison · PKT</span>
+            <span className="zm-hero-kicker">{L('Market comparison · PKT', 'منڈی موازنہ · پاکستانی وقت')}</span>
           </div>
-          <h2 className="zm-hero-title">{selectedProducts.map(p => p.name).join(' vs ')}</h2>
+          <h2 className="zm-hero-title">{selectedProducts.map(p => N(p.name)).join(L(' vs ', ' بمقابلہ '))}</h2>
           <p className="zm-hero-where"><MapPin size={13} aria-hidden="true" />{scopeColumns.map(c => c.label).join(' · ')}</p>
           <div className="zm-hero-controls">
-            <label className="zm-hero-pill"><CalendarDays size={14} aria-hidden="true" /><select aria-label="Report date" value={activeDay} onChange={e => setReportDate(e.target.value)}>{unique([activeDay, ...availableDays].filter(Boolean)).map(day => <option key={day} value={day}>{new Date(day + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</option>)}{!availableDays.length && <option value="">No dated records</option>}</select><ChevronDown size={13} aria-hidden="true" /></label>
+            <label className="zm-hero-pill"><CalendarDays size={14} aria-hidden="true" /><select aria-label={L('Report date', 'رپورٹ کی تاریخ')} value={activeDay} onChange={e => setReportDate(e.target.value)}>{unique([activeDay, ...availableDays].filter(Boolean)).map(day => <option key={day} value={day}>{date(day, { weekday: 'short', day: 'numeric', month: 'short' })}</option>)}{!availableDays.length && <option value="">{L('No dated records', 'کوئی تاریخ والا ریکارڈ نہیں')}</option>}</select><ChevronDown size={13} aria-hidden="true" /></label>
             {filterControls()}
           </div>
           <div className="zm-hero-stats">
-            <div><b>{variants.length}</b><span>Byproducts</span></div>
-            <div><b>{reportingLocations.length}</b><span>Mandis reporting</span></div>
-            <div><b>{filteredRows.length}</b><span>Reports</span></div>
+            <div><b>{variants.length}</b><span>{L('Byproducts', 'ضمنی مصنوعات')}</span></div>
+            <div><b>{reportingLocations.length}</b><span>{L('Mandis reporting', 'رپورٹ کرنے والی منڈیاں')}</span></div>
+            <div><b>{filteredRows.length}</b><span>{L('Reports', 'رپورٹس')}</span></div>
           </div>
           <div className="zm-hero-actions">
-            <button type="button" className="zm-hero-btn primary" onClick={downloadPdf} disabled={!filteredRows.length || pdfBusy}><FileDown size={15} aria-hidden="true" />{pdfBusy ? 'Preparing…' : 'Download PDF'}</button>
-            <button type="button" className="zm-hero-btn" onClick={() => persist(effective)}><Bookmark size={15} aria-hidden="true" />Save</button>
-            <button type="button" className="zm-hero-btn" onClick={toggleRotation} aria-label={rotated ? 'Back to portrait' : 'Landscape view'}><Maximize2 size={15} aria-hidden="true" />{rotated ? 'Portrait' : 'Landscape'}</button>
+            <button type="button" className="zm-hero-btn primary" onClick={downloadPdf} disabled={!filteredRows.length || pdfBusy}><FileDown size={15} aria-hidden="true" />{pdfBusy ? L('Preparing…', 'تیار ہو رہی ہے…') : L('Download PDF', 'PDF ڈاؤن لوڈ')}</button>
+            <button type="button" className="zm-hero-btn" onClick={() => persist(effective)}><Bookmark size={15} aria-hidden="true" />{L('Save', 'محفوظ کریں')}</button>
+            <button type="button" className="zm-hero-btn" onClick={toggleRotation} aria-label={rotated ? L('Back to portrait', 'عمودی پر واپس') : L('Landscape view', 'افقی منظر')}><Maximize2 size={15} aria-hidden="true" />{rotated ? L('Portrait', 'عمودی') : L('Landscape', 'افقی')}</button>
           </div>
         </section>
-        <section ref={overview} id={`${reportId}-overview`} tabIndex={-1} className="zm-report-section" aria-label="Comparison report top">
-          {hasOverlap && <p className="zm-aggregate-caution">Selected areas overlap. A mandi may contribute to more than one column; columns are not added together.</p>}
-          {(audit.duplicates > 0 || audit.conflictingIds > 0) && <p className="zm-aggregate-caution">{audit.duplicates} repeated rows removed. {audit.conflictingIds} conflicting record IDs excluded.</p>}
-          {rowsLoading && <div className="zm-empty zm-loading" role="status"><span className="zm-spinner" aria-hidden="true" /><h3>Loading market reports…</h3></div>}
-          {rowsError && !rowsLoading && <div className="zm-empty" role="alert"><h3>Couldn’t load market reports</h3><p>{rowsError}</p></div>}
-          {!rowsLoading && !rowsError && !filteredRows.length && <div className="zm-empty"><Icon name="search" size={28} /><h3>No reports match this selection</h3><p>Choose another grade, price type, or location.</p><button className="zm-primary" onClick={() => setStage('refine')}>Edit filters</button></div>}
+        <section ref={overview} id={`${reportId}-overview`} tabIndex={-1} className="zm-report-section" aria-label={L('Comparison report top', 'موازنہ رپورٹ کا آغاز')}>
+          {hasOverlap && <p className="zm-aggregate-caution">{L('Selected areas overlap. A mandi may contribute to more than one column; columns are not added together.', 'منتخب علاقے ایک دوسرے میں شامل ہیں۔ ایک منڈی ایک سے زیادہ کالم میں آ سکتی ہے؛ کالم آپس میں جمع نہیں کیے جاتے۔')}</p>}
+          {(audit.duplicates > 0 || audit.conflictingIds > 0) && <p className="zm-aggregate-caution">{L(`${audit.duplicates} repeated rows removed. ${audit.conflictingIds} conflicting record IDs excluded.`, `${audit.duplicates} دہرائی گئی قطاریں ہٹا دی گئیں۔ ${audit.conflictingIds} متضاد ریکارڈ شامل نہیں کیے گئے۔`)}</p>}
+          {rowsLoading && <div className="zm-empty zm-loading" role="status"><span className="zm-spinner" aria-hidden="true" /><h3>{L('Loading market reports…', 'منڈی رپورٹس لوڈ ہو رہی ہیں…')}</h3></div>}
+          {rowsError && !rowsLoading && <div className="zm-empty" role="alert"><h3>{L('Couldn’t load market reports', 'منڈی رپورٹس لوڈ نہیں ہو سکیں')}</h3><p>{rowsError}</p></div>}
+          {!rowsLoading && !rowsError && !filteredRows.length && <div className="zm-empty"><Icon name="search" size={28} /><h3>{L('No reports match this selection', 'اس انتخاب کے مطابق کوئی رپورٹ نہیں')}</h3><p>{L('Choose another grade, price type, or location.', 'کوئی اور گریڈ، ریٹ کی قسم یا مقام منتخب کریں۔')}</p><button className="zm-primary" onClick={() => setStage('refine')}>{L('Edit filters', 'فلٹر تبدیل کریں')}</button></div>}
         </section>
         <div className="zm-finance-surface">{matrixReport()}</div>
-        <section ref={summary} id={`${reportId}-summary`} tabIndex={-1} data-matrix-section="summary" className="zm-report-section zm-summary" aria-label="Comparison summary"><div className="zm-section-heading"><span>05 / END OF REPORT</span><h2>Comparison Summary</h2></div>
-          <div className="zm-summary-products">{selectedProducts.map(p => <div key={p.id} className="zm-white-card"><Crop product={p} size={58} /><div><h3>{p.name}</h3><p>{effective.filters[p.id].byproductIds.length} byproducts<br />{effective.filters[p.id].priceTypes.length} price types<br />{unique(filteredRows.filter(r => r.productId === p.id).map(r => r.locationId)).length} reporting mandis</p></div></div>)}</div>
-          <div className="zm-white-card zm-covered"><h3><Icon name="pin" size={18} /> Provinces Covered</h3><div className="zm-province-pills">{selectedProvinces.map(p => <div key={p}><strong>{p}</strong><small>{selectedLocations.filter(l => l.province === p).length} selected mandis</small></div>)}</div></div>
-          <div className="zm-summary-info"><Icon name="chart" size={30} /><p>{filteredRows.length} distinct source observations · {variants.length} byproduct columns · {reportingLocations.length} reporting mandis. Means are calculated from source rows, never from already-rounded averages.</p></div>
+        <section ref={summary} id={`${reportId}-summary`} tabIndex={-1} data-matrix-section="summary" className="zm-report-section zm-summary" aria-label={L('Comparison summary', 'موازنے کا خلاصہ')}><div className="zm-section-heading"><span>{L('05 / END OF REPORT', '05 / رپورٹ کا اختتام')}</span><h2>{L('Comparison Summary', 'موازنے کا خلاصہ')}</h2></div>
+          <div className="zm-summary-products">{selectedProducts.map(p => <div key={p.id} className="zm-white-card"><Crop product={p} size={58} /><div><h3>{N(p.name)}</h3><p>{L(`${effective.filters[p.id].byproductIds.length} byproducts`, `${effective.filters[p.id].byproductIds.length} ضمنی مصنوعات`)}<br />{L(`${effective.filters[p.id].priceTypes.length} price types`, `${effective.filters[p.id].priceTypes.length} ریٹ کی اقسام`)}<br />{L(`${unique(filteredRows.filter(r => r.productId === p.id).map(r => r.locationId)).length} reporting mandis`, `${unique(filteredRows.filter(r => r.productId === p.id).map(r => r.locationId)).length} رپورٹ کرنے والی منڈیاں`)}</p></div></div>)}</div>
+          <div className="zm-white-card zm-covered"><h3><Icon name="pin" size={18} /> {L('Provinces Covered', 'شامل صوبے')}</h3><div className="zm-province-pills">{selectedProvinces.map(p => <div key={p}><strong>{N(p)}</strong><small>{L(`${selectedLocations.filter(l => l.province === p).length} selected mandis`, `${selectedLocations.filter(l => l.province === p).length} منتخب منڈیاں`)}</small></div>)}</div></div>
+          <div className="zm-summary-info"><Icon name="chart" size={30} /><p>{L(`${filteredRows.length} distinct source observations · ${variants.length} byproduct columns · ${reportingLocations.length} reporting mandis. Means are calculated from source rows, never from already-rounded averages.`, `${filteredRows.length} منفرد اصل رپورٹس · ${variants.length} ضمنی مصنوعات کے کالم · ${reportingLocations.length} رپورٹ کرنے والی منڈیاں۔ اوسط اصل ریکارڈ سے نکالی جاتی ہے، پہلے سے گول کی گئی اوسط سے نہیں۔`)}</p></div>
           <div className="zm-farm-art"><p lang="ur" dir="rtl">بہتر معلومات<br />بہتر فیصلے</p><small>Better Information<br />Better Decisions</small><svg viewBox="0 0 400 125" aria-hidden="true"><g fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M0 64Q100 5 220 68T400 70M0 88Q135 33 280 100M0 112Q110 70 240 125M80 125q90-75 250-40M172 125q100-53 228-23M12 34h45m210-8h38M298 65V43l19-18 20 18v27m-25-2V48h10v18" /><path d="M58 75V37m0 16-9-9m9 1 10-11M365 79V36m0 23-11-12m11 1 11-9" /><circle cx="57" cy="25" r="10" /><path d="m198 29 7-4 7 4m-38 9 7-4 7 4" /></g></svg></div>
-          <button className="zm-primary" onClick={() => { lastToggle.current = document.activeElement as HTMLButtonElement; setShowDecision(true); }}><Icon name="headset" /> Get Market Decision <Icon name="arrow" /></button><p className="zm-decision-caption"><Icon name="headset" size={16} />{onDecisionRequest ? 'Send your comparison to the team for a human review.' : 'Prepare a request for your market team. It downloads as a file until a team inbox is connected.'}</p>
-          <div className="zm-summary-actions"><button onClick={() => jump(overview)}>Back to report ↑</button><button onClick={reset}>New comparison</button></div>
+          <button className="zm-primary" onClick={() => { lastToggle.current = document.activeElement as HTMLButtonElement; setShowDecision(true); }}><Icon name="headset" /> {L('Get Market Decision', 'منڈی کا فیصلہ حاصل کریں')} <Icon name="arrow" /></button><p className="zm-decision-caption"><Icon name="headset" size={16} />{onDecisionRequest ? L('Send your comparison to the team for a human review.', 'اپنا موازنہ ٹیم کو جائزے کے لیے بھیجیں۔') : L('Prepare a request for your market team. It downloads as a file until a team inbox is connected.', 'اپنی منڈی ٹیم کے لیے درخواست تیار کریں۔ ٹیم ان باکس جڑنے تک یہ فائل کے طور پر ڈاؤن لوڈ ہوتی ہے۔')}</p>
+          <div className="zm-summary-actions"><button onClick={() => jump(overview)}>{L('Back to report ↑', 'رپورٹ پر واپس ↑')}</button><button onClick={reset}>{L('New comparison', 'نیا موازنہ')}</button></div>
         </section>
       </div>}
     </div>
 
-    {stage === 'report' && activeView && navigationItems.length > 1 && <HeadingNavigator headings={navigationItems} activeId={activeView.id} onSelect={navigateView} kind="Sections" />}
+    {stage === 'report' && activeView && navigationItems.length > 1 && <HeadingNavigator headings={navigationItems} activeId={activeView.id} onSelect={navigateView} kind={L('Sections', 'حصے')} />}
     {stage === 'report' && !isLandscape && !rotateDismissed && <div className="zm-rotate-prompt" role="dialog" aria-modal="true" aria-labelledby={`${reportId}-rotate`}>
       <div className="zm-rotate-card">
         <span className="zm-rotate-phone" aria-hidden="true"><i /></span>
-        <h2 id={`${reportId}-rotate`}>Rotate your phone</h2>
-        <p>The comparison sheet shows every column side by side in landscape.</p>
-        <button className="zm-primary" onClick={toggleRotation}>Rotate</button>
-        <button className="zm-rotate-skip" onClick={() => setRotateDismissed(true)}>Keep portrait</button>
+        <h2 id={`${reportId}-rotate`}>{L('Rotate your phone', 'فون گھمائیں')}</h2>
+        <p>{L('The comparison sheet shows every column side by side in landscape.', 'افقی حالت میں موازنہ شیٹ تمام کالم ساتھ ساتھ دکھاتی ہے۔')}</p>
+        <button className="zm-primary" onClick={toggleRotation}>{L('Rotate', 'گھمائیں')}</button>
+        <button className="zm-rotate-skip" onClick={() => setRotateDismissed(true)}>{L('Keep portrait', 'عمودی رکھیں')}</button>
       </div>
     </div>}
     {notice && <div className="zm-toast" role="status">{notice}</div>}
@@ -715,7 +746,7 @@ export default function ZaraiMandiCompare(props: ZaraiMandiCompareProps) {
       onApply: picked => { applyPickedLocations(picked); setLocationPickerOpen(false); },
       onClose: () => setLocationPickerOpen(false),
     })}
-    {showDecision && <Modal title="Get Market Decision" onClose={() => { if (!sending) { setShowDecision(false); lastToggle.current?.focus(); } }}><p className="zm-subtle">{onDecisionRequest ? 'The market team will receive your selection and contact details.' : 'No service is connected. Download a request containing your selection and contact details.'}</p><form onSubmit={submitDecision}><label className="zm-field">Your name<input name="name" required autoComplete="name" maxLength={100} /></label><label className="zm-field">Contact number<input name="phone" required type="tel" autoComplete="tel" placeholder="+92 …" maxLength={30} /></label><label className="zm-field">What would you like to discuss?<textarea name="note" rows={3} maxLength={1000} placeholder="Tell the team what you are comparing…" /></label>{decisionError && <p role="alert" className="zm-error">{decisionError}</p>}<button className="zm-primary" disabled={sending}>{sending ? 'Sending…' : onDecisionRequest ? 'Send to market team' : 'Download request'}<Icon name="arrow" /></button></form></Modal>}
+    {showDecision && <Modal title={L('Get Market Decision', 'منڈی کا فیصلہ حاصل کریں')} onClose={() => { if (!sending) { setShowDecision(false); lastToggle.current?.focus(); } }}><p className="zm-subtle">{onDecisionRequest ? L('The market team will receive your selection and contact details.', 'منڈی ٹیم کو آپ کا انتخاب اور رابطہ معلومات مل جائیں گی۔') : L('No service is connected. Download a request containing your selection and contact details.', 'کوئی سروس منسلک نہیں۔ اپنے انتخاب اور رابطہ معلومات کے ساتھ درخواست ڈاؤن لوڈ کریں۔')}</p><form onSubmit={submitDecision}><label className="zm-field">{L('Your name', 'آپ کا نام')}<input name="name" required autoComplete="name" maxLength={100} /></label><label className="zm-field">{L('Contact number', 'رابطہ نمبر')}<input name="phone" required type="tel" autoComplete="tel" placeholder="+92 …" maxLength={30} /></label><label className="zm-field">{L('What would you like to discuss?', 'آپ کس بارے میں بات کرنا چاہتے ہیں؟')}<textarea name="note" rows={3} maxLength={1000} placeholder={L('Tell the team what you are comparing…', 'ٹیم کو بتائیں آپ کس کا موازنہ کر رہے ہیں…')} /></label>{decisionError && <p role="alert" className="zm-error">{decisionError}</p>}<button className="zm-primary" disabled={sending}>{sending ? L('Sending…', 'بھیجا جا رہا ہے…') : onDecisionRequest ? L('Send to market team', 'منڈی ٹیم کو بھیجیں') : L('Download request', 'درخواست ڈاؤن لوڈ کریں')}<Icon name="arrow" /></button></form></Modal>}
   </main>;
 }
 
@@ -785,7 +816,7 @@ function SmoothDropdown({ label = 'Filter', summary = '', ariaLabel, icon, open:
       }}>
       <div className="smooth-panel-scroll" style={{ maxHeight: bounds.maxHeight - 2 }}>
         <div ref={contentRef}>
-          <div className="smooth-panel-heading"><div>{icon}<span>{label}<small>{summary}</small></span></div><button type="button" aria-label="Close filters" onClick={close}><X size={20} /></button></div>
+          <div className="smooth-panel-heading"><div>{icon}<span>{label}<small>{summary}</small></span></div><button type="button" aria-label="Close" onClick={close}><X size={20} /></button></div>
           <motion.div initial={{ opacity: 0, y: reduced ? 0 : 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduced ? 0 : 0.2, delay: reduced ? 0 : 0.06 }} className="smooth-panel-content">
             {children}
           </motion.div>

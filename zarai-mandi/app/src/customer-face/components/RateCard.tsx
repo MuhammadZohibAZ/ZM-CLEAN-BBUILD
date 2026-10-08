@@ -238,7 +238,7 @@ export function RateCard({
                   : "inherit",
             }}
           >
-            {lang === "ur" ? "کم قیمت (۴۰ کلو)" : "Min (40 KG)"}
+            {lang === "ur" ? "کم قیمت (40 کلو)" : "Min (40 KG)"}
           </span>
         </div>
 
@@ -270,7 +270,7 @@ export function RateCard({
                   : "inherit",
             }}
           >
-            {lang === "ur" ? "زیادہ قیمت (۴۰ کلو)" : "Max (40 KG)"}
+            {lang === "ur" ? "زیادہ قیمت (40 کلو)" : "Max (40 KG)"}
           </span>
         </div>
       </div>

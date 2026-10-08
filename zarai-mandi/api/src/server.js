@@ -11,6 +11,7 @@ import {
   getTrend,
   getTrendAllRateTypes,
   getVerticalCardStats,
+  getVerticalSplitCardStats,
 } from "./aggregate.js";
 import { registerCompareRoutes } from "./compare.js";
 
@@ -79,6 +80,18 @@ app.get("/api/verticals/:division/card-stats", async (req, res) => {
   const { division } = req.params;
   const { date, locationKind, locationLabel } = req.query;
   const results = await getVerticalCardStats(division, { date, locationKind, locationLabel });
+  res.json(results);
+});
+
+// Tester screens: one card per by-product x special-attribute value (by=attribute)
+// or per by-product x rate type (by=rateType).
+app.get("/api/verticals/:division/card-stats-split", async (req, res) => {
+  const { division } = req.params;
+  const { date, locationKind, locationLabel, by } = req.query;
+  if (by !== "attribute" && by !== "rateType") {
+    return res.status(400).json({ error: "by must be 'attribute' or 'rateType'" });
+  }
+  const results = await getVerticalSplitCardStats(division, { date, locationKind, locationLabel, by });
   res.json(results);
 });
 

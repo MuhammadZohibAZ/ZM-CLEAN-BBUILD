@@ -52,7 +52,7 @@ export const ExpandableMandiMapCard: React.FC<ExpandableMandiMapCardProps> = ({
 }) => {
   const mapRecords = records ?? [];
   const isUr = lang === "ur";
-  const n = (v: number) => (isUr ? String(v).replace(/[0-9]/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[+d]) : String(v));
+  const n = (v: number) => String(v); // Urdu text uses English digits too
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const containerRef = useRef<HTMLDivElement>(null);

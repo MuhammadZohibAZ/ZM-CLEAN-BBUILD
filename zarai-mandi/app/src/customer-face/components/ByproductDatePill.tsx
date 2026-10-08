@@ -116,8 +116,8 @@ export function ByproductDatePill({
                 </span>
               </div>
 
-              {/* Dash separator */}
-              <span className="text-[10px] font-bold text-[#10B981] pb-0.5">-</span>
+              {/* Divider (a "-" renders like a kashida in the Urdu font) */}
+              <span className="w-px h-5 bg-[#10B981]/45 mx-0.5 flex-shrink-0" aria-hidden="true" />
 
               {/* Right Column: Hijri Date & Year */}
               <div className="flex flex-col items-center leading-none">
@@ -209,7 +209,7 @@ export function ByproductDatePill({
                         fontFamily: lang === "ur" ? URDU_FONT : "inherit",
                       }}
                     >
-                      {lang === "ur" ? "۱۴ ستمبر (تازہ ترین)" : "14 Sep (Latest)"}
+                      {lang === "ur" ? "14 ستمبر (تازہ ترین)" : "14 Sep (Latest)"}
                     </button>
                   </div>
                 )}

@@ -68,7 +68,7 @@ export function VoiceQueryOverlay({
       timerRef.current = setTimeout(() => {
         setPhase("speaking");
         if (lang === "ur") {
-          speakText("پاکپتن منڈی میں گندم کا مل ریٹ ۲۸۵۰ روپے ہے۔");
+          speakText("پاکپتن منڈی میں گندم کا مل ریٹ 2850 روپے ہے۔");
         } else {
           speakText("Wheat Mill Rate in Pakpattan Mandi is 2850 rupees.");
         }

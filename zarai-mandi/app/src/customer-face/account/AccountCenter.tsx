@@ -9,7 +9,7 @@ import { speakText } from "../shared/voice";
 // ─── ACCOUNT CENTER ───────────────────────────────────────────────────────────
 // Everything behind the profile button on the home screen: the account menu
 // and each sheet it opens (edit profile, subscriptions, voice & language,
-// historical data, representative, contact us, log out). HomeScreen only holds
+// representative, contact us — incl. historical data requests — log out). HomeScreen only holds
 // which view is open and the saved profile; all form state lives here.
 
 // Contact details — edit here to change them everywhere in this section.
@@ -46,7 +46,6 @@ export type AccountView =
   | "edit"
   | "subs"
   | "voice"
-  | "historical"
   | "rep"
   | "help"
   | "logout";
@@ -566,7 +565,7 @@ export function AccountCenter({
 
   const planLabel = profileCompleted
     ? L("Zarai Mandi Pro", "زرعی منڈی پرو")
-    : L("Free Trial · 2 days left", "مفت ٹرائل · ۲ دن باقی");
+    : L("Free Trial · 2 days left", "مفت ٹرائل · 2 دن باقی");
 
   const initials =
     profile.name
@@ -682,16 +681,6 @@ export function AccountCenter({
             />
             <Row
               isUr={isUr}
-              icon="calendar"
-              label={L("Historical Data", "تاریخی ڈیٹا")}
-              sub={L(
-                "Request data from before you subscribed",
-                "سائن اپ سے پہلے کا ڈیٹا حاصل کریں",
-              )}
-              onClick={() => onViewChange("historical")}
-            />
-            <Row
-              isUr={isUr}
               icon="users"
               label={
                 hasRepAccount
@@ -723,9 +712,8 @@ export function AccountCenter({
               isUr={isUr}
               icon="globe"
               label={L("Voice & Language", "آواز اور زبان")}
-              sub={`${isUr ? "اردو" : "English"} · ${
-                voiceEnabled ? L("Voice on", "آواز فعال") : L("Voice off", "آواز بند")
-              }`}
+              sub={`${isUr ? "اردو" : "English"} · ${voiceEnabled ? L("Voice on", "آواز فعال") : L("Voice off", "آواز بند")
+                }`}
               onClick={() => onViewChange("voice")}
               last
             />
@@ -739,7 +727,10 @@ export function AccountCenter({
               isUr={isUr}
               icon="headset"
               label={L("Contact Us", "ہم سے رابطہ کریں")}
-              sub={L("WhatsApp, helpline, email & FAQs", "واٹس ایپ، ہیلپ لائن، ای میل")}
+              sub={L(
+                "Mandi updates, trade directory, international rates, historical data & FAQs",
+                "منڈی اپڈیٹس، تجارتی ڈائریکٹری، بین الاقوامی ریٹس، تاریخی ڈیٹا",
+              )}
               onClick={() => onViewChange("help")}
               last
             />
@@ -893,7 +884,7 @@ export function AccountCenter({
 
             <div>
               <p className="text-sm font-semibold text-center mb-3" style={{ color: C.ink }}>
-                {L("Enter the 4-digit code we sent you", "۴ ہندسوں کا OTP کوڈ درج کریں")}
+                {L("Enter the 4-digit code we sent you", "4 ہندسوں کا OTP کوڈ درج کریں")}
               </p>
               <div className="flex justify-center gap-3" dir="ltr">
                 {[0, 1, 2, 3].map((idx) => (
@@ -938,7 +929,7 @@ export function AccountCenter({
                     setOtpError(
                       L(
                         "Please enter the full 4-digit code",
-                        "براہ کرم مکمل ۴ ہندسوں کا کوڈ درج کریں",
+                        "براہ کرم مکمل 4 ہندسوں کا کوڈ درج کریں",
                       ),
                     );
                     return;
@@ -980,7 +971,7 @@ export function AccountCenter({
               className="text-[10.5px] font-semibold px-2 py-0.5 rounded-full"
               style={{ background: "rgba(255,255,255,0.18)" }}
             >
-              {profileCompleted ? L("Active", "فعال") : L("2 days left", "۲ دن باقی")}
+              {profileCompleted ? L("Active", "فعال") : L("2 days left", "2 دن باقی")}
             </span>
           </div>
           <p className="text-lg font-bold mt-1.5">
@@ -1122,42 +1113,6 @@ export function AccountCenter({
     );
   }
 
-  // ── HISTORICAL DATA ─────────────────────────────────────────────────────────
-  if (view === "historical") {
-    return (
-      <Sheet title={L("Historical Data", "تاریخی ڈیٹا")} onClose={close} maxHeight="85vh" isUr={isUr}>
-        <p className="text-sm leading-relaxed" style={{ color: C.muted }}>
-          {L(
-            "Rates and analytics are available from your signup date onward. For records from before you subscribed, our data team can prepare a custom export.",
-            "ایپ میں آپ کے سائن اپ کی تاریخ کے بعد کا مکمل ڈیٹا دستیاب ہے۔ اگر آپ کو اس سے پہلے کا تاریخی ڈیٹا درکار ہے تو ہماری ٹیم سے رابطہ کریں۔",
-          )}
-        </p>
-        <Card>
-          <Row
-            isUr={isUr}
-            icon="whatsapp"
-            label={L("WhatsApp", "واٹس ایپ")}
-            sub={<Ltr>{ZM_CONTACT.whatsappDisplay}</Ltr>}
-            href={waLink("Hello Zarai Mandi Team, I need historical data prior to my subscription")}
-          />
-          <Row
-            isUr={isUr}
-            icon="mail"
-            label={L("Email", "ای میل")}
-            sub={ZM_CONTACT.email}
-            href={`mailto:${ZM_CONTACT.email}?subject=${encodeURIComponent(
-              "Request for Prior Historical Data",
-            )}&body=${encodeURIComponent(
-              "Hello Zarai Mandi Team,\n\nI need historical data prior to my subscription date. Please assist.",
-            )}`}
-            last
-          />
-        </Card>
-        <PrimaryButton onClick={close}>{L("Done", "ٹھیک ہے")}</PrimaryButton>
-      </Sheet>
-    );
-  }
-
   // ── BECOME A REPRESENTATIVE ─────────────────────────────────────────────────
   if (view === "rep") {
     return (
@@ -1198,6 +1153,14 @@ export function AccountCenter({
 
   // ── CONTACT US ──────────────────────────────────────────────────────────────
   if (view === "help") {
+    // What the team can provide on WhatsApp; one button opens one chat for all of it.
+    const whatsappServices: { icon: keyof typeof ICON_PATHS; title: string }[] = [
+      { icon: "bell", title: L("Ghalla Mandi updates", "غلہ منڈی اپڈیٹس") },
+      { icon: "users", title: L("Trade directory", "تجارتی ڈائریکٹری") },
+      { icon: "globe", title: L("International rates", "بین الاقوامی ریٹس") },
+      { icon: "calendar", title: L("Historical data", "تاریخی ڈیٹا") },
+    ];
+
     const faqs = [
       {
         q: L("How often are mandi rates updated?", "منڈی کے ریٹس کتنی بار اپ ڈیٹ ہوتے ہیں؟"),
@@ -1214,6 +1177,13 @@ export function AccountCenter({
         ),
       },
       {
+        q: L("How far back does the data in the app go?", "ایپ میں کتنا پرانا ڈیٹا موجود ہے؟"),
+        a: L(
+          "Rates and analytics are available from your signup date onward. For earlier records, message us on WhatsApp above and our team will prepare a custom export.",
+          "ایپ میں آپ کے سائن اپ کی تاریخ کے بعد کا مکمل ڈیٹا دستیاب ہے۔ اس سے پہلے کا ڈیٹا چاہیے تو اوپر واٹس ایپ پر رابطہ کریں، ہماری ٹیم آپ کو فراہم کرے گی۔",
+        ),
+      },
+      {
         q: L("Which payment methods are supported?", "ادائیگی کے کون سے طریقے دستیاب ہیں؟"),
         a: L(
           "JazzCash, EasyPaisa, SadaPay, NayaPay and 1Link bank transfers.",
@@ -1224,57 +1194,55 @@ export function AccountCenter({
 
     return (
       <Sheet title={L("Contact Us", "ہم سے رابطہ کریں")} onClose={close} maxHeight="92vh" isUr={isUr}>
-        {/* Ghalla Mandi WhatsApp updates */}
+        {/* One WhatsApp entry point for everything the team provides */}
         <div
           className="p-4 rounded-2xl"
           style={{ background: `linear-gradient(135deg, ${C.deep}, ${C.primary})` }}
         >
-          <div className="flex items-start gap-3">
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: "rgba(255,255,255,0.16)" }}
-            >
-              <Icon name="bell" size={20} color="#fff" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p
-                className="font-bold text-white"
-                style={{ fontSize: isUr ? 16 : 15, fontFamily: isUr ? URDU_FONT : "inherit" }}
-              >
-                {L("Ghalla Mandi updates on WhatsApp", "غلہ منڈی اپڈیٹس واٹس ایپ پر")}
-              </p>
-              <p className="text-xs mt-0.5 leading-relaxed" style={{ color: "#CDEBDF" }}>
-                {L(
-                  "Get daily grain market rates and news sent straight to your WhatsApp.",
-                  "روزانہ غلہ منڈی کے ریٹس اور خبریں براہ راست اپنے واٹس ایپ پر حاصل کریں۔",
-                )}
-              </p>
-            </div>
+          <p
+            className="font-bold text-white"
+            style={{ fontSize: isUr ? 16 : 15, fontFamily: isUr ? URDU_FONT : "inherit" }}
+          >
+            {L("Get more on WhatsApp", "واٹس ایپ پر مزید حاصل کریں")}
+          </p>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-2 mt-3">
+            {whatsappServices.map((item) => (
+              <span key={item.icon} className="flex items-center gap-2 min-w-0">
+                <span
+                  className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ background: "rgba(255,255,255,0.16)" }}
+                >
+                  <Icon name={item.icon} size={15} color="#fff" />
+                </span>
+                <span
+                  className="text-[12.5px] font-semibold leading-tight text-white"
+                  style={{ fontFamily: isUr ? URDU_FONT : "inherit" }}
+                >
+                  {item.title}
+                </span>
+              </span>
+            ))}
           </div>
           <a
             href={waLink(
-              `Assalam-o-Alaikum Zarai Mandi Team, I would like to receive Ghalla Mandi updates on WhatsApp. Name: ${profile.name}`,
+              `Assalam-o-Alaikum Zarai Mandi Team, I would like information on Ghalla Mandi updates, the trade directory, international rates or historical data. Name: ${profile.name}`,
             )}
             target="_blank"
             rel="noopener noreferrer"
-            className="tap-target mt-3 w-full py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition active:scale-[0.99]"
+            className="tap-target mt-4 w-full py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition active:scale-[0.99]"
             style={{ background: "#fff", color: C.deep }}
           >
             <Icon name="whatsapp" size={16} color={C.primary} />
-            {L("Get updates on WhatsApp", "واٹس ایپ پر اپڈیٹس حاصل کریں")}
+            {L("Chat on WhatsApp", "واٹس ایپ پر بات کریں")}
+            <span className="font-semibold" style={{ color: C.muted }}>
+              · <Ltr>{ZM_CONTACT.whatsappDisplay}</Ltr>
+            </span>
           </a>
         </div>
 
         <div>
           <SectionLabel>{L("Talk to us", "ہم سے بات کریں")}</SectionLabel>
           <Card>
-            <Row
-              isUr={isUr}
-              icon="whatsapp"
-              label={L("WhatsApp support", "واٹس ایپ سپورٹ")}
-              sub={<Ltr>{ZM_CONTACT.whatsappDisplay}</Ltr>}
-              href={waLink("Hello Zarai Mandi Team, I need help with the app.")}
-            />
             <Row
               isUr={isUr}
               icon="phone"

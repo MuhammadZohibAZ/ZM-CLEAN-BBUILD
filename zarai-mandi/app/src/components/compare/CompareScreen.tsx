@@ -9,6 +9,7 @@ import ZaraiMandiCompare, {
   type PriceType,
 } from "./ZaraiMandiCompare";
 import { fetchCompareCatalog, fetchCompareRecords, type CompareCatalog, type CompareRecords } from "../../lib/api";
+import { URDU_FONT, useLang } from "../../customer-face/shared/i18n/LangProvider";
 
 /**
  * Live-data adapter for the Compare tab: loads the catalogue once, then each
@@ -162,8 +163,8 @@ function buildRows(records: CompareRecords, divisionOf: Map<string, string>): Ma
   return rows;
 }
 
-const formatDay = (day: string) =>
-  new Date(`${day}T12:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+const formatDay = (day: string, ur: boolean) =>
+  new Date(`${day}T12:00:00Z`).toLocaleDateString(ur ? "ur-PK-u-nu-latn" : "en-GB", { day: "numeric", month: "short", year: "numeric" });
 
 export default function CompareScreen({
   productIcon,
@@ -177,6 +178,9 @@ export default function CompareScreen({
   /** The app's location filter sheet, so Compare picks locations exactly like the product screens. */
   renderLocationPicker?: (props: LocationPickerProps) => ReactNode;
 }) {
+  const { lang } = useLang();
+  const ur = lang === "ur";
+  const L = (en: string, urText: string) => (ur ? urText : en);
   const [catalog, setCatalog] = useState<CompareCatalog | null>(null);
   const [catalogError, setCatalogError] = useState("");
   const [attempt, setAttempt] = useState(0);
@@ -186,7 +190,7 @@ export default function CompareScreen({
     setCatalogError("");
     fetchCompareCatalog()
       .then((c) => active && setCatalog(c))
-      .catch(() => active && setCatalogError("The market data service is not reachable."));
+      .catch(() => active && setCatalogError("unreachable"));
     return () => {
       active = false;
     };
@@ -241,7 +245,7 @@ export default function CompareScreen({
           loaded.current.set(id, buildRows(records, divisionOf));
           if (active) setVersion((v) => v + 1);
         })
-        .catch(() => active && setRowsError("Market reports could not be loaded. Check the connection and try again."))
+        .catch(() => active && setRowsError("failed"))
         .finally(() => active && setPending((p) => p.filter((x) => x !== id)));
     }
     return () => {
@@ -256,28 +260,28 @@ export default function CompareScreen({
 
   if (!catalog) {
     return (
-      <div className="flex h-full flex-col" style={{ background: "#F1F7F4" }}>
+      <div className="flex h-full flex-col" style={{ background: "#F1F7F4", fontFamily: ur ? URDU_FONT : undefined }}>
         <header className="zm-status-gap flex-shrink-0 px-4 pb-3 pt-10" style={{ background: "#F4FAF7", borderBottom: "1px solid #D5E2DD" }}>
-          <h1 className="text-xl font-extrabold text-[#183B34]">Compare</h1>
+          <h1 className="text-xl font-extrabold text-[#183B34]">{L("Compare", "موازنہ")}</h1>
         </header>
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-8 text-center">
           {catalogError ? (
             <>
-              <p className="text-[15px] font-bold text-[#183B34]">Couldn’t load products</p>
-              <p className="text-[13px] text-[#52635F]">{catalogError}</p>
+              <p className="text-[15px] font-bold text-[#183B34]">{L("Couldn’t load products", "پروڈکٹس لوڈ نہیں ہو سکیں")}</p>
+              <p className="text-[13px] text-[#52635F]">{L("The market data service is not reachable.", "منڈی ڈیٹا سروس تک رسائی نہیں ہو سکی۔")}</p>
               <button
                 type="button"
                 onClick={() => setAttempt((a) => a + 1)}
                 className="mt-1 rounded-2xl px-5 py-2.5 text-sm font-bold text-white"
                 style={{ background: "#087F63" }}
               >
-                Try again
+                {L("Try again", "دوبارہ کوشش کریں")}
               </button>
             </>
           ) : (
             <>
               <span className="size-7 animate-spin rounded-full border-[3px] border-[#D5E2DD] border-t-[#087F63]" aria-hidden />
-              <p role="status" className="text-[13px] text-[#52635F]">Loading products…</p>
+              <p role="status" className="text-[13px] text-[#52635F]">{L("Loading products…", "پروڈکٹس لوڈ ہو رہی ہیں…")}</p>
             </>
           )}
         </div>
@@ -290,13 +294,13 @@ export default function CompareScreen({
       categories={categories}
       locations={locations}
       ownedCategoryIds={ownedCategoryIds}
-      accessNote={ownedProducts ? "Showing the products you subscribe to." : "Free trial — compare any product."}
+      accessNote={ownedProducts ? L("Showing the products you subscribe to.", "آپ کی سبسکرائب کی گئی پروڈکٹس دکھائی جا رہی ہیں۔") : L("Free trial — compare any product.", "مفت ٹرائل — کسی بھی پروڈکٹ کا موازنہ کریں۔")}
       renderLocationPicker={renderLocationPicker}
       rows={rows}
       onProductIdsChange={onProductIdsChange}
       rowsLoading={!rowsError && selectedIds.some((id) => pending.includes(id) || !loaded.current.has(id))}
-      rowsError={rowsError}
-      dataLabel={catalog.dateRange ? `Market data · ${formatDay(catalog.dateRange.first)} – ${formatDay(catalog.dateRange.last)}` : undefined}
+      rowsError={rowsError ? L("Market reports could not be loaded. Check the connection and try again.", "منڈی رپورٹس لوڈ نہیں ہو سکیں۔ کنکشن چیک کر کے دوبارہ کوشش کریں۔") : ""}
+      dataLabel={catalog.dateRange ? `${L("Market data", "منڈی ڈیٹا")} · ${formatDay(catalog.dateRange.first, ur)} – ${formatDay(catalog.dateRange.last, ur)}` : undefined}
       storageKey="zarai-mandi-compare-v2"
     />
   );

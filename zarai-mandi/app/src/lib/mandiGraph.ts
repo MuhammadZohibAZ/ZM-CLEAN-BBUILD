@@ -4,9 +4,9 @@
 
 import { REAL_DATES_TIMELINE } from "../data/realCommodityData";
 
+// Urdu text uses English digits (see LangProvider's toUrduDigits).
 function toUrduDigits(n: number | string): string {
-  const urduDigits = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
-  return String(n).replace(/[0-9]/g, (w) => urduDigits[+w]);
+  return String(n);
 }
 
 export function buildMandiInlineGraphFromRows(options: {
@@ -156,7 +156,7 @@ export function buildMandiInlineGraphFromRows(options: {
     xLabels = monthsEn.map((m, i) => (lang === "ur" ? monthsUr[i] : m));
   } else if (timeframe === "3M") {
     const weeksEn = ["27 Jun", "4 Jul", "11 Jul", "18 Jul", "25 Jul", "1 Aug", "8 Aug", "15 Aug", "22 Aug", "29 Aug", "5 Sep", "14 Sep"];
-    const weeksUr = ["۲۷ جون", "۴ جولائی", "۱۱ جولائی", "۱۸ جولائی", "۲۵ جولائی", "۱ اگست", "۸ اگست", "۱۵ اگست", "۲۲ اگست", "۲۹ اگست", "۵ ستمبر", "۱۴ ستمبر"];
+    const weeksUr = ["27 جون", "4 جولائی", "11 جولائی", "18 جولائی", "25 جولائی", "1 اگست", "8 اگست", "15 اگست", "22 اگست", "29 اگست", "5 ستمبر", "14 ستمبر"];
     const seasonalFactors = [0.97, 0.975, 0.98, 0.985, 0.99, 0.992, 0.995, 0.998, 1.0, 1.002, 0.999, 1.0];
     const arrivalFactors = [0.85, 0.9, 0.92, 0.95, 0.98, 1.0, 1.02, 1.05, 1.0, 0.98, 0.95, 1.0];
 

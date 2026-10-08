@@ -28,9 +28,9 @@ export interface MandiTrendGraphViewProps {
   showCloseButton?: boolean;
 }
 
+// Urdu text uses English digits (see LangProvider's toUrduDigits).
 function toUrduDigits(n: number | string): string {
-  const urduDigits = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
-  return String(n).replace(/[0-9]/g, (w) => urduDigits[+w]);
+  return String(n);
 }
 
 export const MandiTrendGraphView: React.FC<MandiTrendGraphViewProps> = ({
@@ -305,7 +305,7 @@ export const MandiTrendGraphView: React.FC<MandiTrendGraphViewProps> = ({
       const monthsEn = ["Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep"];
       const monthsUr = ["اکتوبر", "نومبر", "دسمبر", "جنوری", "فروری", "مارچ", "اپریل", "مئی", "جون", "جولائی", "اگست", "ستمبر"];
       const fullEn = ["Oct 2025", "Nov 2025", "Dec 2025", "Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026"];
-      const fullUr = ["اکتوبر ۲۰۲۵", "نومبر ۲۰۲۵", "دسمبر ۲۰۲۵", "جنوری ۲۰۲۶", "فروری ۲۰۲۶", "مارچ ۲۰۲۶", "اپریل ۲۰۲۶", "مئی ۲۰۲۶", "جون ۲۰۲۶", "جولائی ۲۰۲۶", "اگست ۲۰۲۶", "ستمبر ۲۰۲۶"];
+      const fullUr = ["اکتوبر 2025", "نومبر 2025", "دسمبر 2025", "جنوری 2026", "فروری 2026", "مارچ 2026", "اپریل 2026", "مئی 2026", "جون 2026", "جولائی 2026", "اگست 2026", "ستمبر 2026"];
       const seasonalFactors = [0.93, 0.94, 0.95, 0.96, 0.98, 1.01, 1.04, 1.02, 0.99, 0.97, 0.99, 1.0];
       const arrivalFactors = [0.8, 0.85, 0.9, 0.95, 1.1, 1.3, 1.4, 1.2, 0.9, 0.85, 1.0, 1.0];
       return {
@@ -323,7 +323,7 @@ export const MandiTrendGraphView: React.FC<MandiTrendGraphViewProps> = ({
       const monthsEn = ["Apr", "May", "Jun", "Jul", "Aug", "Sep"];
       const monthsUr = ["اپریل", "مئی", "جون", "جولائی", "اگست", "ستمبر"];
       const fullEn = ["Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026"];
-      const fullUr = ["اپریل ۲۰۲۶", "مئی ۲۰۲۶", "جون ۲۰۲۶", "جولائی ۲۰۲۶", "اگست ۲۰۲۶", "ستمبر ۲۰۲۶"];
+      const fullUr = ["اپریل 2026", "مئی 2026", "جون 2026", "جولائی 2026", "اگست 2026", "ستمبر 2026"];
       const seasonalFactors = [1.03, 1.02, 0.99, 0.98, 0.99, 1.0];
       const arrivalFactors = [1.3, 1.2, 0.9, 0.85, 1.0, 1.0];
       return {
@@ -339,14 +339,14 @@ export const MandiTrendGraphView: React.FC<MandiTrendGraphViewProps> = ({
       };
     } else if (stockTimeframe === "3M") {
       const weeksEn = ["27 Jun", "4 Jul", "11 Jul", "18 Jul", "25 Jul", "1 Aug", "8 Aug", "15 Aug", "22 Aug", "29 Aug", "5 Sep", "14 Sep"];
-      const weeksUr = ["۲۷ جون", "۴ جولائی", "۱۱ جولائی", "۱۸ جولائی", "۲۵ جولائی", "۱ اگست", "۸ اگست", "۱۵ اگست", "۲۲ اگست", "۲۹ اگست", "۵ ستمبر", "۱۴ ستمبر"];
+      const weeksUr = ["27 جون", "4 جولائی", "11 جولائی", "18 جولائی", "25 جولائی", "1 اگست", "8 اگست", "15 اگست", "22 اگست", "29 اگست", "5 ستمبر", "14 ستمبر"];
       const seasonalFactors = [0.97, 0.975, 0.98, 0.985, 0.99, 0.992, 0.995, 0.998, 1.0, 1.002, 0.999, 1.0];
       const arrivalFactors = [0.85, 0.9, 0.92, 0.95, 0.98, 1.0, 1.02, 1.05, 1.0, 0.98, 0.95, 1.0];
       return {
         len: 12,
         labels: weeksEn.map((w, i) => ({
           tickLabel: i % 3 === 0 || i === 11 ? (lang === "ur" ? weeksUr[i] : w) : "",
-          fullDate: lang === "ur" ? `${weeksUr[i]} ۲۰۲۶` : `${w} 2026`,
+          fullDate: lang === "ur" ? `${weeksUr[i]} 2026` : `${w} 2026`,
         })),
         priceFactor: (base: number, i: number) => Math.round(base * seasonalFactors[i]),
         minFactor: (base: number, i: number) => Math.round(base * seasonalFactors[i] * 0.992),
@@ -856,10 +856,10 @@ export const MandiTrendGraphView: React.FC<MandiTrendGraphViewProps> = ({
         <div className="relative flex items-center justify-between gap-1.5 w-full pb-2 border-b border-[#E8EFEC]">
           <div className="flex items-center gap-1 flex-1">
             {[
-              { id: "15m", labelEn: "15m", labelUr: "۱۵ منٹ" },
-              { id: "1h", labelEn: "1h", labelUr: "۱ گھنٹہ" },
-              { id: "4h", labelEn: "4h", labelUr: "۴ گھنٹے" },
-              { id: "1D", labelEn: "1D", labelUr: "۱ دن" },
+              { id: "15m", labelEn: "15m", labelUr: "15 منٹ" },
+              { id: "1h", labelEn: "1h", labelUr: "1 گھنٹہ" },
+              { id: "4h", labelEn: "4h", labelUr: "4 گھنٹے" },
+              { id: "1D", labelEn: "1D", labelUr: "1 دن" },
             ].map((tf) => {
               const isTfActive = stockTimeframe === tf.id;
               return (
@@ -930,11 +930,11 @@ export const MandiTrendGraphView: React.FC<MandiTrendGraphViewProps> = ({
                     style={{ boxShadow: "0 10px 25px -3px rgba(0,0,0,0.18)" }}
                   >
                     {[
-                      { id: "1W", labelEn: "1 Week", labelUr: "۱ ہفتہ" },
-                      { id: "1M", labelEn: "1 Month", labelUr: "۱ ماہ" },
-                      { id: "3M", labelEn: "3 Months", labelUr: "۳ ماہ" },
-                      { id: "6M", labelEn: "6 Months", labelUr: "۶ ماہ" },
-                      { id: "1Y", labelEn: "1 Year", labelUr: "۱ سال" },
+                      { id: "1W", labelEn: "1 Week", labelUr: "1 ہفتہ" },
+                      { id: "1M", labelEn: "1 Month", labelUr: "1 ماہ" },
+                      { id: "3M", labelEn: "3 Months", labelUr: "3 ماہ" },
+                      { id: "6M", labelEn: "6 Months", labelUr: "6 ماہ" },
+                      { id: "1Y", labelEn: "1 Year", labelUr: "1 سال" },
                     ].map((opt) => (
                       <button
                         key={opt.id}

@@ -180,8 +180,8 @@ export function CandleChart({
     <div style={{ position: "relative" }}>
       {/* MA legend */}
       <div style={{ display: "flex", gap: 12, padding: "0 12px 4px", fontSize: 11.5, fontWeight: 600, fontVariantNumeric: "tabular-nums", direction: "ltr" }}>
-        <span style={{ color: CANDLE.ma7 }}>{f.tx("7-day avg", "۷ دن اوسط")} {data.ma7[ci] > 0 ? f.num(data.ma7[ci]) : "—"}</span>
-        <span style={{ color: CANDLE.ma14 }}>{f.tx("14-day avg", "۱۴ دن اوسط")} {data.ma14[ci] > 0 ? f.num(data.ma14[ci]) : "—"}</span>
+        <span style={{ color: CANDLE.ma7 }}>{f.tx("7-day avg", "7 دن اوسط")} {data.ma7[ci] > 0 ? f.num(data.ma7[ci]) : "—"}</span>
+        <span style={{ color: CANDLE.ma14 }}>{f.tx("14-day avg", "14 دن اوسط")} {data.ma14[ci] > 0 ? f.num(data.ma14[ci]) : "—"}</span>
       </div>
       <svg
         ref={svgRef}

@@ -15,6 +15,8 @@
 //     label the result as an approximation with its contributing-market
 //     count alongside it.
 
+import fs from "node:fs";
+
 import { pool } from "./db.js";
 
 // Card field qualification (the ">=80% filled -> show it" rule) and the
@@ -522,348 +524,19 @@ function buildLocationFilter(locationKind, locationLabel, params) {
 // Moisture is handled separately above (computeCardStats): it's a
 // continuous measurement, not a category, so "most common raw string"
 // was never the right summary for it -- a computed average is.
-// User-designated special attribute mapping per product/byproduct.
-// Maps normalized (lowercase, alphanumeric only) product or byproduct names
-// to one of: 'origin', 'newOld', 'color', 'variety', 'spec', 'quality', 'moisture', or null.
-const SPECIAL_PRODUCT_ATTRIBUTES = {
-  // VEGETABLE
-  "bittergourd": "origin",
-  "bottlegourd": "origin",
-  "brinjalgol": "origin",
-  "brinjallamba": "origin",
-  "broccoli": "origin",
-  "cabbage": "origin",
-  "capsicum": "origin",
-  "carrot": "origin",
-  "cauliflower": "origin",
-  "cucumber": "origin",
-  "garlicchina": "origin",
-  "garlicdesi": "origin",
-  "ginger": "origin",
-  "guar": "origin",
-  "lemonchina": "origin",
-  "lemondesi": "origin",
-  "okra": "origin",
-  "oniongradea": "newOld",
-  "oniongradeb": "newOld",
-  "oniongradec": "newOld",
-  "pea": "origin",
-  "potatobeej": "origin",
-  "potatobeejgradea": "origin",
-  "potatobeejgradeb": "origin",
-  "potatobeejgradec": "origin",
-  "potatogoli": "origin",
-  "potatolr": "origin",
-  "potatolaal": "newOld",
-  "potatomozika": "newOld",
-  "potatoraveera": "origin",
-  "potatoraveeragradea": "origin",
-  "potatoraveeragradeb": "origin",
-  "potatoraveeragradec": "origin",
-  "potatosanta": "origin",
-  "potatostone": "origin",
-  "potatostonegradea": "origin",
-  "potatostonegradeb": "origin",
-  "potatostonegradec": "origin",
-  "potatosufaid": "origin",
-  "ridgegourd": "origin",
-  "roundgourd": "origin",
-  "saladleaves": "origin",
-  "shakarqandi": null,
-  "spinach": "origin",
-  "sweetpotato": "color",
-  "tomatogradea": "origin",
-  "tomatogradeb": "origin",
-  "tomatogradec": "origin",
-  "turnip": "origin",
-
-  // WHEAT
-  "chokar": null,
-  "flour": null,
-  "flourspecial": null,
-  "refinedflour": null,
-  "sooji": null,
-  "sorghum": "color",
-  "straw": null,
-  "wheat": "newOld",
-  "wheatbran": null,
-
-  // EDIBLE OIL
-  "canola": null,
-  "canolameal": null,
-  "canolaoil": null,
-  "canolaseed": "newOld",
-  "mustardcake": null,
-  "mustardoil": null,
-  "mustardseed": "newOld",
-  "sarsokhal": null,
-  "sarsooil": null,
-  "soybean": null,
-  "soybeanmeal": null,
-  "soybeanoil": null,
-  "soybeanoilwashed": null,
-  "sunflower": null,
-  "sunfloweroil": null,
-  "sunflowerseed": null,
-  "taarameera": null,
-  "taarameeraoil": null,
-
-  // PULSES (All None identified)
-  "gramblackthick": null,
-  "gramblackthin": null,
-  "grampulsethick": null,
-  "grampulsethickas": null,
-  "grampulsethin": null,
-  "grampulsethinas": null,
-  "gramwhite7mm": null,
-  "gramwhite9mm": null,
-  "mashsabut2": null,
-  "mashshellthick": null,
-  "mashshellthin": null,
-  "mashwashed1": null,
-  "mashwashed2": null,
-  "masoorpulsered": null,
-  "masoorsabut1": null,
-  "masoorsabut2": null,
-  "moongsabut1": null,
-  "moongsabut2": null,
-  "moongshell1": null,
-  "moongwashed1": null,
-  "moongwashed2": null,
-  "pigeonpeathick": null,
-  "pigeonpeathin": null,
-  "redlubya1": null,
-  "redlubya2": null,
-  "whitelubyathick": null,
-
-  // RICE / PADDY
-  "paddy1509": "newOld",
-  "paddy1692": "newOld",
-  "paddy1718": "newOld",
-  "paddy1847": "newOld",
-  "paddy86": "newOld",
-  "paddyc9": "newOld",
-  "paddyirri6": "newOld",
-  "paddyirri9": "newOld",
-  "paddyirrifine": "newOld",
-  "paddykainat1121": "newOld",
-  "paddylp18": "newOld",
-  "paddypp7": "newOld",
-  "paddysuper": "newOld",
-  "paddysuper515": "newOld",
-  "paddysupri": "newOld",
-
-  // FRUITS
-  "apple": "origin",
-  "apricot": "origin",
-  "banana": "origin",
-  "cherry": "origin",
-  "falsa": "origin",
-  "fruiter": "origin",
-  "grapefruit": "origin",
-  "grapes": "origin",
-  "kalakulluapple": "origin",
-  "kharbooza": "origin",
-  "mangoalmas": "origin",
-  "mangoanwerratul": "origin",
-  "mangoblackchunsa": "origin",
-  "mangodasheri": "origin",
-  "mangofajri": "origin",
-  "mangosaroli": "origin",
-  "mangosindhri": "origin",
-  "mangowhitechunsa": "origin",
-  "mausambi": "origin",
-  "oranges": null,
-  "papaya": "origin",
-  "peach": "origin",
-  "plum": "origin",
-  "pomegranate": "origin",
-  "sweetlime": "origin",
-  "watermelon": "origin",
-
-  // MILLED RICE
-  "1121basmati1": null,
-  "1121basmati2": "origin",
-  "1121kacha": null,
-  "1121steam": null,
-  "1121white": null,
-  "1509kacha": null,
-  "1509sella": "origin",
-  "1509steam": "origin",
-  "1509steambasmati": null,
-  "1509steamsila": null,
-  "1509white": null,
-  "1718kacha": null,
-  "1718steam": null,
-  "1847kacha": null,
-  "1847steam": null,
-  "386basmatinew": "origin",
-  "386basmatiold": "origin",
-  "c9basmati": null,
-  "c9sila": "newOld",
-  "c9steam": "newOld",
-  "c9white": "newOld",
-  "irri6": null,
-  "irri6sabut1": "origin",
-  "irri6white": null,
-  "irri9": "newOld",
-  "irritota": "origin",
-  "kainatdoublesteam": null,
-  "lal386new": "origin",
-  "lal386old": "origin",
-  "punia11211": "origin",
-  "punia11212": "origin",
-  "puniabasmati1": "origin",
-  "ricehusk": null,
-  "sella11211": "origin",
-  "sella386": "newOld",
-  "sellapunjab": "origin",
-  "shortgraintota": null,
-  "silky": "origin",
-  "silkysortex": "origin",
-  "superbasmatisindh": "origin",
-  "superkernel": null,
-  "suprinew": "origin",
-  "supriold": null,
-  "suprisila": "origin",
-  "totabasmati": "origin",
-
-  // MAIZE
-  "cornsilage": null,
-  "cornstarch": null,
-  "maizegradea": "newOld",
-  "maizegradeb": "newOld",
-  "maizegradec": "newOld",
-  "popcorn": "newOld",
-
-  // COTTON
-  "cottonseed": null,
-  "cottonseedcake": null,
-  "cottonseedoil": null,
-  "seedcottongradea": "color",
-  "seedcottongradeb": "color",
-  "seedcottongradec": "color",
-  "banola": null,
-  "banolakhal": null,
-  "banolaoil": null,
-  "phuttia": null,
-  "phuttib": null,
-  "phuttic": null,
-
-  // SPICES
-  "blackpepper": null,
-  "blackpepperpowder": null,
-  "cinnamon": null,
-  "clove": null,
-  "corianderseed": null,
-  "corianderseedpowder": null,
-  "cuminblack": null,
-  "cuminwhite": null,
-  "fennel": null,
-  "jaifal": null,
-  "largeblackcardamom": null,
-  "redchillipowder": null,
-  "redchilliwhole": null,
-  "smallcardamom": null,
-  "turmeric": null,
-
-  // SESAME
-  "sesamegradea": "color",
-  "sesamegradeb": "newOld",
-  "sesamegradec": "newOld",
-
-  // CHILLIES
-  "desichilli": null,
-  "greenchillilarge": "variety",
-  "greenchillimedium": "variety",
-  "greenchillismall": null,
-  "hybirdchilli": "spec",
-  "longichilli": "spec",
-  "reddesichilli": "spec",
-  "redhybirdchilli": "spec",
-  "redlongichilli": "spec",
-  "redrichstarchilli": "spec",
-  "redshingrichilli": "spec",
-  "redsummerqueenchilli": "spec",
-  "richstarchilli": "newOld",
-  "shingrichilli": null,
-
-  // DRY-FRUITS
-  "almondamerican": null,
-  "almondaustralian": null,
-  "almonddesi": null,
-  "cashew": null,
-  "fig": null,
-  "largeraisins": null,
-  "pistachio": null,
-  "walnut": null,
-
-  // OTHER VARIETIES
-  "barley": null,
-  "barseem": null,
-  "camelina": null,
-  "castorbean": null,
-  "eggtray": "spec",
-  "moongi": null,
-  "oat": null,
-  "quinoa": null,
-
-  // DATES
-  "ajwadates": null,
-  "amberdates": null,
-  "aseelchuara": null,
-  "aseeldates": "origin",
-  "begumjangidates": null,
-  "blackaseelchuara": null,
-  "dhakidrydates": null,
-  "jamsordates": null,
-  "karbaladates": null,
-  "kupradates": null,
-  "mazafatidates": null,
-  "narchuara": null,
-  "rabbidates": null,
-  "rangkataseelchuara": null,
-  "rangkatblackaseeldrydates": null,
-  "rangkatdhakidrydates": null,
-  "rangkatnarchuara": null,
-  "zahididates": null,
-
-  // MILLET
-  "milletgradea": "color",
-  "milletgradeb": "color",
-  "milletgradec": "color",
-
-  // SUGAR
-  "jaggery": null,
-  "refinedsugar": null,
-  "shakkar": null,
-  "millgate": null,
-  "sugarmills": null,
-
-  // HERBALS
-  "chiaseed": null,
-  "drylemon": null,
-  "hing": null,
-  "ispaghol": null,
-  "ispagholhusk": null,
-  "kalonji": null,
-  "kalonjioil": null,
-  "salabmisri": null,
-  "salebpanja": null,
-  "tukhmalanga": null,
-  "zafran": null,
-
-  // FODDER
-  "alfalfa": null,
-  "rhodegrass": null,
-
-  // CLARIFIED BUTTER
-  "asiaghee": null,
-  "daldaghee": null,
-  "kashmirghee": null,
-  "khyberghee": null,
-  "sufighee": null,
-};
+// User-designated special attribute per product/by-product. Shared with the
+// app (byproductStats.ts) so the API and the cards always agree; keys are
+// normalized names (lowercase, alphanumeric only).
+const SPECIAL_ATTRIBUTES_PATH = new URL(
+  "../../app/src/customer-face/shared/data/specialAttributes.json",
+  import.meta.url
+);
+const SPECIAL_PRODUCT_ATTRIBUTES = Object.assign(
+  {},
+  ...Object.entries(JSON.parse(fs.readFileSync(SPECIAL_ATTRIBUTES_PATH, "utf8")))
+    .filter(([section]) => !section.startsWith("_"))
+    .map(([, entries]) => entries)
+);
 
 export const ATTR_TYPE_TO_COL = {
   newOld: "new_old",
@@ -891,7 +564,15 @@ export function getProductSpecialAttrType(byproduct, matchedByproduct) {
  * bilingual label/dot-color mapping for each type and should keep using
  * it, rather than duplicating that table here.
  */
-async function computeCardStats(row, targetDate, locationKind, locationLabel) {
+// Extra filter for one split card (tester screens): one special-attribute value
+// (`attrCol`/`attrValue`) or one forced rate type (`rateType`).
+function splitAttrClause(split, params) {
+  if (!split?.attrCol) return "";
+  params.push(split.attrValue);
+  return `and trim(${split.attrCol}) = $${params.length}`;
+}
+
+async function computeCardStats(row, targetDate, locationKind, locationLabel, split = null) {
   const base = {
     catalogId: row.id,
     hasData: false,
@@ -912,10 +593,11 @@ async function computeCardStats(row, targetDate, locationKind, locationLabel) {
 
   const rtParams = [row.product, row.matched_by_product];
   const rtLocClause = buildLocationFilter(locationKind, locationLabel, rtParams);
+  const rtSplitClause = splitAttrClause(split, rtParams);
   const { rows: rtRows } = await pool.query(
     `select coalesce(price_type, 'Mandi Rate') as rt, count(*) as n
      from price_records
-     where product = $1 and by_product = $2 ${rtLocClause}
+     where product = $1 and by_product = $2 ${rtLocClause} ${rtSplitClause}
      group by rt order by n desc`,
     rtParams
   );
@@ -924,11 +606,13 @@ async function computeCardStats(row, targetDate, locationKind, locationLabel) {
   const allRateTypes = rtRows.map((r) => r.rt);
   // rtRows is already ordered by record count desc, so its head is the
   // live-computed dominant (most-occurring) price type for this by-product.
-  const mostOccurringRateType = rtRows[0].rt;
+  if (split?.rateType && !allRateTypes.includes(split.rateType)) return base;
+  const mostOccurringRateType = split?.rateType || rtRows[0].rt;
   const otherRateTypesCount = Math.max(0, allRateTypes.length - 1);
 
   const priceParams = [row.product, row.matched_by_product, mostOccurringRateType];
   const priceLocClause = buildLocationFilter(locationKind, locationLabel, priceParams);
+  const priceSplitClause = splitAttrClause(split, priceParams);
   let priceDateSql = "";
   if (targetDate) {
     priceParams.push(targetDate);
@@ -940,7 +624,7 @@ async function computeCardStats(row, targetDate, locationKind, locationLabel) {
        select * from price_records
        where product = $1 and by_product = $2 and price_valid and price_type = $3
          and province is not null and district is not null and station is not null
-         ${priceDateSql} ${priceLocClause}
+         ${priceDateSql} ${priceLocClause} ${priceSplitClause}
      ),
      market as (
        select province, district, station, avg(minimum) mn, avg(maximum) mx
@@ -956,7 +640,7 @@ async function computeCardStats(row, targetDate, locationKind, locationLabel) {
 
   if (targetDate && avgMin === 0 && avgMax === 0) {
     const fbParams = [row.product, row.matched_by_product, mostOccurringRateType];
-    const fbLoc = buildLocationFilter(locationKind, locationLabel, fbParams);
+    const fbLoc = buildLocationFilter(locationKind, locationLabel, fbParams) + " " + splitAttrClause(split, fbParams);
     const { rows: fbRows } = await pool.query(
       `with latest_date as (
          select max(record_date) as md from price_records
@@ -985,7 +669,12 @@ async function computeCardStats(row, targetDate, locationKind, locationLabel) {
   }
 
   const arrParams = [row.product, row.matched_by_product];
-  const arrLocClause = buildLocationFilter(locationKind, locationLabel, arrParams);
+  let arrLocClause = buildLocationFilter(locationKind, locationLabel, arrParams);
+  arrLocClause += " " + splitAttrClause(split, arrParams);
+  if (split?.rateType) {
+    arrParams.push(split.rateType);
+    arrLocClause += ` and price_type = $${arrParams.length}`;
+  }
   let arrDateSql = "";
   if (targetDate) {
     arrParams.push(targetDate);
@@ -1005,7 +694,7 @@ async function computeCardStats(row, targetDate, locationKind, locationLabel) {
   let markets = Number(arrRows[0].markets);
   if (markets === 0 && avgMin > 0) {
     const mktParams = [row.product, row.matched_by_product, mostOccurringRateType];
-    const mktLoc = buildLocationFilter(locationKind, locationLabel, mktParams);
+    const mktLoc = buildLocationFilter(locationKind, locationLabel, mktParams) + " " + splitAttrClause(split, mktParams);
     const { rows: mktRows } = await pool.query(
       `select count(distinct station) as m
        from price_records
@@ -1022,7 +711,12 @@ async function computeCardStats(row, targetDate, locationKind, locationLabel) {
   const specialAttrs = [];
   const targetAttrType = getProductSpecialAttrType(row.by_product, row.matched_by_product);
 
-  if (targetAttrType === "moisture") {
+  if (split?.attrCol) {
+    // A split card is defined by its attribute value, so that value is the card's chip.
+    const value = split.attrType === "moisture" ? `${split.attrValue}%` : split.attrValue;
+    specialAttr = { type: split.attrType, value };
+    specialAttrs.push(specialAttr);
+  } else if (targetAttrType === "moisture") {
     if (row.moisture_rule_band) {
       specialAttr = { type: "moisture", value: `${row.moisture_rule_band}%`, isDeclaredRule: true };
       specialAttrs.push(specialAttr);
@@ -1091,6 +785,7 @@ async function computeCardStats(row, targetDate, locationKind, locationLabel) {
     arrivalCoverage,
     specialAttr,
     specialAttrs,
+    split: split ? { by: split.by, value: split.value } : null,
   };
 }
 
@@ -1112,4 +807,71 @@ export async function getVerticalCardStats(division, options = {}) {
   return Promise.all(
     catalogRows.map((row) => computeCardStats(row, date || null, locationKind, locationLabel))
   );
+}
+
+/**
+ * Card stats split into one card per by-product and special-attribute value
+ * (`by: "attribute"`, e.g. Wheat Crop New / Old) or per by-product and rate
+ * type (`by: "rateType"`). Split values are those reported for the location
+ * over the whole dataset, so the set of cards doesn't change with the date.
+ * By-products with nothing to split on return their normal single card.
+ */
+export async function getVerticalSplitCardStats(division, options = {}) {
+  const { date, locationKind, locationLabel, by } = options;
+  const { rows: catalogRows } = await pool.query(
+    `select id, division, by_product, product, matched_by_product, has_data, moisture_rule_band
+     from by_products where division = $1 order by id`,
+    [division]
+  );
+
+  const cardsPerRow = await Promise.all(
+    catalogRows.map(async (row) => {
+      const single = async () => [await computeCardStats(row, date || null, locationKind, locationLabel)];
+      if (!row.has_data || !row.matched_by_product) return single();
+
+      if (by === "rateType") {
+        const params = [row.product, row.matched_by_product];
+        const loc = buildLocationFilter(locationKind, locationLabel, params);
+        const { rows } = await pool.query(
+          `select coalesce(price_type, 'Mandi Rate') as v, count(*) as n
+           from price_records where product = $1 and by_product = $2 ${loc}
+           group by v order by n desc`,
+          params
+        );
+        if (rows.length === 0) return single();
+        return Promise.all(
+          rows.map((r) =>
+            computeCardStats(row, date || null, locationKind, locationLabel, { by, value: r.v, rateType: r.v })
+          )
+        );
+      }
+
+      const attrType = getProductSpecialAttrType(row.by_product, row.matched_by_product);
+      const col = attrType === "moisture" ? "moisture_raw" : ATTR_TYPE_TO_COL[attrType];
+      if (!col) return single();
+      const params = [row.product, row.matched_by_product];
+      const loc = buildLocationFilter(locationKind, locationLabel, params);
+      const { rows } = await pool.query(
+        `select trim(${col}) as v, count(*) as n
+         from price_records
+         where product = $1 and by_product = $2 ${loc}
+           and ${col} is not null and trim(${col}) != '' and lower(trim(${col})) != 'null'
+         group by trim(${col}) order by n desc`,
+        params
+      );
+      if (rows.length === 0) return single();
+      return Promise.all(
+        rows.map((r) =>
+          computeCardStats(row, date || null, locationKind, locationLabel, {
+            by,
+            value: r.v,
+            attrType,
+            attrCol: col,
+            attrValue: r.v,
+          })
+        )
+      );
+    })
+  );
+  return cardsPerRow.flat();
 }
