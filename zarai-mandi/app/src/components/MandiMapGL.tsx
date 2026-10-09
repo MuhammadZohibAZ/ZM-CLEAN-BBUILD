@@ -10,6 +10,7 @@ import { makeFmt } from "../customer-face/screens/product-rates/format";
 import type { MarketRow } from "../customer-face/screens/product-rates/types";
 import { TIMELINE } from "../customer-face/screens/product-rates/useMarketData";
 import outlineGeo from "../customer-face/shared/data/geo/pakistanOutline.json";
+import { fetchRoadRoute, straightKm, type LngLat } from "../lib/routing";
 import provincesGeo from "../customer-face/shared/data/geo/pakistanProvinces.json";
 import stationCoords from "../customer-face/shared/data/geo/stationCoords.json";
 import { useLang } from "../customer-face/shared/i18n/LangProvider";
@@ -59,16 +60,6 @@ const normKey = (s: string) =>
     .toLowerCase()
     .replace(/\b(city|mandi|cantt|cantonment|tehsil|district)\b/g, " ")
     .replace(/[^a-z0-9]/g, "");
-
-/** Straight-line distance in km (haversine). */
-function distanceKm(a: { lat: number; lon: number }, b: { lat: number; lon: number }) {
-  const R = 6371;
-  const toRad = (d: number) => (d * Math.PI) / 180;
-  const dLat = toRad(b.lat - a.lat);
-  const dLon = toRad(b.lon - a.lon);
-  const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLon / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(h));
-}
 
 /** Pin labels only change at these zooms, so zooming doesn't re-render React every frame. */
 const zoomBucket = (z: number) => (z >= 7 ? 2 : z >= 6 ? 1 : 0);
@@ -130,6 +121,13 @@ export default function MandiMapGL({
   const [userLoc, setUserLoc] = useState<{ lat: number; lon: number } | null>(null);
   const [locState, setLocState] = useState<"idle" | "asking" | "denied">("idle");
   const [distanceFor, setDistanceFor] = useState<string | null>(null);
+  // The route on the map: road route, or a straight line when routing fails.
+  const [route, setRoute] = useState<
+    | { key: string; status: "loading" }
+    | { key: string; status: "road"; km: number; minutes: number }
+    | { key: string; status: "straight"; km: number }
+    | null
+  >(null);
   const userMarkerRef = useRef<Marker | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [detailFor, setDetailFor] = useState<string | null>(null);
@@ -227,7 +225,7 @@ export default function MandiMapGL({
       dragRotate: false,
       pitchWithRotate: false,
       touchPitch: false,
-      attributionControl: { compact: true, customAttribution: "Locations © GeoNames · Borders © geoBoundaries" },
+      attributionControl: { compact: true, customAttribution: "Locations © GeoNames · Borders © geoBoundaries · Routes © OSRM, OpenStreetMap" },
     });
     map.touchZoomRotate.disableRotation();
     mapRef.current = map;
@@ -427,41 +425,87 @@ export default function MandiMapGL({
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 },
     );
   };
-  // Your position and a dashed line to the mandi, framed together.
+  // Your position and the road route to the mandi, framed together.
+  const routePin = pins.find((p) => p.key === distanceFor);
+  const routeLat = routePin?.lat;
+  const routeLon = routePin?.lon;
   useEffect(() => {
     const map = mapRef.current;
-    const pin = pins.find((p) => p.key === distanceFor);
-    if (!map || !userLoc) return;
-    if (!userMarkerRef.current) {
+    if (!map) return;
+    const empty = { type: "FeatureCollection" as const, features: [] };
+    // Route layers need the style; on a slow connection set them once it is ready.
+    const setLine = (data: GeoJSON.FeatureCollection) => {
+      const apply = () => {
+        const src = map.getSource("zm-route") as maplibregl.GeoJSONSource | undefined;
+        if (src) {
+          src.setData(data);
+          return;
+        }
+        map.addSource("zm-route", { type: "geojson", data });
+        const road = ["==", ["get", "kind"], "road"] as maplibregl.FilterSpecification;
+        map.addLayer({ id: "zm-route-casing", type: "line", source: "zm-route", filter: road, layout: { "line-join": "round", "line-cap": "round" }, paint: { "line-color": "#FFFFFF", "line-width": ["interpolate", ["linear"], ["zoom"], 5, 6, 10, 10] } });
+        map.addLayer({ id: "zm-route", type: "line", source: "zm-route", filter: road, layout: { "line-join": "round", "line-cap": "round" }, paint: { "line-color": "#2563EB", "line-width": ["interpolate", ["linear"], ["zoom"], 5, 3.5, 10, 6] } });
+        map.addLayer({ id: "zm-route-straight", type: "line", source: "zm-route", filter: ["==", ["get", "kind"], "straight"], paint: { "line-color": "#2563EB", "line-width": 2.5, "line-dasharray": [2, 1.5] } });
+      };
+      if (map.isStyleLoaded()) apply();
+      else map.once("idle", apply);
+    };
+
+    if (userLoc && !userMarkerRef.current) {
       const el = document.createElement("div");
       el.className = "zm-map-me";
       userMarkerRef.current = new maplibregl.Marker({ element: el }).setLngLat([userLoc.lon, userLoc.lat]).addTo(map);
     }
-    if (!pin) return;
-    const line = {
-      type: "Feature" as const,
-      properties: {},
-      geometry: { type: "LineString" as const, coordinates: [[userLoc.lon, userLoc.lat], [pin.lon, pin.lat]] },
+    userMarkerRef.current?.setLngLat(userLoc ? [userLoc.lon, userLoc.lat] : [0, 0]);
+
+    if (!distanceFor || !userLoc || routeLat === undefined || routeLon === undefined) {
+      if (map.getSource("zm-route")) setLine(empty);
+      if (!distanceFor) setRoute(null);
+      return;
+    }
+    const key = distanceFor;
+    const to = { lat: routeLat, lon: routeLon };
+    const frame = (coords: LngLat[]) => {
+      const lons = coords.map((c) => c[0]);
+      const lats = coords.map((c) => c[1]);
+      map.fitBounds(
+        [
+          [Math.min(...lons), Math.min(...lats)],
+          [Math.max(...lons), Math.max(...lats)],
+        ],
+        { padding: { top: 170, bottom: 230, left: 50, right: 70 }, maxZoom: 11, duration: 900 },
+      );
     };
-    // The line needs the style; on a slow connection add it once the style is ready.
-    const drawLine = () => {
-      const src = map.getSource("zm-distance") as maplibregl.GeoJSONSource | undefined;
-      if (src) src.setData(line);
-      else {
-        map.addSource("zm-distance", { type: "geojson", data: line });
-        map.addLayer({ id: "zm-distance", type: "line", source: "zm-distance", paint: { "line-color": "#2563EB", "line-width": 2.5, "line-dasharray": [2, 1.5] } });
-      }
-    };
-    if (map.isStyleLoaded()) drawLine();
-    else map.once("idle", drawLine);
-    map.fitBounds(
-      [
-        [Math.min(userLoc.lon, pin.lon), Math.min(userLoc.lat, pin.lat)],
-        [Math.max(userLoc.lon, pin.lon), Math.max(userLoc.lat, pin.lat)],
-      ],
-      { padding: { top: 170, bottom: 200, left: 50, right: 70 }, maxZoom: 9, duration: 900 },
-    );
-  }, [userLoc, distanceFor, pins]);
+    const feature = (kind: "road" | "straight", coordinates: LngLat[]): GeoJSON.FeatureCollection => ({
+      type: "FeatureCollection",
+      features: [{ type: "Feature", properties: { kind }, geometry: { type: "LineString", coordinates } }],
+    });
+
+    setRoute({ key, status: "loading" });
+    setLine(empty);
+    frame([[userLoc.lon, userLoc.lat], [to.lon, to.lat]]);
+    const ctrl = new AbortController();
+    fetchRoadRoute(userLoc, to, ctrl.signal)
+      .then((r) => {
+        if (!r) throw new Error("no route");
+        setLine(feature("road", r.coordinates));
+        setRoute({ key, status: "road", km: r.km, minutes: r.minutes });
+        frame(r.coordinates);
+      })
+      .catch(() => {
+        if (ctrl.signal.aborted) return;
+        // No road route (offline, routing down, or no road): show the straight line, labelled as such.
+        setLine(feature("straight", [[userLoc.lon, userLoc.lat], [to.lon, to.lat]]));
+        setRoute({ key, status: "straight", km: straightKm(userLoc, to) });
+      });
+    return () => ctrl.abort();
+  }, [userLoc, distanceFor, routeLat, routeLon]);
+
+  // Choosing another mandi (or closing the selection) clears the route, so
+  // the user can check a different one.
+  useEffect(() => {
+    if (distanceFor && selected !== distanceFor) setDistanceFor(null);
+  }, [selected, distanceFor]);
 
   // Selecting a pin flies there and brings its card into view.
   const flyTo = (key: string) => {
@@ -489,6 +533,13 @@ export default function MandiMapGL({
       () => undefined,
       { enableHighAccuracy: false, timeout: 8000 },
     );
+  };
+
+  const driveTime = (min: number) => {
+    const h = Math.floor(min / 60);
+    const m = Math.round(min % 60);
+    if (isUr) return h ? `تقریباً ${f.num(h)} گھنٹے ${f.num(m)} منٹ` : `تقریباً ${f.num(m)} منٹ`;
+    return h ? `~${h} h ${m} min drive` : `~${m} min drive`;
   };
 
   // ── Search ───────────────────────────────────────────────────────
@@ -750,11 +801,38 @@ export default function MandiMapGL({
                       <circle cx="12" cy="12" r="3.5" />
                       <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
                     </svg>
-                    {distanceFor === p.key && userLoc ? (
-                      <span style={{ fontSize: 12, fontWeight: 700, color: "#1E3A8A" }}>
-                        {isUr
-                          ? `آپ سے تقریباً ${f.num(Math.round(distanceKm(userLoc, p)))} کلومیٹر (سیدھی لکیر)`
-                          : `≈ ${f.num(Math.round(distanceKm(userLoc, p)))} km from you (straight line)`}
+                    {distanceFor === p.key && userLoc && route?.key === p.key ? (
+                      <span className="flex-1 min-w-0 flex items-center justify-between gap-2">
+                        {route.status === "loading" ? (
+                          <span style={{ fontSize: 12, fontWeight: 600, color: "#6B7C76" }}>{isUr ? "سڑک کا راستہ معلوم ہو رہا ہے…" : "Finding the road route…"}</span>
+                        ) : route.status === "road" ? (
+                          <span className="min-w-0" style={{ fontSize: 12, fontWeight: 700, color: "#1E3A8A", lineHeight: 1.3 }}>
+                            {isUr ? `سڑک سے ${f.num(Math.round(route.km))} کلومیٹر` : `${f.num(Math.round(route.km))} km by road`}
+                            <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#6B7C76" }}>{driveTime(route.minutes)}</span>
+                          </span>
+                        ) : (
+                          <span className="min-w-0" style={{ fontSize: 12, fontWeight: 700, color: "#1E3A8A", lineHeight: 1.3 }}>
+                            {isUr ? `≈ ${f.num(Math.round(route.km))} کلومیٹر (سیدھی لکیر)` : `≈ ${f.num(Math.round(route.km))} km straight line`}
+                            <span style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#B45309" }}>
+                              {isUr ? "سڑک کا راستہ دستیاب نہیں" : "Road route unavailable"}
+                            </span>
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDistanceFor(null);
+                          }}
+                          aria-label={isUr ? "راستہ ہٹائیں" : "Clear route"}
+                          className="flex-shrink-0 flex items-center gap-1 rounded-full transition active:scale-95"
+                          style={{ height: 26, padding: "0 9px", background: "#EEF2FF", color: "#1E3A8A", fontSize: 11.5, fontWeight: 800 }}
+                        >
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round">
+                            <path d="M6 6l12 12M18 6L6 18" />
+                          </svg>
+                          {isUr ? "ہٹائیں" : "Clear"}
+                        </button>
                       </span>
                     ) : distanceFor === p.key && locState === "asking" ? (
                       <span style={{ fontSize: 12, fontWeight: 600, color: "#6B7C76" }}>{isUr ? "آپ کا مقام معلوم ہو رہا ہے…" : "Finding your location…"}</span>
