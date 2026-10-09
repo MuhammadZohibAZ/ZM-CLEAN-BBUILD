@@ -96,7 +96,8 @@ export function PriceHero({
   );
 
   return (
-    <div style={{ padding: "4px 16px 0" }}>
+    // 16px from both screen edges: the carousel pane is 10px narrower on the right (next page's peek).
+    <div style={{ padding: "4px 6px 0 16px" }}>
       <div style={{ position: "relative", overflow: "hidden", borderRadius: 18, color: DK.text, background: DK.bg, border: DK.border, boxShadow: DK.shadow }}>
         <div
           aria-hidden="true"

@@ -22,6 +22,8 @@ export function useDivisionCardData(
   divisions: string[],
   date?: string,
   scope?: LocationScope,
+  /** By-product screen: selected special-attribute values ("type|value") and each card's chosen rate type. */
+  filters: { attrs?: string[]; rates?: Record<string, string> } = {},
 ): UseDivisionCardDataResult {
   const [catalogByDivision, setCatalogByDivision] = useState<Record<string, ByProductCatalogRow[]>>({});
   const [cardStatsByDivision, setCardStatsByDivision] = useState<Record<string, CardStats[]>>({});
@@ -31,6 +33,8 @@ export function useDivisionCardData(
   const divisionKey = divisions.filter(Boolean).sort().join(",");
   const scopeKind = scope?.kind;
   const scopeLabel = scope?.label;
+  const attrsKey = [...(filters.attrs || [])].sort().join(",");
+  const ratesKey = JSON.stringify(filters.rates || {});
 
   useEffect(() => {
     let cancelled = false;
@@ -59,6 +63,8 @@ export function useDivisionCardData(
                 date,
                 locationKind: scopeKind,
                 locationLabel: scopeLabel,
+                attrs: filters.attrs,
+                rates: filters.rates,
               }).catch(() => [] as CardStats[]),
             ]);
             catMap[div] = catalog;
@@ -84,7 +90,7 @@ export function useDivisionCardData(
     return () => {
       cancelled = true;
     };
-  }, [divisionKey, date, scopeKind, scopeLabel]);
+  }, [divisionKey, date, scopeKind, scopeLabel, attrsKey, ratesKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
     catalogByDivision,

@@ -403,6 +403,7 @@ function AppInner({
               initialColor={(current as ComRatesScr).initialColor}
               initialSpec={(current as ComRatesScr).initialSpec}
               initialCondition={(current as ComRatesScr).initialCondition}
+              initialOrigin={(current as ComRatesScr).initialOrigin}
               initialMoisture={(current as ComRatesScr).initialMoisture}
               initialStatDate={(current as ComRatesScr).initialStatDate}
               initialAvgMin={(current as ComRatesScr).initialAvgMin}

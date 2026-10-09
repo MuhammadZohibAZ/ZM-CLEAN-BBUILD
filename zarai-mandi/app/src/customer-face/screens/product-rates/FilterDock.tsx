@@ -384,6 +384,9 @@ export type FilterUiProps = {
   locationActive?: boolean;
   /** Back to all of Pakistan. */
   onClearLocation?: () => void;
+  /** The rate / attributes are still the ones the tapped card opened with (no clear ✕ yet). */
+  rateFromCard?: boolean;
+  filtersFromCard?: boolean;
 };
 
 function tick() {

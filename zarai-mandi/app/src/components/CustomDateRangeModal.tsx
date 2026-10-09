@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { latestDatasetDate } from "../customer-face/shared/data/datasetDates";
 
 export interface CustomDateRangeModalProps {
   isOpen: boolean;
@@ -16,7 +17,7 @@ export function CustomDateRangeModal({
   onApply,
 }: CustomDateRangeModalProps) {
   const [start, setStart] = useState(currentRange?.start || "2026-09-01");
-  const [end, setEnd] = useState(currentRange?.end || "2026-09-14");
+  const [end, setEnd] = useState(currentRange?.end || latestDatasetDate());
 
   useEffect(() => {
     if (currentRange) {

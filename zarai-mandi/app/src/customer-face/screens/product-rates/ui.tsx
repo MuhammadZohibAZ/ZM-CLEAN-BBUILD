@@ -221,8 +221,12 @@ export function BottomSheet({
   dir,
   font,
   display,
+  revealHeader = false,
 }: {
   onClose: () => void;
+  /** Keep the screen's header ([data-zm-sheet-reveal]) clear of the dimmed, blurred
+   * backdrop, so it still shows what the sheet is about (e.g. the by-product). */
+  revealHeader?: boolean;
   title: string;
   subtitle?: string;
   action?: React.ReactNode;
@@ -233,17 +237,30 @@ export function BottomSheet({
   display: string;
 }) {
   if (typeof document === "undefined") return null;
+  const revealBottom = revealHeader
+    ? Math.round(document.querySelector("[data-zm-sheet-reveal]")?.getBoundingClientRect().bottom ?? 0)
+    : 0;
   // Portalled to <body> so the sheet always rises from the bottom of the
   // screen, whatever animated/transformed containers the screen sits in.
   return createPortal(
-    <div className="zm-sheet-overlay zm-sheet-anim zm-product-rates" style={{ zIndex: 12000 }} onClick={onClose}>
+    <div
+      className="zm-sheet-overlay zm-sheet-anim zm-product-rates"
+      style={revealBottom > 0 ? { zIndex: 12000, background: "transparent", backdropFilter: "none", WebkitBackdropFilter: "none" } : { zIndex: 12000 }}
+      onClick={onClose}
+    >
+      {revealBottom > 0 && (
+        <div
+          aria-hidden="true"
+          style={{ position: "absolute", left: 0, right: 0, bottom: 0, top: revealBottom, background: "rgba(5, 25, 18, 0.55)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }}
+        />
+      )}
       <div
         role="dialog"
         aria-modal="true"
         aria-label={title}
         dir={dir}
         className="zm-sheet-high"
-        style={{ background: C.ground, maxHeight: "92vh", fontFamily: font, color: C.ink }}
+        style={{ position: "relative", background: C.ground, maxHeight: revealBottom > 0 ? `min(92vh, calc(100dvh - ${revealBottom + 8}px))` : "92vh", fontFamily: font, color: C.ink }}
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ width: 44, height: 5, borderRadius: 3, background: "#C3CFC9", margin: "10px auto 0", flexShrink: 0 }} />

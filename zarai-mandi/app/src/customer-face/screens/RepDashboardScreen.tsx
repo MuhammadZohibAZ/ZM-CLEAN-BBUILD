@@ -16,12 +16,12 @@ export function RepDashboardScreen({
   onSwitchRole?: (role: "customer" | "representative") => void;
   hasRepAccount?: boolean;
 }) {
-  const { lang, setLang, t, voiceEnabled, setVoiceEnabled } = useLang();
+  const { lang, setLang, t, tn, voiceEnabled, setVoiceEnabled } = useLang();
   const [showSwitchToast, setShowSwitchToast] = useState<string | null>(null);
   const lastProfileTapRef = useRef<number>(0);
   const [submittedModalOpen, setSubmittedModalOpen] = useState(false);
 
-  const repName = initialUserData?.name || (lang === "ur" ? "محمد عارف" : "Muhammad Arif");
+  const repName = tn(initialUserData?.name || "Muhammad Arif");
   const repCity = initialUserData?.city || "Pakpattan Mandi";
   const repProvince = initialUserData?.province || "Punjab";
 

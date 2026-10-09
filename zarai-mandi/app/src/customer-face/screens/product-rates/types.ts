@@ -23,7 +23,7 @@ export type MarketRow = {
   reportedAt?: string;
 };
 
-export type AttrKey = "newOld" | "variety" | "moisture" | "color" | "spec" | "origin";
+export type AttrKey = "newOld" | "variety" | "moisture" | "color" | "spec" | "origin" | "quality";
 export type AttrFilters = Partial<Record<AttrKey, string>>;
 
 export type ChangeInterval = 1 | 3 | 7 | 30;
@@ -47,6 +47,7 @@ export type ProductRatesProps = {
   initialColor?: string;
   initialSpec?: string;
   initialCondition?: string;
+  initialOrigin?: string;
   initialMoisture?: string;
   initialStatDate?: string;
   initialAvgMin?: number;

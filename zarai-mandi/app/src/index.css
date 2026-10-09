@@ -1393,31 +1393,6 @@ body {
   z-index: 55;
 }
 
-/* ── Rotating Beam Border Colors ── */
-.zm-beam-border-pink::after {
-  background: conic-gradient(
-    from var(--beam-angle, 0deg) at 50% 50%,
-    transparent 0deg,
-    transparent 250deg,
-    rgba(251, 113, 133, 0.3) 280deg,
-    rgba(244, 63, 94, 0.95) 330deg,
-    rgba(225, 29, 72, 1) 360deg
-  ) !important;
-  animation: zmAngleSpin 4s linear infinite;
-}
-
-.zm-beam-border-green::after {
-  background: conic-gradient(
-    from var(--beam-angle, 0deg) at 50% 50%,
-    transparent 0deg,
-    transparent 255deg,
-    rgba(16, 185, 129, 0.25) 285deg,
-    rgba(52, 211, 153, 0.95) 330deg,
-    rgba(16, 185, 129, 1) 360deg
-  ) !important;
-  animation: zmAngleSpin 4s linear infinite;
-}
-
 /* ── Custom Scrollbar for Popups & Filter Panels ── */
 .zm-popover-scrollbar {
   scrollbar-width: thin;

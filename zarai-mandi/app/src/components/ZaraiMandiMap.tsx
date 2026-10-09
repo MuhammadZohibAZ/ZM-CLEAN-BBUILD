@@ -274,7 +274,7 @@ export default function ZaraiMandiMap({
   const [graphMode, setGraphMode] = useState<"price" | "arrival">("price");
   const [timeframe, setTimeframe] = useState<string>("1D");
   const [isMoreOpen, setIsMoreOpen] = useState(false);
-  const [customRange, setCustomRange] = useState<{ start: string; end: string }>({ start: "2026-08-15", end: "2026-09-14" });
+  const [customRange, setCustomRange] = useState<{ start: string; end: string }>(() => ({ start: TIMELINE[Math.max(0, TIMELINE.length - 31)], end: TIMELINE[TIMELINE.length - 1] }));
   const [isCustomPickerOpen, setIsCustomPickerOpen] = useState(false);
   const [granularity, setGranularity] = useState<string>("15");
   const [graphHoverIdx, setGraphHoverIdx] = useState<number | null>(null);
@@ -1035,6 +1035,8 @@ export default function ZaraiMandiMap({
             t={(s) => s}
             tm={(s) => s}
             tr={(s) => s}
+            byproductName={activeCommodity}
+            byproductIcon={activeCommodity}
             mandiName={selectedMandi.name}
             initialRate={dominantRate}
             allRows={allMarketRows}

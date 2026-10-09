@@ -568,8 +568,13 @@ export function getProductSpecialAttrType(byproduct, matchedByproduct) {
 // (`attrCol`/`attrValue`) or one forced rate type (`rateType`).
 function splitAttrClause(split, params) {
   if (!split?.attrCol) return "";
-  params.push(split.attrValue);
-  return `and trim(${split.attrCol}) = $${params.length}`;
+  // One value (split cards) or several (the by-product screen's attribute filter).
+  const values = split.attrValues?.length ? split.attrValues : [split.attrValue];
+  const marks = values.map((v) => {
+    params.push(v);
+    return `$${params.length}`;
+  });
+  return `and trim(${split.attrCol}) in (${marks.join(", ")})`;
 }
 
 async function computeCardStats(row, targetDate, locationKind, locationLabel, split = null) {
@@ -606,8 +611,29 @@ async function computeCardStats(row, targetDate, locationKind, locationLabel, sp
   const allRateTypes = rtRows.map((r) => r.rt);
   // rtRows is already ordered by record count desc, so its head is the
   // live-computed dominant (most-occurring) price type for this by-product.
-  if (split?.rateType && !allRateTypes.includes(split.rateType)) return base;
-  const mostOccurringRateType = split?.rateType || rtRows[0].rt;
+  // A chosen rate type with no reports here (e.g. under an attribute filter)
+  // falls back to the most-reported one.
+  let defaultRateType = rtRows[0].rt;
+  // A card for one attribute value (e.g. Wheat · New) takes the rate type most
+  // reported for that value in the 30 days up to the day, so it shows a current
+  // rate rather than one that was common months ago.
+  if (split?.attrCol && targetDate) {
+    const from = new Date(`${String(targetDate).slice(0, 10)}T00:00:00Z`);
+    from.setUTCDate(from.getUTCDate() - 30);
+    const recentParams = [row.product, row.matched_by_product];
+    const recentLoc = buildLocationFilter(locationKind, locationLabel, recentParams) + " " + splitAttrClause(split, recentParams);
+    recentParams.push(from.toISOString().slice(0, 10), String(targetDate).slice(0, 10));
+    const { rows: recent } = await pool.query(
+      `select coalesce(price_type, 'Mandi Rate') as rt, count(*) as n
+       from price_records
+       where product = $1 and by_product = $2 ${recentLoc}
+         and record_date >= $${recentParams.length - 1} and record_date <= $${recentParams.length}
+       group by rt order by n desc limit 1`,
+      recentParams
+    );
+    if (recent[0]?.rt) defaultRateType = recent[0].rt;
+  }
+  const mostOccurringRateType = split?.rateType && allRateTypes.includes(split.rateType) ? split.rateType : defaultRateType;
   const otherRateTypesCount = Math.max(0, allRateTypes.length - 1);
 
   const priceParams = [row.product, row.matched_by_product, mostOccurringRateType];
@@ -637,14 +663,20 @@ async function computeCardStats(row, targetDate, locationKind, locationLabel, sp
   );
   let avgMin = Number(priceRows[0].avg_min);
   let avgMax = Number(priceRows[0].avg_max);
+  // Day the card describes: the selected day, or the latest report day before
+  // it when the by-product wasn't reported that day (see fallback below).
+  let statsDate = targetDate;
 
   if (targetDate && avgMin === 0 && avgMax === 0) {
     const fbParams = [row.product, row.matched_by_product, mostOccurringRateType];
     const fbLoc = buildLocationFilter(locationKind, locationLabel, fbParams) + " " + splitAttrClause(split, fbParams);
+    fbParams.push(targetDate);
+    const onOrBefore = `$${fbParams.length}`;
     const { rows: fbRows } = await pool.query(
       `with latest_date as (
          select max(record_date) as md from price_records
          where product = $1 and by_product = $2 and price_valid and price_type = $3 ${fbLoc}
+           and record_date <= ${onOrBefore}
        ),
        eligible as (
          select * from price_records
@@ -658,26 +690,30 @@ async function computeCardStats(row, targetDate, locationKind, locationLabel, sp
          from eligible group by province, district, station
        )
        select coalesce(round(avg(mn)::numeric, 2), 0) as avg_min,
-              coalesce(round(avg(mx)::numeric, 2), 0) as avg_max
+              coalesce(round(avg(mx)::numeric, 2), 0) as avg_max,
+              (select md from latest_date) as md
        from market`,
       fbParams
     );
     if (fbRows[0] && Number(fbRows[0].avg_min) > 0) {
       avgMin = Number(fbRows[0].avg_min);
       avgMax = Number(fbRows[0].avg_max);
+      statsDate = fbRows[0].md || targetDate;
     }
   }
 
   const arrParams = [row.product, row.matched_by_product];
   let arrLocClause = buildLocationFilter(locationKind, locationLabel, arrParams);
   arrLocClause += " " + splitAttrClause(split, arrParams);
-  if (split?.rateType) {
-    arrParams.push(split.rateType);
+  // Split / filtered cards: arrivals and mandis for the card's own rate type,
+  // as the rates screen counts them for the rate + attribute it opens with.
+  if (split?.rateType || split?.attrCol) {
+    arrParams.push(mostOccurringRateType);
     arrLocClause += ` and price_type = $${arrParams.length}`;
   }
   let arrDateSql = "";
-  if (targetDate) {
-    arrParams.push(targetDate);
+  if (statsDate) {
+    arrParams.push(statsDate);
     arrDateSql = `and record_date = $${arrParams.length}`;
   }
 
@@ -712,10 +748,11 @@ async function computeCardStats(row, targetDate, locationKind, locationLabel, sp
   const targetAttrType = getProductSpecialAttrType(row.by_product, row.matched_by_product);
 
   if (split?.attrCol) {
-    // A split card is defined by its attribute value, so that value is the card's chip.
-    const value = split.attrType === "moisture" ? `${split.attrValue}%` : split.attrValue;
-    specialAttr = { type: split.attrType, value };
-    specialAttrs.push(specialAttr);
+    // A split / filtered card is defined by its attribute value(s), so they are the card's chip.
+    const values = split.attrValues?.length ? split.attrValues : [split.attrValue];
+    const show = (v) => (split.attrType === "moisture" ? `${v}%` : v);
+    for (const v of values) specialAttrs.push({ type: split.attrType, value: show(v) });
+    specialAttr = { type: split.attrType, value: values.map(show).join(" / ") };
   } else if (targetAttrType === "moisture") {
     if (row.moisture_rule_band) {
       specialAttr = { type: "moisture", value: `${row.moisture_rule_band}%`, isDeclaredRule: true };
@@ -739,16 +776,28 @@ async function computeCardStats(row, targetDate, locationKind, locationLabel, sp
   } else if (targetAttrType) {
     const col = ATTR_TYPE_TO_COL[targetAttrType];
     if (col) {
-      const attrParams2 = [row.product, row.matched_by_product, mostOccurringRateType];
-      const attrLocClause2 = buildLocationFilter(locationKind, locationLabel, attrParams2);
-      let { rows: modeRows } = await pool.query(
-        `select ${col} as val, count(*) as c
-         from price_records
-         where product = $1 and by_product = $2 and price_type = $3 ${attrLocClause2}
-           and ${col} is not null and trim(${col}) != '' and lower(trim(${col})) != 'null'
-         group by ${col} order by count(*) desc limit 1`,
-        attrParams2
-      );
+      // Most common value among the card's rate type, on the day the card shows
+      // first, so the rate + attribute the card opens the rates screen with
+      // actually have reports together (e.g. Wheat Stock Rate is all "Old").
+      const modeFor = async (onDate) => {
+        const attrParams2 = [row.product, row.matched_by_product, mostOccurringRateType];
+        let attrLocClause2 = buildLocationFilter(locationKind, locationLabel, attrParams2);
+        if (onDate) {
+          attrParams2.push(onDate);
+          attrLocClause2 += ` and record_date = $${attrParams2.length}`;
+        }
+        const { rows } = await pool.query(
+          `select ${col} as val, count(*) as c
+           from price_records
+           where product = $1 and by_product = $2 and price_type = $3 ${attrLocClause2}
+             and ${col} is not null and trim(${col}) != '' and lower(trim(${col})) != 'null'
+           group by ${col} order by count(*) desc limit 1`,
+          attrParams2
+        );
+        return rows;
+      };
+      let modeRows = statsDate ? await modeFor(statsDate) : [];
+      if (!modeRows[0]?.val) modeRows = await modeFor(null);
       if (!modeRows[0]?.val) {
         const attrParamsFallback = [row.product, row.matched_by_product];
         const attrLocClauseFallback = buildLocationFilter(locationKind, locationLabel, attrParamsFallback);
@@ -766,6 +815,35 @@ async function computeCardStats(row, targetDate, locationKind, locationLabel, sp
       if (val && val !== "null" && String(val).trim() !== "") {
         specialAttr = { type: targetAttrType, value: String(val).trim() };
         specialAttrs.push(specialAttr);
+        // The card opens the rates screen filtered to this rate + attribute, so
+        // its price and mandi count are for that pair too (same numbers there).
+        if (statsDate && avgMin > 0) {
+          const pairParams = [row.product, row.matched_by_product, mostOccurringRateType, statsDate, specialAttr.value];
+          const pairLoc = buildLocationFilter(locationKind, locationLabel, pairParams);
+          const { rows: pairRows } = await pool.query(
+            `with eligible as (
+               select * from price_records
+               where product = $1 and by_product = $2 and price_valid and price_type = $3
+                 and record_date = $4 and trim(${col}) = $5
+                 and province is not null and district is not null and station is not null
+                 ${pairLoc}
+             ),
+             market as (
+               select province, district, station, avg(minimum) mn, avg(maximum) mx
+               from eligible group by province, district, station
+             )
+             select coalesce(round(avg(mn)::numeric, 2), 0) as avg_min,
+                    coalesce(round(avg(mx)::numeric, 2), 0) as avg_max,
+                    count(*) as markets
+             from market`,
+            pairParams
+          );
+          if (pairRows[0] && Number(pairRows[0].avg_min) > 0) {
+            avgMin = Number(pairRows[0].avg_min);
+            avgMax = Number(pairRows[0].avg_max);
+            markets = Number(pairRows[0].markets);
+          }
+        }
       }
     }
   }
@@ -786,6 +864,9 @@ async function computeCardStats(row, targetDate, locationKind, locationLabel, sp
     specialAttr,
     specialAttrs,
     split: split ? { by: split.by, value: split.value } : null,
+    // The report day the numbers are from (the latest day before the asked one
+    // when the by-product wasn't reported that day).
+    statsDate: statsDate || null,
   };
 }
 
@@ -795,8 +876,28 @@ async function computeCardStats(row, targetDate, locationKind, locationLabel, sp
  * frontend can render its existing "No Data Available" overlay exactly
  * as it does today.
  */
+/** The column a by-product's special attribute is stored in (null = nothing to filter on). */
+function attributeColumn(row) {
+  const attrType = getProductSpecialAttrType(row.by_product, row.matched_by_product);
+  if (!attrType) return null;
+  // Maize grades have one declared moisture band; nothing to filter on.
+  if (attrType === "moisture" && row.moisture_rule_band) return null;
+  const col = attrType === "moisture" ? "moisture_raw" : ATTR_TYPE_TO_COL[attrType];
+  return col ? { attrType, col } : null;
+}
+
+/**
+ * One card per by-product. Options for the by-product screen:
+ * - `attrs`: selected special-attribute values as "type|value". A by-product
+ *   whose attribute type has selected values gets stats for those values only;
+ *   one whose type has none is returned as `{ filteredOut: true }`.
+ * - `rates`: { key: rateType } — a card's chosen rate type, keyed by catalog id
+ *   ("12") or, for a by-product's card of one attribute value, "12~Old".
+ * With several values selected, a by-product gets one card per value (each its
+ * own average), tagged `split: { by: "attribute", value }`.
+ */
 export async function getVerticalCardStats(division, options = {}) {
-  const { date, locationKind, locationLabel } = options;
+  const { date, locationKind, locationLabel, attrs = [], rates = {} } = options;
 
   const { rows: catalogRows } = await pool.query(
     `select id, division, by_product, product, matched_by_product, has_data, moisture_rule_band
@@ -804,9 +905,71 @@ export async function getVerticalCardStats(division, options = {}) {
     [division]
   );
 
-  return Promise.all(
-    catalogRows.map((row) => computeCardStats(row, date || null, locationKind, locationLabel))
+  const wanted = new Map(); // attrType -> values
+  for (const a of attrs) {
+    const i = a.indexOf("|");
+    if (i <= 0) continue;
+    const type = a.slice(0, i);
+    wanted.set(type, [...(wanted.get(type) || []), a.slice(i + 1)]);
+  }
+
+  const perRow = await Promise.all(
+    catalogRows.map(async (row) => {
+      if (!wanted.size) {
+        const rateType = rates[row.id] || null;
+        const split = rateType ? { by: "rateType", value: rateType, rateType } : null;
+        return [{ ...(await computeCardStats(row, date || null, locationKind, locationLabel, split)), split: null }];
+      }
+      const attr = attributeColumn(row);
+      const values = attr ? wanted.get(attr.attrType) : null;
+      if (!values?.length) {
+        return [{ catalogId: row.id, product: row.division, byproduct: row.by_product, hasData: false, filteredOut: true }];
+      }
+      const cards = await Promise.all(
+        values.map(async (value) => {
+          const rateType = rates[`${row.id}~${value}`] || null;
+          const split = { by: "attribute", value, attrType: attr.attrType, attrCol: attr.col, attrValue: value, ...(rateType ? { rateType } : {}) };
+          return { ...(await computeCardStats(row, date || null, locationKind, locationLabel, split)), split: { by: "attribute", value } };
+        })
+      );
+      // A value this by-product never reported (up to that day) isn't a card.
+      const reported = cards.filter((c) => c.hasData);
+      return reported.length ? reported : [{ catalogId: row.id, product: row.division, byproduct: row.by_product, hasData: false, filteredOut: true }];
+    })
   );
+  return perRow.flat();
+}
+
+/**
+ * Special-attribute values reported for each by-product of a division (for
+ * the by-product screen's filter chips): [{ catalogId, byproduct, type, value, count }].
+ */
+export async function getVerticalAttributeValues(division, options = {}) {
+  const { locationKind, locationLabel } = options;
+  const { rows: catalogRows } = await pool.query(
+    `select id, division, by_product, product, matched_by_product, has_data, moisture_rule_band
+     from by_products where division = $1 order by id`,
+    [division]
+  );
+  const perRow = await Promise.all(
+    catalogRows.map(async (row) => {
+      if (!row.has_data || !row.matched_by_product) return [];
+      const attr = attributeColumn(row);
+      if (!attr) return [];
+      const params = [row.product, row.matched_by_product];
+      const loc = buildLocationFilter(locationKind, locationLabel, params);
+      const { rows } = await pool.query(
+        `select trim(${attr.col}) as v, count(*) as n
+         from price_records
+         where product = $1 and by_product = $2 ${loc}
+           and ${attr.col} is not null and trim(${attr.col}) != '' and lower(trim(${attr.col})) != 'null'
+         group by trim(${attr.col}) order by n desc`,
+        params
+      );
+      return rows.map((r) => ({ catalogId: row.id, byproduct: row.by_product, type: attr.attrType, value: r.v, count: Number(r.n) }));
+    })
+  );
+  return perRow.flat();
 }
 
 /**
@@ -847,6 +1010,8 @@ export async function getVerticalSplitCardStats(division, options = {}) {
       }
 
       const attrType = getProductSpecialAttrType(row.by_product, row.matched_by_product);
+      // Maize grades have one declared moisture band; nothing to split on.
+      if (attrType === "moisture" && row.moisture_rule_band) return single();
       const col = attrType === "moisture" ? "moisture_raw" : ATTR_TYPE_TO_COL[attrType];
       if (!col) return single();
       const params = [row.product, row.matched_by_product];

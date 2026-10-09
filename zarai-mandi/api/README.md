@@ -16,9 +16,11 @@ running API no longer uses them.)
 # 1. One-off: Python with openpyxl
 python3 -m pip install openpyxl
 
-# 2. Load an export (default: data/All Commodity Prices_2025-09-23_to_2026-09-23.xlsx)
+# 2. Prepare the year of prices (fills missing price types, matches names to
+#    the app) and load it (default: data/prices_2025-09-23_to_2026-09-23_prepared.xlsx)
+python3 data/prepare_year_prices.py
 cd api
-python3 db/etl_sqlite.py "../data/<export>.xlsx"
+python3 db/etl_sqlite.py
 
 # 3. Run the API
 npm install

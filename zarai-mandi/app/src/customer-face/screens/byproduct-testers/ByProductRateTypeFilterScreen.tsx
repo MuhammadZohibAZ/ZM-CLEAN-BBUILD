@@ -16,6 +16,8 @@ import {
 // one rate type. The chip bar filters the cards by rate type.
 
 const NO_DATA = "__none__";
+// Shown right after All; the other rate types follow by card count.
+const PRIORITY_RATE = "Mandi Rate";
 
 function filterValueOf(c: SplitCard): string {
   return c.splitValue ?? NO_DATA;
@@ -35,7 +37,12 @@ export function ByProductRateTypeFilterScreen(props: TesterBodyProps) {
         label: value === NO_DATA ? (lang === "ur" ? "ڈیٹا نہیں" : "No data") : tr(value),
         count,
       }))
-      .sort((a, b) => Number(a.value === NO_DATA) - Number(b.value === NO_DATA) || b.count - a.count);
+      .sort(
+        (a, b) =>
+          Number(b.value === PRIORITY_RATE) - Number(a.value === PRIORITY_RATE) ||
+          Number(a.value === NO_DATA) - Number(b.value === NO_DATA) ||
+          b.count - a.count
+      );
   }, [cards, lang, tr]);
 
   const filter = useMultiFilter(options);

@@ -54,7 +54,7 @@ export function MandiSection({
   interval: ChangeInterval;
   onInterval: (i: ChangeInterval) => void;
   selectedMandi?: string;
-  primary: AttrKey;
+  primary: AttrKey | null;
   onOpen: (e: MandiEntry) => void;
   loading: boolean;
   /** Which view this slide shows (default: "table"). */
@@ -203,10 +203,10 @@ export function MandiSection({
 
   const listForCols = fullscreen ? entries : visible;
   const specCols = useMemo(() => {
-    const raw: { key: AttrKey | "unit" | "quality"; label: string }[] = [
-      { key: primary, label: colLabel(f, primary) },
-      ...(["newOld", "moisture", "color", "variety", "origin", "spec"] as AttrKey[]).filter((k) => k !== primary).map((k) => ({ key: k, label: colLabel(f, k) })),
-      { key: "quality", label: f.tx("Quality", "معیار") },
+    // The by-product's special attribute first, then the rest (quality has its own cleaned column).
+    const raw: { key: AttrKey | "unit"; label: string }[] = [
+      ...(primary ? [{ key: primary, label: colLabel(f, primary) }] : []),
+      ...(["newOld", "moisture", "color", "variety", "origin", "spec", "quality"] as AttrKey[]).filter((k) => k !== primary).map((k) => ({ key: k, label: colLabel(f, k) })),
       { key: "unit", label: f.tx("Unit", "اکائی") },
     ];
     const hasData = (key: AttrKey | "unit" | "quality") =>
@@ -730,6 +730,7 @@ function colLabel(f: Fmt, k: AttrKey) {
     color: ["Color", "رنگ"],
     spec: ["Spec", "خصوصیت"],
     origin: ["Origin", "علاقہ"],
+    quality: ["Quality", "معیار"],
   };
   return f.tx(L[k][0], L[k][1]);
 }
@@ -754,11 +755,11 @@ function MandiRow({
   first: boolean;
   index: number;
   selected: boolean;
-  primary: AttrKey;
+  primary: AttrKey | null;
   onOpen: () => void;
 }) {
   const r = e.row;
-  const order: AttrKey[] = [primary, ...(["newOld", "variety", "moisture", "color", "spec"] as AttrKey[]).filter((k) => k !== primary)];
+  const order: AttrKey[] = [...(primary ? [primary] : []), ...(["newOld", "variety", "moisture", "color", "spec"] as AttrKey[]).filter((k) => k !== primary)];
   const extra = order
     .filter((k) => r[k])
     .map((k) => {

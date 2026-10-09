@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 
+import { onScreenVariantPick, publishScreenVariants } from "../../../lib/device-bridge";
+import { inDevicePreview } from "../../../lib/device-orientation";
 import { URDU_FONT, useLang } from "../../shared/i18n/LangProvider";
 
-// Floating "Test" button on the by-product screen that switches between the
-// original card grid and the two tester variants. The choice is remembered on
-// this device only.
+// Testing switch on the by-product screen between the original card grid and
+// the two tester variants. In the desktop phone mockup it sits outside the
+// phone (like the testing pill); on a real phone it's a floating "Test" button.
+// The choice is remembered on this device only.
 
 export type ByproductScreenVariant = "original" | "attribute" | "rateType";
 
@@ -56,6 +59,29 @@ export function ScreenVariantSwitch({
 }) {
   const { lang } = useLang();
   const [open, setOpen] = useState(false);
+  const inDevice = inDevicePreview();
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+
+  // In the mockup: offer the versions to the picker beside the phone.
+  useEffect(() => {
+    if (!inDevice) return;
+    publishScreenVariants({
+      title: "Screen version (testing)",
+      active: variant,
+      options: VARIANTS.map((v) => ({ id: v, label: LABELS[v].en })),
+    });
+  }, [inDevice, variant]);
+  useEffect(() => {
+    if (!inDevice) return;
+    const off = onScreenVariantPick((id) => {
+      if (VARIANTS.includes(id as ByproductScreenVariant)) onChangeRef.current(id as ByproductScreenVariant);
+    });
+    return () => {
+      off();
+      publishScreenVariants(null);
+    };
+  }, [inDevice]);
   const rootRef = useRef<HTMLDivElement>(null);
   const font = lang === "ur" ? URDU_FONT : "inherit";
 
@@ -67,6 +93,8 @@ export function ScreenVariantSwitch({
     document.addEventListener("pointerdown", close);
     return () => document.removeEventListener("pointerdown", close);
   }, [open]);
+
+  if (inDevice) return null;
 
   return (
     <div

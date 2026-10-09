@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { REAL_DATES_TIMELINE, type TimelineResult } from "../../../data/realCommodityData";
+import { type TimelineResult } from "../../../data/realCommodityData";
 import {
   fetchAllRecords,
   fetchByProducts,
@@ -8,12 +8,13 @@ import {
   type ByProductCatalogRow,
   type TrendPoint,
 } from "../../../lib/api";
+import { DATASET_DATES } from "../../shared/data/datasetDates";
 import { ALL_RATE_TYPES } from "../../shared/data/rates";
 import type { LocationScope } from "../../shared/types";
 import type { MarketRow } from "./types";
 
-/** The fixed day grid every chart on this screen is drawn on. */
-export const TIMELINE = REAL_DATES_TIMELINE;
+/** The day grid every chart on this screen is drawn on: every day the data covers. */
+export const TIMELINE = DATASET_DATES;
 
 /** Reindexes a sparse day-points series onto the timeline. A day with no
  * report carries the last price forward ("unreported", not "zero");

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import ExpandableMandiMapCard from "../../../components/ExpandableMandiMapCard";
 import type { MapByProductRecord } from "../../../components/ZaraiMandiMap";
-import { getProductSpecialAttrType } from "../../shared/data/byproductStats";
+import { getDeclaredMoistureBand, getProductSpecialAttrType } from "../../shared/data/byproductStats";
 import { getDivisionForProduct, isProductTodayOnly } from "../../shared/data/catalog";
 import { getProvinceFromLoc } from "../../shared/data/mandis";
 import { ALL_RATE_TYPES } from "../../shared/data/rates";
@@ -39,6 +39,8 @@ import { TIMELINE, useMarketData } from "./useMarketData";
 import "./productRates.css";
 import { Swiper3D } from "./Swiper3D";
 
+const SPARK_DAYS = 30;
+
 // Which filter UI the Overview uses. All three are complete:
 //   "rail"   – always-visible bar under the tabs (current)
 //   "drawer" – pull-down drawer with a summary grip
@@ -72,6 +74,8 @@ export function ProductRatesScreen({
   initialNewOld,
   initialColor,
   initialSpec,
+  initialCondition,
+  initialOrigin,
   initialMoisture,
   initialStatDate,
 }: ProductRatesProps) {
@@ -88,8 +92,15 @@ export function ProductRatesScreen({
     newOld: initialNewOld || undefined,
     color: initialColor || undefined,
     spec: initialSpec || undefined,
+    quality: initialCondition || undefined,
+    origin: initialOrigin || undefined,
     moisture: initialMoisture || undefined,
   }));
+  // The rate and attributes the tapped card opened with. While they're unchanged
+  // the filter rail shows a dropdown arrow, not a clear ✕.
+  const arrival = useRef({ rate, filters }).current;
+  const sameFilters = (a: AttrFilters, b: AttrFilters) =>
+    [...new Set([...Object.keys(a), ...Object.keys(b)])].every((k) => (a[k as keyof AttrFilters] || undefined) === (b[k as keyof AttrFilters] || undefined));
   const [date, setDate] = useState<string>("");
   const [listProvince, setListProvince] = useState<string | null>(null);
   // Mandi table: nothing selected by default (reports in their own order).
@@ -108,12 +119,16 @@ export function ProductRatesScreen({
   const lockHistory = isProductTodayOnly(product);
 
   // Pick the starting day once reports arrive: the requested day if it has
-  // reports (and history is not locked), otherwise the latest report day.
+  // reports (and history is not locked), otherwise the latest day with reports
+  // for the card's rate and attribute (the newest day can be a partial export).
   useEffect(() => {
     if (!dates.length) return;
     const wanted = initialStatDate ? initialStatDate.slice(0, 10) : "";
     if (!date || !dates.includes(date) || (lockHistory && date !== latest)) {
-      setDate(!lockHistory && dates.includes(wanted) ? wanted : latest);
+      if (lockHistory) return setDate(latest);
+      const matching = new Set(rows.filter((r) => passesFilters(r, arrival.filters, arrival.rate)).map((r) => r.date));
+      const upTo = dates.includes(wanted) ? wanted : latest;
+      setDate([...dates].reverse().find((d) => d <= upTo && matching.has(d)) || upTo);
     }
   }, [dates, latest, lockHistory]); // eslint-disable-line react-hooks/exhaustive-deps
   const day = date || latest;
@@ -162,6 +177,17 @@ export function ProductRatesScreen({
     }
     return TIMELINE.map((d) => statsFor(byDay.get(d) || []).mid);
   }, [scopeRows, filters, rate]);
+
+  // The hero sparkline shows a month (the year lives in the Trends tab). It ends
+  // on the latest day and only moves back when an older day is picked.
+  const [sparkEnd, setSparkEnd] = useState(() => TIMELINE.length);
+  useEffect(() => {
+    const i = TIMELINE.indexOf(day);
+    if (i < 0) return;
+    setSparkEnd((end) => (i >= end - SPARK_DAYS && i < end ? end : Math.min(TIMELINE.length, i + 1 + Math.floor(SPARK_DAYS / 2))));
+  }, [day]);
+  const sparkStart = Math.max(0, sparkEnd - SPARK_DAYS);
+  const sparkDates = TIMELINE.slice(sparkStart, sparkEnd);
 
   // ─── Labels ───────────────────────────────────────────────────
   const scopeRow = scopeRows[0];
@@ -223,7 +249,7 @@ export function ProductRatesScreen({
     color: r.color,
   });
   const mapRecords: MapByProductRecord[] = useMemo(() => rows.filter(keep).map(toMapRecord), [rows, filters, rate]);
-  const mapColorKey = primaryAttr(getProductSpecialAttrType(byproduct, product)) as keyof MapByProductRecord;
+  const mapColorKey = (primaryAttr(getProductSpecialAttrType(byproduct, product)) ?? "newOld") as keyof MapByProductRecord;
 
   const pickItem = {
     vertical,
@@ -259,6 +285,8 @@ export function ProductRatesScreen({
     groups: filterGroups,
     filters,
     onFilters: setFilters,
+    rateFromCard: rate !== ALL_RATES && rate === arrival.rate,
+    filtersFromCard: Object.values(filters).some(Boolean) && sameFilters(filters, arrival.filters),
     resultCount: stats.mandis,
     isDefault: scope.kind === "pakistan" && day === latest && rate === ALL_RATES && !Object.values(filters).some(Boolean),
     locationActive: scope.kind !== "pakistan",
@@ -275,7 +303,7 @@ export function ProductRatesScreen({
   const activeAttrs = useMemo(() => {
     const list: Array<{ key: string; label: string; value: string; display: string }> = [];
     const targetType = getProductSpecialAttrType(byproduct, product);
-    const primaryKey: AttrKey = primaryAttr(targetType);
+    const primaryKey = primaryAttr(targetType);
 
     // 1. Any filters explicitly set by user (or initialized from card)
     const filterKeys = (Object.keys(filters) as AttrKey[]).filter((k) => Boolean(filters[k]));
@@ -290,8 +318,14 @@ export function ProductRatesScreen({
       list.push({ key, label, value: val, display });
     }
 
-    // 2. If no filter is set for the byproduct's primary special attribute, check if all day rows share a single unique attribute
-    if (!filters[primaryKey]) {
+    // 2. A maize grade's declared moisture band (A 11-14%, B 14-16%, ...) describes the grade.
+    const band = primaryKey === "moisture" ? getDeclaredMoistureBand(byproduct) : null;
+    if (band && !filters.moisture) {
+      list.push({ key: "moisture", label: attrLabel(f, "moisture"), value: band, display: attrValue(f, t, "moisture", band) });
+    }
+
+    // 3. If no filter is set for the byproduct's primary special attribute, check if all day rows share a single unique attribute
+    if (primaryKey && !filters[primaryKey] && !band) {
       const uniqueValues = Array.from(
         new Set(dayRows.map((r) => r[primaryKey] as string).filter(Boolean))
       );
@@ -384,14 +418,14 @@ export function ProductRatesScreen({
                       isLatest={day === latest}
                       prevDate={prevDay}
                       onPickDay={(i) => {
-                        const d = TIMELINE[i];
+                        const d = sparkDates[i];
                         if (dates.includes(d) && !(lockHistory && d !== latest)) setDate(d);
                       }}
                       stats={stats}
                       prev={prevStats}
                       nationalMid={nationalMid}
                       isMandi={scope.kind === "mandi"}
-                      spark={{ dates: TIMELINE, series: [{ color: C.brand, values: sparkSource }], idx: Math.max(0, TIMELINE.indexOf(day)) }}
+                      spark={{ dates: sparkDates, series: [{ color: C.brand, values: sparkSource.slice(sparkStart, sparkEnd) }], idx: Math.max(0, sparkDates.indexOf(day)) }}
                       onListen={speakHero}
                       lockHistory={lockHistory}
                       onSubscribe={() => push?.({ id: "billing", product, vertical })}
@@ -406,7 +440,7 @@ export function ProductRatesScreen({
                   key: "best-map",
                   label: f.tx("Best Places & Map", "بہترین منڈیاں اور نقشہ"),
                   node: (
-                    <div style={{ padding: "16px 16px 0", display: "flex", flexDirection: "column", gap: 6 }}>
+                    <div style={{ padding: "16px 6px 0 16px", display: "flex", flexDirection: "column", gap: 6 }}>
                       {!loading && (
                         <BestPlaces
                           f={f}
@@ -512,6 +546,9 @@ export function ProductRatesScreen({
           t={t}
           tm={tm}
           tr={tr}
+          byproductName={tc(name)}
+          byproductIcon={name}
+          vertical={vertical}
           mandiName={detail.mandi}
           initialRate={detail.rate}
           allRows={rows}

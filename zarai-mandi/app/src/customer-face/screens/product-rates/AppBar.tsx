@@ -33,7 +33,9 @@ export function AppBar({
 }) {
   return (
     <header style={{ flexShrink: 0, background: C.surface }}>
+      {/* Stays visible above sheets that open with revealHeader (BottomSheet). */}
       <div
+        data-zm-sheet-reveal=""
         style={{
           display: "flex",
           alignItems: "center",

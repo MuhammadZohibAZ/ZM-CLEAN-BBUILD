@@ -92,7 +92,9 @@ export function TrendChart({
   const lineTop = 10;
   const lineBottom = H - bottomAxis - (barH ? barH + 10 : 0);
   const n = dates.length;
-  const x = (i: number) => (n <= 1 ? plotW / 2 : (i / (n - 1)) * plotW);
+  // Compact charts run edge to edge; inset the ends so the first/last point's dot isn't clipped.
+  const edge = compact ? 10 : 0;
+  const x = (i: number) => (n <= 1 ? plotW / 2 : edge + (i / (n - 1)) * (plotW - edge * 2));
   const xr = (i: number) => (f.ur ? plotW - x(i) + axisW : x(i));
 
   const allVals = barsOnly

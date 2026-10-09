@@ -23,6 +23,8 @@ export interface LangCtx {
   tc: (name: string) => string;
   tm: (mandiName: string) => string;
   tr: (rateType: string) => string;
+  /** A person's name in the current language (saved names can be in either script). */
+  tn: (name: string) => string;
   voiceEnabled: boolean;
   setVoiceEnabled: (v: boolean) => void;
 }
@@ -34,9 +36,24 @@ export const LangContext = createContext<LangCtx>({
   tc: (n) => n,
   tm: (m) => m,
   tr: (r) => r,
+  tn: (n) => personName(n, "en"),
   voiceEnabled: false,
   setVoiceEnabled: () => { },
 });
+
+// Urdu -> English for names saved in Urdu, so they read in English too.
+let URDU_TO_EN: Map<string, string> | null = null;
+function personName(name: string, lang: Lang): string {
+  const n = (name || "").trim();
+  if (!n) return "";
+  if (lang === "ur") return AUTO_URDU_DICT[n] || n;
+  if (!/[\u0600-\u06FF]/.test(n)) return n;
+  if (!URDU_TO_EN) {
+    URDU_TO_EN = new Map();
+    for (const [en, ur] of Object.entries(AUTO_URDU_DICT)) if (!URDU_TO_EN.has(ur)) URDU_TO_EN.set(ur, en);
+  }
+  return URDU_TO_EN.get(n) || n;
+}
 
 export function useLang() {
   return useContext(LangContext);
@@ -111,11 +128,13 @@ export function LangProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
+  const tn = (name: string): string => personName(name, lang);
+
   return (
     <>
       <style>{ZM_THEME_CSS}</style>
       <LangContext.Provider
-        value={{ lang, setLang, t, tc, tm, tr, voiceEnabled, setVoiceEnabled }}
+        value={{ lang, setLang, t, tc, tm, tr, tn, voiceEnabled, setVoiceEnabled }}
       >
         {children}
       </LangContext.Provider>

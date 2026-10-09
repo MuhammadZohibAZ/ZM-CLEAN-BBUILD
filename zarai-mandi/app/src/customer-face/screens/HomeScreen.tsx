@@ -87,6 +87,7 @@ export function HomeScreen({
     t,
     tc,
     tm,
+    tn,
     voiceEnabled: homeVoiceEnabled,
     setVoiceEnabled: homeSetVoiceEnabled,
   } = useLang();
@@ -145,9 +146,8 @@ export function HomeScreen({
   };
 
   // Saved profile shown in the header and edited via AccountCenter
-  const [profileName, setProfileName] = useState(
-    initialUserData?.name || (lang === "ur" ? "محمد عارف" : "Muhammad Arif"),
-  );
+  // Saved as typed; shown through tn() so it follows the language switch.
+  const [profileName, setProfileName] = useState(initialUserData?.name || "Muhammad Arif");
   const [profilePhone, setProfilePhone] = useState(
     initialUserData?.phone || "0300 1234567",
   );
@@ -686,7 +686,7 @@ export function HomeScreen({
                     textShadow: "0 2px 8px rgba(0,0,0,0.5)",
                   }}
                 >
-                  {profileName || (lang === "ur" ? "محمد عارف" : "Muhammad Arif")}
+                  {tn(profileName || "Muhammad Arif")}
                 </h1>
 
                 {/* Edit Button right in header */}

@@ -29,12 +29,23 @@ const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.le
 
 export type Stats = { min: number; max: number; mid: number; arrival: number; mandis: number; count: number };
 
-/** Same maths the old hero used: average of reported minimums and maximums. */
+/**
+ * Average minimum and maximum, the same maths as the API's card and trend
+ * figures: each mandi's reports are averaged first, then the mandis, so a
+ * mandi with many reports doesn't outweigh the others.
+ */
 export function statsFor(rows: MarketRow[]): Stats {
-  const mins = rows.map((r) => r.min).filter((v) => v > 0);
-  const maxs = rows.map((r) => r.max).filter((v) => v > 0);
-  const min = avg(mins);
-  const max = avg(maxs);
+  const byMandi = new Map<string, { mins: number[]; maxs: number[] }>();
+  for (const r of rows) {
+    const key = `${r.province}|${r.district}|${r.mandiName}`;
+    let m = byMandi.get(key);
+    if (!m) byMandi.set(key, (m = { mins: [], maxs: [] }));
+    if (r.min > 0) m.mins.push(r.min);
+    if (r.max > 0) m.maxs.push(r.max);
+  }
+  const groups = [...byMandi.values()];
+  const min = avg(groups.filter((g) => g.mins.length).map((g) => avg(g.mins)));
+  const max = avg(groups.filter((g) => g.maxs.length).map((g) => avg(g.maxs)));
   return {
     min,
     max,
@@ -132,7 +143,7 @@ export function sortEntries(list: MandiEntry[], sort: SortKey, pinMandi?: string
   return [...sorted.filter((e) => normLoc(e.row.mandiName) === pin), ...sorted.filter((e) => normLoc(e.row.mandiName) !== pin)];
 }
 
-export const ATTR_KEYS: AttrKey[] = ["newOld", "variety", "moisture", "color", "spec", "origin"];
+export const ATTR_KEYS: AttrKey[] = ["newOld", "variety", "moisture", "color", "spec", "origin", "quality"];
 
 /** Filter choices built from the reports themselves, with how many mandis
  * report each value. Attributes nobody reports are left out entirely. */
@@ -151,10 +162,9 @@ export function filterOptions(rows: MarketRow[]): { key: AttrKey; options: { val
   }).filter((g) => g.options.length > 0);
 }
 
-/** Which attribute a commodity is mostly traded on, so it is shown first. */
-export function primaryAttr(t: string | null | undefined): AttrKey {
-  if (t === "moisture") return "moisture";
-  if (t === "color") return "color";
-  if (t === "variety") return "variety";
-  return "newOld";
+/** The by-product's special attribute as a filter key (shown first), or null if it has none. */
+export function primaryAttr(t: string | null | undefined): AttrKey | null {
+  return t === "moisture" || t === "color" || t === "variety" || t === "newOld" || t === "spec" || t === "origin" || t === "quality"
+    ? t
+    : null;
 }

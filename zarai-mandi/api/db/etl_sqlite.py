@@ -28,7 +28,9 @@ import sys
 import openpyxl
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_XLSX = os.path.join(BASE_DIR, "..", "..", "data", "All Commodity Prices_2025-09-23_to_2026-09-23.xlsx")
+# The year of prices the app serves (prepared by data/prepare_year_prices.py:
+# price types filled in, names matched to the app).
+DEFAULT_XLSX = os.path.join(BASE_DIR, "..", "..", "data", "prices_2025-09-23_to_2026-09-23_prepared.xlsx")
 SQLITE_PATH = os.path.join(BASE_DIR, "zarai_mandi.sqlite")
 CATALOG_PATH = os.path.join(BASE_DIR, "catalog_459.csv")
 ALIASES_PATH = os.path.join(BASE_DIR, "catalog_aliases.csv")
@@ -257,7 +259,11 @@ def main():
 
     batch = []
     n = 0
+    width = len(headers)
     for row_num, row in enumerate(rows, start=header_row + 1):
+        # Rows can come back shorter than the header when their last cells are empty.
+        if len(row) < width:
+            row = tuple(row) + (None,) * (width - len(row))
         if row[0] is None and all(v in (None, "") for v in row):
             continue
         date_val = row[col_idx.get("Date", 0)]

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { Fmt } from "./format";
 import { C } from "./theme";
@@ -71,12 +71,37 @@ export function RangeSheet({
 
   const count = end ? dates.filter((d) => d >= start && d <= end).length : 0;
   const ready = !!end && count >= 2;
+  // Add the year once a range crosses into another year (the data spans a year).
+  const crossYear = !!end && start.slice(0, 4) !== end.slice(0, 4);
+  const label = (d: string) => (crossYear ? `${f.day(d)} '${f.digits(d.slice(2, 4))}` : f.day(d));
+
+  // Quick periods ending on the latest report day.
+  const last = dates[dates.length - 1];
+  const presets = [
+    { months: 3, en: "Last 3 months", ur: "پچھلے 3 ماہ" },
+    { months: 6, en: "Last 6 months", ur: "پچھلے 6 ماہ" },
+    { months: 9, en: "Last 9 months", ur: "پچھلے 9 ماہ" },
+    { months: 12, en: "Whole year", ur: "پورا سال" },
+  ].map((p) => {
+    const from = new Date(`${last}T00:00:00Z`);
+    from.setUTCMonth(from.getUTCMonth() - p.months);
+    from.setUTCDate(from.getUTCDate() + 1);
+    const iso = from.toISOString().slice(0, 10);
+    return { ...p, start: dates.find((d) => d >= iso) || dates[0] };
+  });
+
+  // Open on the month of the current start day, not the oldest month.
+  const monthRefs = useRef(new Map<string, HTMLDivElement>());
+  useEffect(() => {
+    const [y, m] = value.start.split("-").map(Number);
+    monthRefs.current.get(`${y}-${m}`)?.scrollIntoView({ block: "start" });
+  }, [value.start]);
 
   return (
     <BottomSheet
       onClose={onClose}
       title={f.tx("Custom period", "مخصوص مدت")}
-      subtitle={end ? `${f.day(start)} – ${f.day(end)}` : f.tx(`From ${f.day(start)} · now tap an end day`, `${f.day(start)} سے · اب آخری دن چنیں`)}
+      subtitle={end ? `${label(start)} – ${label(end)}` : f.tx(`From ${f.day(start)} · now tap an end day`, `${f.day(start)} سے · اب آخری دن چنیں`)}
       dir={f.dir}
       font={f.font}
       display={f.display}
@@ -102,14 +127,41 @@ export function RangeSheet({
           }}
         >
           {ready
-            ? f.tx(`Show ${f.day(start)} – ${f.day(end!)} · ${count} days`, `${f.day(start)} – ${f.day(end!)} دکھائیں · ${f.digits(count)} دن`)
+            ? f.tx(`Show ${label(start)} – ${label(end!)} · ${count} days`, `${label(start)} – ${label(end!)} دکھائیں · ${f.digits(count)} دن`)
             : f.tx("Pick an end day", "آخری دن چنیں")}
         </button>
       }
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {dates.length > 62 && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {presets.map((p) => {
+              const on = start === p.start && end === last;
+              return (
+                <button
+                  key={p.months}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => {
+                    setStart(p.start);
+                    setEnd(last);
+                  }}
+                  style={{ height: 34, padding: "0 14px", borderRadius: 17, border: `1px solid ${on ? C.brand : C.line}`, background: on ? C.brandTint : C.surface, color: on ? C.brandDeep : C.ink2, fontSize: 13, fontWeight: 600, fontFamily: f.font }}
+                >
+                  {f.tx(p.en, p.ur)}
+                </button>
+              );
+            })}
+          </div>
+        )}
         {months.map((mo) => (
-          <div key={mo.key} style={{ borderRadius: 18, background: C.surface, padding: "12px 12px 8px" }}>
+          <div
+            key={mo.key}
+            ref={(el) => {
+              if (el) monthRefs.current.set(mo.key, el);
+              else monthRefs.current.delete(mo.key);
+            }}
+            style={{ scrollMarginTop: 8, borderRadius: 18, background: C.surface, padding: "12px 12px 8px" }}>
             <div style={{ fontSize: 15, fontWeight: 700, padding: "0 4px 8px" }}>
               {f.ur ? `${MONTHS_UR[mo.m - 1]} ${f.digits(mo.y)}` : `${MONTHS_EN[mo.m - 1]} ${mo.y}`}
             </div>

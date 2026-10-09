@@ -27,6 +27,27 @@ export interface CardStats {
   specialAttrs?: CardSpecialAttr[];
   /** Set on split cards (tester screens): the attribute value or rate type this card covers. */
   split?: { by: CardSplitBy; value: string } | null;
+  /** Report day the numbers are from (earlier than asked when that day had no reports). */
+  statsDate?: string | null;
+  /** Set when an attribute filter is on and this by-product has none of the chosen values. */
+  filteredOut?: boolean;
+}
+
+/** Card options on the by-product screen. */
+export interface CardStatsOptions extends LocationFilter {
+  /** Selected special-attribute values, each "type|value". */
+  attrs?: string[];
+  /** A card's chosen rate type, keyed by catalog id ("12") or by-product + attribute value ("12~Old"). */
+  rates?: Record<string, string>;
+}
+
+/** A special-attribute value reported for a by-product (filter chips). */
+export interface AttributeValue {
+  catalogId: number;
+  byproduct: string;
+  type: CardSpecialAttr["type"];
+  value: string;
+  count: number;
 }
 
 export type CardSplitBy = "attribute" | "rateType";
@@ -120,8 +141,16 @@ function cached<T>(key: string, loader: () => Promise<T>): Promise<T> {
   return cache.get(key) as Promise<T>;
 }
 
-export function fetchVerticalCardStats(division: string, opts: LocationFilter = {}): Promise<CardStats[]> {
-  const query = qs({ date: opts.date, locationKind: opts.locationKind, locationLabel: opts.locationLabel });
+export function fetchVerticalCardStats(division: string, opts: CardStatsOptions = {}): Promise<CardStats[]> {
+  const query = qs({
+    date: opts.date,
+    locationKind: opts.locationKind,
+    locationLabel: opts.locationLabel,
+    attrs: opts.attrs?.length ? [...opts.attrs].sort().join(",") : undefined,
+    rates: opts.rates && Object.keys(opts.rates).length
+      ? Object.entries(opts.rates).sort(([a], [b]) => a.localeCompare(b)).map(([id, rt]) => `${id}:${rt}`).join(",")
+      : undefined,
+  });
   return cached(`card-stats:${division}:${query}`, () =>
     getJson<CardStats[]>(`/api/verticals/${encodeURIComponent(division)}/card-stats${query}`)
   );
@@ -137,6 +166,18 @@ export function fetchVerticalSplitCardStats(
   return cached(`card-stats-split:${division}:${query}`, () =>
     getJson<CardStats[]>(`/api/verticals/${encodeURIComponent(division)}/card-stats-split${query}`)
   );
+}
+
+export function fetchAttributeValues(division: string, opts: LocationFilter = {}): Promise<AttributeValue[]> {
+  const query = qs({ locationKind: opts.locationKind, locationLabel: opts.locationLabel });
+  return cached(`attribute-values:${division}:${query}`, () =>
+    getJson<AttributeValue[]>(`/api/verticals/${encodeURIComponent(division)}/attribute-values${query}`)
+  );
+}
+
+/** First and last report day in the market data ("YYYY-MM-DD"). */
+export function fetchDatasetRange(): Promise<{ first: string | null; last: string | null }> {
+  return getJson<{ first: string | null; last: string | null }>("/api/dataset");
 }
 
 export function fetchByProducts(division?: string): Promise<ByProductCatalogRow[]> {

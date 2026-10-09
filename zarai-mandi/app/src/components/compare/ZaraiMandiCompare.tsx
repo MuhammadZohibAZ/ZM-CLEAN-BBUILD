@@ -35,7 +35,7 @@ interface ReportText { ur: boolean; L: (en: string, urText: string) => string; N
 function cn(...inputs: ClassValue[]) { return twMerge(clsx(inputs)); }
 
 // Price channels as reported in the market export ("Mandi Rate" → "Mandi"), in display order.
-export const PRICE_TYPES = ['Mandi', 'Wholesale', 'Broker', 'Stock', 'Retail', 'Ex-Mill', 'Mill Gate', 'Dealer'] as const;
+export const PRICE_TYPES = ['Mandi', 'Wholesale', 'Broker', 'Stock', 'Retail', 'Ex-Mill', 'Mill Gate', 'Dealer', 'Export', 'Farm Gate'] as const;
 export type PriceType = typeof PRICE_TYPES[number];
 export interface AttributeDefinition { key: string; label?: string; kind: 'category' | 'number'; unit?: string; options?: string[]; required?: boolean }
 export type AttributeFilter = { kind: 'category'; values: string[] } | { kind: 'number'; min?: string; max?: string };

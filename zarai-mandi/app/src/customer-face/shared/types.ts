@@ -39,6 +39,7 @@ export type Screen =
     initialColor?: string;
     initialSpec?: string;
     initialCondition?: string;
+    initialOrigin?: string;
     initialMoisture?: string;
     initialStatDate?: string;
     initialAvgMin?: number;
@@ -173,6 +174,8 @@ export interface ByproductNationalStats {
   arrivalCoverage?: number;
   specialAttr: SpecialAttrInfo | null;
   specialAttrs?: SpecialAttrInfo[];
+  /** Report day the numbers are from ("YYYY-MM-DD"). */
+  statsDate?: string | null;
 }
 
 export type RichRow = {

@@ -5,7 +5,7 @@ import {
   emptyByproductStats,
   getCardUpdatedMinutes,
 } from "../../components/ByProductNationalCard";
-import { calculateByproductSummary } from "./byproductStats";
+import { getDeclaredMoistureBand } from "./byproductStats";
 import { PRODUCT_DIVISIONS, VERTICALS } from "./catalog";
 import { FLAT_ALL_MANDI_ROWS } from "./mandis";
 import {
@@ -151,8 +151,8 @@ export type ByproductCardData = {
 };
 
 /**
- * 1 summary card per by-product, with date/location-specific rates and arrivals
- * computed from the dataset, sorted with data first and most recently updated first.
+ * 1 summary card per by-product, with the API's date/location-specific rates and
+ * arrivals, sorted main by-products first, then with data, then most recently updated.
  */
 export function buildByproductCards(
   byproducts: string[],
@@ -166,22 +166,9 @@ export function buildByproductCards(
   const list = byproducts.map((bp) => {
     const normBp = norm(bp);
     const raw = statsForDivision.find((s) => norm(s.byproduct) === normBp || s.byproduct.toLowerCase() === bp.toLowerCase());
-    let stats = raw ? apiCardStatsToUi(raw) : emptyByproductStats(dbDivision, bp);
-
-    // Compute date-specific rates and arrivals from the dataset for the selected date
-    const localStats = calculateByproductSummary(sel?.product || dbDivision, bp, locationScope, date);
-    if (localStats) {
-      stats = {
-        ...stats,
-        hasData: localStats.hasData,
-        avgMin: localStats.avgMin,
-        avgMax: localStats.avgMax,
-        totalArrival: localStats.totalArrival,
-        markets: localStats.markets,
-        mostOccurringRateType: localStats.mostOccurringRateType || stats.mostOccurringRateType,
-        specialAttr: localStats.specialAttr || stats.specialAttr,
-      };
-    }
+    // The API computes each card from every record for the selected date and
+    // location (the whole year of data), with the shared special-attribute map.
+    const stats = raw ? apiCardStatsToUi(raw) : emptyByproductStats(dbDivision, bp);
 
     return { sel: cardSel, bp, stats };
   });
@@ -262,8 +249,10 @@ export function productRatesScreenFor(card: ByproductCardData, dateStr: string):
   let initNewOld: string | undefined;
   let initSpec: string | undefined;
 
-  if (sa) {
-    if (sa.type === 'moisture') initMoisture = sa.valueEn.replace('%', '').trim();
+  // Several values chosen in the attribute filter ("New / Old"): open unfiltered on attribute.
+  if (sa && !sa.valueEn.includes(' / ')) {
+    // A maize grade's moisture band describes the grade; it isn't a row value to filter on.
+    if (sa.type === 'moisture') initMoisture = getDeclaredMoistureBand(bp) ? undefined : sa.valueEn.replace('%', '').trim();
     else if (sa.type === 'color') initColor = sa.valueEn;
     else if (sa.type === 'variety') initVariety = sa.valueEn;
     else if (sa.type === 'newOld') initNewOld = sa.valueEn;
@@ -281,8 +270,10 @@ export function productRatesScreenFor(card: ByproductCardData, dateStr: string):
     initialVariety: initVariety,
     initialNewOld: initNewOld,
     initialSpec: initSpec,
-    initialCondition: sa?.type === 'quality' ? sa.valueEn : undefined,
-    initialStatDate: dateStr,
+    initialCondition: sa?.type === 'quality' && !sa.valueEn.includes(' / ') ? sa.valueEn : undefined,
+    initialOrigin: sa?.type === 'origin' && !sa.valueEn.includes(' / ') ? sa.valueEn : undefined,
+    // Open on the day the card's numbers are from (the picked day had no reports otherwise).
+    initialStatDate: stats.statsDate && stats.statsDate < dateStr ? stats.statsDate : dateStr,
     initialAvgMin: stats.avgMin > 0 ? stats.avgMin : undefined,
     initialAvgMax: stats.avgMax > 0 ? stats.avgMax : undefined,
     initialTotalArrival: stats.totalArrival > 0 ? stats.totalArrival : undefined,

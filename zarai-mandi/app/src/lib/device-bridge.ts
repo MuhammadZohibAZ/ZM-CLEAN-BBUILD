@@ -62,3 +62,44 @@ export function onDevControls(handler: (controls: DevControls) => void) {
 export function sendDevCommand(frame: HTMLIFrameElement | null) {
   frame?.contentWindow?.postMessage({ type: COMMAND }, window.location.origin);
 }
+
+// ── Screen variants (testing): a screen offering alternative versions, e.g. the
+// by-product screen's Original / Special attribute / Rate type filters. In the
+// mockup the picker sits beside the phone, like the testing pill.
+
+const VARIANTS = "zm-screen-variants";
+const VARIANT_PICK = "zm-screen-variant-pick";
+
+export type ScreenVariants = { title: string; active: string; options: { id: string; label: string }[] };
+
+/** App → mockup: the versions the current screen offers (null when it closes). */
+export function publishScreenVariants(variants: ScreenVariants | null) {
+  if (inDevicePreview()) window.parent.postMessage({ type: VARIANTS, variants }, window.location.origin);
+}
+
+/** App: run `handler` when a version is picked in the mockup. */
+export function onScreenVariantPick(handler: (id: string) => void) {
+  const listener = (event: MessageEvent) => {
+    if (event.origin !== window.location.origin) return;
+    const data = event.data as { type?: string; id?: string } | null;
+    if (data?.type === VARIANT_PICK && data.id) handler(data.id);
+  };
+  window.addEventListener("message", listener);
+  return () => window.removeEventListener("message", listener);
+}
+
+/** Mockup: receive the current screen's versions. */
+export function onScreenVariants(handler: (variants: ScreenVariants | null) => void) {
+  const listener = (event: MessageEvent) => {
+    if (event.origin !== window.location.origin) return;
+    const data = event.data as { type?: string; variants?: ScreenVariants | null } | null;
+    if (data?.type === VARIANTS) handler(data.variants ?? null);
+  };
+  window.addEventListener("message", listener);
+  return () => window.removeEventListener("message", listener);
+}
+
+/** Mockup: pick a version in the app inside `frame`. */
+export function sendScreenVariantPick(frame: HTMLIFrameElement | null, id: string) {
+  frame?.contentWindow?.postMessage({ type: VARIANT_PICK, id }, window.location.origin);
+}

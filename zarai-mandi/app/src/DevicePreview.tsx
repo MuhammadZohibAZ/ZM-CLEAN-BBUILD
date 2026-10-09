@@ -1,7 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import IPhoneMockup, { DEVICE_SPECS } from "./components/ui/iphone-mockup";
 import { onDeviceOrientationRequest, type DeviceOrientation } from "./lib/device-orientation";
-import { DEVICE_STATUS_BAR, onDevControls, sendDevCommand, type DevControls } from "./lib/device-bridge";
+import {
+  DEVICE_STATUS_BAR,
+  onDevControls,
+  onScreenVariants,
+  sendDevCommand,
+  sendScreenVariantPick,
+  type DevControls,
+  type ScreenVariants,
+} from "./lib/device-bridge";
 
 /**
  * Desktop preview: shows the app inside an iPhone 15 Pro (393×852).
@@ -213,10 +221,46 @@ function DevPill({ controls, onAction }: { controls: DevControls | null; onActio
   );
 }
 
+/** Testing: the current screen's alternative versions, on the desk below the testing pill. */
+function VariantPanel({ variants, onPick }: { variants: ScreenVariants | null; onPick: (id: string) => void }) {
+  if (!variants) return null;
+  return (
+    <div
+      className="fixed right-5 top-[68px] z-20 flex w-[236px] flex-col gap-1 rounded-2xl p-2"
+      style={{
+        background: "rgba(7, 51, 47, 0.9)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        border: "1px solid rgba(255,255,255,0.14)",
+        boxShadow: "0 10px 28px rgba(7,51,47,0.25)",
+        fontFamily: "'Inter', system-ui, sans-serif",
+      }}
+    >
+      <span className="px-2 pb-0.5 pt-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#7FB8A8]">{variants.title}</span>
+      {variants.options.map((o) => {
+        const on = o.id === variants.active;
+        return (
+          <button
+            key={o.id}
+            type="button"
+            onClick={() => onPick(o.id)}
+            aria-pressed={on}
+            className="cursor-pointer rounded-xl border-0 px-3 py-2 text-left text-[12.5px] font-semibold transition hover:brightness-110 active:scale-[0.98]"
+            style={{ background: on ? "#2FAE68" : "rgba(255,255,255,0.06)", color: on ? "#fff" : "#E3F4EC" }}
+          >
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function DevicePreview() {
   const [orientation, setOrientation] = useState<DeviceOrientation>("portrait");
   const [scale, setScale] = useState(() => fitScale("portrait"));
   const [controls, setControls] = useState<DevControls | null>(null);
+  const [variants, setVariants] = useState<ScreenVariants | null>(null);
   const frameRef = useRef<HTMLIFrameElement>(null);
   const time = useClock();
   const landscape = orientation === "landscape";
@@ -224,6 +268,7 @@ export default function DevicePreview() {
 
   useEffect(() => onDeviceOrientationRequest(setOrientation), []);
   useEffect(() => onDevControls(setControls), []);
+  useEffect(() => onScreenVariants(setVariants), []);
   useEffect(() => {
     const onResize = () => setScale(fitScale(orientation));
     onResize();
@@ -252,6 +297,7 @@ export default function DevicePreview() {
       style={{ background: "radial-gradient(ellipse at 50% 35%, #EEF5F1 0%, #D5E3DC 55%, #BFD1C9 100%)" }}
     >
       <DevPill controls={controls} onAction={() => sendDevCommand(frameRef.current)} />
+      <VariantPanel variants={variants} onPick={(id) => sendScreenVariantPick(frameRef.current, id)} />
       <div
         style={{
           position: "absolute",

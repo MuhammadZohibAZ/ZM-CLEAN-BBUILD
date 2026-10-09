@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { type CardStats, type CardSpecialAttr } from "../../lib/api";
 
 import { getProductSpecialAttrType } from "../shared/data/byproductStats";
+import { latestDatasetDay } from "../shared/data/datasetDates";
 import { toUrduDigits, URDU_FONT, useLang } from "../shared/i18n/LangProvider";
 import { type ByproductNationalStats, type SpecialAttrInfo } from "../shared/types";
 
@@ -94,7 +95,7 @@ export function getCardUpdatedAgo(
   selectedDate?: Date | null,
 ): string {
   if (selectedDate) {
-    const refDate = new Date(2026, 8, 14);
+    const refDate = latestDatasetDay();
     const d1 = new Date(refDate.getFullYear(), refDate.getMonth(), refDate.getDate());
     const d2 = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
     const diffMs = d1.getTime() - d2.getTime();
@@ -255,6 +256,7 @@ export function ByProductNationalCard({
   selectedDate,
   onClick,
   onMorePriceTypesClick,
+  onRateTypeChange,
 }: {
   stats: ByproductNationalStats;
   product?: string;
@@ -262,6 +264,8 @@ export function ByProductNationalCard({
   selectedDate?: Date | null;
   onClick: () => void;
   onMorePriceTypesClick?: () => void;
+  /** When set, the rate type under the name is a dropdown of the by-product's rate types. */
+  onRateTypeChange?: (rateType: string) => void;
 }) {
   const { lang, tc, tr } = useLang();
 
@@ -320,7 +324,35 @@ export function ByProductNationalCard({
           }`}
           style={{ fontFamily: lang === 'ur' ? URDU_FONT : 'inherit' }}
         >
-          {tr(stats.mostOccurringRateType)}
+          {onRateTypeChange && stats.allRateTypes.length > 1 ? (
+            // A native select over the label: the phone's own picker, and taps
+            // on it don't open the card.
+            <span
+              className="relative inline-flex items-center gap-1 rounded-full px-2 py-0.5 -ms-0.5"
+              style={{ background: '#E8F8F3', border: '1px solid #BCE8D8' }}
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            >
+              <span>{tr(stats.mostOccurringRateType)}</span>
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#087F63" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+              <select
+                aria-label={lang === 'ur' ? 'ریٹ کی قسم' : 'Rate type'}
+                value={stats.mostOccurringRateType}
+                onChange={(e) => onRateTypeChange(e.target.value)}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              >
+                {stats.allRateTypes.map((rt) => (
+                  <option key={rt} value={rt}>
+                    {tr(rt)}
+                  </option>
+                ))}
+              </select>
+            </span>
+          ) : (
+            tr(stats.mostOccurringRateType)
+          )}
         </p>
       </div>
 
@@ -400,7 +432,7 @@ export function ByProductNationalCard({
                 <polyline points="12 6 12 12 16 14" />
               </svg>
               <span className="whitespace-nowrap">
-                {getCardUpdatedAgo(stats.catalogId || stats.byproduct, lang, selectedDate)}
+                {getCardUpdatedAgo(stats.catalogId || stats.byproduct, lang, cardStatsDay(stats, selectedDate))}
               </span>
             </div>
           </div>
@@ -446,7 +478,16 @@ export function apiCardStatsToUi(raw: CardStats): ByproductNationalStats {
     arrivalCoverage: raw.arrivalCoverage,
     specialAttr,
     specialAttrs,
+    statsDate: raw.statsDate ? raw.statsDate.slice(0, 10) : null,
   };
+}
+
+/** The day a card's numbers describe: its report day when that is before the picked day. */
+export function cardStatsDay(stats: ByproductNationalStats, selectedDate?: Date | null): Date | null {
+  if (!stats.statsDate) return selectedDate ?? null;
+  const [y, m, d] = stats.statsDate.split("-").map(Number);
+  const day = new Date(y, m - 1, d);
+  return !selectedDate || day < selectedDate ? day : selectedDate;
 }
 
 export function emptyByproductStats(division: string, byproduct: string): ByproductNationalStats {

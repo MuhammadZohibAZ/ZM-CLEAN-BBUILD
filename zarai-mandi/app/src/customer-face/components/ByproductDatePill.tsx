@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import { firstDatasetDate, latestDatasetDate, latestDatasetDay } from "../shared/data/datasetDates";
 
 import { toUrduDigits, URDU_FONT, useLang } from "../shared/i18n/LangProvider";
 
 // Gregorian + Hijri date pill with its calendar picker, used above by-product
-// cards (Home carousel and ByProductCombinedScreen). The dataset covers
-// 15 Aug – 14 Sep 2026; 14 Sep 2026 is the latest day.
+// cards (Home carousel and ByProductCombinedScreen). Days with data and the
+// latest day come from the dataset (datasetDates.ts).
 
 export function ByproductDatePill({
   selectedDate,
@@ -19,9 +20,9 @@ export function ByproductDatePill({
 }) {
   const { lang } = useLang();
   const [isDateCalOpen, setIsDateCalOpen] = useState(false);
-  const [calMonth, setCalMonth] = useState<Date>(selectedDate || new Date(2026, 8, 14));
+  const [calMonth, setCalMonth] = useState<Date>(selectedDate || latestDatasetDay());
   const setSelectedDate = onSelectDate;
-  const curDate = selectedDate || new Date(2026, 8, 14);
+  const curDate = selectedDate || latestDatasetDay();
 
   // Gregorian + Lunar Islamic Date Object (2-line layout with dash)
   const dateInfo = useMemo(() => {
@@ -153,7 +154,7 @@ export function ByproductDatePill({
         while (sdCalDays.length % 7 !== 0) sdCalDays.push(null);
         const sdIsSame = (a: Date, b: Date) =>
           a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-        const sdIsRef = (d: Date) => sdIsSame(d, new Date(2026, 8, 14));
+        const sdIsRef = (d: Date) => sdIsSame(d, latestDatasetDay());
 
         if (typeof document === "undefined") return null;
 
@@ -198,7 +199,7 @@ export function ByproductDatePill({
                   <div className="flex justify-end mb-1.5">
                     <button
                       onClick={() => {
-                        setSelectedDate(new Date(2026, 8, 14));
+                        setSelectedDate(latestDatasetDay());
                         setIsDateCalOpen(false);
                       }}
                       className="font-bold px-2 py-0.5 rounded-full transition active:scale-95 shadow-sm"
@@ -209,7 +210,11 @@ export function ByproductDatePill({
                         fontFamily: lang === "ur" ? URDU_FONT : "inherit",
                       }}
                     >
-                      {lang === "ur" ? "14 ستمبر (تازہ ترین)" : "14 Sep (Latest)"}
+                      {(() => {
+                        const d = latestDatasetDay();
+                        const mon = (lang === "ur" ? mnUr : mn)[d.getMonth()];
+                        return lang === "ur" ? `${d.getDate()} ${mon} (تازہ ترین)` : `${d.getDate()} ${mon} (Latest)`;
+                      })()}
                     </button>
                   </div>
                 )}
@@ -240,7 +245,7 @@ export function ByproductDatePill({
                     const selected = selectedDate ? sdIsSame(d, selectedDate) : false;
                     const isRef = sdIsRef(d);
                     const dStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-                    const inRange = dStr >= "2026-08-15" && dStr <= "2026-09-14";
+                    const inRange = dStr >= firstDatasetDate() && dStr <= latestDatasetDate();
 
                     return (
                       <button

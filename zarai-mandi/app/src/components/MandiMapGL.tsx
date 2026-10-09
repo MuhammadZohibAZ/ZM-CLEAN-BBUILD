@@ -864,6 +864,8 @@ export default function MandiMapGL({
           t={(s) => s}
           tm={tm}
           tr={tr}
+          byproductName={isUr ? tc(commodity) : commodity}
+          byproductIcon={commodity}
           mandiName={`${detailPin.name} Mandi`}
           initialRate={dayRecords.find((r) => normKey(r.mandiName) === detailPin.key)?.rateType || "Mandi Rate"}
           allRows={detailRows}

@@ -511,7 +511,7 @@ export function AccountCenter({
   onOpenCompleteProfile: () => void;
   onOpenBilling: (product: string, vertical: string) => void;
 }) {
-  const { lang, setLang, tc, voiceEnabled, setVoiceEnabled } = useLang();
+  const { lang, setLang, tc, tn, voiceEnabled, setVoiceEnabled } = useLang();
   const isUr = lang === "ur";
   const L = (en: string, ur: string) => (isUr ? ur : en);
 
@@ -611,7 +611,7 @@ export function AccountCenter({
               className="font-bold text-white truncate"
               style={{ fontSize: isUr ? 18 : 16, fontFamily: isUr ? URDU_FONT : "inherit" }}
             >
-              {profile.name}
+              {tn(profile.name)}
             </p>
             <p className="text-xs mt-0.5 truncate" style={{ color: "#CDEBDF" }}>
               <Ltr>{profile.phone}</Ltr>

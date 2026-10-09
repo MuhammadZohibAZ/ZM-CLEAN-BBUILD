@@ -15,6 +15,21 @@ export const SPECIAL_PRODUCT_ATTRIBUTES: Record<string, SpecialAttrInfo['type'] 
     .map(([, entries]) => entries as Record<string, SpecialAttrInfo['type'] | null>)
 );
 
+// Maize grades are defined by a moisture band (business rule, same as the API's
+// MAIZE_MOISTURE_BANDS); the band is the grade's moisture, not a value in the rows.
+const MAIZE_MOISTURE_BANDS: Record<string, string> = {
+  maizegradea: "11-14",
+  maizegradeb: "14-16",
+  maizegradec: "16-18",
+  maizegraded: "18-20",
+};
+
+/** Declared moisture band of a maize grade ("11-14"), or null. Also matches "Feed / Maize Grade A". */
+export function getDeclaredMoistureBand(byproduct?: string | null): string | null {
+  const key = (byproduct || "").toLowerCase().replace(/^feed\s*\/\s*/, "").replace(/[^a-z0-9]/g, "");
+  return MAIZE_MOISTURE_BANDS[key] ?? null;
+}
+
 export function getProductSpecialAttrType(
   byproduct?: string | null,
   product?: string | null
@@ -113,7 +128,18 @@ export function calculateByproductSummary(
   let specialAttr: SpecialAttrInfo | null = null;
   const targetAttrType = getProductSpecialAttrType(targetByproduct, targetProduct);
 
-  if (targetAttrType) {
+  const declaredBand = targetAttrType === 'moisture' ? getDeclaredMoistureBand(targetByproduct) : null;
+  if (declaredBand) {
+    specialAttr = {
+      type: 'moisture',
+      labelEn: 'Moisture',
+      labelUr: 'نمی',
+      valueEn: `${declaredBand}%`,
+      valueUr: `${toUrduDigits(declaredBand)}%`,
+      dotColor: '#38BDF8',
+      filterFn: () => true,
+    };
+  } else if (targetAttrType) {
     const valCounts: Record<string, number> = {};
     for (let i = 0; i < rtRows.length; i++) {
       const r = rtRows[i];

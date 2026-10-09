@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react'
 import ReactDOM from 'react-dom/client'
 import './index.css'
 import { markDevicePreview } from './lib/device-bridge'
+import { loadDatasetDates } from './customer-face/shared/data/datasetDates'
 
 // On desktop, show the app inside an iPhone 15 Pro Max mockup (the app itself runs
 // in the mockup's iframe). Phones, the iframe itself, and ?device=off get the app directly.
@@ -15,10 +16,14 @@ markDevicePreview()
 
 const Root = lazy(() => (showDevicePreview ? import('./DevicePreview') : import('./App')))
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+// The app's charts and date pickers follow the data's date range, so load it first
+// (the desktop mockup page only frames the app and doesn't need it).
+const ready = showDevicePreview ? Promise.resolve() : loadDatasetDates()
+
+ready.then(() => ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <Suspense fallback={null}>
       <Root />
     </Suspense>
   </React.StrictMode>,
-)
+))

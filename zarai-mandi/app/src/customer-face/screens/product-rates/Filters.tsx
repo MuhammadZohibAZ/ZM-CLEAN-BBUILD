@@ -9,6 +9,7 @@ export function attrLabel(f: Fmt, k: AttrKey) {
     color: ["Color", "رنگ"],
     spec: ["Specification", "خصوصیت"],
     origin: ["Origin", "علاقہ"],
+    quality: ["Quality", "معیار"],
   };
   return f.tx(L[k][0], L[k][1]);
 }

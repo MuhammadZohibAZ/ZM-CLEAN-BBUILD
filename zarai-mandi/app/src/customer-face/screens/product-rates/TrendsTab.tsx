@@ -109,7 +109,6 @@ export function TrendsTab({
   const end = TL - off;
   const dates = TIMELINE.slice(start, end);
   const len = dates.length;
-  const i = idx === null || idx >= len ? len - 1 : idx;
   // Keep the picked day when only switching between 2W and 1D (same window).
   const prevRange = useRef(range);
   useEffect(() => {
@@ -223,6 +222,12 @@ export function TrendsTab({
   const mins = slice(main.mins);
   const maxs = slice(main.maxs);
   const prices = slice(main.prices);
+  // Unpicked, the chart reads the latest day in view that has reports (the
+  // newest day can be a partial export with none for this rate).
+  let lastReported = len - 1;
+  while (lastReported > 0 && !(prices[lastReported] > 0)) lastReported--;
+  if (!(prices[lastReported] > 0)) lastReported = len - 1;
+  const i = idx === null || idx >= len ? lastReported : idx;
   const firstIdx = prices.findIndex((p) => p > 0);
   const first = firstIdx >= 0 ? prices[firstIdx] : 0;
   

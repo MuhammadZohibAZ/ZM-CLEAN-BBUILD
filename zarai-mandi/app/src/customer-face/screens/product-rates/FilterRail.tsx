@@ -33,6 +33,8 @@ export function FilterRail({
   onFilters,
   locationActive = false,
   onClearLocation,
+  rateFromCard = false,
+  filtersFromCard = false,
   showDate = true,
   variant = "bar",
 }: FilterUiProps & { showDate?: boolean; variant?: "bar" | "map" }) {
@@ -42,7 +44,8 @@ export function FilterRail({
   const rateLabel = rate === allRates ? f.tx("All rates", "تمام ریٹ") : rates.find((r) => r.id === rate)?.label || rate;
   const isLatest = date === latest;
 
-  const parts: { key: string; caption: string; value: string; active: boolean; grow: number; onClick: () => void; onClear?: () => void }[] = [
+  // `fromCard`: set by the tapped card, not by the user, so it shows a dropdown arrow instead of ✕.
+  const parts: { key: string; caption: string; value: string; active: boolean; grow: number; onClick: () => void; onClear?: () => void; fromCard?: boolean }[] = [
     { key: "loc", caption: f.tx("Location", "مقام"), value: locationLabel, active: locationActive, grow: 1.15, onClick: onOpenLocation, onClear: onClearLocation },
   ];
   if (showDate && date) {
@@ -61,6 +64,7 @@ export function FilterRail({
     caption: f.tx("Rate", "ریٹ"),
     value: rateLabel,
     active: rate !== allRates,
+    fromCard: rateFromCard,
     grow: 0.95,
     onClick: () => setOpen("rate"),
     onClear: () => allRates && onRate(allRates),
@@ -71,6 +75,7 @@ export function FilterRail({
       caption: f.tx("Attribute", "خصوصیات"),
       value: qualityCount ? f.tx(`${qualityCount} selected`, `${f.digits(qualityCount)} منتخب`) : f.tx("Any", "کوئی بھی"),
       active: qualityCount > 0,
+      fromCard: filtersFromCard,
       grow: 1.05,
       onClick: () => setOpen("quality"),
       onClear: () => onFilters({}),
@@ -112,7 +117,7 @@ export function FilterRail({
         }}
       >
         {parts.map((p, i) => {
-          const clearable = p.active && !!p.onClear;
+          const clearable = p.active && !!p.onClear && !p.fromCard;
           return (
             <div
               key={p.key}

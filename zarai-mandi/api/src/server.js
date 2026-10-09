@@ -12,6 +12,7 @@ import {
   getTrendAllRateTypes,
   getVerticalCardStats,
   getVerticalSplitCardStats,
+  getVerticalAttributeValues,
 } from "./aggregate.js";
 import { registerCompareRoutes } from "./compare.js";
 
@@ -38,6 +39,12 @@ app.get("/api/health", async (_req, res) => {
 
 // Top-level customer-facing divisions (the 468-entry catalog's grouping,
 // e.g. Wheat/Rice/Paddy/Fertilizer/Livestock/Kiryana) for the home screen.
+// First and last report day in the database (the app's date range).
+app.get("/api/dataset", async (_req, res) => {
+  const { rows } = await pool.query("select min(record_date) as first, max(record_date) as last from price_records");
+  res.json({ first: rows[0]?.first ?? null, last: rows[0]?.last ?? null });
+});
+
 app.get("/api/verticals", async (_req, res) => {
   const { rows } = await pool.query(`
     select division as name,
@@ -76,11 +83,26 @@ app.get("/api/by-products", async (req, res) => {
 // One batch call returning every by-product card's stats for a division
 // (avg min/max, arrival, markets, special attribute), in the exact shape
 // app/src/CustomerFaceApp.tsx's ByproductNationalStats expects.
+// attrs = "type|value,..." (special-attribute filter); rates = "catalogId[~value]:Rate Type,..." (a card's chosen rate).
 app.get("/api/verticals/:division/card-stats", async (req, res) => {
   const { division } = req.params;
   const { date, locationKind, locationLabel } = req.query;
-  const results = await getVerticalCardStats(division, { date, locationKind, locationLabel });
+  const list = (v) => (typeof v === "string" && v ? v.split(",").map((x) => x.trim()).filter(Boolean) : []);
+  const attrs = list(req.query.attrs);
+  const rates = {};
+  for (const pair of list(req.query.rates)) {
+    const i = pair.lastIndexOf(":");
+    if (i > 0) rates[pair.slice(0, i)] = pair.slice(i + 1);
+  }
+  const results = await getVerticalCardStats(division, { date, locationKind, locationLabel, attrs, rates });
   res.json(results);
+});
+
+// Special-attribute values per by-product (the by-product screen's filter chips).
+app.get("/api/verticals/:division/attribute-values", async (req, res) => {
+  const { division } = req.params;
+  const { locationKind, locationLabel } = req.query;
+  res.json(await getVerticalAttributeValues(division, { locationKind, locationLabel }));
 });
 
 // Tester screens: one card per by-product x special-attribute value (by=attribute)
