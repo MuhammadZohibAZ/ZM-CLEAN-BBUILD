@@ -327,6 +327,7 @@ export function ByProductCombinedScreen({
                   onRateTypeChange={
                     rateKey ? (rt) => setCardRates((prev) => ({ ...prev, [rateKey]: rt })) : undefined
                   }
+                  rupeeOnLeftInUrdu={true}
                 />
               );
             })}

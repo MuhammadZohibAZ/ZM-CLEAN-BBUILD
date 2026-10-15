@@ -258,6 +258,7 @@ export function ByProductNationalCard({
   onMorePriceTypesClick,
   onRateTypeChange,
   compact = false,
+  rupeeOnLeftInUrdu = true,
 }: {
   stats: ByproductNationalStats;
   product?: string;
@@ -269,6 +270,8 @@ export function ByProductNationalCard({
   onRateTypeChange?: (rateType: string) => void;
   /** Leave out the locations / last-updated row (tight spaces). */
   compact?: boolean;
+  /** When true in Urdu mode, prices display “روپے” on the left and number on the right in English digits. Defaults to true. */
+  rupeeOnLeftInUrdu?: boolean;
 }) {
   const { lang, tc, tr } = useLang();
 
@@ -295,6 +298,27 @@ export function ByProductNationalCard({
       </span>
     )
     : '—';
+
+  const formatPrice = (amount: number) => {
+    if (lang === 'ur') {
+      if (rupeeOnLeftInUrdu) {
+        return (
+          <span
+            dir="ltr"
+            className="inline-flex items-center gap-1"
+            style={{ direction: 'ltr', unicodeBidi: 'isolate' }}
+          >
+            <span style={{ fontFamily: URDU_FONT }}>روپے</span>
+            <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+              {Math.round(amount).toLocaleString()}
+            </span>
+          </span>
+        );
+      }
+      return `روپے\u00A0${toUrduDigits(Math.round(amount).toLocaleString())}`;
+    }
+    return `Rs\u00A0${Math.round(amount).toLocaleString()}`;
+  };
 
   return (
     <div
@@ -369,9 +393,7 @@ export function ByProductNationalCard({
               label={lang === 'ur' ? 'اوسط کم' : 'Avg min'}
               value={
                 stats.hasData && stats.avgMin > 0
-                  ? lang === 'ur'
-                    ? `روپے\u00A0${toUrduDigits(Math.round(stats.avgMin).toLocaleString())}`
-                    : `Rs\u00A0${Math.round(stats.avgMin).toLocaleString()}`
+                  ? formatPrice(stats.avgMin)
                   : '—'
               }
               caption={lang === 'ur' ? 'فی 40 کلو' : 'per 40 kg'}
@@ -381,9 +403,7 @@ export function ByProductNationalCard({
               label={lang === 'ur' ? 'اوسط زیادہ' : 'Avg max'}
               value={
                 stats.hasData && stats.avgMax > 0
-                  ? lang === 'ur'
-                    ? `روپے\u00A0${toUrduDigits(Math.round(stats.avgMax).toLocaleString())}`
-                    : `Rs\u00A0${Math.round(stats.avgMax).toLocaleString()}`
+                  ? formatPrice(stats.avgMax)
                   : '—'
               }
               caption={lang === 'ur' ? 'فی 40 کلو' : 'per 40 kg'}
