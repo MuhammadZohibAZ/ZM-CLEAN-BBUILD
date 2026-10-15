@@ -63,7 +63,8 @@ The language is app-wide: `LangProvider` sits in `App.tsx` above onboarding and 
 | Special-attribute chip bar | `customer-face/components/FilterChipBar.tsx` |
 | Card data, order (main by-products first), tap → screen 3 | `customer-face/shared/data/byproductCards.ts` |
 | Card stats fetch (date, location, attribute filter, card rates) | `customer-face/shared/hooks/useDivisionCardData.ts` |
-| **Tester versions** (Test button; delete `testers/` to remove) | `testers/` — `ByProductAttributeFilterScreen`, `ByProductRateTypeFilterScreen`, `ByProductFilterBarScreen` (filter bar), `ScreenVariantSwitch`, `splitCards` |
+| **Tester versions** (Test button; delete `testers/` to remove) | `testers/` — `ByProductAttributeFilterScreen`, `ByProductRateTypeFilterScreen`, `ByProductFilterBarScreen` (filter bar), `ByProductSidebarFilterScreen` (filter sidebar, split screen), `ScreenVariantSwitch`, `splitCards` |
+| Rate-type + attribute filtering shared by the filter bar and sidebar testers | `testers/rateAttributeCards.tsx` · `useRateAttributeCards` |
 
 ## Screen 3 — Rates (`customer-face/screens/product-rates/`)
 

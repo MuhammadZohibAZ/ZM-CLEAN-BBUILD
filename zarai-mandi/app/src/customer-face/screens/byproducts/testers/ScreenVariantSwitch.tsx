@@ -1,9 +1,9 @@
 import { useStoredVariant, VariantSwitch, type VariantOption } from "../../../components/VariantSwitch";
 
 // Testing switch on the by-product screen between the original card grid and
-// the three tester variants (see customer-face/components/VariantSwitch).
+// the tester variants (see customer-face/components/VariantSwitch).
 
-export type ByproductScreenVariant = "original" | "attribute" | "rateType" | "filterBar";
+export type ByproductScreenVariant = "original" | "attribute" | "rateType" | "filterBar" | "sidebar";
 
 const STORAGE_KEY = "zm.byproductScreenVariant";
 
@@ -29,6 +29,13 @@ const OPTIONS: VariantOption<ByproductScreenVariant>[] = [
     ur: "فلٹر بار",
     hintEn: "Rate + attribute bar, like the rates screen",
     hintUr: "ریٹ اور وصف کی بار، ریٹس اسکرین جیسی",
+  },
+  {
+    id: "sidebar",
+    en: "Filter sidebar",
+    ur: "فلٹر سائیڈ بار",
+    hintEn: "Filters in a side panel, cards beside it",
+    hintUr: "فلٹر ایک طرف، کارڈز ساتھ",
   },
 ];
 const VARIANTS = OPTIONS.map((o) => o.id);

@@ -9,6 +9,7 @@ import { ProductIcon } from "../../components/ProductIcon";
 import { ByProductAttributeFilterScreen } from "./testers/ByProductAttributeFilterScreen";
 import { ByProductRateTypeFilterScreen } from "./testers/ByProductRateTypeFilterScreen";
 import { ByProductFilterBarScreen } from "./testers/ByProductFilterBarScreen";
+import { ByProductSidebarFilterScreen } from "./testers/ByProductSidebarFilterScreen";
 import { ScreenVariantSwitch, useByproductScreenVariant } from "./testers/ScreenVariantSwitch";
 import {
   buildByproductCards,
@@ -272,6 +273,7 @@ export function ByProductCombinedScreen({
         };
         const testerKey = `${dbDivision}-${activeProduct?.product}`;
         if (screenVariant === 'filterBar') return <ByProductFilterBarScreen key={testerKey} {...testerProps} />;
+        if (screenVariant === 'sidebar') return <ByProductSidebarFilterScreen key={testerKey} {...testerProps} />;
         return screenVariant === 'attribute'
           ? <ByProductAttributeFilterScreen key={testerKey} {...testerProps} />
           : <ByProductRateTypeFilterScreen key={testerKey} {...testerProps} />;
