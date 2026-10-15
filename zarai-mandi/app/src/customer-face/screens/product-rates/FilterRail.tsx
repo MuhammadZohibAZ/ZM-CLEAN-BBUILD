@@ -108,7 +108,7 @@ export function FilterRail({
         display: "flex",
         alignItems: "stretch",
         background: variant === "map" ? "#FFFFFF" : C.surface,
-        padding: variant === "map" ? "4px" : "10px 16px 12px",
+        padding: variant === "map" ? "3px" : "10px 16px 12px",
         borderRadius: variant === "map" ? 18 : 0,
         boxShadow: variant === "map" ? "0 2px 10px rgba(0,0,0,0.08)" : "none",
         borderBottom: variant === "map" ? "none" : `1px solid ${C.lineSoft}`,
@@ -142,8 +142,8 @@ export function FilterRail({
               key={p.key}
               style={{
                 position: "relative",
-                flex: `${p.grow} 1 0`,
-                minWidth: "max-content",
+                flex: variant === "map" ? "1 1 auto" : `${p.grow} 1 0`,
+                minWidth: variant === "map" ? 0 : "max-content",
                 borderInlineStart: i ? `1px solid ${C.line}` : "none",
                 background: p.active ? C.brandTint : "transparent",
                 transition: "background 200ms",
@@ -160,9 +160,9 @@ export function FilterRail({
                   alignItems: "flex-start",
                   justifyContent: "center",
                   gap: 1,
-                  height: variant === "map" ? 50 : 54,
-                  paddingInlineStart: 8,
-                  paddingInlineEnd: clearable ? 26 : 8,
+                  height: variant === "map" ? 46 : 54,
+                  paddingInlineStart: variant === "map" ? 6 : 8,
+                  paddingInlineEnd: clearable ? (variant === "map" ? 22 : 26) : variant === "map" ? 4 : 8,
                   paddingTop: 0,
                   paddingBottom: 0,
                   border: "none",
@@ -174,23 +174,29 @@ export function FilterRail({
               >
                 <span
                   style={{
-                    fontSize: 11,
+                    fontSize: variant === "map" ? 10.5 : 11,
                     fontWeight: 500,
                     color: p.active ? C.brandDeep : C.muted,
                     lineHeight: 1.2,
                     whiteSpace: "nowrap",
+                    maxWidth: "100%",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
                   }}
                 >
                   {p.caption}
                 </span>
-                <span style={{ display: "flex", alignItems: "center", gap: 3, whiteSpace: "nowrap" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: 3, whiteSpace: "nowrap", maxWidth: "100%" }}>
                   <span
                     style={{
-                      fontSize: 13,
+                      fontSize: variant === "map" ? 12.5 : 13,
                       fontWeight: 600,
                       color: p.active ? C.brandDeep : C.ink,
                       lineHeight: 1.2,
                       whiteSpace: "nowrap",
+                      minWidth: 0,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
                     }}
                   >
                     {p.value}

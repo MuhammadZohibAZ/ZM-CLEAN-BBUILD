@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { inDevicePreview } from "./lib/device-orientation"
 import { onDevCommand, publishDevControls } from "./lib/device-bridge"
-import OnboardingFlow, { type OnboardingUserData } from "./OnboardingFlow"
+import OnboardingFlow, { type OnboardingUserData } from "./onboarding/OnboardingFlow"
 import CustomerFaceApp from "./CustomerFaceApp"
 
 export default function App() {

@@ -11,19 +11,6 @@ export type RateItem = {
 };
 export type Screen =
   | { id: "home" }
-  | { id: "search" }
-  | { id: "mandi-list" }
-  | {
-    id: "mandi-detail";
-    mandiId: string;
-  }
-  | { id: "product-select" }
-  | { id: "byproduct-select" }
-  | {
-    id: "rates-result";
-    items: RateItem[];
-    source: "product" | "byproduct";
-  }
   | {
     id: "byproduct-combined";
     products: { vertical: string; product: string }[];
@@ -53,9 +40,6 @@ export type Screen =
   }
   | { id: "compare" }
   | { id: "news" }
-  | {
-    id: "live-market";
-  }
   | {
     id: "billing";
     product: string;

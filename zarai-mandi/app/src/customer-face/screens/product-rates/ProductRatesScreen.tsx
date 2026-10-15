@@ -20,7 +20,7 @@ import { makeFmt, shortRate, stripMandi } from "./format";
 import { MandiDetailSheet } from "./MandiDetailSheet";
 import { MandiSection } from "./MandiSection";
 import { PriceHero } from "./PriceHero";
-import { LocationSheet } from "./LocationSheet";
+import { FilterLocationSheet } from "./FilterLocationSheet";
 import { PickerSheet } from "./PickerSheet";
 import {
   ALL_RATES,
@@ -601,7 +601,7 @@ export function ProductRatesScreen({
       {tab === "overview" && FILTER_UI === "dock" && <FilterDock {...filterUi} />}
 
       {locSheet && (
-        <LocationSheet f={f} tm={tm} rows={rows} value={scope} onPick={setScope} onClose={() => setLocSheet(false)} />
+        <FilterLocationSheet f={f} tm={tm} rows={rows} value={scope} onPick={setScope} onClose={() => setLocSheet(false)} />
       )}
 
       {bpPicker && replace && (

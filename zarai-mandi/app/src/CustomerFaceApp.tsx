@@ -3,18 +3,11 @@ import { lazy, Suspense, useState, useRef, useEffect } from "react";
 import { FloatingMiniPlayer } from "./customer-face/components/FloatingMiniPlayer";
 import { BottomNav } from "./customer-face/navigation/BottomNav";
 import { VoiceQueryOverlay } from "./customer-face/navigation/VoiceQueryOverlay";
-import { BillingScreen } from "./customer-face/screens/BillingScreen";
-import { ByProductCombinedScreen } from "./customer-face/screens/ByProductCombinedScreen";
-import { ByProductSelectScreen } from "./customer-face/screens/ByProductSelectScreen";
+import { BillingScreen } from "./customer-face/screens/billing/BillingScreen";
+import { ByProductCombinedScreen } from "./customer-face/screens/byproducts/ByProductCombinedScreen";
 import { HomeScreenSwitch } from "./customer-face/screens/home/HomeScreenSwitch";
-import { LiveMarketScreen } from "./customer-face/screens/LiveMarketScreen";
-import { MandiDetailScreen } from "./customer-face/screens/MandiDetailScreen";
-import { MandiListScreen } from "./customer-face/screens/MandiListScreen";
 import { ProductRatesScreen } from "./customer-face/screens/product-rates/ProductRatesScreen";
-import { ProductSelectScreen } from "./customer-face/screens/ProductSelectScreen";
-import { RatesResultScreen } from "./customer-face/screens/RatesResultScreen";
 import { RepDashboardScreen } from "./customer-face/screens/RepDashboardScreen";
-import { SearchScreen } from "./customer-face/screens/SearchScreen";
 import { NewsVideosScreen } from "./customer-face/screens/ZaraiReelsScreen";
 import {
   PRODUCT_ID_TO_NAME,
@@ -35,7 +28,7 @@ import {
 } from "./customer-face/shared/types";
 import { speakText } from "./customer-face/shared/voice";
 import { setFullBleed } from "./lib/device-bridge";
-import { CompleteProfileModal } from "./customer-face/sheets/CompleteProfileModal";
+import { CompleteProfileModal } from "./customer-face/sheets/complete-profile/CompleteProfileModal";
 import { FeedModal } from "./customer-face/sheets/FeedModal";
 import { LocationScopeSheet } from "./customer-face/sheets/LocationScopeSheet";
 import { MultiLocSheet } from "./customer-face/sheets/MultiLocSheet";
@@ -261,8 +254,6 @@ function AppInner({
     setFeedOpen(true);
   };
 
-  type RatesScr = Extract<Screen, { id: "rates-result" }>;
-  type MandiScr = Extract<Screen, { id: "mandi-detail" }>;
   type ComRatesScr = Extract<Screen, { id: "product-rates" }>;
   type CombinedScr = Extract<Screen, { id: "byproduct-combined" }>;
   type BillingScr = Extract<Screen, { id: "billing" }>;
@@ -346,13 +337,6 @@ function AppInner({
               />
             )
           )}
-          {current.id === "search" && <SearchScreen push={push} onBack={pop} />}
-          {current.id === "product-select" && (
-            <ProductSelectScreen push={push} onBack={pop} />
-          )}
-          {current.id === "byproduct-select" && (
-            <ByProductSelectScreen push={push} onBack={pop} />
-          )}
           {current.id === "byproduct-combined" && (
             <ByProductCombinedScreen
               products={(current as CombinedScr).products}
@@ -367,23 +351,6 @@ function AppInner({
               onSelectLocation={(s) => setLocationScope(s)}
               profileCompleted={profileCompleted}
               onOpenSubscribe={() => setCompleteProfileOpen(true)}
-            />
-          )}
-          {current.id === "rates-result" && (
-            <RatesResultScreen
-              items={(current as RatesScr).items}
-              source={(current as RatesScr).source}
-              onBack={pop}
-            />
-          )}
-          {current.id === "mandi-list" && (
-            <MandiListScreen push={push} onBack={pop} />
-          )}
-          {current.id === "mandi-detail" && (
-            <MandiDetailScreen
-              mandiId={(current as MandiScr).mandiId}
-              onBack={pop}
-              push={push}
             />
           )}
           {current.id === "product-rates" && (
@@ -416,7 +383,6 @@ function AppInner({
               initialMarkets={(current as ComRatesScr).initialMarkets}
             />
           )}
-          {current.id === "live-market" && <LiveMarketScreen onBack={pop} />}
           {current.id === "compare" && (
             <Suspense fallback={<div className="flex-1" style={{ background: "#F1F7F4" }} />}>
               <CompareScreen

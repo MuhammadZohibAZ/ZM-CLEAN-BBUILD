@@ -601,15 +601,15 @@ export default function MandiMapGL({
       <div ref={containerRef} style={{ position: "absolute", inset: 0 }} />
 
       {/* ── Top: close + filter rail, then legend and day ── */}
-      <div className="absolute inset-x-0 top-0 flex flex-col gap-2 px-3 pt-3" style={{ zIndex: 5, pointerEvents: "none" }}>
-        <div className="flex items-center gap-2" style={{ pointerEvents: "auto" }}>
+      <div className="absolute inset-x-0 top-0 flex flex-col gap-2 px-2 pt-3" style={{ zIndex: 5, pointerEvents: "none" }}>
+        <div className="flex items-center gap-1.5" style={{ pointerEvents: "auto" }}>
           {onClose && (
             <button
               type="button"
               onClick={onClose}
               aria-label={isUr ? "واپس" : "Back"}
               className="flex-shrink-0 flex items-center justify-center rounded-full transition active:scale-90"
-              style={{ width: 44, height: 44, background: "#FFFFFF", boxShadow: SHADOW }}
+              style={{ width: 34, height: 34, background: "#FFFFFF", boxShadow: SHADOW }}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#183B34" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points={isUr ? "9 18 15 12 9 6" : "15 18 9 12 15 6"} />

@@ -84,7 +84,7 @@ export function FavoriteCardsRow({ items, push }: { items: FavoriteCardItem[]; p
           push(screen.id === "product-rates" ? { ...screen, initialScope: loc } : screen);
         };
         return (
-          <div key={k} className="flex-shrink-0 flex flex-col gap-1.5" style={{ width: "calc((100% - 8px) / 2)", scrollSnapAlign: "start" }}>
+          <div key={k} className="flex-shrink-0 flex flex-col gap-1.5" style={{ width: "calc((100% - 8px) / 1.8)", scrollSnapAlign: "start" }}>
             {/* Where it was favourited */}
             <span
               className="self-start flex items-center gap-1 rounded-full px-2 py-0.5 max-w-full"

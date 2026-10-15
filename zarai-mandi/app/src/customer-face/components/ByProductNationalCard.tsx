@@ -289,10 +289,10 @@ export function ByProductNationalCard({
   // The unit is set smaller so long counts still fit beside the attribute cell.
   const arrivalValue = hasArrival
     ? (
-      <>
+      <span className="whitespace-nowrap">
         {lang === 'ur' ? toUrduDigits(stats.totalArrival.toLocaleString()) : stats.totalArrival.toLocaleString()}
-        {' '}<span className="text-[10px] font-bold whitespace-nowrap">{lang === 'ur' ? 'تھیلے' : 'Bags'}</span>
-      </>
+        {' '}<span className="text-[10px] font-bold">{lang === 'ur' ? 'تھیلے' : 'Bags'}</span>
+      </span>
     )
     : '—';
 
@@ -361,7 +361,8 @@ export function ByProductNationalCard({
 
       {/* Metric rows: 3 clean rows with overlay container */}
       <div className="relative z-10 w-full flex-1 flex flex-col justify-between">
-        <div className={!stats.hasData ? 'opacity-35 select-none filter blur-[0.5px]' : ''}>
+        {/* Column flex so the locations row sits at the bottom of every card */}
+        <div className={`flex-1 flex flex-col ${!stats.hasData ? 'opacity-35 select-none filter blur-[0.5px]' : ''}`}>
           {/* Row 1: Avg min | Avg max */}
           <div className="flex w-full">
             <CardStatCell
@@ -408,7 +409,7 @@ export function ByProductNationalCard({
 
           {/* Row 3 (left out on compact cards, e.g. Home on short screens) */}
           {!compact && (
-            <>
+            <div className="mt-auto">
           <div className="h-px w-full my-1.5" style={{ background: '#E7F0EB' }} />
 
           {/* Row 3: Locations on Left + Time Pill on Bottom-Right */}
@@ -442,7 +443,7 @@ export function ByProductNationalCard({
               </span>
             </div>
           </div>
-            </>
+            </div>
           )}
         </div>
 

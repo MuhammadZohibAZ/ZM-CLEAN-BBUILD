@@ -1,8 +1,8 @@
 import type { ComponentProps } from "react";
 
 import { useStoredVariant, VariantSwitch, type VariantOption } from "../../components/VariantSwitch";
-import { HomeScreen } from "../HomeScreen";
-import { AlternativeHomeScreen } from "./AlternativeHomeScreen";
+import { HomeScreen } from "./original/HomeScreen";
+import { AlternativeHomeScreen } from "./alternative/AlternativeHomeScreen";
 
 // Testing switch on the home screen between the original home (home → by-product
 // cards → detail) and the alternative home (product rail + by-product carousel).
