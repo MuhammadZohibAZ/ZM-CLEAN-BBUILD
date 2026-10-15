@@ -18,6 +18,7 @@ import {
   SocialIcon,
   TermsToggle,
 } from "../parts";
+import { useObLang } from "../i18n";
 
 // ─── Screen 3 – Registration / Sign In / OTP / Profile ────────────────────────
 export function AccountScreen({
@@ -38,6 +39,7 @@ export function AccountScreen({
   onBack: () => void;
   onSwitchMode?: (mode: "register" | "signin") => void;
 }) {
+  const { L } = useObLang();
   const [tab, setTab] = useState<ContactInputTab>("phone");
   const [phoneValue, setPhoneValue] = useState("");
   const [emailValue, setEmailValue] = useState("");
@@ -143,7 +145,7 @@ export function AccountScreen({
   function handleCustomEmailSubmit() {
     const v = customEmail.trim().toLowerCase();
     if (!isValidEmail(v)) {
-      setCustomEmailErr("Enter a valid email address");
+      setCustomEmailErr(L("Enter a valid email address", "درست ای میل ایڈریس لکھیں"));
       return;
     }
     const synthetic = {
@@ -185,23 +187,23 @@ export function AccountScreen({
       <div className="auth-card" style={{ maxHeight: "none" }}>
         <Progress total={2} current={1} />
         <div className="eyebrow">
-          {isSignIn ? "Welcome Back" : "Step 2 of 2"}
+          {isSignIn ? L("Welcome Back", "خوش آمدید") : L("Step 2 of 2", "مرحلہ 2 از 2")}
         </div>
         <div className="headline">
           {isSignIn
-            ? "Sign In"
+            ? L("Sign In", "سائن اِن")
             : role === "customer"
-              ? "Customer Registration"
-              : "Representative Registration"}
+              ? L("Customer Registration", "کسٹمر رجسٹریشن")
+              : L("Representative Registration", "نمائندہ رجسٹریشن")}
         </div>
         <div className="subline">
           {!otpSent && !verified
             ? isSignIn
-              ? "Sign in with your mobile number or email to access your account."
-              : "How would you like to sign up?"
+              ? L("Sign in with your mobile number or email to access your account.", "اپنے اکاؤنٹ میں جانے کے لیے موبائل نمبر یا ای میل سے سائن اِن کریں۔")
+              : L("How would you like to sign up?", "آپ کس طرح سائن اَپ کرنا چاہیں گے؟")
             : otpSent && !verified
-              ? "Enter the OTP we sent you."
-              : "Complete your profile to continue."}
+              ? L("Enter the OTP we sent you.", "ہمارا بھیجا ہوا OTP لکھیں۔")
+              : L("Complete your profile to continue.", "جاری رکھنے کے لیے اپنی پروفائل مکمل کریں۔")}
         </div>
 
         {/* ── Step 1: contact entry ── */}
@@ -223,10 +225,10 @@ export function AccountScreen({
               disabled={!currentValid}
               onClick={handleSendOtp}
             >
-              Send {tab === "email" ? "Email" : "WhatsApp"} OTP →
+              {tab === "email" ? L("Send Email OTP →", "ای میل پر OTP بھیجیں ←") : L("Send WhatsApp OTP →", "واٹس ایپ پر OTP بھیجیں ←")}
             </button>
 
-            <Divider label="or" />
+            <Divider label={L("or", "یا")} />
 
             <button
               type="button"
@@ -235,7 +237,7 @@ export function AccountScreen({
             >
               {SocialIcon.google}
               <span>
-                {isSignIn ? "Sign in with Google" : "Continue with Google"}
+                {isSignIn ? L("Sign in with Google", "گوگل سے سائن اِن کریں") : L("Continue with Google", "گوگل کے ساتھ جاری رکھیں")}
               </span>
             </button>
 
@@ -243,8 +245,8 @@ export function AccountScreen({
             <div style={{ textAlign: "center", marginTop: 18 }}>
               <span style={{ fontSize: 13, color: "var(--zm-muted)" }}>
                 {isSignIn
-                  ? "Don't have an account? "
-                  : "Already have an account? "}
+                  ? L("Don't have an account? ", "اکاؤنٹ نہیں ہے؟ ")
+                  : L("Already have an account? ", "پہلے سے اکاؤنٹ ہے؟ ")}
               </span>
               <button
                 type="button"
@@ -260,7 +262,7 @@ export function AccountScreen({
                   textDecoration: "underline",
                 }}
               >
-                {isSignIn ? "Register / Sign Up" : "Sign In"}
+                {isSignIn ? L("Register / Sign Up", "رجسٹر / سائن اَپ") : L("Sign In", "سائن اِن")}
               </button>
             </div>
           </>
@@ -275,7 +277,7 @@ export function AccountScreen({
               style={{ margin: "10px auto 0", display: "flex", fontSize: 13 }}
               onClick={handleChangeContact}
             >
-              ← Change {tab === "phone" ? "number" : "email"}
+              {tab === "phone" ? L("← Change number", "نمبر تبدیل کریں →") : L("← Change email", "ای میل تبدیل کریں →")}
             </button>
           </>
         )}
@@ -309,7 +311,7 @@ export function AccountScreen({
                 });
               }}
             >
-              Continue to Zarai Mandi →
+              {L("Continue to Zarai Mandi →", "زرعی منڈی پر جائیں ←")}
             </button>
           </>
         )}
@@ -324,7 +326,7 @@ export function AccountScreen({
           }}
           onClick={onBack}
         >
-          ← Back
+          {L("← Back", "واپس →")}
         </button>
       </div>
 
@@ -335,8 +337,8 @@ export function AccountScreen({
           aria-modal="true"
           aria-label={
             googleStage === "picker"
-              ? "Choose a Google account"
-              : "Sign in with Google"
+              ? L("Choose a Google account", "گوگل اکاؤنٹ منتخب کریں")
+              : L("Sign in with Google", "گوگل سے سائن اِن کریں")
           }
           onClick={(e) => {
             if (e.target === e.currentTarget) setGoogleStage("closed");
@@ -370,10 +372,10 @@ export function AccountScreen({
               <div style={{ padding: "22px 22px 10px", textAlign: "center" }}>
                 {SocialIcon.google}
                 <div style={{ fontSize: 17, fontWeight: 500, marginTop: 10 }}>
-                  Choose an account
+                  {L("Choose an account", "اکاؤنٹ منتخب کریں")}
                 </div>
                 <div style={{ fontSize: 13, color: "#5f6368", marginTop: 2 }}>
-                  to continue to <strong>Zarai Mandi</strong>
+                  {L("to continue to", "جاری رکھنے کے لیے:")} <strong>{L("Zarai Mandi", "زرعی منڈی")}</strong>
                 </div>
               </div>
               <div style={{ borderTop: "1px solid #e8eaed" }}>
@@ -491,14 +493,14 @@ export function AccountScreen({
                       >
                         +
                       </span>
-                      <span>Use another account</span>
+                      <span>{L("Use another account", "دوسرا اکاؤنٹ استعمال کریں")}</span>
                     </button>
                   ) : (
                     <div style={{ padding: "12px 20px 16px" }}>
                       <input
                         autoFocus
                         type="email"
-                        placeholder="Enter Google email"
+                        placeholder={L("Enter Google email", "گوگل ای میل لکھیں")}
                         value={customEmail}
                         onChange={(e) => {
                           setCustomEmail(e.target.value);
@@ -558,7 +560,7 @@ export function AccountScreen({
                             fontFamily: "Arial, sans-serif",
                           }}
                         >
-                          Cancel
+                          {L("Cancel", "منسوخ")}
                         </button>
                         <button
                           type="button"
@@ -575,7 +577,7 @@ export function AccountScreen({
                             fontFamily: "Arial, sans-serif",
                           }}
                         >
-                          Next
+                          {L("Next", "اگلا")}
                         </button>
                       </div>
                     </div>
@@ -605,7 +607,7 @@ export function AccountScreen({
                     fontFamily: "Arial, sans-serif",
                   }}
                 >
-                  Cancel
+                  {L("Cancel", "منسوخ")}
                 </button>
               </div>
             </div>
@@ -627,7 +629,7 @@ export function AccountScreen({
               <div style={{ textAlign: "center", marginBottom: 16 }}>
                 {SocialIcon.google}
                 <div style={{ fontSize: 18, fontWeight: 600, marginTop: 12 }}>
-                  Sign in with Google
+                  {L("Sign in with Google", "گوگل سے سائن اِن کریں")}
                 </div>
               </div>
               {/* Account chip */}
@@ -680,9 +682,7 @@ export function AccountScreen({
                   margin: "0 0 12px",
                 }}
               >
-                By continuing, Google will share your <strong>name</strong>,{" "}
-                <strong>email</strong>, and <strong>profile picture</strong>{" "}
-                with Zarai Mandi.
+                {L("By continuing, Google will share your name, email and profile picture with Zarai Mandi.", "جاری رکھنے پر گوگل آپ کا نام، ای میل اور پروفائل تصویر زرعی منڈی کے ساتھ شیئر کرے گا۔")}
               </p>
               <p
                 style={{
@@ -692,8 +692,7 @@ export function AccountScreen({
                   lineHeight: 1.5,
                 }}
               >
-                You can manage Sign in with Google in your Google Account
-                settings.
+                {L("You can manage Sign in with Google in your Google Account settings.", "آپ گوگل اکاؤنٹ کی سیٹنگز میں \"گوگل سے سائن اِن\" کا انتظام کر سکتے ہیں۔")}
               </p>
               <div
                 style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}
@@ -712,7 +711,7 @@ export function AccountScreen({
                     fontFamily: "Arial, sans-serif",
                   }}
                 >
-                  Cancel
+                  {L("Cancel", "منسوخ")}
                 </button>
                 <button
                   type="button"
@@ -729,7 +728,7 @@ export function AccountScreen({
                     fontFamily: "Arial, sans-serif",
                   }}
                 >
-                  Agree and continue
+                  {L("Agree and continue", "متفق ہوں اور جاری رکھیں")}
                 </button>
               </div>
             </div>

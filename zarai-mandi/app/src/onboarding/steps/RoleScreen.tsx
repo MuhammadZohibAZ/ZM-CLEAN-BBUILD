@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { type Role } from "../data";
+import { useObLang } from "../i18n";
 import { Progress } from "../parts";
 
 // ─── Screen 2 – Who Are You? (simplified — no descriptions, no sub-options) ──
@@ -16,11 +17,12 @@ export function RoleScreen({
   onBack: () => void;
   onSignIn?: () => void;
 }) {
+  const { L } = useObLang();
   const [role, setRole] = useState<Role | "">(initialRole || "");
 
   const roles: { id: Role; label: string }[] = [
-    { id: "customer", label: "Customer" },
-    { id: "representative", label: "Representative" },
+    { id: "customer", label: L("Customer", "کسٹمر") },
+    { id: "representative", label: L("Representative", "نمائندہ") },
   ];
 
   return (
@@ -34,10 +36,10 @@ export function RoleScreen({
     >
       <div className="auth-card">
         <Progress total={2} current={0} />
-        <div className="eyebrow">Step 1 of 2</div>
-        <div className="headline">Who are you?</div>
+        <div className="eyebrow">{L("Step 1 of 2", "مرحلہ 1 از 2")}</div>
+        <div className="headline">{L("Who are you?", "آپ کون ہیں؟")}</div>
         <div className="subline">
-          Select your role to personalise Zarai Mandi.
+          {L("Select your role to personalise Zarai Mandi.", "زرعی منڈی کو اپنے لیے موزوں بنانے کے لیے اپنا کردار منتخب کریں۔")}
         </div>
 
         <div className="radio-group-container" style={{ marginBottom: 8 }}>
@@ -62,13 +64,13 @@ export function RoleScreen({
           disabled={!role}
           onClick={() => onNext(role as Role)}
         >
-          Continue →
+          {L("Continue →", "جاری رکھیں ←")}
         </button>
 
         {onSignIn && (
           <div style={{ textAlign: "center", marginTop: 14 }}>
             <span style={{ fontSize: 13, color: "var(--zm-muted)" }}>
-              Already have an account?{" "}
+              {L("Already have an account?", "پہلے سے اکاؤنٹ ہے؟")}{" "}
             </span>
             <button
               type="button"
@@ -84,7 +86,7 @@ export function RoleScreen({
                 textDecoration: "underline",
               }}
             >
-              Sign In
+              {L("Sign In", "سائن اِن")}
             </button>
           </div>
         )}
@@ -99,7 +101,7 @@ export function RoleScreen({
           }}
           onClick={onBack}
         >
-          ← Change Language / زبان
+          {L("← Change Language / زبان", "زبان تبدیل کریں / Language →")}
         </button>
       </div>
     </div>

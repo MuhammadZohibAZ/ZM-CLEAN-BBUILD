@@ -62,7 +62,12 @@ export function useLang() {
 // Module-level lang for speakText (synced by LangProvider)
 export let appLang: Lang = "en";
 
-export function LangProvider({ children }: { children: React.ReactNode }) {
+/**
+ * Language state for the whole app (onboarding + customer app share it, so the
+ * language picked in onboarding carries on). `injectTheme` adds the customer
+ * app's global CSS; App.tsx mounts the provider above onboarding without it.
+ */
+export function LangProvider({ children, injectTheme = true }: { children: React.ReactNode; injectTheme?: boolean }) {
   const [lang, setLangState] = useState<Lang>("en");
   const [voiceEnabled, setVoiceEnabledState] = useState(false);
 
@@ -132,7 +137,7 @@ export function LangProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <style>{ZM_THEME_CSS}</style>
+      {injectTheme && <style>{ZM_THEME_CSS}</style>}
       <LangContext.Provider
         value={{ lang, setLang, t, tc, tm, tr, tn, voiceEnabled, setVoiceEnabled }}
       >

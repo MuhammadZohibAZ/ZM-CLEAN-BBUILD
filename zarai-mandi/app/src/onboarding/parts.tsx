@@ -9,8 +9,11 @@ import {
   isValidEmail,
   isValidPhone,
   normalizePhone,
+  professionLabel,
   PROFESSIONS,
 } from "./data";
+import { useLang } from "../customer-face/shared/i18n/LangProvider";
+import { useObLang } from "./i18n";
 
 // ─── Shared UI ────────────────────────────────────────────────────────────────
 export function Progress({
@@ -71,6 +74,7 @@ export function TermsToggle({
   agreed: boolean;
   onChange: (v: boolean) => void;
 }) {
+  const { L } = useObLang();
   return (
     <div
       style={{
@@ -97,7 +101,7 @@ export function TermsToggle({
           flex: 1,
         }}
       >
-        I agree to the{" "}
+        {L("I agree to the", "میں")}{" "}
         <span
           style={{
             color: "var(--zm-green)",
@@ -109,9 +113,9 @@ export function TermsToggle({
             onChange(!agreed);
           }}
         >
-          Terms &amp; Conditions
+          {L("Terms & Conditions", "شرائط و ضوابط")}
         </span>{" "}
-        and{" "}
+        {L("and", "اور")}{" "}
         <span
           style={{
             color: "var(--zm-green)",
@@ -123,8 +127,9 @@ export function TermsToggle({
             onChange(!agreed);
           }}
         >
-          Privacy Policy
+          {L("Privacy Policy", "رازداری کی پالیسی")}
         </span>
+        {L("", " سے متفق ہوں")}
       </span>
     </div>
   );
@@ -182,6 +187,8 @@ export function ContactField({
   onTabChange: (t: ContactInputTab) => void;
   disabled?: boolean;
 }) {
+  const { L } = useObLang();
+  const { tm } = useLang();
   const cc =
     COUNTRY_CODES.find((c) => c.code === countryCode) ?? COUNTRY_CODES[0];
   const phoneValid = isValidPhone(phoneValue, countryCode);
@@ -200,7 +207,7 @@ export function ContactField({
               marginBottom: 6,
             }}
           >
-            WhatsApp / Mobile Number *
+            {L("WhatsApp / Mobile Number *", "واٹس ایپ / موبائل نمبر *")}
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             <div style={{ position: "relative", flexShrink: 0 }}>
@@ -289,18 +296,18 @@ export function ContactField({
           <div style={{ fontSize: 11.5, marginTop: 6, lineHeight: 1.5 }}>
             {!phoneValue && (
               <span style={{ color: "var(--zm-muted)" }}>
-                Pakistan: enter 03XX XXXXXXX or just 10 digits
+                {L("Pakistan: enter 03XX XXXXXXX or just 10 digits", "پاکستان: 03XX XXXXXXX یا صرف 10 ہندسے لکھیں")}
               </span>
             )}
             {phoneValue && !phoneValid && (
               <span style={{ color: "#b45309" }}>
-                Enter {cc.digits}-digit number for {cc.country} (e.g. {cc.hint})
+                {L(`Enter ${cc.digits}-digit number for ${cc.country} (e.g. ${cc.hint})`, `${tm(cc.country)} کے لیے ${cc.digits} ہندسوں کا نمبر لکھیں (مثلاً ${cc.hint})`)}
               </span>
             )}
             {phoneValid && (
               <span style={{ color: "var(--zm-green)" }}>
-                OTP will be sent via WhatsApp to{" "}
-                {normalizePhone(phoneValue, countryCode)}
+                {L("OTP will be sent via WhatsApp to", "OTP واٹس ایپ پر بھیجا جائے گا:")}{" "}
+                <span className="ltr">{normalizePhone(phoneValue, countryCode)}</span>
               </span>
             )}
           </div>
@@ -324,8 +331,8 @@ export function ContactField({
               }}
             >
               {mode === "signin"
-                ? "Sign in with Email instead"
-                : "Sign up with Email instead"}
+                ? L("Sign in with Email instead", "اس کے بجائے ای میل سے سائن اِن کریں")
+                : L("Sign up with Email instead", "اس کے بجائے ای میل سے سائن اَپ کریں")}
             </button>
           )}
         </div>
@@ -342,7 +349,7 @@ export function ContactField({
               marginBottom: 6,
             }}
           >
-            Email Address *
+            {L("Email Address *", "ای میل ایڈریس *")}
           </div>
           <div style={{ position: "relative" }}>
             <input
@@ -386,14 +393,14 @@ export function ContactField({
           </div>
           {emailValue && !emailValid && (
             <div style={{ fontSize: 11.5, color: "#b45309", marginTop: 6 }}>
-              Enter a valid email (e.g. name@gmail.com)
+              {L("Enter a valid email (e.g. name@gmail.com)", "درست ای میل لکھیں (مثلاً name@gmail.com)")}
             </div>
           )}
           {emailValid && (
             <div
               style={{ fontSize: 11.5, color: "var(--zm-green)", marginTop: 6 }}
             >
-              OTP will be sent to {emailValue.trim()}
+              {L("OTP will be sent to", "OTP یہاں بھیجا جائے گا:")} <span className="ltr">{emailValue.trim()}</span>
             </div>
           )}
           {/* Link back to phone */}
@@ -416,8 +423,8 @@ export function ContactField({
               }}
             >
               {mode === "signin"
-                ? "Sign in with Mobile Number instead"
-                : "Sign up with Phone instead"}
+                ? L("Sign in with Mobile Number instead", "اس کے بجائے موبائل نمبر سے سائن اِن کریں")
+                : L("Sign up with Phone instead", "اس کے بجائے فون سے سائن اَپ کریں")}
             </button>
           )}
         </div>
@@ -433,6 +440,7 @@ export function OtpBoxes({
   onVerified: () => void;
   sentTo: string;
 }) {
+  const { L } = useObLang();
   const [vals, setVals] = useState(["", "", "", "", "", ""]);
   const refs = Array.from({ length: 6 }, () => useRef<HTMLInputElement>(null));
 
@@ -486,7 +494,7 @@ export function OtpBoxes({
             lineHeight: 1.5,
           }}
         >
-          6-digit OTP sent to <strong>{sentTo}</strong>
+          {L("6-digit OTP sent to", "6 ہندسوں کا OTP بھیجا گیا:")} <strong className="ltr">{sentTo}</strong>
         </div>
       )}
       <div
@@ -516,7 +524,7 @@ export function OtpBoxes({
         disabled={!allFilled}
         onClick={onVerified}
       >
-        Verify OTP →
+        {L("Verify OTP →", "OTP کی تصدیق کریں ←")}
       </button>
     </>
   );
@@ -539,12 +547,14 @@ export function ProfileFields({
   setLocation: (v: string) => void;
   showLocation: boolean;
 }) {
+  const { L, isUr } = useObLang();
+  const { tm } = useLang();
   const [professionSearch, setProfessionSearch] = useState("");
   const [professionOpen, setProfessionOpen] = useState(false);
   const [locationSearch, setLocationSearch] = useState("");
   const [locationOpen, setLocationOpen] = useState(false);
   const filteredProfessions = PROFESSIONS.filter((p) =>
-    p.toLowerCase().includes(professionSearch.toLowerCase()),
+    `${p} ${professionLabel(p, true)}`.toLowerCase().includes(professionSearch.toLowerCase()),
   );
   const filteredLocations = CITIES.filter((c) =>
     `${c.city} ${c.district} ${c.province}`
@@ -555,18 +565,18 @@ export function ProfileFields({
   return (
     <>
       <div className="field">
-        <div className="role-sub-label">Name *</div>
+        <div className="role-sub-label">{L("Name *", "نام *")}</div>
         <input
           className="profile-input"
           type="text"
-          placeholder="Enter your name"
+          placeholder={L("Enter your name", "اپنا نام لکھیں")}
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
       </div>
       <div className="field">
         <div className="role-sub-label">
-          Profession{" "}
+          {L("Profession", "پیشہ")}{" "}
           <span
             style={{
               fontSize: 11,
@@ -576,7 +586,7 @@ export function ProfileFields({
               letterSpacing: "normal",
             }}
           >
-            (Optional)
+            {L("(Optional)", "(اختیاری)")}
           </span>
         </div>
         <button
@@ -587,15 +597,15 @@ export function ProfileFields({
           <span
             style={{ color: profession ? "var(--zm-text)" : "var(--zm-muted)" }}
           >
-            {profession || "Select profession (optional)"}
+            {profession ? professionLabel(profession, isUr) : L("Select profession (optional)", "پیشہ منتخب کریں (اختیاری)")}
           </span>
-          <span>⌄</span>
+          <span aria-hidden="true">▾</span>
         </button>
         {professionOpen && (
           <div className="dropdown-panel">
             <input
               className="dropdown-search"
-              placeholder="Search profession…"
+              placeholder={L("Search profession…", "پیشہ تلاش کریں…")}
               value={professionSearch}
               onChange={(e) => setProfessionSearch(e.target.value)}
               autoFocus
@@ -611,11 +621,11 @@ export function ProfileFields({
                   }}
                 >
                   <span className="occ-dot" />
-                  <span>{p}</span>
+                  <span>{professionLabel(p, isUr)}</span>
                 </div>
               ))}
               {!filteredProfessions.length && (
-                <div className="dropdown-empty">No professions found</div>
+                <div className="dropdown-empty">{L("No professions found", "کوئی پیشہ نہیں ملا")}</div>
               )}
             </div>
           </div>
@@ -623,7 +633,7 @@ export function ProfileFields({
       </div>
       {showLocation && (
         <div className="field">
-          <div className="role-sub-label">Location *</div>
+          <div className="role-sub-label">{L("Location *", "مقام *")}</div>
           <button
             type="button"
             className="profile-select"
@@ -632,15 +642,15 @@ export function ProfileFields({
             <span
               style={{ color: location ? "var(--zm-text)" : "var(--zm-muted)" }}
             >
-              {location || "Select location"}
+              {location ? tm(location) : L("Select location", "مقام منتخب کریں")}
             </span>
-            <span>⌄</span>
+            <span aria-hidden="true">▾</span>
           </button>
           {locationOpen && (
             <div className="dropdown-panel">
               <input
                 className="dropdown-search"
-                placeholder="Search city, district or province…"
+                placeholder={L("Search city, district or province…", "شہر، ضلع یا صوبہ تلاش کریں…")}
                 value={locationSearch}
                 onChange={(e) => setLocationSearch(e.target.value)}
                 autoFocus
@@ -657,15 +667,15 @@ export function ProfileFields({
                   >
                     <span className="occ-dot" />
                     <div>
-                      <div>{c.city}</div>
+                      <div>{tm(c.city)}</div>
                       <span style={{ fontSize: 11, color: "var(--zm-muted)" }}>
-                        {c.district}, {c.province}
+                        {tm(c.district)}، {tm(c.province)}
                       </span>
                     </div>
                   </div>
                 ))}
                 {!filteredLocations.length && (
-                  <div className="dropdown-empty">No locations found</div>
+                  <div className="dropdown-empty">{L("No locations found", "کوئی مقام نہیں ملا")}</div>
                 )}
               </div>
             </div>

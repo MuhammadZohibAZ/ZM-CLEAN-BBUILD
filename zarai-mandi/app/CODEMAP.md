@@ -18,23 +18,21 @@ Where each part of the app lives. Paths are under `app/src/`.
 
 ## Onboarding (`onboarding/`)
 
-`OnboardingFlow.tsx` runs the steps in order and holds the user's answers.
+`OnboardingFlow.tsx` runs the steps: Language → Role → Account, then customers go straight into the app and representatives see "Rep pending".
 
 | Part on screen | File · component |
 |---|---|
-| 1 · Choose English / Urdu | `steps/LangScreen.tsx` · `LangScreen` |
+| 1 · Choose English / Urdu (sets the app language) | `steps/LangScreen.tsx` · `LangScreen` |
 | 2 · Customer or representative | `steps/RoleScreen.tsx` · `RoleScreen` |
 | 3 · Sign up / sign in (phone, email, Google), OTP, profile | `steps/AccountScreen.tsx` · `AccountScreen` |
-| Interested products | `steps/InterestsScreen.tsx` · `InterestsScreen` |
-| City / district / province | `steps/LocationScreen.tsx` · `LocationScreen` |
-| Products + plan duration (pricing) | `steps/SubscriptionScreen.tsx` · `SubscriptionScreen` |
-| Payment | `steps/PaymentScreen.tsx` · `PaymentScreen` |
-| "Setting up your account" loader | `steps/LoadingScreen.tsx` · `LoadingScreen` |
 | Rep account pending approval | `steps/RepPendingScreen.tsx` · `RepPendingScreen` |
 | Shared pieces: progress bar, divider, terms toggle, social icons, phone/email field, OTP boxes, profile fields | `parts.tsx` |
-| Lists (products, cities, languages, country codes), pricing, phone/email validation | `data.ts` |
+| Screens, cities, languages, professions (+ Urdu names), country codes, phone/email validation | `data.ts` |
+| English / Urdu text (`L(en, ur)`), right-to-left + Urdu font | `i18n.ts` · `useObLang`, `OB_URDU_CSS` |
 | Onboarding styles | `theme.ts` |
-| The two onboarding-only product icons (livestock, live market) | `icons/` |
+| Livestock icon (also used by `data/seasonProductData.ts`) | `icons/` |
+
+The language is app-wide: `LangProvider` sits in `App.tsx` above onboarding and the customer app, so the language picked on the first screen carries into the app.
 
 ## Screen 1 — Home (`customer-face/screens/home/`)
 
@@ -133,7 +131,7 @@ Opened by "Unlock" in My Subscriptions and "Subscribe" on locked data.
 
 ## Archived (not built)
 
-`app/_archive/` holds files no longer reachable from the app (old rates screen, old sheets, Search / Mandi list / Live market / Rates result screens, the unused onboarding Dashboard step, …), same folder layout as `src/`. Move a file back into `src/` to use it again.
+`app/_archive/` holds files no longer reachable from the app (old rates screen, old sheets, Search / Mandi list / Live market / Rates result screens, onboarding steps the flow never reached — Dashboard, Interests, Location, Subscription, Payment, Loading — with their data in `_archive/onboarding/unused-data.ts`, …), same folder layout as `src/`. Move a file back into `src/` to use it again.
 
 ## Images
 

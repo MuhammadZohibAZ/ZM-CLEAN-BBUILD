@@ -4,7 +4,7 @@ import logoImg from "@/imports/zmlogodark-removebg-preview.png";
 import { LANGUAGES } from "../data";
 
 // ─── Screen 1 – Language ──────────────────────────────────────────────────────
-export function LangScreen({ onNext }: { onNext: () => void }) {
+export function LangScreen({ onNext }: { onNext: (code: string) => void }) {
   return (
     <div
       className="screen-scroll s-enter"
@@ -49,7 +49,7 @@ export function LangScreen({ onNext }: { onNext: () => void }) {
           <button
             key={lng.code}
             className={`lang-btn${lng.urdu ? " regional" : ""}`}
-            onClick={onNext}
+            onClick={() => onNext(lng.code)}
             style={
               (lng as any).centered
                 ? {

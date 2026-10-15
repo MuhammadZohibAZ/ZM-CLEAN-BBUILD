@@ -16,7 +16,8 @@ import {
 } from "./customer-face/shared/data/catalog";
 import { getproductIconSrc } from "./customer-face/shared/data/icons";
 import { ZARAI_REELS, type ZaraiReel } from "./customer-face/shared/data/reels";
-import { LangProvider, useLang } from "./customer-face/shared/i18n/LangProvider";
+import { useLang } from "./customer-face/shared/i18n/LangProvider";
+import { ZM_THEME_CSS } from "./customer-face/shared/theme";
 import {
   type AppProps,
   type FeedFilter,
@@ -485,10 +486,13 @@ function AppInner({
   );
 }
 
+// Language state comes from the LangProvider in App.tsx (shared with onboarding);
+// the customer app adds its own theme CSS.
 export default function CustomerFaceApp(props: AppProps) {
   return (
-    <LangProvider>
+    <>
+      <style>{ZM_THEME_CSS}</style>
       <AppInner {...props} />
-    </LangProvider>
+    </>
   );
 }

@@ -1,7 +1,7 @@
 // Onboarding: representative account pending approval.
 
-// ─── App ─────────────────────────────────────────────────────────────────────
-// ─── Rep Pending Screen ───────────────────────────────────────────────────────
+import { useObLang } from "../i18n";
+
 export function RepPendingScreen({
   name,
   onProceed,
@@ -9,6 +9,7 @@ export function RepPendingScreen({
   name: string;
   onProceed: () => void;
 }) {
+  const { L } = useObLang();
   return (
     <div
       className="screen-scroll s-enter"
@@ -38,13 +39,13 @@ export function RepPendingScreen({
         </div>
 
         <div className="eyebrow" style={{ textAlign: "center" }}>
-          Application Received
+          {L("Application Received", "درخواست موصول ہو گئی")}
         </div>
         <div
           className="headline"
           style={{ textAlign: "center", fontSize: 20, marginBottom: 10 }}
         >
-          We'll be in touch soon
+          {L("We'll be in touch soon", "ہم جلد آپ سے رابطہ کریں گے")}
         </div>
 
         <div
@@ -55,11 +56,14 @@ export function RepPendingScreen({
             marginBottom: 24,
           }}
         >
-          Thank you,{" "}
-          <strong style={{ color: "var(--zm-dark)" }}>{name || "there"}</strong>
-          . Your representative application has been submitted. Our operations
-          team will review your details and verify your account within{" "}
-          <strong style={{ color: "var(--zm-dark)" }}>24–48 hours</strong>.
+          {L("Thank you,", "شکریہ،")}{" "}
+          <strong style={{ color: "var(--zm-dark)" }}>{name || L("there", "")}</strong>
+          {L(
+            ". Your representative application has been submitted. Our operations team will review your details and verify your account within ",
+            "۔ آپ کی نمائندہ درخواست جمع ہو گئی ہے۔ ہماری آپریشنز ٹیم آپ کی تفصیلات دیکھ کر ",
+          )}
+          <strong style={{ color: "var(--zm-dark)" }}>{L("24–48 hours", "24 سے 48 گھنٹوں")}</strong>
+          {L(".", " میں آپ کے اکاؤنٹ کی تصدیق کرے گی۔")}
         </div>
 
         {/* Horizontal Status Progress Card */}
@@ -93,7 +97,7 @@ export function RepPendingScreen({
                   letterSpacing: "0.04em",
                 }}
               >
-                Application Status
+                {L("Application Status", "درخواست کی صورتحال")}
               </span>
             </div>
           </div>
@@ -165,7 +169,7 @@ export function RepPendingScreen({
                   lineHeight: 1.15,
                 }}
               >
-                Submitted
+                {L("Submitted", "جمع ہو گئی")}
               </span>
             </div>
 
@@ -203,7 +207,7 @@ export function RepPendingScreen({
                   lineHeight: 1.15,
                 }}
               >
-                Ops Review
+                {L("Ops Review", "ٹیم کا جائزہ")}
               </span>
             </div>
 
@@ -240,7 +244,7 @@ export function RepPendingScreen({
                   lineHeight: 1.15,
                 }}
               >
-                Verified
+                {L("Verified", "تصدیق شدہ")}
               </span>
             </div>
           </div>
@@ -259,7 +263,7 @@ export function RepPendingScreen({
             fontWeight: 800,
           }}
         >
-          Proceed to Zarai Mandi App →
+          {L("Proceed to Zarai Mandi App →", "زرعی منڈی ایپ پر جائیں ←")}
         </button>
 
         <div
@@ -278,8 +282,8 @@ export function RepPendingScreen({
         >
           <span style={{ fontSize: 16, flexShrink: 0 }}>💬</span>
           <span>
-            Questions? WhatsApp us at{" "}
-            <strong style={{ color: "var(--zm-dark)" }}>0300-0000000</strong>
+            {L("Questions? WhatsApp us at", "سوالات؟ ہمیں واٹس ایپ کریں:")}{" "}
+            <strong className="ltr" style={{ color: "var(--zm-dark)" }}>0300-0000000</strong>
           </span>
         </div>
       </div>

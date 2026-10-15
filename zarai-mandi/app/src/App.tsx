@@ -3,6 +3,7 @@ import { inDevicePreview } from "./lib/device-orientation"
 import { onDevCommand, publishDevControls } from "./lib/device-bridge"
 import OnboardingFlow, { type OnboardingUserData } from "./onboarding/OnboardingFlow"
 import CustomerFaceApp from "./CustomerFaceApp"
+import { LangProvider } from "./customer-face/shared/i18n/LangProvider"
 
 export default function App() {
   const [stage, setStage] = useState<"onboarding" | "customer_face">("onboarding")
@@ -73,95 +74,98 @@ export default function App() {
   useEffect(() => onDevCommand(() => devActionRef.current()), [])
 
   return (
-    <main
-      className="w-full h-full min-h-screen flex justify-center bg-[#F1F7F4] overflow-hidden"
-      style={{
-        width: "100vw",
-        height: "100dvh",
-        margin: 0,
-        padding: 0,
-        background: "#F1F7F4",
-      }}
-    >
-      {/* Floating Mode Toggle Pill for Testing & Role Switching */}
-      {!inDevice && (
-        <div
-          style={{
-            position: "fixed",
-            top: 10,
-            right: 14,
-            zIndex: 9999,
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            background: "rgba(6, 45, 36, 0.92)",
-            backdropFilter: "blur(12px)",
-            padding: "4px 10px",
-            borderRadius: 24,
-            border: "1px solid rgba(255, 255, 255, 0.2)",
-            boxShadow: "0 4px 16px rgba(0,0,0,0.25)",
-          }}
-        >
-          <span
-            style={{
-              fontSize: 10,
-              fontWeight: 800,
-              color: "#B4E6D2",
-              letterSpacing: "0.03em",
-            }}
-          >
-            {devLabel}
-          </span>
-          <button
-            onClick={handleDevAction}
-            className="tap-target"
-            style={{
-              background: "#2FAE68",
-              color: "#fff",
-              border: "none",
-              borderRadius: 14,
-              padding: "2px 8px",
-              fontSize: 9.5,
-              fontWeight: 800,
-              cursor: "pointer",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 2,
-            }}
-            title={devTitle}
-          >
-            {devAction}
-          </button>
-        </div>
-      )}
-
-      {/* Responsive Mobile Container — fits any screen width/height */}
-      <div
-        className="zm-shell w-full h-full flex flex-col mx-auto relative overflow-hidden"
+    // One language for onboarding and the app (theme CSS comes with CustomerFaceApp).
+    <LangProvider injectTheme={false}>
+      <main
+        className="w-full h-full min-h-screen flex justify-center bg-[#F1F7F4] overflow-hidden"
         style={{
-          width: "100%",
-          maxWidth: "480px",
+          width: "100vw",
           height: "100dvh",
+          margin: 0,
+          padding: 0,
           background: "#F1F7F4",
         }}
       >
-        {stage === "onboarding" ? (
-          <OnboardingFlow
-            initialMode={authMode}
-            initialRole={initialRole}
-            onComplete={handleOnboardingComplete}
-          />
-        ) : (
-          <CustomerFaceApp
-            initialUserData={userData || undefined}
-            activeRole={activeRole}
-            hasRepAccount={hasRepAccount}
-            onSwitchRole={handleSwitchRole}
-            onStartRepOnboarding={handleStartRepOnboarding}
-            onRestartOnboarding={handleRestartOnboarding}
-          />
+        {/* Floating Mode Toggle Pill for Testing & Role Switching */}
+        {!inDevice && (
+          <div
+            style={{
+              position: "fixed",
+              top: 10,
+              right: 14,
+              zIndex: 9999,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              background: "rgba(6, 45, 36, 0.92)",
+              backdropFilter: "blur(12px)",
+              padding: "4px 10px",
+              borderRadius: 24,
+              border: "1px solid rgba(255, 255, 255, 0.2)",
+              boxShadow: "0 4px 16px rgba(0,0,0,0.25)",
+            }}
+          >
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: 800,
+                color: "#B4E6D2",
+                letterSpacing: "0.03em",
+              }}
+            >
+              {devLabel}
+            </span>
+            <button
+              onClick={handleDevAction}
+              className="tap-target"
+              style={{
+                background: "#2FAE68",
+                color: "#fff",
+                border: "none",
+                borderRadius: 14,
+                padding: "2px 8px",
+                fontSize: 9.5,
+                fontWeight: 800,
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 2,
+              }}
+              title={devTitle}
+            >
+              {devAction}
+            </button>
+          </div>
         )}
-      </div>
-    </main>
+
+        {/* Responsive Mobile Container — fits any screen width/height */}
+        <div
+          className="zm-shell w-full h-full flex flex-col mx-auto relative overflow-hidden"
+          style={{
+            width: "100%",
+            maxWidth: "480px",
+            height: "100dvh",
+            background: "#F1F7F4",
+          }}
+        >
+          {stage === "onboarding" ? (
+            <OnboardingFlow
+              initialMode={authMode}
+              initialRole={initialRole}
+              onComplete={handleOnboardingComplete}
+            />
+          ) : (
+            <CustomerFaceApp
+              initialUserData={userData || undefined}
+              activeRole={activeRole}
+              hasRepAccount={hasRepAccount}
+              onSwitchRole={handleSwitchRole}
+              onStartRepOnboarding={handleStartRepOnboarding}
+              onRestartOnboarding={handleRestartOnboarding}
+            />
+          )}
+        </div>
+      </main>
+    </LangProvider>
   )
 }
