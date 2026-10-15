@@ -4,12 +4,13 @@ import ExpandableMandiMapCard from "../../../components/ExpandableMandiMapCard";
 import type { MapByProductRecord } from "../../../components/ZaraiMandiMap";
 import { getDeclaredMoistureBand, getProductSpecialAttrType } from "../../shared/data/byproductStats";
 import { getDivisionForProduct, isProductTodayOnly } from "../../shared/data/catalog";
+import { byproductsForSelection, mainByproductRank } from "../../shared/data/byproductCards";
+import { fetchByProducts } from "../../../lib/api";
 import { getProvinceFromLoc } from "../../shared/data/mandis";
 import { ALL_RATE_TYPES } from "../../shared/data/rates";
 import { URDU_FONT, useLang } from "../../shared/i18n/LangProvider";
 import type { LocationScope } from "../../shared/types";
 import { speakText } from "../../shared/voice";
-import { MultiLocSheet } from "../../sheets/MultiLocSheet";
 import { AppBar, type Tab } from "./AppBar";
 import { BestPlaces } from "./BestPlaces";
 import { FilterDock, type FilterUiProps } from "./FilterDock";
@@ -19,6 +20,7 @@ import { makeFmt, shortRate, stripMandi } from "./format";
 import { MandiDetailSheet } from "./MandiDetailSheet";
 import { MandiSection } from "./MandiSection";
 import { PriceHero } from "./PriceHero";
+import { LocationSheet } from "./LocationSheet";
 import { PickerSheet } from "./PickerSheet";
 import {
   ALL_RATES,
@@ -27,6 +29,7 @@ import {
   inScope,
   mandiEntries,
   passesFilters,
+  rangeEntries,
   primaryAttr,
   sortEntries,
   statsFor,
@@ -66,6 +69,7 @@ export function ProductRatesScreen({
   byproduct,
   onBack,
   push,
+  replace,
   isPickedBP = () => false,
   togglePickBP = () => { },
   initialRateType,
@@ -110,6 +114,8 @@ export function ProductRatesScreen({
   const [sort, setSort] = useState<SortKey>("none");
   const [interval, setChangeInterval] = useState<ChangeInterval>(1);
   const [locSheet, setLocSheet] = useState(false);
+  // Custom period picked in the expanded table or the map (null = the single day).
+  const [dayRange, setDayRange] = useState<{ start: string; end: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [ovPage, setOvPage] = useState(0);
   const [headerCompact, setHeaderCompact] = useState(false);
@@ -118,6 +124,29 @@ export function ProductRatesScreen({
   const say = (en: string, ur: string) => voiceEnabled && speakText(f.tx(en, ur));
 
   const { rows, dates, timelines, loading, error } = useMarketData(getDivisionForProduct(vertical, product), name, scope);
+
+  // The product's other by-products, for the header's switcher (main ones first).
+  const [siblings, setSiblings] = useState<{ name: string; hasData: boolean }[]>([]);
+  const [bpPicker, setBpPicker] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    fetchByProducts(getDivisionForProduct(vertical, product))
+      .then((catalog) => {
+        if (cancelled) return;
+        const names = byproductsForSelection(catalog, { vertical, product }, false);
+        const hasData = new Map(catalog.map((c) => [c.by_product.toLowerCase(), c.has_data]));
+        setSiblings(
+          names
+            .map((n, i) => ({ name: n, hasData: hasData.get(n.toLowerCase()) ?? false, i, rank: mainByproductRank(product, n) }))
+            .sort((a, b) => a.rank - b.rank || Number(b.hasData) - Number(a.hasData) || a.i - b.i)
+            .map(({ name: n, hasData: h }) => ({ name: n, hasData: h })),
+        );
+      })
+      .catch(() => !cancelled && setSiblings([]));
+    return () => {
+      cancelled = true;
+    };
+  }, [vertical, product]);
   const latest = dates[dates.length - 1] || TIMELINE[TIMELINE.length - 1];
   const lockHistory = isProductTodayOnly(product);
 
@@ -161,15 +190,15 @@ export function ProductRatesScreen({
   const availableRates = new Set(scopeDayAnyRate.map((r) => r.rateType));
   const filterGroups = filterOptions(scopeRows.filter((r) => r.date === day && passesFilters(r, {}, rate)));
 
-  const entries = useMemo(
-    () =>
-      sortEntries(
-        mandiEntries(rows, dates, day, interval, (r) => passesFilters(r, filters, rate) && (!listProvince || r.province === listProvince)),
-        sort,
-        scope.kind === "mandi" ? scope.label : undefined,
-      ),
-    [rows, dates, day, interval, filters, rate, listProvince, sort, scope],
-  );
+  const entries = useMemo(() => {
+    const keepRow = (r: MarketRow) => passesFilters(r, filters, rate) && (!listProvince || r.province === listProvince);
+    return sortEntries(
+      dayRange ? rangeEntries(rows, dayRange, keepRow) : mandiEntries(rows, dates, day, interval, keepRow),
+      sort,
+      scope.kind === "mandi" ? scope.label : undefined,
+    );
+  }, [rows, dates, day, interval, filters, rate, listProvince, sort, scope, dayRange]);
+  const periodLabel = dayRange ? `${f.day(dayRange.start)} – ${f.day(dayRange.end)}` : undefined;
 
   // Same maths as the headline number, so tapping a day shows matching values.
   const sparkSource = useMemo(() => {
@@ -214,6 +243,39 @@ export function ProductRatesScreen({
       : locationLabel;
   // The pill only needs the place name ("Multan"), not "Multan Mandi".
   const pillLabel = scope.kind === "mandi" ? tm(stripMandi(scope.label)) : locationLabel;
+
+  // Nothing reported for the day with these choices: say why, and offer the
+  // nearest day that has reports, all of Pakistan, or clearing the filters.
+  const emptyState = useMemo(() => {
+    if (loading || dayRows.length > 0) return null;
+    const keepRow = (r: MarketRow) => passesFilters(r, filters, rate);
+    const filtersOn = rate !== ALL_RATES || Object.values(filters).some(Boolean);
+    const allowed = (d: string) => !lockHistory || d === latest;
+    // Closest day (earlier first, then later) with reports for these choices here.
+    const scopedDays = new Set(scopeRows.filter(keepRow).map((r) => r.date));
+    const before = [...dates].reverse().find((d) => d < day && scopedDays.has(d) && allowed(d));
+    const after = dates.find((d) => d > day && scopedDays.has(d) && allowed(d));
+    const near = before || after;
+    const elsewhere = scope.kind !== "pakistan" && rows.some((r) => r.date === day && keepRow(r));
+    const place = scope.kind === "pakistan" ? "" : f.tx(` in ${pillLabel}`, ` ${pillLabel} میں`);
+    const what = filtersOn ? f.tx(" for these filters", " ان فلٹرز کے لیے") : "";
+    const actions: { label: string; onClick: () => void }[] = [];
+    if (near) actions.push({ label: f.tx(`Show ${f.day(near)}`, `${f.day(near)} دکھائیں`), onClick: () => setDate(near) });
+    if (elsewhere) actions.push({ label: f.tx("Show all Pakistan", "پورا پاکستان دکھائیں"), onClick: () => setScope(PAKISTAN) });
+    if (filtersOn) actions.push({ label: f.tx("Clear filters", "فلٹر صاف کریں"), onClick: () => { setRate(ALL_RATES); setFilters({}); } });
+    const message = elsewhere
+      ? f.tx(
+          `No reports${place}${what} on ${f.day(day)}. Other places reported that day.`,
+          `${f.day(day)} کو${place}${what} کوئی رپورٹ نہیں۔ اس دن دوسری جگہوں سے رپورٹس آئیں۔`,
+        )
+      : near
+        ? f.tx(
+            `No reports${place}${what} on ${f.day(day)}. The nearest day with data is ${f.day(near)}, or pick another day from the Day filter.`,
+            `${f.day(day)} کو${place}${what} کوئی رپورٹ نہیں۔ قریب ترین دن ${f.day(near)} ہے، یا دن کے فلٹر سے کوئی اور دن چنیں۔`,
+          )
+        : f.tx(`No reports${place}${what} yet.`, `${place}${what} ابھی کوئی رپورٹ نہیں۔`);
+    return { message, actions };
+  }, [loading, dayRows.length, filters, rate, lockHistory, latest, scopeRows, dates, day, scope.kind, rows, pillLabel, f]); // eslint-disable-line react-hooks/exhaustive-deps
   const rateLabel = rate === ALL_RATES ? f.tx("All rate types", "تمام ریٹ") : f.tx(`${shortRate(rate)} rate`, tr(rate));
 
   const heroChange = prevStats && prevStats.mid > 0 && stats.mid > 0 ? ((stats.mid - prevStats.mid) / prevStats.mid) * 100 : null;
@@ -278,6 +340,8 @@ export function ProductRatesScreen({
     date: day,
     latest,
     onDate: setDate,
+    dayRange,
+    onDayRange: setDayRange,
     lockHistory,
     rate,
     rates: [
@@ -298,6 +362,7 @@ export function ProductRatesScreen({
     onClearLocation: () => setScope(PAKISTAN),
     onReset: () => {
       setScope(PAKISTAN);
+      setDayRange(null);
       setDate(latest);
       setRate(ALL_RATES);
       setFilters({});
@@ -360,8 +425,7 @@ export function ProductRatesScreen({
       <AppBar
         f={f}
         title={tc(name)}
-        vertical={vertical}
-        iconName={name}
+        onTitleClick={replace && siblings.length > 1 ? () => setBpPicker(true) : undefined}
         picked={picked}
         onBack={onBack}
         onToggleFav={() => {
@@ -435,8 +499,8 @@ export function ProductRatesScreen({
                       lockHistory={lockHistory}
                       onSubscribe={() => push?.({ id: "billing", product, vertical })}
                       loading={loading}
-                      emptyMessage={f.tx(`No reports for ${locationLabel} on ${f.day(day)} with these choices.`, `${f.day(day)} کو ${locationLabel} کی کوئی رپورٹ نہیں۔`)}
-                      onClearScope={() => setScope(PAKISTAN)}
+                      emptyMessage={emptyState?.message ?? null}
+                      emptyActions={emptyState?.actions}
                       activeAttrs={activeAttrs}
                     />
                   ),
@@ -464,8 +528,9 @@ export function ProductRatesScreen({
                         commodityName={tc(name)}
                         records={mapRecords}
                         day={day}
+                        dayRange={dayRange}
                         colorKey={mapColorKey}
-                        filterBar={<FilterRail {...filterUi} showDate variant="map" />}
+                        filterBar={<FilterRail {...filterUi} showDate allowRange variant="map" />}
                         focusMandiName={scope.kind === "mandi" || scope.kind === "district" ? scope.label : undefined}
                         focusProvinceName={scope.kind === "province" ? scope.label : undefined}
                         lang={lang}
@@ -486,6 +551,8 @@ export function ProductRatesScreen({
               tr={tr}
               entries={entries}
               date={day}
+              periodLabel={periodLabel}
+              datePicker={{ dates, latest, onDate: setDate, dayRange, onDayRange: setDayRange, lockHistory }}
               regionLabel={listProvince ? tm(listProvince) : undefined}
               rateLabel={rate === ALL_RATES ? "" : rateLabel}
               rate={rate}
@@ -498,6 +565,7 @@ export function ProductRatesScreen({
               selectedMandi={scope.kind === "mandi" ? scope.label : undefined}
               primary={primaryAttr(getProductSpecialAttrType(byproduct, product))}
               loading={loading}
+              emptyNote={dayRange ? null : emptyState}
               onOpen={(e) => {
                 setDetail({ mandi: e.row.mandiName, rate: e.row.rateType });
                 const m = stripMandi(e.row.mandiName);
@@ -533,15 +601,22 @@ export function ProductRatesScreen({
       {tab === "overview" && FILTER_UI === "dock" && <FilterDock {...filterUi} />}
 
       {locSheet && (
-        <MultiLocSheet
-          singleSelect
-          selected={scope.kind !== "pakistan" ? [scope] : []}
-          dataMandiNames={dataMandiNames}
-          onApply={(locs) => {
-            setScope(locs.length === 0 || locs.some((x) => x.kind === "pakistan") ? PAKISTAN : locs[0]);
-            setLocSheet(false);
+        <LocationSheet f={f} tm={tm} rows={rows} value={scope} onPick={setScope} onClose={() => setLocSheet(false)} />
+      )}
+
+      {bpPicker && replace && (
+        <PickerSheet
+          f={f}
+          title={f.tx("By-product", "ضمنی مصنوع")}
+          subtitle={tc(product)}
+          value={[name]}
+          onChange={(v) => {
+            if (v[0] === name) return;
+            // Same place, the new by-product's own rates (its rate types and attributes differ).
+            replace({ id: "product-rates", vertical, product, byproduct: v[0], initialScope: scope });
           }}
-          onClose={() => setLocSheet(false)}
+          onClose={() => setBpPicker(false)}
+          options={siblings.map((s) => ({ id: s.name, label: tc(s.name), meta: s.hasData ? undefined : f.tx("No data", "ڈیٹا نہیں") }))}
         />
       )}
 

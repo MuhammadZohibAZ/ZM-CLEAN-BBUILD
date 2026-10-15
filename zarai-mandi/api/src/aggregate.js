@@ -864,6 +864,9 @@ async function computeCardStats(row, targetDate, locationKind, locationLabel, sp
     specialAttr,
     specialAttrs,
     split: split ? { by: split.by, value: split.value } : null,
+    // A rate type was asked for but this by-product has none of it here, so
+    // the card shows its most-reported rate instead.
+    rateFallback: Boolean(split?.rateType && split.rateType !== mostOccurringRateType),
     // The report day the numbers are from (the latest day before the asked one
     // when the by-product wasn't reported that day).
     statsDate: statsDate || null,
@@ -897,7 +900,8 @@ function attributeColumn(row) {
  * own average), tagged `split: { by: "attribute", value }`.
  */
 export async function getVerticalCardStats(division, options = {}) {
-  const { date, locationKind, locationLabel, attrs = [], rates = {} } = options;
+  // `rate`: one rate type for every card (a card's own choice in `rates` wins).
+  const { date, locationKind, locationLabel, attrs = [], rates = {}, rate = null } = options;
 
   const { rows: catalogRows } = await pool.query(
     `select id, division, by_product, product, matched_by_product, has_data, moisture_rule_band
@@ -916,7 +920,7 @@ export async function getVerticalCardStats(division, options = {}) {
   const perRow = await Promise.all(
     catalogRows.map(async (row) => {
       if (!wanted.size) {
-        const rateType = rates[row.id] || null;
+        const rateType = rates[row.id] || rate || null;
         const split = rateType ? { by: "rateType", value: rateType, rateType } : null;
         return [{ ...(await computeCardStats(row, date || null, locationKind, locationLabel, split)), split: null }];
       }
@@ -927,7 +931,7 @@ export async function getVerticalCardStats(division, options = {}) {
       }
       const cards = await Promise.all(
         values.map(async (value) => {
-          const rateType = rates[`${row.id}~${value}`] || null;
+          const rateType = rates[`${row.id}~${value}`] || rate || null;
           const split = { by: "attribute", value, attrType: attr.attrType, attrCol: attr.col, attrValue: value, ...(rateType ? { rateType } : {}) };
           return { ...(await computeCardStats(row, date || null, locationKind, locationLabel, split)), split: { by: "attribute", value } };
         })
@@ -1039,4 +1043,42 @@ export async function getVerticalSplitCardStats(division, options = {}) {
     })
   );
   return cardsPerRow.flat();
+}
+
+/**
+ * Reports per rate type for a division's by-products on the day (or the latest
+ * day before it with reports): { date, counts: [{ rateType, count }] }, most
+ * first. The by-product screen's filter bar opens on the top one.
+ */
+export async function getVerticalRateCounts(division, options = {}) {
+  const { date, locationKind, locationLabel } = options;
+  const { rows: catalogRows } = await pool.query(
+    `select product, matched_by_product from by_products
+     where division = $1 and has_data and matched_by_product is not null`,
+    [division]
+  );
+  if (catalogRows.length === 0) return { date: null, counts: [] };
+  const params = [];
+  const pairs = catalogRows.map((r) => {
+    params.push(r.product, r.matched_by_product);
+    return `(product = $${params.length - 1} and by_product = $${params.length})`;
+  });
+  const where = `(${pairs.join(" or ")}) ${buildLocationFilter(locationKind, locationLabel, params)}`;
+  let dayClause = "";
+  if (date) {
+    params.push(String(date).slice(0, 10));
+    dayClause = `and record_date <= $${params.length}`;
+  }
+  const { rows: dayRows } = await pool.query(`select max(record_date) as d from price_records where ${where} ${dayClause}`, params);
+  const day = dayRows[0]?.d;
+  if (!day) return { date: null, counts: [] };
+  const countParams = params.slice(0, date ? params.length - 1 : params.length);
+  countParams.push(day);
+  const { rows } = await pool.query(
+    `select coalesce(price_type, 'Mandi Rate') as rt, count(*) as n
+     from price_records where ${where} and record_date = $${countParams.length}
+     group by rt order by n desc`,
+    countParams
+  );
+  return { date: String(day).slice(0, 10), counts: rows.map((r) => ({ rateType: r.rt, count: Number(r.n) })) };
 }

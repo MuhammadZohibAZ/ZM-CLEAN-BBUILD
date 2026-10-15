@@ -1,4 +1,3 @@
-import { ProductIcon } from "../../components/ProductIcon";
 import type { Fmt } from "./format";
 import { C } from "./theme";
 import { Icon, IconButton, Tabs } from "./ui";
@@ -9,8 +8,7 @@ export function AppBar({
   f,
   title,
   subtitle,
-  vertical,
-  iconName,
+  onTitleClick,
   picked,
   onBack,
   onToggleFav,
@@ -21,8 +19,8 @@ export function AppBar({
   f: Fmt;
   title: string;
   subtitle?: string;
-  vertical: string;
-  iconName: string;
+  /** Switch to another by-product of the same product (title shows a dropdown arrow). */
+  onTitleClick?: () => void;
   picked: boolean;
   onBack: () => void;
   onToggleFav: () => void;
@@ -47,24 +45,43 @@ export function AppBar({
         <IconButton label={f.tx("Back", "واپس")} onClick={onBack}>
           <Icon name="back" size={20} width={2.4} flip={f.ur} />
         </IconButton>
-        <div style={{ width: 38, height: 38, borderRadius: 19, background: C.chip, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
-          <ProductIcon name={iconName} vertical={vertical} size={30} />
-        </div>
         <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-          <h1
-            style={{
-              margin: 0,
-              fontSize: 18,
-              fontWeight: 700,
-              lineHeight: f.ur ? 1.5 : 1.2,
-              letterSpacing: "-0.01em",
-              color: C.ink,
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-            {title}
+          <h1 style={{ margin: 0, minWidth: 0, display: "flex" }}>
+            {(() => {
+              const text = (
+                <span
+                  style={{
+                    fontSize: 18,
+                    fontWeight: 700,
+                    lineHeight: f.ur ? 1.5 : 1.2,
+                    letterSpacing: "-0.01em",
+                    color: C.ink,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    minWidth: 0,
+                  }}
+                >
+                  {title}
+                </span>
+              );
+              return onTitleClick ? (
+                <button
+                  type="button"
+                  onClick={onTitleClick}
+                  aria-haspopup="listbox"
+                  aria-label={f.tx(`${title}: change by-product`, `${title}: ضمنی مصنوع تبدیل کریں`)}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6, minWidth: 0, maxWidth: "100%", padding: 0, border: "none", background: "transparent", fontFamily: f.font, textAlign: "start" }}
+                >
+                  {text}
+                  <span style={{ width: 22, height: 22, borderRadius: 11, background: C.chip, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Icon name="chevDown" size={12} width={2.6} color={C.ink2} />
+                  </span>
+                </button>
+              ) : (
+                text
+              );
+            })()}
           </h1>
           {(subtitle || compact) && (
             <div style={{ position: "relative", height: f.ur ? 20 : 16 }}>

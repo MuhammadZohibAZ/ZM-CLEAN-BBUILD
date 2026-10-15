@@ -8,6 +8,7 @@ import { FilterChipBar, useMultiFilter, type FilterOption } from "../components/
 import { ProductIcon } from "../components/ProductIcon";
 import { ByProductAttributeFilterScreen } from "./byproduct-testers/ByProductAttributeFilterScreen";
 import { ByProductRateTypeFilterScreen } from "./byproduct-testers/ByProductRateTypeFilterScreen";
+import { ByProductFilterBarScreen } from "./byproduct-testers/ByProductFilterBarScreen";
 import { ScreenVariantSwitch, useByproductScreenVariant } from "./byproduct-testers/ScreenVariantSwitch";
 import {
   buildByproductCards,
@@ -270,6 +271,7 @@ export function ByProductCombinedScreen({
           push,
         };
         const testerKey = `${dbDivision}-${activeProduct?.product}`;
+        if (screenVariant === 'filterBar') return <ByProductFilterBarScreen key={testerKey} {...testerProps} />;
         return screenVariant === 'attribute'
           ? <ByProductAttributeFilterScreen key={testerKey} {...testerProps} />
           : <ByProductRateTypeFilterScreen key={testerKey} {...testerProps} />;

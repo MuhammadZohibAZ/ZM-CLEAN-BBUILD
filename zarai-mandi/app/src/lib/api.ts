@@ -31,6 +31,8 @@ export interface CardStats {
   statsDate?: string | null;
   /** Set when an attribute filter is on and this by-product has none of the chosen values. */
   filteredOut?: boolean;
+  /** A rate type was asked for (`rate` / `rates`) but this card has none of it, so it shows its main rate. */
+  rateFallback?: boolean;
 }
 
 /** Card options on the by-product screen. */
@@ -39,6 +41,8 @@ export interface CardStatsOptions extends LocationFilter {
   attrs?: string[];
   /** A card's chosen rate type, keyed by catalog id ("12") or by-product + attribute value ("12~Old"). */
   rates?: Record<string, string>;
+  /** One rate type for every card (a card's own entry in `rates` wins). */
+  rate?: string;
 }
 
 /** A special-attribute value reported for a by-product (filter chips). */
@@ -147,6 +151,7 @@ export function fetchVerticalCardStats(division: string, opts: CardStatsOptions 
     locationKind: opts.locationKind,
     locationLabel: opts.locationLabel,
     attrs: opts.attrs?.length ? [...opts.attrs].sort().join(",") : undefined,
+    rate: opts.rate,
     rates: opts.rates && Object.keys(opts.rates).length
       ? Object.entries(opts.rates).sort(([a], [b]) => a.localeCompare(b)).map(([id, rt]) => `${id}:${rt}`).join(",")
       : undefined,
@@ -173,6 +178,15 @@ export function fetchAttributeValues(division: string, opts: LocationFilter = {}
   return cached(`attribute-values:${division}:${query}`, () =>
     getJson<AttributeValue[]>(`/api/verticals/${encodeURIComponent(division)}/attribute-values${query}`)
   );
+}
+
+/** Reports per rate type on the day (or the latest day before it with reports), most first. */
+export function fetchRateCounts(
+  division: string,
+  opts: LocationFilter = {},
+): Promise<{ date: string | null; counts: { rateType: string; count: number }[] }> {
+  const query = qs({ date: opts.date, locationKind: opts.locationKind, locationLabel: opts.locationLabel });
+  return cached(`rate-counts:${division}:${query}`, () => getJson(`/api/verticals/${encodeURIComponent(division)}/rate-counts${query}`));
 }
 
 /** First and last report day in the market data ("YYYY-MM-DD"). */

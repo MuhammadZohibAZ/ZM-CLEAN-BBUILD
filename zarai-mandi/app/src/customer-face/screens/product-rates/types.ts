@@ -36,6 +36,8 @@ export type ProductRatesProps = {
   byproduct: string;
   onBack: () => void;
   push?: (s: Screen) => void;
+  /** Swap this screen for another (used to switch by-product in place). */
+  replace?: (s: Screen) => void;
   isPickedBP?: (item: RateItem) => boolean;
   togglePickBP?: (item: RateItem) => void;
   locationScope?: LocationScope;

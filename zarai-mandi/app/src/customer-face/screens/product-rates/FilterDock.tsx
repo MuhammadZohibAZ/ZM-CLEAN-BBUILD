@@ -387,6 +387,9 @@ export type FilterUiProps = {
   /** The rate / attributes are still the ones the tapped card opened with (no clear ✕ yet). */
   rateFromCard?: boolean;
   filtersFromCard?: boolean;
+  /** A custom period (table / map): replaces the single day while set. */
+  dayRange?: { start: string; end: string } | null;
+  onDayRange?: (r: { start: string; end: string } | null) => void;
 };
 
 function tick() {

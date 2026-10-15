@@ -123,6 +123,54 @@ export function mandiEntries(
   return out;
 }
 
+/**
+ * Mandi rows over a custom period (expanded table / map): one row per mandi,
+ * rate type and attribute values, with its average min / max over the days it
+ * reported, total arrivals, change from its first to its last reported day in
+ * the period, and a sparkline of its last report days.
+ */
+export function rangeEntries(
+  allRows: MarketRow[],
+  range: { start: string; end: string },
+  keep: (r: MarketRow) => boolean,
+): MandiEntry[] {
+  const mid = (r: MarketRow) => (r.min > 0 && r.max > 0 ? (r.min + r.max) / 2 : r.min || r.max);
+  const groups = new Map<string, MarketRow[]>();
+  for (const r of allRows) {
+    if (r.date < range.start || r.date > range.end || !keep(r)) continue;
+    const key = [r.mandiName, r.rateType, r.variety, r.newOld, r.quality, r.color, r.moisture].join("|");
+    const list = groups.get(key);
+    if (list) list.push(r);
+    else groups.set(key, [r]);
+  }
+  const out: MandiEntry[] = [];
+  for (const [key, rs] of groups) {
+    const byDay = new Map<string, number[]>();
+    for (const r of rs) byDay.set(r.date, [...(byDay.get(r.date) || []), mid(r)]);
+    const days = [...byDay.keys()].sort();
+    const dayMid = (d: string) => avg(byDay.get(d) || []);
+    const first = dayMid(days[0]);
+    const last = dayMid(days[days.length - 1]);
+    const mins = rs.map((r) => r.min).filter((v) => v > 0);
+    const maxs = rs.map((r) => r.max).filter((v) => v > 0);
+    const latest = rs.reduce((a, r) => (r.date > a.date ? r : a), rs[0]);
+    const row: MarketRow = {
+      ...latest,
+      min: Math.round(avg(mins)),
+      max: Math.round(avg(maxs)),
+      arrival: rs.reduce((a, r) => a + r.arrival, 0),
+    };
+    out.push({
+      key,
+      row,
+      mid: mid(row),
+      change: days.length > 1 && first > 0 && last > 0 ? ((last - first) / first) * 100 : null,
+      spark: days.slice(-SPARK_DAYS).map(dayMid),
+    });
+  }
+  return out;
+}
+
 export function sortEntries(list: MandiEntry[], sort: SortKey, pinMandi?: string): MandiEntry[] {
   const byName = (a: MandiEntry, b: MandiEntry) => stripMandi(a.row.mandiName).localeCompare(stripMandi(b.row.mandiName));
   const by: Record<SortKey, (a: MandiEntry, b: MandiEntry) => number> = {

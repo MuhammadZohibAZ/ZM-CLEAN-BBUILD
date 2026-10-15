@@ -13,6 +13,7 @@ import {
   getVerticalCardStats,
   getVerticalSplitCardStats,
   getVerticalAttributeValues,
+  getVerticalRateCounts,
 } from "./aggregate.js";
 import { registerCompareRoutes } from "./compare.js";
 
@@ -94,8 +95,16 @@ app.get("/api/verticals/:division/card-stats", async (req, res) => {
     const i = pair.lastIndexOf(":");
     if (i > 0) rates[pair.slice(0, i)] = pair.slice(i + 1);
   }
-  const results = await getVerticalCardStats(division, { date, locationKind, locationLabel, attrs, rates });
+  const rate = typeof req.query.rate === "string" && req.query.rate ? req.query.rate : null;
+  const results = await getVerticalCardStats(division, { date, locationKind, locationLabel, attrs, rates, rate });
   res.json(results);
+});
+
+// Reports per rate type on the day (the by-product screen's filter bar default).
+app.get("/api/verticals/:division/rate-counts", async (req, res) => {
+  const { division } = req.params;
+  const { date, locationKind, locationLabel } = req.query;
+  res.json(await getVerticalRateCounts(division, { date, locationKind, locationLabel }));
 });
 
 // Special-attribute values per by-product (the by-product screen's filter chips).

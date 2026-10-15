@@ -3,6 +3,7 @@ import { useState } from "react";
 import { attrLabel, attrValue } from "./Filters";
 import type { FilterUiProps } from "./FilterDock";
 import { PickerSheet } from "./PickerSheet";
+import { RangeSheet } from "./RangeSheet";
 import { C } from "./theme";
 import { BottomSheet, Icon } from "./ui";
 
@@ -37,7 +38,15 @@ export function FilterRail({
   filtersFromCard = false,
   showDate = true,
   variant = "bar",
-}: FilterUiProps & { showDate?: boolean; variant?: "bar" | "map" }) {
+  allowRange = false,
+  dayRange = null,
+  onDayRange,
+}: FilterUiProps & {
+  showDate?: boolean;
+  variant?: "bar" | "map";
+  /** Offer a custom date range in the day picker (expanded table, map). */
+  allowRange?: boolean;
+}) {
   const [open, setOpen] = useState<Open>(null);
   const qualityCount = Object.values(filters).filter(Boolean).length;
   const allRates = rates[0]?.id;
@@ -48,7 +57,17 @@ export function FilterRail({
   const parts: { key: string; caption: string; value: string; active: boolean; grow: number; onClick: () => void; onClear?: () => void; fromCard?: boolean }[] = [
     { key: "loc", caption: f.tx("Location", "مقام"), value: locationLabel, active: locationActive, grow: 1.15, onClick: onOpenLocation, onClear: onClearLocation },
   ];
-  if (showDate && date) {
+  if (showDate && dayRange) {
+    parts.push({
+      key: "day",
+      caption: f.tx("Period", "مدت"),
+      value: `${f.day(dayRange.start)} – ${f.day(dayRange.end)}`,
+      active: true,
+      grow: 1.2,
+      onClick: () => setOpen("day"),
+      onClear: () => onDayRange?.(null),
+    });
+  } else if (showDate && date) {
     parts.push({
       key: "day",
       caption: isLatest ? f.tx("Day · latest", "دن · تازہ") : f.tx("Day", "دن"),
@@ -222,19 +241,23 @@ export function FilterRail({
       </div>
 
       {open === "day" && (
-        <PickerSheet
+        // A calendar of the report days; in the expanded table and the map it
+        // can also pick a date range.
+        <RangeSheet
           f={f}
-          title={f.tx("Report day", "رپورٹ کا دن")}
-          subtitle={lockHistory ? f.tx("Past days need a subscription", "پچھلے دن سبسکرپشن کے ساتھ") : undefined}
-          value={[date]}
-          onChange={(v) => onDate(v[0])}
+          dates={dates}
+          day={date}
+          onPickDay={(d) => {
+            onDayRange?.(null);
+            onDate(d);
+          }}
+          dayDisabled={(d) => lockHistory && d !== latest}
+          dayNote={lockHistory ? f.tx("Past days need a subscription", "پچھلے دن سبسکرپشن کے ساتھ") : undefined}
+          allowRange={(allowRange || !!dayRange) && !lockHistory && !!onDayRange}
+          initialMode={dayRange ? "range" : "day"}
+          value={dayRange || { start: dates[Math.max(0, dates.indexOf(date) - 6)] || date, end: date }}
+          onApply={(r) => onDayRange?.(r)}
           onClose={() => setOpen(null)}
-          options={[...dates].reverse().map((d) => ({
-            id: d,
-            label: f.dayFullWeekdayYear(d),
-            meta: d === latest ? f.tx("Latest", "تازہ ترین") : undefined,
-            disabled: lockHistory && d !== latest,
-          }))}
         />
       )}
 

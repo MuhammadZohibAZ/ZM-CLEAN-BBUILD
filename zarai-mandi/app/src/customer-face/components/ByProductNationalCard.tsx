@@ -257,6 +257,7 @@ export function ByProductNationalCard({
   onClick,
   onMorePriceTypesClick,
   onRateTypeChange,
+  compact = false,
 }: {
   stats: ByproductNationalStats;
   product?: string;
@@ -266,6 +267,8 @@ export function ByProductNationalCard({
   onMorePriceTypesClick?: () => void;
   /** When set, the rate type under the name is a dropdown of the by-product's rate types. */
   onRateTypeChange?: (rateType: string) => void;
+  /** Leave out the locations / last-updated row (tight spaces). */
+  compact?: boolean;
 }) {
   const { lang, tc, tr } = useLang();
 
@@ -288,7 +291,7 @@ export function ByProductNationalCard({
     ? (
       <>
         {lang === 'ur' ? toUrduDigits(stats.totalArrival.toLocaleString()) : stats.totalArrival.toLocaleString()}
-        <span className="text-[10px] font-bold">{'\u00A0'}{lang === 'ur' ? 'تھیلے' : 'Bags'}</span>
+        {' '}<span className="text-[10px] font-bold whitespace-nowrap">{lang === 'ur' ? 'تھیلے' : 'Bags'}</span>
       </>
     )
     : '—';
@@ -403,6 +406,9 @@ export function ByProductNationalCard({
             />
           </div>
 
+          {/* Row 3 (left out on compact cards, e.g. Home on short screens) */}
+          {!compact && (
+            <>
           <div className="h-px w-full my-1.5" style={{ background: '#E7F0EB' }} />
 
           {/* Row 3: Locations on Left + Time Pill on Bottom-Right */}
@@ -436,6 +442,8 @@ export function ByProductNationalCard({
               </span>
             </div>
           </div>
+            </>
+          )}
         </div>
 
         {/* No Data Overlay covering only the metrics section */}

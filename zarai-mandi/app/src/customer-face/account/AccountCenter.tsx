@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 
 import { ProductIcon } from "../components/ProductIcon";
 import { PRODUCT_DIVISIONS, SUBSCRIBED_PRODUCTS } from "../shared/data/catalog";
-import { LOCATIONS } from "../shared/data/mandis";
+import { MANDI_DATA } from "../shared/data/mandiLocation";
 import { URDU_FONT, useLang } from "../shared/i18n/LangProvider";
 import { speakText } from "../shared/voice";
 
@@ -153,7 +153,56 @@ const ICON_PATHS: Record<string, React.ReactNode> = {
       <polyline points="12 19 5 12 12 5" />
     </>
   ),
+  search: (
+    <>
+      <circle cx="11" cy="11" r="7" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </>
+  ),
+  pin: (
+    <>
+      <path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z" />
+      <circle cx="12" cy="9.5" r="2.5" />
+    </>
+  ),
+  locate: (
+    <>
+      <circle cx="12" cy="12" r="7" />
+      <circle cx="12" cy="12" r="2.5" />
+      <line x1="12" y1="2" x2="12" y2="5" />
+      <line x1="12" y1="19" x2="12" y2="22" />
+      <line x1="2" y1="12" x2="5" y2="12" />
+      <line x1="19" y1="12" x2="22" y2="12" />
+    </>
+  ),
 };
+
+// Every city with a mandi, for the profile's location (just cities: no
+// province, district or "All Pakistan" choice here).
+const PROFILE_CITIES: { city: string; province: string; lat: number; lng: number }[] = (() => {
+  const seen = new Map<string, { city: string; province: string; lat: number; lng: number }>();
+  for (const m of MANDI_DATA) {
+    if (!m.city || seen.has(m.city)) continue;
+    seen.set(m.city, { city: m.city, province: m.province, lat: m.latitude, lng: m.longitude });
+  }
+  return [...seen.values()].sort((a, b) => a.city.localeCompare(b.city));
+})();
+
+/** "Pakpattan Mandi" -> "Pakpattan" (profiles saved before this held a mandi name). */
+const cityName = (s: string) => (s || "").replace(/\s*mandi\s*$/i, "").trim();
+
+function nearestCity(lat: number, lng: number) {
+  let best = PROFILE_CITIES[0];
+  let bestD = Infinity;
+  for (const c of PROFILE_CITIES) {
+    const d = (c.lat - lat) ** 2 + ((c.lng - lng) * Math.cos((lat * Math.PI) / 180)) ** 2;
+    if (d < bestD) {
+      bestD = d;
+      best = c;
+    }
+  }
+  return best;
+}
 
 function Icon({
   name,
@@ -511,7 +560,7 @@ export function AccountCenter({
   onOpenCompleteProfile: () => void;
   onOpenBilling: (product: string, vertical: string) => void;
 }) {
-  const { lang, setLang, tc, tn, voiceEnabled, setVoiceEnabled } = useLang();
+  const { lang, setLang, tc, tm, tn, voiceEnabled, setVoiceEnabled } = useLang();
   const isUr = lang === "ur";
   const L = (en: string, ur: string) => (isUr ? ur : en);
 
@@ -521,7 +570,9 @@ export function AccountCenter({
   const [editName, setEditName] = useState(profile.name);
   const [editPhone, setEditPhone] = useState(profile.phone);
   const [editProvince, setEditProvince] = useState(profile.province);
-  const [editCity, setEditCity] = useState(profile.city);
+  const [editCity, setEditCity] = useState(cityName(profile.city));
+  const [citySearch, setCitySearch] = useState("");
+  const [detecting, setDetecting] = useState<"idle" | "busy" | "failed">("idle");
   const [verifyStep, setVerifyStep] = useState(false);
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [otpError, setOtpError] = useState("");
@@ -538,7 +589,9 @@ export function AccountCenter({
     setEditName(profile.name);
     setEditPhone(profile.phone);
     setEditProvince(profile.province);
-    setEditCity(profile.city);
+    setEditCity(cityName(profile.city));
+    setCitySearch("");
+    setDetecting("idle");
     setVerifyStep(false);
     setOtp(["", "", "", ""]);
     setOtpError("");
@@ -616,6 +669,12 @@ export function AccountCenter({
             <p className="text-xs mt-0.5 truncate" style={{ color: "#CDEBDF" }}>
               <Ltr>{profile.phone}</Ltr>
             </p>
+            {cityName(profile.city) && (
+              <p className="text-xs mt-0.5 flex items-center gap-1 truncate" style={{ color: "#CDEBDF", fontFamily: isUr ? URDU_FONT : "inherit" }}>
+                <Icon name="pin" size={12} color="#CDEBDF" />
+                <span className="truncate">{tm(cityName(profile.city))}</span>
+              </p>
+            )}
             <span
               className="inline-block mt-1.5 text-[10.5px] font-semibold px-2 py-0.5 rounded-full"
               style={{ background: "rgba(255,255,255,0.16)", color: "#E4F2EC" }}
@@ -755,10 +814,6 @@ export function AccountCenter({
 
   // ── EDIT PROFILE ────────────────────────────────────────────────────────────
   if (view === "edit") {
-    const mandis = LOCATIONS[editProvince]
-      ? Object.values(LOCATIONS[editProvince]).flat()
-      : ["Pakpattan Mandi", "Arifwala Mandi", "Lahore Grain Market", "Multan Mandi"];
-
     return (
       <Sheet
         title={verifyStep ? L("Verify Contact", "رابطے کی تصدیق") : L("Edit Profile", "پروفائل ترمیم کریں")}
@@ -798,52 +853,90 @@ export function AccountCenter({
                 </p>
               </div>
               <div>
-                <SectionLabel>{L("Province", "صوبہ")}</SectionLabel>
-                <div className="grid grid-cols-2 gap-2">
-                  {Object.keys(LOCATIONS).map((prov) => (
-                    <Chip
-                      key={prov}
-                      active={editProvince === prov}
-                      onClick={() => {
-                        setEditProvince(prov);
-                        const first = LOCATIONS[prov]
-                          ? Object.values(LOCATIONS[prov]).flat()[0]
-                          : undefined;
-                        setEditCity(first || "Pakpattan Mandi");
-                      }}
-                    >
-                      {prov}
-                    </Chip>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <SectionLabel>{L("Primary mandi", "بنیادی منڈی")}</SectionLabel>
-                <Card style={{ maxHeight: 208, overflowY: "auto" }}>
-                  {mandis.map((mandi, i) => {
-                    const active = editCity === mandi;
-                    return (
-                      <button
-                        key={mandi}
-                        type="button"
-                        onClick={() => setEditCity(mandi)}
-                        className="w-full flex items-center justify-between px-4 py-2.5 text-left"
-                        style={{
-                          background: active ? C.mint : C.card,
-                          borderBottom:
-                            i === mandis.length - 1 ? "none" : `1px solid ${C.divider}`,
-                        }}
-                      >
-                        <span
-                          className="text-sm"
-                          style={{ color: C.ink, fontWeight: active ? 600 : 500 }}
-                        >
-                          {mandi}
-                        </span>
-                        {active && <Icon name="check" size={16} color={C.primary} strokeWidth={2.6} />}
-                      </button>
+                <SectionLabel>{L("City", "شہر")}</SectionLabel>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!("geolocation" in navigator)) return setDetecting("failed");
+                    setDetecting("busy");
+                    navigator.geolocation.getCurrentPosition(
+                      (pos) => {
+                        const c = nearestCity(pos.coords.latitude, pos.coords.longitude);
+                        setEditCity(c.city);
+                        setEditProvince(c.province);
+                        setCitySearch("");
+                        setDetecting("idle");
+                      },
+                      () => setDetecting("failed"),
+                      { timeout: 10000, maximumAge: 600000 },
                     );
-                  })}
+                  }}
+                  className="tap-target w-full flex items-center gap-2.5 px-4 py-3 rounded-2xl mb-2 transition active:scale-[0.99]"
+                  style={{ background: C.mint, border: `1px solid ${C.divider}`, color: C.primary, fontWeight: 700, fontSize: 14 }}
+                >
+                  <Icon name="locate" size={18} color={C.primary} strokeWidth={2.2} />
+                  <span className="flex-1" style={{ textAlign: isUr ? "right" : "left" }}>
+                    {detecting === "busy"
+                      ? L("Detecting your location…", "آپ کا مقام معلوم کیا جا رہا ہے…")
+                      : L("Detect my location", "میرا مقام معلوم کریں")}
+                  </span>
+                </button>
+                {detecting === "failed" && (
+                  <p className="text-[11px] mb-2 px-1" style={{ color: "#B91C1C" }}>
+                    {L("Couldn't get your location. Pick your city below.", "مقام معلوم نہیں ہو سکا۔ نیچے سے اپنا شہر چنیں۔")}
+                  </p>
+                )}
+                <div className="relative mb-2">
+                  <span className="absolute top-1/2 -translate-y-1/2 pointer-events-none" style={{ [isUr ? "right" : "left"]: 12 }}>
+                    <Icon name="search" size={15} color={C.muted} />
+                  </span>
+                  <input
+                    type="text"
+                    value={citySearch}
+                    onChange={(e) => setCitySearch(e.target.value)}
+                    className={inputClass}
+                    style={{ [isUr ? "paddingRight" : "paddingLeft"]: 34 }}
+                    placeholder={L("Search city", "شہر تلاش کریں")}
+                  />
+                </div>
+                <Card style={{ maxHeight: 208, overflowY: "auto" }}>
+                  {(() => {
+                    const q = citySearch.trim().toLowerCase();
+                    const list = PROFILE_CITIES.filter(
+                      (c) => !q || c.city.toLowerCase().includes(q) || tm(c.city).includes(citySearch.trim()),
+                    );
+                    if (list.length === 0) {
+                      return (
+                        <p className="px-4 py-3 text-sm" style={{ color: C.muted }}>
+                          {L("No city found", "کوئی شہر نہیں ملا")}
+                        </p>
+                      );
+                    }
+                    return list.map((c, i) => {
+                      const active = editCity === c.city;
+                      return (
+                        <button
+                          key={c.city}
+                          type="button"
+                          onClick={() => {
+                            setEditCity(c.city);
+                            setEditProvince(c.province);
+                          }}
+                          className="w-full flex items-center justify-between px-4 py-2.5"
+                          style={{
+                            textAlign: isUr ? "right" : "left",
+                            background: active ? C.mint : C.card,
+                            borderBottom: i === list.length - 1 ? "none" : `1px solid ${C.divider}`,
+                          }}
+                        >
+                          <span className="text-sm" style={{ color: C.ink, fontWeight: active ? 600 : 500, fontFamily: isUr ? URDU_FONT : "inherit" }}>
+                            {tm(c.city)}
+                          </span>
+                          {active && <Icon name="check" size={16} color={C.primary} strokeWidth={2.6} />}
+                        </button>
+                      );
+                    });
+                  })()}
                 </Card>
               </div>
             </div>

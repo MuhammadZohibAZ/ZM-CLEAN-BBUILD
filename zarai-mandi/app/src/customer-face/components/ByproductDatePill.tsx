@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import { createPortal } from "react-dom";
-import { firstDatasetDate, latestDatasetDate, latestDatasetDay } from "../shared/data/datasetDates";
+import { DATASET_DATES, latestDatasetDay } from "../shared/data/datasetDates";
+import { makeFmt } from "../screens/product-rates/format";
+import { RangeSheet } from "../screens/product-rates/RangeSheet";
 
 import { toUrduDigits, URDU_FONT, useLang } from "../shared/i18n/LangProvider";
 
@@ -19,8 +20,8 @@ export function ByproductDatePill({
   compact?: boolean;
 }) {
   const { lang } = useLang();
+  const fmt = makeFmt(lang);
   const [isDateCalOpen, setIsDateCalOpen] = useState(false);
-  const [calMonth, setCalMonth] = useState<Date>(selectedDate || latestDatasetDay());
   const setSelectedDate = onSelectDate;
   const curDate = selectedDate || latestDatasetDay();
 
@@ -136,165 +137,28 @@ export function ByproductDatePill({
         </>
       )}
 
-      {/* Date Calendar Modal */}
-      {isDateCalOpen && (() => {
-        const mn = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        const mnUr = ["جنوری", "فروری", "مارچ", "اپریل", "مئی", "جون", "جولائی", "اگست", "ستمبر", "اکتوبر", "نومبر", "دسمبر"];
-        const sdYear = calMonth.getFullYear();
-        const sdMonthIdx = calMonth.getMonth();
-        const sdMonthName = lang === "ur"
-          ? `${mnUr[sdMonthIdx]} ${toUrduDigits(sdYear)}`
-          : calMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-        const sdFirstDow = new Date(sdYear, sdMonthIdx, 1).getDay();
-        const sdDaysInMonth = new Date(sdYear, sdMonthIdx + 1, 0).getDate();
-        const sdCalDays: (number | null)[] = [
-          ...Array(sdFirstDow).fill(null),
-          ...Array.from({ length: sdDaysInMonth }, (_, i) => i + 1),
-        ];
-        while (sdCalDays.length % 7 !== 0) sdCalDays.push(null);
-        const sdIsSame = (a: Date, b: Date) =>
-          a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-        const sdIsRef = (d: Date) => sdIsSame(d, latestDatasetDay());
-
-        if (typeof document === "undefined") return null;
-
-        return createPortal(
-          <div
-            className="fixed inset-0 z-[150] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-            onClick={() => setIsDateCalOpen(false)}
-          >
-            <div
-              className="rounded-2xl overflow-hidden shadow-2xl w-[280px] sm:w-[300px] screen-enter"
-              style={{ background: "#F4FAF7", border: "1.5px solid #10B981" }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="px-4 pt-3.5 pb-3">
-                <div className="flex items-center justify-between mb-2.5">
-                  <button
-                    onClick={() => setCalMonth(new Date(sdYear, sdMonthIdx - 1, 1))}
-                    className="tap-target w-8 h-8 rounded-full flex items-center justify-center font-bold transition active:scale-90"
-                    style={{ background: "#E8EFEC", color: "#2F4A43", fontSize: 16 }}
-                  >
-                    ‹
-                  </button>
-                  <p
-                    className="font-extrabold text-[#183B34]"
-                    style={{
-                      fontSize: lang === "ur" ? 16 : 14,
-                      fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                    }}
-                  >
-                    {sdMonthName}
-                  </p>
-                  <button
-                    onClick={() => setCalMonth(new Date(sdYear, sdMonthIdx + 1, 1))}
-                    className="tap-target w-8 h-8 rounded-full flex items-center justify-center font-bold transition active:scale-90"
-                    style={{ background: "#E8EFEC", color: "#2F4A43", fontSize: 16 }}
-                  >
-                    ›
-                  </button>
-                </div>
-
-                {selectedDate && (
-                  <div className="flex justify-end mb-1.5">
-                    <button
-                      onClick={() => {
-                        setSelectedDate(latestDatasetDay());
-                        setIsDateCalOpen(false);
-                      }}
-                      className="font-bold px-2 py-0.5 rounded-full transition active:scale-95 shadow-sm"
-                      style={{
-                        background: "#E0F2FE",
-                        color: "#0369A1",
-                        fontSize: lang === "ur" ? 12 : 10,
-                        fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                      }}
-                    >
-                      {(() => {
-                        const d = latestDatasetDay();
-                        const mon = (lang === "ur" ? mnUr : mn)[d.getMonth()];
-                        return lang === "ur" ? `${d.getDate()} ${mon} (تازہ ترین)` : `${d.getDate()} ${mon} (Latest)`;
-                      })()}
-                    </button>
-                  </div>
-                )}
-
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", marginBottom: 4 }}>
-                  {(lang === "ur"
-                    ? ["ات", "پی", "من", "بد", "جم", "جم", "ہف"]
-                    : ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
-                  ).map((d, i) => (
-                    <div
-                      key={i}
-                      className="text-center font-bold text-[10px]"
-                      style={{
-                        color: "#80918B",
-                        paddingBottom: 2,
-                        fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                      }}
-                    >
-                      {d}
-                    </div>
-                  ))}
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2 }}>
-                  {sdCalDays.map((day, idx) => {
-                    if (!day) return <div key={idx} />;
-                    const d = new Date(sdYear, sdMonthIdx, day);
-                    const selected = selectedDate ? sdIsSame(d, selectedDate) : false;
-                    const isRef = sdIsRef(d);
-                    const dStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-                    const inRange = dStr >= firstDatasetDate() && dStr <= latestDatasetDate();
-
-                    return (
-                      <button
-                        key={idx}
-                        onClick={() => {
-                          setSelectedDate(d);
-                          setIsDateCalOpen(false);
-                        }}
-                        className="tap-target flex items-center justify-center rounded-full font-bold text-xs mx-auto transition active:scale-90"
-                        style={{
-                          width: 32,
-                          height: 32,
-                          background: selected
-                            ? "#087F63"
-                            : isRef
-                              ? "#E4F2EC"
-                              : inRange
-                                ? "rgba(16, 185, 129, 0.08)"
-                                : "transparent",
-                          color: selected
-                            ? "#fff"
-                            : isRef
-                              ? "#075E4F"
-                              : inRange
-                                ? "#143B33"
-                                : "#94A3B8",
-                          border: isRef && !selected
-                            ? "1.5px solid #087F63"
-                            : selected
-                              ? "none"
-                              : inRange
-                                ? "1px solid rgba(16, 185, 129, 0.25)"
-                                : "none",
-                        }}
-                      >
-                        {lang === "ur" ? toUrduDigits(day) : day}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>,
-          document.body
-        );
-      })()}
+      {/* Same calendar as the rates screen's filter rail (one month, arrows to move). */}
+      {isDateCalOpen && (
+        <RangeSheet
+          f={fmt}
+          dates={DATASET_DATES}
+          day={toIso(curDate)}
+          onPickDay={(d) => {
+            const [y, m, day] = d.split("-").map(Number);
+            setSelectedDate(new Date(y, m - 1, day));
+          }}
+          allowRange={false}
+          value={{ start: toIso(curDate), end: toIso(curDate) }}
+          onApply={() => {}}
+          onClose={() => setIsDateCalOpen(false)}
+        />
+      )}
     </>
   );
 }
+
+const toIso = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
 // ─── Islamic / Lunar Calendar Helper ──────────────────────────
 export function getIslamicDate(

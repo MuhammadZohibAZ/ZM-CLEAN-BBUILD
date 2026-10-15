@@ -8,6 +8,8 @@ import { ALL_RATES, type MandiEntry } from "./selectors";
 import { C } from "./theme";
 import type { AttrKey, ChangeInterval, SortKey } from "./types";
 import { PickerSheet } from "./PickerSheet";
+import { EmptyActions, type EmptyAction } from "./PriceHero";
+import { RangeSheet } from "./RangeSheet";
 import { Sparkline, sparkTone } from "./Sparkline";
 import { Icon } from "./ui";
 
@@ -25,6 +27,8 @@ export function MandiSection({
   tr,
   entries: entriesIn,
   date,
+  periodLabel,
+  datePicker,
   regionLabel,
   rateLabel,
   sort,
@@ -35,6 +39,7 @@ export function MandiSection({
   primary,
   onOpen,
   loading,
+  emptyNote,
   mode,
   rate,
   rates,
@@ -57,8 +62,21 @@ export function MandiSection({
   primary: AttrKey | null;
   onOpen: (e: MandiEntry) => void;
   loading: boolean;
+  /** Why the day is empty and ways out (shared with the price card). */
+  emptyNote?: { message: string; actions: EmptyAction[] } | null;
   /** Which view this slide shows (default: "table"). */
   mode?: "table" | "cards";
+  /** A custom period in place of the single day (e.g. "12 Sep – 22 Sep"). */
+  periodLabel?: string;
+  /** Full-screen table's calendar button: a day or a date range (the columns filter the rest). */
+  datePicker?: {
+    dates: string[];
+    latest: string;
+    onDate: (d: string) => void;
+    dayRange: { start: string; end: string } | null;
+    onDayRange: (r: { start: string; end: string } | null) => void;
+    lockHistory: boolean;
+  };
   rate?: string;
   rates?: Array<{ id: string; label: string; count?: number; disabled?: boolean }>;
   onRate?: (r: string) => void;
@@ -92,6 +110,7 @@ export function MandiSection({
   };
   const [showAll, setShowAll] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
+  const [calOpen, setCalOpen] = useState(false);
   const [landscape, setLandscape] = useState(true);
 
   useEffect(() => setShowAll(false), [regionLabel, date]);
@@ -605,7 +624,14 @@ export function MandiSection({
         </div>
       ) : entries.length === 0 ? (
         <div style={{ margin: "0 16px", padding: 24, borderRadius: 20, background: C.surface, textAlign: "center", fontSize: 14, fontWeight: 500, color: C.muted, lineHeight: f.lh }}>
-          {f.tx("No mandi reported for the day and filters you picked.", "اس دن اور فلٹر کے لیے کسی منڈی کی رپورٹ نہیں۔")}
+          {emptyNote ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center" }}>
+              <span>{emptyNote.message}</span>
+              <EmptyActions f={f} actions={emptyNote.actions} center />
+            </div>
+          ) : (
+            f.tx("No mandi reported for the day and filters you picked.", "اس دن اور فلٹر کے لیے کسی منڈی کی رپورٹ نہیں۔")
+          )}
         </div>
       ) : viewMode === "table" ? (
         <div style={{ padding: "0 16px" }}>
@@ -672,10 +698,39 @@ export function MandiSection({
               </button>
               <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
                 <span style={{ fontWeight: 700, fontSize: 15, lineHeight: f.lh, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{f.tx("Mandi rates", "منڈی ریٹس")}</span>
-                <span style={{ fontWeight: 500, fontSize: 12, color: C.muted, lineHeight: f.lh, whiteSpace: "nowrap" }}>
-                  {f.tx(`${f.day(date)} · ${entries.length} rows · PKR per 40 kg`, `${f.day(date)} · ${f.digits(entries.length)} قطاریں · روپے فی 40 کلو`)}
+                {/* The date / period sits on the calendar button beside it. */}
+                <span style={{ fontWeight: 500, fontSize: 12, color: C.muted, lineHeight: f.lh, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {datePicker
+                    ? f.tx(`${entries.length} rows · PKR per 40 kg`, `${f.digits(entries.length)} قطاریں · روپے فی 40 کلو`)
+                    : f.tx(`${periodLabel || f.day(date)} · ${entries.length} rows · PKR per 40 kg`, `${periodLabel || f.day(date)} · ${f.digits(entries.length)} قطاریں · روپے فی 40 کلو`)}
                 </span>
               </div>
+              {datePicker && (
+                <button
+                  type="button"
+                  onClick={() => setCalOpen(true)}
+                  aria-label={f.tx(`Dates: ${periodLabel || f.day(date)}`, `تاریخیں: ${periodLabel || f.day(date)}`)}
+                  style={{
+                    height: 38,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "0 12px",
+                    borderRadius: 12,
+                    border: `1px solid ${datePicker.dayRange || date !== datePicker.latest ? C.brand : C.line}`,
+                    background: datePicker.dayRange || date !== datePicker.latest ? C.brandTint : C.surface,
+                    color: C.brandDeep,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    fontFamily: f.font,
+                    flexShrink: 0,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  <Icon name="calendar" size={16} width={2.2} color={C.brandDeep} />
+                  {periodLabel || f.day(date)}
+                </button>
+              )}
               <div role="group" aria-label={f.tx("Orientation", "رخ")} style={{ display: "flex", gap: 2, padding: 3, borderRadius: 12, background: C.track, flexShrink: 0 }}>
                 {([false, true] as const).map((l) => (
                   <button
@@ -713,6 +768,23 @@ export function MandiSection({
           </div>,
           document.body,
         )}
+      {calOpen && datePicker && (
+        <RangeSheet
+          f={f}
+          dates={datePicker.dates}
+          day={date}
+          onPickDay={(d) => {
+            datePicker.onDayRange(null);
+            datePicker.onDate(d);
+          }}
+          dayDisabled={(d) => datePicker.lockHistory && d !== datePicker.latest}
+          allowRange={!datePicker.lockHistory}
+          initialMode={datePicker.dayRange ? "range" : "day"}
+          value={datePicker.dayRange || { start: datePicker.dates[Math.max(0, datePicker.dates.indexOf(date) - 6)] || date, end: date }}
+          onApply={(r) => datePicker.onDayRange(r)}
+          onClose={() => setCalOpen(false)}
+        />
+      )}
     </section>
   );
 }

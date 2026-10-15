@@ -388,6 +388,8 @@ function AppInner({
           )}
           {current.id === "product-rates" && (
             <ProductRatesScreen
+              key={`${(current as ComRatesScr).product}|${(current as ComRatesScr).byproduct}`}
+              replace={replace}
               vertical={(current as ComRatesScr).vertical}
               product={(current as ComRatesScr).product}
               byproduct={(current as ComRatesScr).byproduct}

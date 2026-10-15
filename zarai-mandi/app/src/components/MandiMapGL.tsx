@@ -84,12 +84,14 @@ export type MandiMapGLProps = {
   records: MapByProductRecord[];
   /** Pins show mandis reporting on this day (default: latest day in records). */
   day?: string;
+  /** A custom period: pins show every mandi reporting in it (overrides `day`). */
+  dayRange?: { start: string; end: string } | null;
   /** Colour pins by this attribute's values (the "all values" view). */
   colorKey?: keyof MapByProductRecord;
   commodity?: string;
   focusMandiName?: string;
   focusProvinceName?: string;
-  /** Extra controls shown under the search bar (e.g. selection / all switch). */
+  /** The screen's filter bar, shown beside the back button. */
   header?: ReactNode;
 };
 
@@ -97,6 +99,7 @@ export default function MandiMapGL({
   onClose,
   records,
   day,
+  dayRange,
   colorKey,
   commodity = "",
   focusMandiName,
@@ -131,14 +134,18 @@ export default function MandiMapGL({
   const userMarkerRef = useRef<Marker | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [detailFor, setDetailFor] = useState<string | null>(null);
-  const [query, setQuery] = useState("");
-  const [searchOpen, setSearchOpen] = useState(false);
   const [offline, setOffline] = useState(false);
 
   // ── Data: the day's pins ─────────────────────────────────────────
   const latestDay = useMemo(() => records.reduce((m, r) => (r.date && r.date > m ? r.date : m), ""), [records]);
   const dayKey = day && records.some((r) => r.date === day) ? day : latestDay;
-  const dayRecords = useMemo(() => records.filter((r) => r.date === dayKey), [records, dayKey]);
+  const dayRecords = useMemo(
+    () =>
+      dayRange
+        ? records.filter((r) => !!r.date && r.date >= dayRange.start && r.date <= dayRange.end)
+        : records.filter((r) => r.date === dayKey),
+    [records, dayKey, dayRange],
+  );
 
   const { pins, unknown, legend } = useMemo(() => {
     const byKey = new Map<string, MapByProductRecord[]>();
@@ -542,13 +549,6 @@ export default function MandiMapGL({
     return h ? `~${h} h ${m} min drive` : `~${m} min drive`;
   };
 
-  // ── Search ───────────────────────────────────────────────────────
-  const results = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return [];
-    return pins.filter((p) => p.name.toLowerCase().includes(q) || tm(p.name).includes(query.trim()) || p.district.toLowerCase().includes(q)).slice(0, 6);
-  }, [query, pins, tm]);
-
   // ── Detail sheet rows (same shape the rates screen uses) ─────────
   const detailRows: MarketRow[] = useMemo(
     () =>
@@ -600,7 +600,7 @@ export default function MandiMapGL({
       {/* Inline position: maplibre-gl.css sets .maplibregl-map { position: relative }. */}
       <div ref={containerRef} style={{ position: "absolute", inset: 0 }} />
 
-      {/* ── Top: close + search, then header (switch), legend, day ── */}
+      {/* ── Top: close + filter rail, then legend and day ── */}
       <div className="absolute inset-x-0 top-0 flex flex-col gap-2 px-3 pt-3" style={{ zIndex: 5, pointerEvents: "none" }}>
         <div className="flex items-center gap-2" style={{ pointerEvents: "auto" }}>
           {onClose && (
@@ -616,66 +616,14 @@ export default function MandiMapGL({
               </svg>
             </button>
           )}
-          <div className="relative flex-1 min-w-0">
-            <label className="flex items-center gap-2 rounded-full px-4" style={{ height: 44, background: "#FFFFFF", boxShadow: SHADOW }}>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#087F63" strokeWidth="2.5" strokeLinecap="round">
-                <circle cx="11" cy="11" r="6.5" />
-                <path d="M16 16l5 5" />
-              </svg>
-              <input
-                value={query}
-                onChange={(e) => {
-                  setQuery(e.target.value);
-                  setSearchOpen(true);
-                }}
-                onFocus={() => setSearchOpen(true)}
-                onBlur={() => setTimeout(() => setSearchOpen(false), 150)}
-                placeholder={isUr ? `${tc(commodity)} کی منڈی تلاش کریں` : `Search ${commodity} mandis`}
-                className="flex-1 min-w-0 bg-transparent outline-none"
-                style={{ fontSize: 14.5, fontWeight: 600, color: "#183B34", fontFamily: font }}
-              />
-            </label>
-            {searchOpen && query.trim() && (
-              <div className="absolute inset-x-0 mt-2 overflow-hidden rounded-2xl" style={{ background: "#FFFFFF", boxShadow: SHADOW, top: "100%" }}>
-                {results.length === 0 ? (
-                  <p style={{ padding: "12px 16px", fontSize: 13, color: "#6B7C76", fontWeight: 600 }}>{isUr ? "کوئی منڈی نہیں ملی" : "No mandi found"}</p>
-                ) : (
-                  results.map((p) => (
-                    <button
-                      key={p.key}
-                      type="button"
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => {
-                        setQuery("");
-                        setSearchOpen(false);
-                        setSelected(p.key);
-                        flyTo(p.key);
-                      }}
-                      className="w-full flex items-center justify-between gap-2 text-start"
-                      style={{ padding: "10px 16px", borderBottom: "1px solid #EEF3F0" }}
-                    >
-                      <span className="min-w-0">
-                        <span className="block truncate" style={{ fontSize: 14, fontWeight: 700, color: "#183B34" }}>{tm(p.name)}</span>
-                        <span className="block truncate" style={{ fontSize: 11.5, fontWeight: 600, color: "#6B7C76" }}>
-                          {tm(p.district)} · {tm(p.province)}
-                        </span>
-                      </span>
-                      <span style={{ fontSize: 12.5, fontWeight: 800, color: "#087F63", direction: "ltr" }}>
-                        {f.num(p.min)}–{f.num(p.max)}
-                      </span>
-                    </button>
-                  ))
-                )}
-              </div>
-            )}
-          </div>
+          {/* The screen's filter rail (location, day / period, rate, attributes); no
+              separate search: the location filter already picks mandis. */}
+          {header && <div className="flex-1 min-w-0">{header}</div>}
         </div>
-
-        {header && <div style={{ pointerEvents: "auto" }}>{header}</div>}
 
         <div className="flex flex-wrap items-center gap-1.5" style={{ pointerEvents: "auto" }}>
           <span className="rounded-full px-3 py-1" style={{ background: "rgba(255,255,255,0.94)", boxShadow: SHADOW, fontSize: 12, fontWeight: 700, color: "#183B34" }}>
-            {f.day(dayKey)} · {f.digits(pins.length)} {isUr ? "منڈیاں" : pins.length === 1 ? "mandi" : "mandis"}
+            {dayRange ? `${f.day(dayRange.start)} – ${f.day(dayRange.end)}` : f.day(dayKey)} · {f.digits(pins.length)} {isUr ? "منڈیاں" : pins.length === 1 ? "mandi" : "mandis"}
           </span>
           {colorKey &&
             legend.length > 1 &&

@@ -1,7 +1,6 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import farmHeroBg from "../../assets/farm_hero_bg.png";
 import homeBgMint from "../../assets/home_bg_mint.jpg";
-import agriForegroundImg from "../../assets/agri_foreground.png";
 
 import { ProductIcon, SpriteIcon } from "../components/ProductIcon";
 import { LockIconSVG } from "../components/icons";
@@ -27,6 +26,9 @@ import {
 import { speakText, stopSpeaking } from "../shared/voice";
 import { CompleteProfileModal } from "../sheets/CompleteProfileModal";
 import { AccountCenter, type AccountView } from "../account/AccountCenter";
+import { fetchByProducts, type ByProductCatalogRow } from "../../lib/api";
+import { SearchProfilePanel, type SearchEntry } from "./home/SearchProfilePanel";
+import { FavoriteCardsRow } from "../components/FavoriteCardsRow";
 
 // ─── HOME SCREEN ──────────────────────────────────────────────────────────────
 
@@ -108,8 +110,6 @@ export function HomeScreen({
 
   const [favLockModalOpen, setFavLockModalOpen] = useState(false);
   const [todayOnlyUnlocked, setTodayOnlyUnlocked] = useState<string[]>([]);
-  const favScrollRef = useRef<HTMLDivElement>(null);
-  const [favPageIndex, setFavPageIndex] = useState(0);
 
   // Persistent Profile Setup Data
   const totalSteps = 3;
@@ -261,6 +261,29 @@ export function HomeScreen({
     (d) => !isAccessible(d.name),
   );
 
+  // Search: every catalog by-product (one cached API call); picking one opens its rates.
+  const [catalogAll, setCatalogAll] = useState<ByProductCatalogRow[]>([]);
+  useEffect(() => {
+    fetchByProducts()
+      .then(setCatalogAll)
+      .catch(() => setCatalogAll([]));
+  }, []);
+  const searchEntries: SearchEntry[] = useMemo(
+    () =>
+      catalogAll
+        .filter((r) => PRODUCT_DIVISIONS.some((d) => d.name === r.division))
+        .map((r) => ({
+          product: r.division,
+          byproduct: r.by_product,
+          label: tc(r.display_name || r.by_product),
+          productLabel: tc(r.division),
+          iconSrc: getproductIconSrc(r.by_product, getVerticalForProduct(r.division)),
+          locked: !isAccessible(r.division),
+          hasData: Boolean(r.has_data),
+        })),
+    [catalogAll, lang, profileCompleted, userSubscribedList], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+
   const handleLockedProductClick = (divName: string, _verticalFor?: string) => {
     const mapped = PRODUCT_ID_TO_NAME[divName.toLowerCase()] || divName;
     updateProfileSetupData({
@@ -313,10 +336,6 @@ export function HomeScreen({
     "Barley",
     "Special Flour",
   ];
-
-  const getFavoriteImage = (bp: string) => {
-    return getproductIconSrc(bp, "Grains");
-  };
 
   // ---------------------------------------------------------
   // PICKED BYPRODUCT DATA
@@ -379,10 +398,8 @@ export function HomeScreen({
         className="relative flex-shrink-0 w-full"
         style={{
           margin: 0,
-          // Shorter on small screens while the profile banner is shown (172px at 844px tall).
-          height: profileCompleted
-            ? "calc(172px + var(--zm-bleed-top))"
-            : "calc(clamp(136px, 20.34vh, 172px) + var(--zm-bleed-top))",
+          // Shorter on small screens so Home fits above the nav without scrolling (172px at 844px tall).
+          height: "calc(clamp(136px, 20.34vh, 172px) + var(--zm-bleed-top))",
           borderRadius: "0 0 24px 24px",
           position: "relative",
           zIndex: 20,
@@ -786,60 +803,20 @@ export function HomeScreen({
           </div>
         </div>
 
-        {/* Floating Search Bar */}
-        <button
-          onClick={() =>
-            handleOrientationTap("search", lang === "ur" ? "تلاش" : "Search", () =>
-              push({ id: "search" }),
-            )
-          }
-          className={`tap-target zm-beam-border flex items-center gap-2.5 ${lang === "ur" ? "text-right" : "text-left"
-            }`}
-          style={{
-            position: "absolute",
-            left: 16,
-            right: 16,
-            bottom: -23,
-            height: 46,
-            paddingLeft: 18,
-            paddingRight: 18,
-            borderRadius: 9999,
-            background: "#FFFFFF",
-            border: "1px solid rgba(0,0,0,0.06)",
-            boxShadow: "0 6px 20px rgba(0,0,0,0.12)",
-            zIndex: 30,
+        {/* Search + Complete Your Profile, sitting on the hero's bottom edge (same as the alternative Home) */}
+        <SearchProfilePanel
+          entries={searchEntries}
+          onPick={(e, final) => {
+            if (!final) return;
+            if (homeVoiceEnabled) speakText(e.label);
+            push({ id: "product-rates", vertical: getVerticalForProduct(e.product), product: e.product, byproduct: e.byproduct });
           }}
-        >
-          <svg width={17} height={17} viewBox="0 0 24 24" fill="none">
-            <circle
-              cx="11"
-              cy="11"
-              r="6.5"
-              stroke="#087F63"
-              strokeWidth="2.4"
-            />
-            <path
-              d="M16 16L21 21"
-              stroke="#087F63"
-              strokeWidth="2.4"
-              strokeLinecap="round"
-            />
-          </svg>
-          <span
-            className="flex-1"
-            style={{
-              fontSize: 13,
-              color: "#6B7C77",
-              fontFamily:
-                lang === "ur"
-                  ? URDU_FONT
-                  : "'Inter', sans-serif",
-              fontWeight: 600,
-            }}
-          >
-            {t("home.search")}
-          </span>
-        </button>
+          onLockedPick={(e) => handleLockedProductClick(e.product, getVerticalForProduct(e.product))}
+          showProfile={!profileCompleted}
+          step={currentStepNum}
+          totalSteps={totalSteps}
+          onOpenProfile={() => setCompleteProfileOpen(true)}
+        />
       </div>
 
       {/* =====================================================
@@ -847,7 +824,7 @@ export function HomeScreen({
           ===================================================== */}
 
       <div
-        className="flex-1 min-h-0 overflow-y-auto relative flex flex-col"
+        className="flex-1 min-h-0 overflow-hidden relative flex flex-col"
         style={{
           background: "linear-gradient(180deg, #EAF6F0 0%, #F4FAF7 45%, #EEF7F2 100%)",
           position: "relative",
@@ -878,168 +855,13 @@ export function HomeScreen({
           }}
         >
           {/* ===================================================
-              COMPLETE YOUR PROFILE PROGRESS CARD (Wavy Organic Contour Banner)
-              (Only visible when profile is NOT yet completed)
-              =================================================== */}
-          {!profileCompleted && (
-            // Top gap shrinks on short screens so Favorites stays above the nav (32px at 844px tall).
-            <div className="px-4" style={{ paddingTop: "clamp(24px, calc(4.5vh - 6px), 32px)" }}>
-              <div
-                onClick={() => setCompleteProfileOpen(true)}
-                className="tap-target zm-beam-border zm-beam-border-card cursor-pointer transition active:scale-[0.99] relative overflow-hidden"
-                style={{
-                  background:
-                    "linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(240, 252, 246, 0.94) 52%, rgba(220, 248, 238, 0.92) 100%)",
-                  backdropFilter: "blur(14px)",
-                  WebkitBackdropFilter: "blur(14px)",
-                  border: "1.5px solid rgba(255, 255, 255, 0.95)",
-                  borderRadius: 24,
-                  padding: "13px 15px",
-                  boxShadow: "0 8px 24px rgba(6, 77, 64, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.95)",
-                }}
-              >
-                {/* Organic curved waves on right side flowing into screen background */}
-                <svg
-                  className="absolute right-0 top-0 bottom-0 h-full pointer-events-none"
-                  style={{ width: "48%", minWidth: 150 }}
-                  viewBox="0 0 160 100"
-                  preserveAspectRatio="none"
-                  fill="none"
-                >
-                  <path
-                    d="M 25,0 C 70,22 35,70 80,100 L 160,100 L 160,0 Z"
-                    fill="rgba(167, 243, 208, 0.45)"
-                  />
-                  <path
-                    d="M 55,0 C 100,18 68,78 115,100 L 160,100 L 160,0 Z"
-                    fill="rgba(110, 231, 183, 0.55)"
-                  />
-                  <path
-                    d="M 90,0 C 130,22 105,82 145,100 L 160,100 L 160,0 Z"
-                    fill="rgba(52, 211, 153, 0.45)"
-                  />
-                </svg>
-
-                <div className="flex items-center justify-between gap-3 relative z-10">
-                  {/* Left: Leaf / Plant Icon */}
-                  <div
-                    className="flex-shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center zm-beam-border"
-                    style={{
-                      background: "rgba(8, 127, 99, 0.12)",
-                      border: "1px solid rgba(8, 127, 99, 0.2)",
-                    }}
-                  >
-                    <svg
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#087F63"
-                      strokeWidth="2.3"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />
-                      <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
-                    </svg>
-                  </div>
-
-                  {/* Center: Title, Subtitle, and Progress */}
-                  <div className="flex-1 min-w-0">
-                    <h3
-                      className="font-extrabold text-[#183B34] leading-tight"
-                      style={{
-                        fontSize: lang === "ur" ? 16 : 14.5,
-                        fontFamily:
-                          lang === "ur"
-                            ? URDU_FONT
-                            : "'Poppins', sans-serif",
-                      }}
-                    >
-                      {lang === "ur"
-                        ? "پروفائل مکمل کریں"
-                        : "Complete Your Profile"}
-                    </h3>
-                    <p
-                      className="text-[#475F57] leading-snug mt-0.5 [@media(max-height:760px)]:truncate"
-                      style={{
-                        fontSize: lang === "ur" ? 11.5 : 10,
-                        fontFamily:
-                          lang === "ur"
-                            ? URDU_FONT
-                            : "inherit",
-                      }}
-                    >
-                      {lang === "ur"
-                        ? `مرحلہ ${currentStepNum} از ${totalSteps} — تازہ ترین ریٹس اور رجحانات حاصل کریں۔`
-                        : `Step ${currentStepNum} of ${totalSteps} — Subscribe to get latest rates & trends.`}
-                    </p>
-
-                    {/* Progress track */}
-                    <div
-                      className="w-full mt-1.5"
-                      style={{
-                        height: 4.5,
-                        background: "rgba(8, 127, 99, 0.14)",
-                        borderRadius: 999,
-                        overflow: "hidden",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: `${progressPct}%`,
-                          height: "100%",
-                          background: "linear-gradient(90deg, #F59E0B, #087F63)",
-                          borderRadius: 999,
-                          transition: "width 0.4s ease-in-out",
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Right: Round Action Button with Arrow */}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setCompleteProfileOpen(true);
-                    }}
-                    className="tap-target zm-beam-border zm-beam-border-white flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition active:scale-90"
-                    style={{
-                      background: "#087F63",
-                      color: "#FFFFFF",
-                      boxShadow: "0 4px 14px rgba(8, 127, 99, 0.4)",
-                    }}
-                    title={lang === "ur" ? "پروفائل مکمل کریں" : "Complete Profile"}
-                  >
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#FFFFFF"
-                      strokeWidth="2.6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <polyline points={lang === "ur" ? "15 18 9 12 15 6" : "9 18 15 12 9 6"} />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ===================================================
               MY PRODUCTS (Harmoniously sized to fill vertical space)
               =================================================== */}
 
           <section
             style={{
-              paddingTop: profileCompleted
-                ? "clamp(34px, 4.2vh, 48px)"
-                : "clamp(12px, 1.8vh, 18px)",
-              paddingBottom: "clamp(4px, 1vh, 10px)",
+              paddingTop: "clamp(30px, 4.2vh, 48px)",
+              paddingBottom: 0,
             }}
           >
             <div className="px-4 flex items-center justify-between mb-2.5">
@@ -1047,7 +869,7 @@ export function HomeScreen({
 
                 <p
                   style={{
-                    fontSize: profileCompleted ? 20 : 18,
+                    fontSize: 20,
                     fontWeight: 800,
                     color: "#183B34",
                     letterSpacing: lang === "ur" ? "0" : "0.02em",
@@ -1095,9 +917,7 @@ export function HomeScreen({
               className="flex items-start overflow-x-auto px-4 pb-1.5"
               style={{
                 scrollbarWidth: "none",
-                gap: profileCompleted
-                  ? "clamp(16px, 4.5vw, 22px)"
-                  : "clamp(14px, 3.8vw, 18px)",
+                gap: "clamp(16px, 4.5vw, 22px)",
               }}
             >
               {activeProducts.map((div) => {
@@ -1118,9 +938,7 @@ export function HomeScreen({
                     }
                     className="flex-shrink-0 flex flex-col items-center tap-target"
                     style={{
-                      width: profileCompleted
-                        ? "clamp(102px, 26vw, 122px)"
-                        : "clamp(96px, 24vw, 112px)",
+                      width: "clamp(102px, 26vw, 122px)",
                       zIndex: voiceGuideActive ? 45 : undefined,
                     }}
                   >
@@ -1128,12 +946,8 @@ export function HomeScreen({
                     <div
                       className="zm-beam-border zm-beam-border-white"
                       style={{
-                        width: profileCompleted
-                          ? "clamp(100px, 13vh, 116px)"
-                          : "clamp(64px, calc(21.47vh - 77px), 104px)",
-                        height: profileCompleted
-                          ? "clamp(100px, 13vh, 116px)"
-                          : "clamp(64px, calc(21.47vh - 77px), 104px)",
+                        width: "clamp(68px, calc(15vh - 28px), 116px)",
+                        height: "clamp(68px, calc(15vh - 28px), 116px)",
                         borderRadius: "50%",
                         border: "3px solid #087F63",
                         background: "#F4FAF7",
@@ -1154,34 +968,13 @@ export function HomeScreen({
                         }}
                       />
 
-                      {/* Active check badge */}
-                      <span
-                        style={{
-                          position: "absolute",
-                          bottom: 2,
-                          right: 2,
-                          width: 22,
-                          height: 22,
-                          borderRadius: "50%",
-                          background: "#087F63",
-                          color: "#fff",
-                          border: "2px solid #EEF7F2",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: 12,
-                          fontWeight: 900,
-                        }}
-                      >
-                        ✓
-                      </span>
                     </div>
 
                     {/* Name */}
                     <span
                       style={{
                         marginTop: 6,
-                        fontSize: profileCompleted ? 15 : 14,
+                        fontSize: 15,
                         fontWeight: 800,
                         color: "#183B34",
                         fontFamily:
@@ -1196,7 +989,7 @@ export function HomeScreen({
 
                     {/* Active Badge */}
                     <span
-                      className="zm-beam-border zm-beam-border-white"
+                      className="zm-beam-border zm-beam-border-white [@media(max-height:700px)]:hidden"
                       style={{
                         marginTop: 3,
                         padding: "2.5px 11px",
@@ -1235,22 +1028,16 @@ export function HomeScreen({
                     }
                     className="flex-shrink-0 flex flex-col items-center tap-target"
                     style={{
-                      width: profileCompleted
-                        ? "clamp(74px, 18vw, 86px)"
-                        : "clamp(68px, 16vw, 78px)",
+                      width: "clamp(74px, 18vw, 86px)",
                     }}
                   >
                     {/* Locked circle */}
                     <div
                       className="zm-beam-border zm-beam-border-green"
                       style={{
-                        width: profileCompleted
-                          ? "clamp(68px, 8.8vh, 80px)"
-                          : "clamp(52px, calc(11.3vh - 22px), 74px)",
-                        height: profileCompleted
-                          ? "clamp(68px, 8.8vh, 80px)"
-                          : "clamp(52px, calc(11.3vh - 22px), 74px)",
-                        marginTop: profileCompleted ? 18 : 14,
+                        width: "clamp(56px, calc(10vh - 6px), 80px)",
+                        height: "clamp(56px, calc(10vh - 6px), 80px)",
+                        marginTop: "max(0px, calc(2.5vh - 11px))",
                         borderRadius: "50%",
                         background: "#E4EFE9",
                         border: "1.5px solid #BDD9CD",
@@ -1300,7 +1087,7 @@ export function HomeScreen({
                     <span
                       style={{
                         marginTop: 4,
-                        fontSize: profileCompleted ? 13 : 11.5,
+                        fontSize: 13,
                         color: "#475F57",
                         fontWeight: 700,
                         textAlign: "center",
@@ -1353,7 +1140,7 @@ export function HomeScreen({
             style={{
               position: "relative",
               zIndex: voiceGuideActive ? 45 : 10,
-              paddingTop: profileCompleted ? "10px" : "0px",
+              paddingTop: "10px",
             }}
           >
             {/* Favorites heading */}
@@ -1362,9 +1149,7 @@ export function HomeScreen({
                 <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                   <p
                     style={{
-                      fontSize: profileCompleted
-                        ? "clamp(18px, 2.5vh, 22px)"
-                        : "clamp(16px, 2.2vh, 19px)",
+                      fontSize: "clamp(18px, 2.5vh, 22px)",
                       fontWeight: 800,
                       color: "#183B34",
                       lineHeight: 1.2,
@@ -1420,326 +1205,23 @@ export function HomeScreen({
               </button>
             </div>
 
-            {/* Favorite cards — 3 cards visible at a time with page swipe and curved layout */}
-            {(() => {
-              const defaultMandiName =
-                profileCity || initialUserData?.city || "Pakpattan Mandi";
-              const favoriteCardsList =
-                pickedByproducts && pickedByproducts.length > 0
+            {/* Favourites: the by-product screen's cards, scrolling sideways, each at the location it was saved with */}
+            <FavoriteCardsRow
+              push={push}
+              items={
+                pickedByproducts.length > 0
                   ? pickedByproducts.map((p) => ({
                     vertical: p.vertical || "Grains",
                     product: p.product || "Wheat",
                     byproduct: p.byproduct,
-                    // The location chosen when it was favourited (All Pakistan, Punjab, Pakpattan, ...).
-                    mandiName: p.location
-                      ? p.location.kind === "pakistan"
-                        ? "All Pakistan"
-                        : p.location.label
-                      : p.mandiName || defaultMandiName,
                     location: p.location,
-                    rateType: p.rateType || "Mill",
+                    rateType: p.rateType,
                   }))
-                  : FAVE_BPS.map((bp) => ({
-                    vertical: "Grains",
-                    product: "Wheat",
-                    byproduct: bp,
-                    mandiName: defaultMandiName,
-                    location: undefined as LocationScope | undefined,
-                    rateType: "Mill",
-                  }));
-
-              // Group into pages of 3 cards each
-              const favPages: (typeof favoriteCardsList)[] = [];
-              for (let i = 0; i < favoriteCardsList.length; i += 3) {
-                favPages.push(favoriteCardsList.slice(i, i + 3));
+                  : FAVE_BPS.map((bp) => ({ vertical: "Grains", product: "Wheat", byproduct: bp }))
               }
-
-              const handleFavScroll = (e: React.UIEvent<HTMLDivElement>) => {
-                const el = e.currentTarget;
-                if (!el.clientWidth) return;
-                const scrollPos = Math.abs(el.scrollLeft);
-                const pIdx = Math.round(scrollPos / el.clientWidth);
-                if (pIdx !== favPageIndex && pIdx >= 0 && pIdx < favPages.length) {
-                  setFavPageIndex(pIdx);
-                }
-              };
-
-              const scrollFavToPage = (idx: number) => {
-                if (!favScrollRef.current) return;
-                const el = favScrollRef.current;
-                const targetX = idx * el.clientWidth;
-                el.scrollTo({
-                  left: lang === "ur" ? -targetX : targetX,
-                  behavior: "smooth",
-                });
-                setFavPageIndex(idx);
-              };
-
-              return (
-                <>
-                  <div
-                    ref={favScrollRef}
-                    onScroll={handleFavScroll}
-                    className="flex overflow-x-auto w-full"
-                    style={{
-                      scrollbarWidth: "none",
-                      scrollSnapType: "x mandatory",
-                      paddingTop: profileCompleted ? "6px" : "2px",
-                      paddingBottom: "8px",
-                    }}
-                  >
-                    {favPages.map((pageCards, pageIdx) => {
-                      return (
-                        <div
-                          key={`fav-page-${pageIdx}`}
-                          className="w-full flex-shrink-0 flex items-center justify-between gap-2 px-0.5"
-                          style={{
-                            scrollSnapAlign: "start",
-                            scrollSnapStop: "always",
-                            minWidth: "100%",
-                            width: "100%",
-                            boxSizing: "border-box",
-                          }}
-                        >
-                          {pageCards.map((item, inPageIdx) => {
-                            const imgSrc = getFavoriteImage(item.byproduct);
-                            const cleanMandi = item.mandiName
-                              .replace(/\s*Mandi\s*/i, "")
-                              .replace(/\s*منڈی\s*/g, "")
-                              .trim();
-
-                            // Curved fan/arc transformation across the 3 visible cards
-                            const cardRot = inPageIdx === 0
-                              ? (lang === "ur" ? 4 : -4)
-                              : inPageIdx === 2
-                                ? (lang === "ur" ? -4 : 4)
-                                : 0;
-                            const cardY = inPageIdx === 1 ? 0 : 4;
-
-                            return (
-                              <button
-                                key={`${item.byproduct}-${item.mandiName}-${pageIdx * 3 + inPageIdx}`}
-                                onClick={() => {
-                                  const spokenName =
-                                    lang === "ur"
-                                      ? `${tc(item.byproduct)} ${tm(item.mandiName)}`
-                                      : `${item.byproduct} ${item.mandiName}`;
-                                  handleOrientationTap("favorite-card", spokenName, () => {
-                                    push({
-                                      id: "product-rates",
-                                      vertical: item.vertical,
-                                      product: item.product,
-                                      byproduct: item.byproduct,
-                                      initialMandi: item.location ? undefined : item.mandiName,
-                                      initialScope: item.location,
-                                      initialRateType: item.rateType,
-                                    });
-                                  });
-                                }}
-                                className="flex-shrink-0 zm-beam-border zm-beam-border-card flex flex-col items-center relative tap-target"
-                                style={{
-                                  // 24px = two 8px gaps + room for the outer cards' tilt
-                                  width: "calc((100% - 24px) / 3)",
-                                  minWidth: "calc((100% - 24px) / 3)",
-                                  maxWidth: "calc((100% - 24px) / 3)",
-                                  height: profileCompleted
-                                    ? "clamp(152px, 19.5vh, 176px)"
-                                    : "clamp(106px, calc(32.2vh - 107px), 176px)",
-                                  padding: "6px 5px 8px",
-                                  borderRadius: 18,
-                                  background: "#FFFFFF",
-                                  border: "1.2px solid #D5E5DE",
-                                  boxShadow: "0 4px 14px rgba(18,65,48,0.08)",
-                                  transform: `translateY(${cardY}px) rotate(${cardRot}deg)`,
-                                  transformOrigin: "center bottom",
-                                  transition: "transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease",
-                                }}
-                              >
-                                {/* Inner Image Frame */}
-                                <div
-                                  style={{
-                                    width: "100%",
-                                    height: profileCompleted
-                                      ? "clamp(74px, 9.6vh, 88px)"
-                                      : "clamp(48px, calc(17.5vh - 67px), 88px)",
-                                    borderRadius: 13,
-                                    background: "#F2F7F4",
-                                    border: "1px solid #E1ECE6",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    position: "relative",
-                                    overflow: "hidden",
-                                  }}
-                                >
-                                  {/* Heart Badge in Top Corner */}
-                                  <div
-                                    style={{
-                                      position: "absolute",
-                                      top: 4,
-                                      right: lang === "ur" ? "auto" : 4,
-                                      left: lang === "ur" ? 4 : "auto",
-                                      width: 19,
-                                      height: 19,
-                                      borderRadius: "50%",
-                                      background: "rgba(255, 255, 255, 0.95)",
-                                      backdropFilter: "blur(4px)",
-                                      boxShadow: "0 1.5px 4px rgba(0,0,0,0.12)",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                      zIndex: 3,
-                                    }}
-                                  >
-                                    <svg
-                                      width="11"
-                                      height="11"
-                                      viewBox="0 0 24 24"
-                                      fill="#E11D48"
-                                      stroke="#E11D48"
-                                      strokeWidth="1.5"
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                    >
-                                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                                    </svg>
-                                  </div>
-
-                                  {/* By-product Icon/Image */}
-                                  {imgSrc ? (
-                                    <img
-                                      src={imgSrc}
-                                      alt={item.byproduct}
-                                      loading="lazy"
-                                      style={{
-                                        width: "78%",
-                                        height: "78%",
-                                        objectFit: "contain",
-                                        display: "block",
-                                        filter: "none",
-                                        opacity: 1,
-                                      }}
-                                    />
-                                  ) : (
-                                    <ProductIcon
-                                      name={item.byproduct}
-                                      vertical={item.vertical || "Grains"}
-                                      size={44}
-                                      style={{
-                                        filter: "none",
-                                        opacity: 1,
-                                      }}
-                                    />
-                                  )}
-                                </div>
-
-                                {/* Name: By-product & Mandi Badge */}
-                                <div className="mt-auto w-full px-0.5 flex flex-col items-center justify-center pt-1">
-                                  <span
-                                    className="text-center font-extrabold truncate w-full text-[#183B34]"
-                                    style={{
-                                      fontSize: "clamp(11.5px, 1.5vh, 13.5px)",
-                                      lineHeight: 1.2,
-                                      fontFamily:
-                                        lang === "ur"
-                                          ? URDU_FONT
-                                          : "'Poppins', sans-serif",
-                                    }}
-                                    title={lang === "ur" ? tc(item.byproduct) : item.byproduct}
-                                  >
-                                    {lang === "ur" ? tc(item.byproduct) : item.byproduct}
-                                  </span>
-
-                                  {/* Mandi Location Badge */}
-                                  <div
-                                    className="flex items-center justify-center gap-1 mt-1 px-1.5 py-0.5 rounded-full"
-                                    style={{
-                                      background: "#EAF5F0",
-                                      border: "1px solid #C7E8D8",
-                                      maxWidth: "100%",
-                                    }}
-                                    title={lang === "ur" ? tm(cleanMandi) : cleanMandi}
-                                  >
-                                    <svg
-                                      width="8"
-                                      height="8"
-                                      viewBox="0 0 24 24"
-                                      fill="#087F63"
-                                      className="flex-shrink-0"
-                                    >
-                                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
-                                      <circle cx="12" cy="9" r="2.5" fill="#EAF5F0" />
-                                    </svg>
-                                    <span
-                                      className="font-bold text-[9px] text-[#075E4F] truncate"
-                                      style={{
-                                        lineHeight: 1.15,
-                                        fontFamily:
-                                          lang === "ur"
-                                            ? URDU_FONT
-                                            : "inherit",
-                                      }}
-                                    >
-                                      {lang === "ur" ? tm(cleanMandi) : cleanMandi}
-                                    </span>
-                                  </div>
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Pagination Dots Indicator — 3 swipe pages */}
-                  <div className="flex items-center justify-center gap-1.5 mt-2">
-                    {favPages.map((_, pIdx) => {
-                      const isActive = (favPageIndex % favPages.length) === pIdx;
-                      return (
-                        <button
-                          key={pIdx}
-                          type="button"
-                          onClick={() => scrollFavToPage(pIdx)}
-                          aria-label={`Page ${pIdx + 1}`}
-                          className="transition-all duration-300 tap-target"
-                          style={{
-                            width: isActive ? 18 : 5.5,
-                            height: 3.5,
-                            borderRadius: 999,
-                            background: isActive ? "#087F63" : "#C6DFD4",
-                            border: "none",
-                            padding: 0,
-                            cursor: "pointer",
-                          }}
-                        />
-                      );
-                    })}
-                  </div>
-                </>
-              );
-            })()}
+            />
           </section>
         </div>
-
-        {/* Agricultural Foreground Foliage Layer (Leaves anchored at bottom) */}
-        <img
-          src={agriForegroundImg}
-          alt="Agricultural Foliage Foreground"
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            width: "100%",
-            height: "auto",
-            maxHeight: "clamp(55px, 8.5vh, 78px)",
-            objectFit: "fill",
-            pointerEvents: "none",
-            zIndex: 1,
-            opacity: 0.95,
-          }}
-        />
 
         {/* ===================================================
             YOUR PICKS SHEET

@@ -47,7 +47,7 @@ export function PriceHero({
   onSubscribe,
   loading,
   emptyMessage,
-  onClearScope,
+  emptyActions = [],
   specialAttr,
   activeAttrs,
 }: {
@@ -69,7 +69,8 @@ export function PriceHero({
   onSubscribe: () => void;
   loading: boolean;
   emptyMessage: string | null;
-  onClearScope: () => void;
+  /** Ways out of an empty day (another day, all of Pakistan, clear filters). */
+  emptyActions?: EmptyAction[];
   specialAttr?: { label: string; value: string } | null;
   activeAttrs?: ActiveAttrBadge[];
 }) {
@@ -197,13 +198,7 @@ export function PriceHero({
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "4px 0 8px" }}>
               <span style={{ fontSize: 14, fontWeight: 600, lineHeight: f.lh }}>{emptyMessage}</span>
-              <button
-                type="button"
-                onClick={onClearScope}
-                style={{ alignSelf: "flex-start", height: 30, padding: "0 12px", borderRadius: 15, border: "none", background: C.brand, color: "#FFFFFF", fontWeight: 700, fontSize: 12, fontFamily: f.font }}
-              >
-                {f.tx("Show all Pakistan", "پورا پاکستان دکھائیں")}
-              </button>
+              <EmptyActions f={f} actions={emptyActions} />
             </div>
           )}
         </div>
@@ -253,6 +248,37 @@ export function PriceHero({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+export type EmptyAction = { label: string; onClick: () => void };
+
+/** Buttons under a "no reports" message: the first is the main way out. */
+export function EmptyActions({ f, actions, center = false }: { f: Fmt; actions: EmptyAction[]; center?: boolean }) {
+  if (actions.length === 0) return null;
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: center ? "center" : "flex-start" }}>
+      {actions.map((a, i) => (
+        <button
+          key={a.label}
+          type="button"
+          onClick={a.onClick}
+          style={{
+            height: 32,
+            padding: "0 14px",
+            borderRadius: 16,
+            border: i === 0 ? "none" : `1px solid ${C.line}`,
+            background: i === 0 ? C.brand : C.surface,
+            color: i === 0 ? "#FFFFFF" : C.brandDeep,
+            fontWeight: 700,
+            fontSize: 12.5,
+            fontFamily: f.font,
+          }}
+        >
+          {a.label}
+        </button>
+      ))}
     </div>
   );
 }

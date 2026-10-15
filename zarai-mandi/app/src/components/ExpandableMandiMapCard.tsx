@@ -27,6 +27,8 @@ export interface ExpandableMandiMapCardProps {
   onSelectMandi?: (name: string) => void;
   /** Pins show mandis that reported on this day (default: latest). */
   day?: string;
+  /** A custom period: pins show every mandi reporting in it (overrides `day`). */
+  dayRange?: { start: string; end: string } | null;
   /** Pins are coloured per value of this attribute (e.g. New / Old) when the
    *  screen's filters leave more than one value on the map. */
   colorKey?: keyof MapByProductRecord;
@@ -47,6 +49,7 @@ export const ExpandableMandiMapCard: React.FC<ExpandableMandiMapCardProps> = ({
   compact = false,
   onSelectMandi,
   day,
+  dayRange,
   colorKey,
   filterBar,
 }) => {
@@ -229,6 +232,7 @@ export const ExpandableMandiMapCard: React.FC<ExpandableMandiMapCardProps> = ({
                     commodity={commodityName}
                     records={mapRecords}
                     day={day}
+                    dayRange={dayRange}
                     colorKey={colorKey}
                     focusMandiName={focusMandiName}
                     focusProvinceName={focusProvinceName}
