@@ -6,7 +6,7 @@ import { VoiceQueryOverlay } from "./customer-face/navigation/VoiceQueryOverlay"
 import { BillingScreen } from "./customer-face/screens/BillingScreen";
 import { ByProductCombinedScreen } from "./customer-face/screens/ByProductCombinedScreen";
 import { ByProductSelectScreen } from "./customer-face/screens/ByProductSelectScreen";
-import { HomeScreen } from "./customer-face/screens/HomeScreen";
+import { HomeScreenSwitch } from "./customer-face/screens/home/HomeScreenSwitch";
 import { LiveMarketScreen } from "./customer-face/screens/LiveMarketScreen";
 import { MandiDetailScreen } from "./customer-face/screens/MandiDetailScreen";
 import { MandiListScreen } from "./customer-face/screens/MandiListScreen";
@@ -315,8 +315,9 @@ function AppInner({
                 hasRepAccount={hasRepAccount}
               />
             ) : (
-              <HomeScreen
+              <HomeScreenSwitch
                 push={push}
+                locationScope={locationScope}
                 setFeedOpen={(v) => {
                   if (v) openFeed({});
                   else setFeedOpen(false);
