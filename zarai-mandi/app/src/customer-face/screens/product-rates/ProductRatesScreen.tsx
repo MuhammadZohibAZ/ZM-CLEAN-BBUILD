@@ -70,6 +70,7 @@ export function ProductRatesScreen({
   togglePickBP = () => { },
   initialRateType,
   initialMandi,
+  initialScope,
   initialVariety,
   initialNewOld,
   initialColor,
@@ -85,7 +86,9 @@ export function ProductRatesScreen({
 
   const name = byproduct || product;
   const [tab, setTab] = useState<Tab>("overview");
-  const [scope, setScope] = useState<LocationScope>(initialMandi ? { kind: "mandi", label: initialMandi } : PAKISTAN);
+  const [scope, setScope] = useState<LocationScope>(
+    initialScope && initialScope.kind !== "pakistan" ? initialScope : initialMandi ? { kind: "mandi", label: initialMandi } : PAKISTAN,
+  );
   const [rate, setRate] = useState(() => normaliseRate(initialRateType));
   const [filters, setFilters] = useState<AttrFilters>(() => ({
     variety: initialVariety || undefined,
@@ -257,6 +260,8 @@ export function ProductRatesScreen({
     byproduct: name,
     mandiName: scope.kind === "mandi" ? scope.label : undefined,
     rateType: rate === ALL_RATES ? undefined : rate,
+    // The favourite remembers the location chosen here (Punjab stays Punjab).
+    location: scope,
   };
   const picked = isPickedBP(pickItem);
 

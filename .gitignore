@@ -34,3 +34,4 @@ Thumbs.db
 *.sqlite-shm
 *.db-wal
 *.db-shm
+*backup*.sqlite

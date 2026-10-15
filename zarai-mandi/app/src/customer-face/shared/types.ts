@@ -6,6 +6,8 @@ export type RateItem = {
   byproduct: string;
   mandiName?: string;
   rateType?: string;
+  /** Location selected when the by-product was favourited (All Pakistan, a province, district or mandi). */
+  location?: LocationScope;
 };
 export type Screen =
   | { id: "home" }
@@ -34,6 +36,8 @@ export type Screen =
     byproduct: string;
     initialRateType?: string;
     initialMandi?: string;
+    /** Opening location (e.g. a favourite's Punjab); takes precedence over initialMandi. */
+    initialScope?: LocationScope;
     initialVariety?: string;
     initialNewOld?: string;
     initialColor?: string;

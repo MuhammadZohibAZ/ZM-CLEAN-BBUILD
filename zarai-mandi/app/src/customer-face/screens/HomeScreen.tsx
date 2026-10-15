@@ -19,6 +19,7 @@ import { URDU_FONT, useLang } from "../shared/i18n/LangProvider";
 import {
   type AppProps,
   type ProfileSetupData,
+  type LocationScope,
   type RateItem,
   type RichRow,
   type Screen,
@@ -1429,7 +1430,13 @@ export function HomeScreen({
                     vertical: p.vertical || "Grains",
                     product: p.product || "Wheat",
                     byproduct: p.byproduct,
-                    mandiName: p.mandiName || defaultMandiName,
+                    // The location chosen when it was favourited (All Pakistan, Punjab, Pakpattan, ...).
+                    mandiName: p.location
+                      ? p.location.kind === "pakistan"
+                        ? "All Pakistan"
+                        : p.location.label
+                      : p.mandiName || defaultMandiName,
+                    location: p.location,
                     rateType: p.rateType || "Mill",
                   }))
                   : FAVE_BPS.map((bp) => ({
@@ -1437,6 +1444,7 @@ export function HomeScreen({
                     product: "Wheat",
                     byproduct: bp,
                     mandiName: defaultMandiName,
+                    location: undefined as LocationScope | undefined,
                     rateType: "Mill",
                   }));
 
@@ -1522,7 +1530,8 @@ export function HomeScreen({
                                       vertical: item.vertical,
                                       product: item.product,
                                       byproduct: item.byproduct,
-                                      initialMandi: item.mandiName,
+                                      initialMandi: item.location ? undefined : item.mandiName,
+                                      initialScope: item.location,
                                       initialRateType: item.rateType,
                                     });
                                   });

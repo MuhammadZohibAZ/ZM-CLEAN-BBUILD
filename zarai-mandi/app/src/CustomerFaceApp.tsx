@@ -163,7 +163,7 @@ function AppInner({
         ? prev.filter(
           (p) => `${p.vertical}|${p.product}|${p.byproduct}` !== key,
         )
-        : [...prev, item];
+        : [...prev, { ...item, location: item.location ?? locationScope }];
     });
   const isPickedBP = (item: RateItem) =>
     pickedByproducts.some(
@@ -398,6 +398,7 @@ function AppInner({
               onOpenLocation={() => setLocSheet(true)}
               initialRateType={(current as ComRatesScr).initialRateType}
               initialMandi={(current as ComRatesScr).initialMandi}
+              initialScope={(current as ComRatesScr).initialScope}
               initialVariety={(current as ComRatesScr).initialVariety}
               initialNewOld={(current as ComRatesScr).initialNewOld}
               initialColor={(current as ComRatesScr).initialColor}

@@ -42,6 +42,7 @@ export type ProductRatesProps = {
   onOpenLocation?: () => void;
   initialRateType?: string;
   initialMandi?: string;
+  initialScope?: LocationScope;
   initialVariety?: string;
   initialNewOld?: string;
   initialColor?: string;
