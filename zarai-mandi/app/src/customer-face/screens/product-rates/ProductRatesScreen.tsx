@@ -263,15 +263,11 @@ export function ProductRatesScreen({
     if (near) actions.push({ label: f.tx(`Show ${f.day(near)}`, `${f.day(near)} دکھائیں`), onClick: () => setDate(near) });
     if (elsewhere) actions.push({ label: f.tx("Show all Pakistan", "پورا پاکستان دکھائیں"), onClick: () => setScope(PAKISTAN) });
     if (filtersOn) actions.push({ label: f.tx("Clear filters", "فلٹر صاف کریں"), onClick: () => { setRate(ALL_RATES); setFilters({}); } });
-    const message = elsewhere
-      ? f.tx(
-          `No reports${place}${what} on ${f.day(day)}. Other places reported that day.`,
-          `${f.day(day)} کو${place}${what} کوئی رپورٹ نہیں۔ اس دن دوسری جگہوں سے رپورٹس آئیں۔`,
-        )
-      : near
+    const message =
+      near || elsewhere
         ? f.tx(
-            `No reports${place}${what} on ${f.day(day)}. The nearest day with data is ${f.day(near)}, or pick another day from the Day filter.`,
-            `${f.day(day)} کو${place}${what} کوئی رپورٹ نہیں۔ قریب ترین دن ${f.day(near)} ہے، یا دن کے فلٹر سے کوئی اور دن چنیں۔`,
+            `No reports${place}${what} on ${f.day(day)}.`,
+            `${f.day(day)} کو${place}${what} کوئی رپورٹ نہیں۔`,
           )
         : f.tx(`No reports${place}${what} yet.`, `${place}${what} ابھی کوئی رپورٹ نہیں۔`);
     return { message, actions };

@@ -6,17 +6,16 @@ import type { RateItem, Screen } from "../../../shared/types";
 const DEFAULT_FAVOURITES = ["Wheat", "Maida", "Flour", "Wheat Bran", "Semolina", "Straw", "Sorghum", "Barley", "Special Flour"];
 
 /**
- * Original Home · "Favorites": heading with "See All", then the favourited
+ * Original Home · "Favorites": heading, then the favourited
  * by-products as the by-product screen's cards (components/FavoriteCardsRow).
  */
 export function HomeFavoritesSection({
   pickedByproducts,
-  handleOrientationTap,
   push,
   voiceGuideActive,
 }: {
   pickedByproducts: RateItem[];
-  handleOrientationTap: (key: string, speakMsg: string, navigateFn: () => void) => void;
+  handleOrientationTap?: (key: string, speakMsg: string, navigateFn: () => void) => void;
   push: (s: Screen) => void;
   voiceGuideActive?: boolean;
 }) {
@@ -48,48 +47,8 @@ export function HomeFavoritesSection({
             >
               {t("Favorites")}
             </p>
-
           </div>
         </div>
-
-        {/* See All Button */}
-        <button
-          onClick={() => {
-            handleOrientationTap(
-              "favorites-all",
-              lang === "ur" ? "پسندیدہ ریٹس" : "Favorite Rates",
-              () => {
-                push({
-                  id: "byproduct-combined",
-                  products: [
-                    {
-                      vertical: "Grains",
-                      product: "Wheat",
-                    },
-                  ],
-                  active: 0,
-                });
-              },
-            );
-          }}
-          className="tap-target zm-beam-border flex items-center justify-center rounded-full px-3 py-1 transition active:scale-95"
-          style={{
-            background: "rgba(255, 255, 255, 0.65)",
-            border: "1.2px solid rgba(16, 185, 129, 0.35)",
-            backdropFilter: "blur(8px)",
-            WebkitBackdropFilter: "blur(8px)",
-            color: "#087F63",
-            fontSize: "12px",
-            fontWeight: 700,
-            gap: "4px",
-            fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-          }}
-        >
-          <span>{lang === "ur" ? "سب دیکھیں" : "See All"}</span>
-          <span style={{ fontSize: "12px", fontWeight: 800 }}>
-            {lang === "ur" ? "←" : "›"}
-          </span>
-        </button>
       </div>
 
       {/* Favourites: the by-product screen's cards, scrolling sideways, each at the location it was saved with */}

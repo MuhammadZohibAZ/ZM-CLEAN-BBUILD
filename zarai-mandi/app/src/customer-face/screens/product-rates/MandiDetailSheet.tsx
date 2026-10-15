@@ -45,6 +45,7 @@ export function MandiDetailSheet({
   onClose,
   onListen,
   onSetLocation,
+  revealHeader = true,
 }: {
   f: Fmt;
   t: (s: string) => string;
@@ -63,6 +64,7 @@ export function MandiDetailSheet({
   onClose: () => void;
   onListen: (text: string) => void;
   onSetLocation: () => void;
+  revealHeader?: boolean;
 }) {
   const key = normLoc(mandiName);
   const mine = useMemo(() => allRows.filter((r) => normLoc(r.mandiName) === key), [allRows, key]);
@@ -224,7 +226,7 @@ export function MandiDetailSheet({
       onClose={onClose}
       title={f.tx(`${name} Mandi`, `${name} منڈی`)}
       subtitle={subtitle}
-      revealHeader
+      revealHeader={revealHeader}
       dir={f.dir}
       font={f.font}
       display={f.display}

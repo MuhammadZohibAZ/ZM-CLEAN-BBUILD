@@ -601,8 +601,16 @@ export default function MandiMapGL({
       <div ref={containerRef} style={{ position: "absolute", inset: 0 }} />
 
       {/* ── Top: close + filter rail, then legend and day ── */}
-      <div className="absolute inset-x-0 top-0 flex flex-col gap-2 px-2 pt-3" style={{ zIndex: 5, pointerEvents: "none" }}>
-        <div className="flex items-center gap-1.5" style={{ pointerEvents: "auto" }}>
+      <div
+        className="absolute inset-x-0 top-0 flex flex-col gap-2 px-2 pt-3"
+        style={{
+          zIndex: 5,
+          pointerEvents: "none",
+          opacity: detailPin ? 0 : 1,
+          transition: "opacity 0.2s ease",
+        }}
+      >
+        <div className="flex items-center gap-1.5" style={{ pointerEvents: detailPin ? "none" : "auto" }}>
           {onClose && (
             <button
               type="button"
@@ -819,6 +827,7 @@ export default function MandiMapGL({
           allRows={detailRows}
           dates={TIMELINE}
           date={dayKey}
+          revealHeader={false}
           onClose={() => setDetailFor(null)}
           onListen={(text) => speakText(text)}
           onSetLocation={() => setDetailFor(null)}

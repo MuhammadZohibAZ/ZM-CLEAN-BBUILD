@@ -303,7 +303,7 @@ export function MandiSection({
               )}
             </th>
             <th style={{ ...thBase, minWidth: 58 }}>
-              {headBtn(rateHeaderLabel, isRateFiltered, () => setPicker("col:rate"))}
+              {headBtn(rateHeaderLabel, false, () => setPicker("col:rate"))}
             </th>
             <th style={{ ...thBase, minWidth: 70 }}>
               {headBtn(

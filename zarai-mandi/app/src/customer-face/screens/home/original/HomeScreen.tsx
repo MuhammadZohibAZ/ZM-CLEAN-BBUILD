@@ -397,7 +397,6 @@ export function HomeScreen({
           {/* Favorites (home/HomeFavoritesSection.tsx) */}
           <HomeFavoritesSection
             pickedByproducts={pickedByproducts}
-            handleOrientationTap={handleOrientationTap}
             push={push}
             voiceGuideActive={voiceGuideActive}
           />
