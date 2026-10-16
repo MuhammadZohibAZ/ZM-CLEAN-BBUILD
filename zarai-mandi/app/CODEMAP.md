@@ -42,6 +42,7 @@ The language is app-wide: `LangProvider` sits in `App.tsx` above onboarding and 
 |---|---|
 | Photo header: language, voice, bell, avatar, name + edit, number | `shared/HomeHero.tsx` · `HomeHero` (both Homes) |
 | Search bar + "Complete profile" chip | `shared/SearchProfilePanel.tsx` · `SearchProfilePanel` (both Homes) |
+| Search modes: `"list"` (Original — suggestions drop down under the bar; a product scrolls the Products row to it, a by-product opens screen 3) · `"inline"` (Alternative — best match shown inside the bar) | `mode` prop of `SearchProfilePanel`, set via `HomeHero`'s `searchMode`; Original's pick handling in `original/HomeScreen.tsx` (`showProduct`) |
 | **Original:** screen layout and state | `original/HomeScreen.tsx` · `HomeScreen` |
 | **Original:** Products row (active + locked circles, View All) | `original/HomeProductsSection.tsx` · `HomeProductsSection` |
 | **Original:** Favourites heading + cards | `original/HomeFavoritesSection.tsx` · `HomeFavoritesSection` |

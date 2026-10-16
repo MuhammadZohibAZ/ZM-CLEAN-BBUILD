@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import farmHeroBg from "../../../../assets/farm_hero_bg.png";
 import homeBgMint from "../../../../assets/home_bg_mint.jpg";
 
@@ -244,11 +244,23 @@ export function HomeScreen({
       .then(setCatalogAll)
       .catch(() => setCatalogAll([]));
   }, []);
+  // Products (Home row) and every catalog by-product, so both can be searched.
   const searchEntries: SearchEntry[] = useMemo(
-    () =>
-      catalogAll
+    () => [
+      ...PRODUCT_DIVISIONS.map((d) => ({
+        kind: "product" as const,
+        product: d.name,
+        byproduct: d.name,
+        label: tc(d.name),
+        productLabel: tc(d.name),
+        iconSrc: getproductIconSrc(d.name, getVerticalForProduct(d.name)),
+        locked: false,
+        hasData: true,
+      })),
+      ...catalogAll
         .filter((r) => PRODUCT_DIVISIONS.some((d) => d.name === r.division))
         .map((r) => ({
+          kind: "byproduct" as const,
           product: r.division,
           byproduct: r.by_product,
           label: tc(r.display_name || r.by_product),
@@ -257,8 +269,19 @@ export function HomeScreen({
           locked: !isAccessible(r.division),
           hasData: Boolean(r.has_data),
         })),
+    ],
     [catalogAll, lang, profileCompleted, userSubscribedList], // eslint-disable-line react-hooks/exhaustive-deps
   );
+
+  // Search → product: scroll the Products row to it and ring it for a moment.
+  const [highlightProduct, setHighlightProduct] = useState<string | null>(null);
+  const highlightTimer = useRef<number | undefined>(undefined);
+  const showProduct = (name: string) => {
+    document.querySelector(`[data-home-product="${CSS.escape(name)}"]`)?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    setHighlightProduct(name);
+    window.clearTimeout(highlightTimer.current);
+    highlightTimer.current = window.setTimeout(() => setHighlightProduct(null), 2200);
+  };
 
   const handleLockedProductClick = (divName: string, _verticalFor?: string) => {
     const mapped = PRODUCT_ID_TO_NAME[divName.toLowerCase()] || divName;
@@ -339,9 +362,15 @@ export function HomeScreen({
         onEditProfile={() => setAccountView("edit")}
         onOpenCompleteProfile={() => setCompleteProfileOpen(true)}
         searchEntries={searchEntries}
+        searchMode="list"
         onSearchPick={(e, final) => {
           if (!final) return;
           if (homeVoiceEnabled) speakText(e.label);
+          if (e.kind === "product") {
+            // A product: bring its circle into view in the Products row.
+            showProduct(e.product);
+            return;
+          }
           push({ id: "product-rates", vertical: getVerticalForProduct(e.product), product: e.product, byproduct: e.byproduct });
         }}
         onLockedPick={(e) => handleLockedProductClick(e.product, getVerticalForProduct(e.product))}
@@ -392,6 +421,7 @@ export function HomeScreen({
             onViewAll={() => setShowAllProducts(true)}
             push={push}
             voiceGuideActive={voiceGuideActive}
+            highlight={highlightProduct}
           />
 
           {/* Favorites (home/HomeFavoritesSection.tsx) */}

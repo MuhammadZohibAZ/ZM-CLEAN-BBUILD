@@ -32,6 +32,7 @@ export function HomeHero({
   searchEntries,
   onSearchPick,
   onLockedPick,
+  searchMode = "inline",
 }: {
   /** CSS height of the photo header (the alternative Home is a little shorter). */
   height: string;
@@ -56,6 +57,8 @@ export function HomeHero({
   searchEntries: SearchEntry[];
   onSearchPick: (entry: SearchEntry, final: boolean) => void;
   onLockedPick: (entry: SearchEntry) => void;
+  /** Search suggestions: inside the bar ("inline") or in a list under it ("list"). */
+  searchMode?: "inline" | "list";
 }) {
   const { lang, setLang, t, tn, voiceEnabled: homeVoiceEnabled, setVoiceEnabled: homeSetVoiceEnabled } = useLang();
   const lastProfileTapRef = useRef<number>(0);
@@ -479,6 +482,7 @@ export function HomeHero({
       entries={searchEntries}
       onPick={onSearchPick}
       onLockedPick={onLockedPick}
+      mode={searchMode}
       showProfile={!profileCompleted}
       step={currentStepNum}
       totalSteps={totalSteps}

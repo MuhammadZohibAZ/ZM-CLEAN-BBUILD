@@ -32,6 +32,8 @@ export type SearchEntry = {
   iconSrc: string;
   locked: boolean;
   hasData: boolean;
+  /** A product (Home row) rather than a by-product. */
+  kind?: "product" | "byproduct";
 };
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9؀-ۿ]+/g, " ").trim();
@@ -50,8 +52,8 @@ function rank(entries: SearchEntry[], query: string): SearchEntry[] {
       else if (n.includes(q)) score = Math.max(score, 2);
     }
     if (score < 0) continue;
-    // Prefer unlocked by-products that have data.
-    scored.push({ e, score: score * 4 + (e.locked ? 0 : 2) + (e.hasData ? 1 : 0) });
+    // Prefer products on a tie, then unlocked by-products that have data.
+    scored.push({ e, score: score * 4 + (e.kind === "product" ? 3 : 0) + (e.locked ? 0 : 2) + (e.hasData ? 1 : 0) });
   }
   return scored
     .sort((a, b) => b.score - a.score || a.e.label.length - b.e.label.length)
@@ -67,6 +69,7 @@ export function SearchProfilePanel({
   step,
   totalSteps,
   onOpenProfile,
+  mode = "inline",
 }: {
   entries: SearchEntry[];
   /** Show this by-product on the ring. `final` = user confirmed (tap / Enter). */
@@ -76,7 +79,14 @@ export function SearchProfilePanel({
   step: number;
   totalSteps: number;
   onOpenProfile: () => void;
+  /**
+   * "inline": the best match is shown inside the bar and picked live as you
+   * type (alternative Home). "list": suggestions drop down under the bar and
+   * nothing is picked until one is tapped (original Home).
+   */
+  mode?: "inline" | "list";
 }) {
+  const listMode = mode === "list";
   const { lang } = useLang();
   const isUr = lang === "ur";
   const font = isUr ? URDU_FONT : "'Inter', sans-serif";
@@ -102,6 +112,7 @@ export function SearchProfilePanel({
   // Live: as user types, automatically select the best match on the carousel directly
   const lastAuto = useRef("");
   useEffect(() => {
+    if (listMode) return;
     if (!topMatch || !query.trim()) {
       lastAuto.current = "";
       return;
@@ -113,7 +124,7 @@ export function SearchProfilePanel({
       onPick(topMatch, false);
     }, AUTO_PICK_MS);
     return () => window.clearTimeout(id);
-  }, [topMatch, query, onPick]);
+  }, [topMatch, query, onPick, listMode]);
 
   const finish = () => {
     setQuery("");
@@ -124,6 +135,7 @@ export function SearchProfilePanel({
   const choose = (e: SearchEntry) => {
     if (e.locked) onLockedPick(e);
     else onPick(e, true);
+    if (listMode) setQuery("");
     setFocused(false);
     inputRef.current?.blur();
   };
@@ -213,8 +225,8 @@ export function SearchProfilePanel({
             />
           </span>
 
-          {/* Inline Selection Indicator directly inside search bar (NO separate window) */}
-          {query.trim() && (
+          {/* Inline Selection Indicator directly inside search bar (inline mode) */}
+          {!listMode && query.trim() && (
             topMatch ? (
               <div
                 className="flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-all shadow-sm"
@@ -329,6 +341,54 @@ export function SearchProfilePanel({
           )}
         </AnimatePresence>
       </div>
+
+      {/* Suggestions under the bar (list mode) */}
+      {listMode && searching && query.trim() && (
+        <div
+          role="listbox"
+          aria-label={isUr ? "تجاویز" : "Suggestions"}
+          className="overflow-hidden"
+          style={{
+            marginTop: 8,
+            borderRadius: 18,
+            background: "#FFFFFF",
+            boxShadow: "0 14px 34px rgba(6, 45, 36, 0.20)",
+            maxHeight: 340,
+            overflowY: "auto",
+            fontFamily: font,
+          }}
+        >
+          {results.length === 0 ? (
+            <div style={{ padding: "14px 16px", fontSize: 13.5, fontWeight: 600, color: "#6B7C77" }}>
+              {isUr ? "کوئی نتیجہ نہیں ملا" : "No match found"}
+            </div>
+          ) : (
+            results.map((r, i) => (
+              <button
+                key={`${r.kind || "byproduct"}|${r.product}|${r.byproduct}`}
+                type="button"
+                role="option"
+                aria-selected={i === 0}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => choose(r)}
+                className="w-full flex items-center gap-3 text-start transition active:bg-[#EEF6F2]"
+                style={{ padding: "9px 14px", borderTop: i ? "1px solid #EEF3F0" : "none", background: "#FFFFFF" }}
+              >
+                <span className="flex-shrink-0 flex items-center justify-center overflow-hidden" style={{ width: 38, height: 38, borderRadius: r.kind === "product" ? 19 : 12, background: "#F2F7F4" }}>
+                  <img src={r.iconSrc} alt="" style={{ width: "82%", height: "82%", objectFit: "contain" }} />
+                </span>
+                <span className="flex-1 min-w-0 flex flex-col">
+                  <span className="truncate" style={{ fontSize: isUr ? 15 : 14, fontWeight: 700, color: "#183B34" }}>{r.label}</span>
+                  <span className="truncate" style={{ fontSize: isUr ? 12.5 : 11.5, fontWeight: 600, color: "#6B7C77" }}>
+                    {r.kind === "product" ? (isUr ? "پروڈکٹ" : "Product") : r.productLabel}
+                  </span>
+                </span>
+                {r.locked && <LockIconSVG size={13} color="#92400E" />}
+              </button>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }

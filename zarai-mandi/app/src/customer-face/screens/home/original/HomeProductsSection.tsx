@@ -20,6 +20,7 @@ export function HomeProductsSection({
   onViewAll,
   push,
   voiceGuideActive,
+  highlight,
 }: {
   activeProducts: Division[];
   lockedProducts: Division[];
@@ -30,6 +31,8 @@ export function HomeProductsSection({
   onViewAll: () => void;
   push: (s: Screen) => void;
   voiceGuideActive?: boolean;
+  /** Product just found by search: ringed for a moment. */
+  highlight?: string | null;
 }) {
   const { lang, t, tc } = useLang();
   return (
@@ -101,6 +104,7 @@ export function HomeProductsSection({
           return (
             <button
               key={div.name}
+              data-home-product={div.name}
               onClick={() =>
                 handleOrientationTap("product", tc(div.name), () => {
                   const selProducts = getProductSelectionsForDivision(div.name);
@@ -126,6 +130,10 @@ export function HomeProductsSection({
                   borderRadius: "50%",
                   border: "3px solid #087F63",
                   background: "#F4FAF7",
+                  outline: highlight === div.name ? "4px solid rgba(245, 158, 11, 0.75)" : "none",
+                  outlineOffset: 3,
+                  transform: highlight === div.name ? "scale(1.06)" : "none",
+                  transition: "transform 250ms ease, outline-color 250ms ease",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -198,6 +206,7 @@ export function HomeProductsSection({
           return (
             <button
               key={div.name}
+              data-home-product={div.name}
               onClick={() =>
                 handleLockedProductClick(div.name, verticalFor)
               }
@@ -212,6 +221,8 @@ export function HomeProductsSection({
                 style={{
                   width: "clamp(56px, calc(10vh - 6px), 80px)",
                   height: "clamp(56px, calc(10vh - 6px), 80px)",
+                  outline: highlight === div.name ? "4px solid rgba(245, 158, 11, 0.75)" : "none",
+                  outlineOffset: 3,
                   marginTop: "max(0px, calc(2.5vh - 11px))",
                   borderRadius: "50%",
                   background: "#E4EFE9",
