@@ -87,10 +87,10 @@ export function PriceHero({
       : ""
     : f.tx(`${stats.mandis} location${stats.mandis === 1 ? "" : "s"}`, `${f.digits(stats.mandis)} مقامات`);
 
-  const stat = (label: string, value: string) => (
+  const stat = (label: string, value: React.ReactNode) => (
     <div style={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0, flex: 1 }}>
       <span style={{ fontSize: 11, fontWeight: 500, color: DK.faint, lineHeight: f.lh }}>{label}</span>
-      <span style={{ fontSize: 13.5, fontWeight: 700, color: DK.text, fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: f.lh }}>
+      <span style={{ fontSize: 13.5, fontWeight: 700, color: DK.text, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: f.lh }}>
         {value}
       </span>
     </div>
@@ -129,8 +129,15 @@ export function PriceHero({
           ) : has ? (
             <>
               <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-                <span style={{ fontSize: f.ur ? 26 : 30, fontWeight: 700, letterSpacing: "-0.03em", lineHeight: f.ur ? 1.6 : 1.1, fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate" }}>
-                  {f.rs(shownMid)}
+                <span style={{ fontSize: f.ur ? 26 : 30, fontWeight: 700, letterSpacing: "-0.03em", lineHeight: f.ur ? 1.6 : 1.1, fontVariantNumeric: "tabular-nums" }}>
+                  {f.ur ? (
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: f.display }}>
+                      <bdi dir="ltr">{f.num(shownMid)}</bdi>
+                      <span>روپے</span>
+                    </span>
+                  ) : (
+                    f.rs(shownMid)
+                  )}
                 </span>
                 {change !== null && (
                   <span style={{ fontSize: 13, fontWeight: 700, fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate", color: dir > 0 ? DK.up : dir < 0 ? DK.down : DK.sub }}>
@@ -226,9 +233,43 @@ export function PriceHero({
 
         {has && (
           <div style={{ position: "relative", display: "flex", gap: 8, padding: "5px 12px 6px", borderTop: `1px solid ${DK.line}` }}>
-            {stat(f.tx("Min", "کم"), f.rs(stats.min))}
-            {stat(f.tx("Max", "زیادہ"), f.rs(stats.max))}
-            {stat(f.tx("Arrival", "آمد"), stats.arrival > 0 ? `${f.num(stats.arrival)} ${f.tx("bags", "بوریاں")}` : "—")}
+            {stat(
+              f.tx("Min", "کم"),
+              f.ur ? (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                  <bdi dir="ltr">{f.num(stats.min)}</bdi>
+                  <span>روپے</span>
+                </span>
+              ) : (
+                f.rs(stats.min)
+              )
+            )}
+            {stat(
+              f.tx("Max", "زیادہ"),
+              f.ur ? (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                  <bdi dir="ltr">{f.num(stats.max)}</bdi>
+                  <span>روپے</span>
+                </span>
+              ) : (
+                f.rs(stats.max)
+              )
+            )}
+            {stat(
+              f.tx("Arrival", "آمد"),
+              stats.arrival > 0 ? (
+                f.ur ? (
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                    <bdi dir="ltr">{f.num(stats.arrival)}</bdi>
+                    <span>بوریاں</span>
+                  </span>
+                ) : (
+                  `${f.num(stats.arrival)} ${f.tx("bags", "بوریاں")}`
+                )
+              ) : (
+                "—"
+              )
+            )}
           </div>
         )}
 

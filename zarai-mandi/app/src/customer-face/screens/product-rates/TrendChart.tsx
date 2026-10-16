@@ -84,7 +84,7 @@ export function TrendChart({
     setTouching(false);
   };
   const W = 340;
-  const axisW = compact ? 0 : 44;
+  const axisW = compact ? 0 : 54;
   const plotW = W - axisW;
   const H = height;
   const bottomAxis = compact ? 4 : 22;
@@ -92,8 +92,8 @@ export function TrendChart({
   const lineTop = 10;
   const lineBottom = H - bottomAxis - (barH ? barH + 10 : 0);
   const n = dates.length;
-  // Compact charts run edge to edge; inset the ends so the first/last point's dot isn't clipped.
-  const edge = compact ? 10 : 0;
+  // Compact charts run edge to edge; inset the ends so bars and points aren't clipped or overlapping axis.
+  const edge = compact ? 10 : (bars ? 10 : 2);
   const x = (i: number) => (n <= 1 ? plotW / 2 : edge + (i / (n - 1)) * (plotW - edge * 2));
   const xr = (i: number) => (f.ur ? plotW - x(i) + axisW : x(i));
 
@@ -263,7 +263,7 @@ export function TrendChart({
         height={H}
         role="img"
         aria-label={ariaLabel}
-        style={{ display: "block", touchAction: onIdx ? "pan-y" : undefined, WebkitTapHighlightColor: "transparent", userSelect: "none" }}
+        style={{ display: "block", direction: "ltr", touchAction: onIdx ? "pan-y" : undefined, WebkitTapHighlightColor: "transparent", userSelect: "none" }}
         onPointerDown={(e) => {
           if (!onIdx && !onPanDays) return;
           try {
@@ -339,7 +339,7 @@ export function TrendChart({
 
         {axis && (
           <text
-            x={f.ur ? 2 : W - 2}
+            x={f.ur ? 4 : W - 2}
             y={13}
             textAnchor={f.ur ? "start" : "end"}
             fontSize="11"
@@ -356,7 +356,7 @@ export function TrendChart({
           return (
             <g key={v}>
               <line x1={f.ur ? axisW : 0} x2={f.ur ? W : plotW} y1={ty} y2={ty} stroke="#EEF1EF" strokeDasharray="3 4" />
-              <text x={f.ur ? 2 : W - 2} y={ty + 4} textAnchor={f.ur ? "start" : "end"} fontSize="11.5" fontWeight="500" fill={C.faint} style={{ fontVariantNumeric: "tabular-nums" }}>
+              <text x={f.ur ? axisW - 14 : W - 2} y={ty + 4} textAnchor="end" fontSize="11.5" fontWeight="500" fill={C.faint} style={{ fontVariantNumeric: "tabular-nums" }}>
                 {fmtY(v)}
               </text>
             </g>

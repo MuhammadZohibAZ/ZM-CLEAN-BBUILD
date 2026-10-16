@@ -286,6 +286,8 @@ export const AUTO_URDU_DICT: Record<string, string> = {
   MT: "میٹرک ٹن",
   Kilo: "کلو",
   Kg: "کلو",
+  kg: "کلو",
+  "kg 40": "40 کلو",
 
   // Deep View, Attributes & Quality
   Overview: "جائزہ",

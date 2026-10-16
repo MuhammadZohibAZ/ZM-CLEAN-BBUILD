@@ -190,7 +190,7 @@ export function CandleChart({
         height={H}
         role="img"
         aria-label={f.tx("Candle chart. Drag for earlier days, pinch to zoom, tap for details.", "کینڈل چارٹ")}
-        style={{ display: "block", touchAction: "pan-y", userSelect: "none", WebkitTapHighlightColor: "transparent" }}
+        style={{ display: "block", direction: "ltr", touchAction: "pan-y", userSelect: "none", WebkitTapHighlightColor: "transparent" }}
         onWheel={(e) => {
           if (!onSpan) return;
           onSpan(span + (e.deltaY > 0 ? 2 : -2));

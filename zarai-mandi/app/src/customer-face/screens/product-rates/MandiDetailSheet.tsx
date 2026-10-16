@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 
 import { MANDI_DATA } from "../../shared/data/mandiLocation";
+import { getMandiWikiProfile } from "../../shared/data/mandiProfilesUrdu";
 import { attrLabel, attrValue } from "./Filters";
 import { arrow, normLoc, shortRate, stripMandi, type Fmt } from "./format";
 import { statsFor } from "./selectors";
@@ -209,16 +210,23 @@ export function MandiDetailSheet({
     { label: f.tx("Arrival unit", "آمد کی اکائی"), vals: join(cur.map((r) => f.unit(r.arrivalUnit || ""))) },
   ].filter((x) => x.vals.length > 0);
 
-  const box = (label: string, value: string, valColor: string = C.ink, bg: string = C.surfaceAlt) => (
+  const box = (label: string, value: React.ReactNode, valColor: string = C.ink, bg: string = C.surfaceAlt) => (
     <div style={{ display: "flex", flexDirection: "column", gap: 2, padding: 10, borderRadius: 14, background: bg, minWidth: 0 }}>
       <span style={{ fontSize: 12.5, fontWeight: 600, color: C.muted }}>{label}</span>
       <span style={{ fontSize: 15, fontWeight: 700, color: valColor, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{value}</span>
     </div>
   );
 
-  const defaultProfile = f.tx(
-    `${stripMandi(mandiName)} is an active agricultural grain market hub in ${place?.province || mandiMeta?.province || "Pakistan"}, connecting regional growers with wholesale buyers for daily transparent auctions.`,
-    `${name} پاکستان کی زرعی منڈیوں میں سے ایک اہم تجارتی مرکز ہے جہاں روزانہ اجناس کی خرید و فروخت اور شفاف بولیاں ہوتی ہیں۔`,
+  const profileText = getMandiWikiProfile(
+    mandiName,
+    f.ur,
+    {
+      district: place?.district || mandiMeta?.district,
+      province: place?.province || mandiMeta?.province,
+      commodities: mandiMeta?.commodities,
+      agriProfile: mandiMeta?.agriProfile,
+    },
+    tm,
   );
 
   return (
@@ -278,29 +286,10 @@ export function MandiDetailSheet({
             }}
           >
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: 14,
-                    background: "#DCFCE7",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: C.brand,
-                    fontSize: 14,
-                    fontWeight: 800,
-                  }}
-                >
-                  ℹ
+              <div style={{ display: "flex", alignItems: "center", minWidth: 0 }}>
+                <span style={{ fontSize: 15, fontWeight: 700, color: "#14532D", fontFamily: f.display, whiteSpace: "nowrap" }}>
+                  {f.tx(`About ${stripMandi(mandiName)} Mandi`, `${name} منڈی کا تعارف و پس منظر`)}
                 </span>
-                <div>
-                  <span style={{ fontSize: 15, fontWeight: 700, color: "#14532D", fontFamily: f.display }}>
-                    {f.tx(`About ${stripMandi(mandiName)} Mandi`, `${name} منڈی کا تعارف و پس منظر`)}
-                  </span>
-
-                </div>
               </div>
               <button
                 type="button"
@@ -314,6 +303,7 @@ export function MandiDetailSheet({
                   padding: "4px 10px",
                   borderRadius: 10,
                   cursor: "pointer",
+                  fontFamily: f.font,
                 }}
               >
                 {f.tx("Hide", "چھپائیں")}
@@ -331,22 +321,42 @@ export function MandiDetailSheet({
                 borderRadius: 14,
                 borderLeft: f.ur ? undefined : `3px solid ${C.brand}`,
                 borderRight: f.ur ? `3px solid ${C.brand}` : undefined,
+                fontFamily: f.font,
+                direction: f.dir,
+                textAlign: f.ur ? "right" : "left",
               }}
             >
-              {mandiMeta?.agriProfile || defaultProfile}
+              {profileText}
             </p>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8 }}>
               <div style={{ padding: "8px 10px", borderRadius: 12, background: "rgba(255, 255, 255, 0.75)", display: "flex", flexDirection: "column", gap: 2 }}>
-                <span style={{ fontSize: 11, fontWeight: 600, color: "#6B7280" }}>{f.tx("Major Crops", "اہم فصلیں")}</span>
-                <span style={{ fontSize: 12.5, fontWeight: 700, color: "#1F2937", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                  {mandiMeta?.commodities?.map((c) => t(c)).join("، ") || f.tx("Wheat, Grains", "گندم، اجناس")}
+                <span style={{ fontSize: 11, fontWeight: 600, color: "#6B7280", fontFamily: f.font }}>{f.tx("Major Crops", "اہم فصلیں")}</span>
+                <span style={{ fontSize: 12.5, fontWeight: 700, color: "#1F2937", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontFamily: f.font }}>
+                  {f.ur
+                    ? mandiMeta?.commodities?.map((c) => {
+                        const tr = tm(c) || t(c);
+                        if (tr && tr !== c) return tr;
+                        const cl = c.toLowerCase();
+                        if (cl.includes("wheat")) return "گندم";
+                        if (cl.includes("maize")) return "مکئی";
+                        if (cl.includes("rice")) return "چاول";
+                        if (cl.includes("cotton")) return "کپاس";
+                        if (cl.includes("sugarcane")) return "گنا";
+                        if (cl.includes("livestock")) return "مال مویشی";
+                        if (cl.includes("fruits")) return "پھل";
+                        if (cl.includes("vegetables")) return "سبزیاں";
+                        return c;
+                      }).join("، ") || "گندم، اجناس"
+                    : mandiMeta?.commodities?.map((c) => t(c)).join(", ") || "Wheat, Grains"}
                 </span>
               </div>
               <div style={{ padding: "8px 10px", borderRadius: 12, background: "rgba(255, 255, 255, 0.75)", display: "flex", flexDirection: "column", gap: 2 }}>
-                <span style={{ fontSize: 11, fontWeight: 600, color: "#6B7280" }}>{f.tx("Region", "ڈسٹرکٹ / صوبہ")}</span>
-                <span style={{ fontSize: 12.5, fontWeight: 700, color: "#1F2937", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                  {place?.district || mandiMeta?.district || "—"}, {place?.province || mandiMeta?.province || "Punjab"}
+                <span style={{ fontSize: 11, fontWeight: 600, color: "#6B7280", fontFamily: f.font }}>{f.tx("Region", "ڈسٹرکٹ / صوبہ")}</span>
+                <span style={{ fontSize: 12.5, fontWeight: 700, color: "#1F2937", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontFamily: f.font }}>
+                  {f.ur
+                    ? `${tm(place?.district || mandiMeta?.district || "—").replace(/ضلع/g, "").trim()}، ${tm(place?.province || mandiMeta?.province || "پنجاب")}`
+                    : `${place?.district || mandiMeta?.district || "—"}, ${place?.province || mandiMeta?.province || "Punjab"}`}
                 </span>
               </div>
             </div>
@@ -358,8 +368,19 @@ export function MandiDetailSheet({
               <span style={{ fontSize: 13, fontWeight: 600, color: C.ink2 }}>
                 <span style={{ color: C.ink, fontWeight: 700 }}>{shortRate(tr(rate))}</span> · {f.tx("per 40 kg", "فی 40 کلو")}
               </span>
-              <span style={{ fontFamily: f.display, fontSize: 30, fontWeight: 700, letterSpacing: "-0.02em", lineHeight: f.ur ? 1.8 : 1.1, fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate" }}>
-                {s.min > 0 ? `${f.rs(s.min)} – ${f.num(s.max)}` : "—"}
+              <span style={{ fontFamily: f.display, fontSize: f.ur ? "clamp(19px, 5.2vw, 24px)" : 30, fontWeight: 700, letterSpacing: "-0.02em", lineHeight: f.ur ? 1.6 : 1.1, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
+                {s.min > 0 ? (
+                  f.ur ? (
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, direction: "ltr" }}>
+                      <span>روپے</span>
+                      <bdi dir="ltr">{`${f.num(s.min)}-${f.num(s.max)}`}</bdi>
+                    </span>
+                  ) : (
+                    `Rs ${f.num(s.min)} – ${f.num(s.max)}`
+                  )
+                ) : (
+                  "—"
+                )}
               </span>
             </div>
             {change !== null && <ChangePill value={change} text={Math.abs(change) < 0.05 ? f.tx("No change", "کوئی تبدیلی نہیں") : `${arrow(change)} ${f.pct(change)}`} />}
@@ -367,7 +388,18 @@ export function MandiDetailSheet({
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8 }}>
             {box(
               prevDate ? f.tx(`vs ${f.day(prevDate)}`, `بمقابلہ ${f.day(prevDate)}`) : f.tx("vs Yesterday", "گزشتہ کل سے"),
-              diffYesterday !== null ? `${diffYesterday >= 0 ? "+" : "−"}${f.rs(Math.abs(diffYesterday))}` : "—",
+              diffYesterday !== null ? (
+                f.ur ? (
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                    <bdi dir="ltr">{`${f.num(Math.abs(diffYesterday))}${diffYesterday >= 0 ? "+" : "−"}`}</bdi>
+                    <span>روپے</span>
+                  </span>
+                ) : (
+                  `${diffYesterday >= 0 ? "+" : "−"}${f.rs(Math.abs(diffYesterday))}`
+                )
+              ) : (
+                "—"
+              ),
               diffYesterday !== null ? (diffYesterday > 0 ? C.up : diffYesterday < 0 ? C.down : C.ink) : C.ink,
             )}
             {box(f.tx("Today's Mandi Rank", "آج کی منڈی رینک"), rank > 0 && mids.length > 1 ? f.tx(`${rank} of ${mids.length}`, `${f.digits(mids.length)} میں ${f.digits(rank)}`) : f.tx("Only one", "واحد"))}

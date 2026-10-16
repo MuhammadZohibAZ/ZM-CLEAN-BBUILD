@@ -53,10 +53,10 @@ export function LangScreen({ onNext }: { onNext: (code: string) => void }) {
             style={
               (lng as any).centered
                 ? {
-                    gridColumn: "1 / -1",
-                    justifySelf: "center",
-                    width: "calc(50% - 5px)",
-                  }
+                  gridColumn: "1 / -1",
+                  justifySelf: "center",
+                  width: "calc(50% - 5px)",
+                }
                 : { width: "100%" }
             }
           >

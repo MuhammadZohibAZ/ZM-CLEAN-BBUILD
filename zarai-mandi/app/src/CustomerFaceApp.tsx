@@ -298,191 +298,191 @@ function AppInner({
         className="relative flex-1 overflow-hidden flex flex-col"
         style={{ minHeight: 0 }}
       >
-          {current.id === "home" && (
-            activeRole === "representative" ? (
-              <RepDashboardScreen
-                push={push}
-                initialUserData={initialUserData}
-                onSwitchRole={onSwitchRole}
-                hasRepAccount={hasRepAccount}
-              />
-            ) : (
-              <HomeScreenSwitch
-                push={push}
-                locationScope={locationScope}
-                setFeedOpen={(v) => {
-                  if (v) openFeed({});
-                  else setFeedOpen(false);
-                }}
-                pickedByproducts={pickedByproducts}
-                togglePickBP={togglePickBP}
-                isPickedBP={isPickedBP}
-                setPickedByproducts={setPickedByproducts}
-                voiceGuideActive={voicePhase === "orientation"}
-                onVoiceGuideClose={() => setVoicePhase("idle")}
-                initialUserData={initialUserData}
-                activeRole={activeRole}
-                hasRepAccount={hasRepAccount}
-                onSwitchRole={onSwitchRole}
-                onStartRepOnboarding={onStartRepOnboarding}
-                onRestartOnboarding={onRestartOnboarding}
-                profileCompleted={profileCompleted}
-                setProfileCompleted={setProfileCompleted}
-                completeProfileOpen={completeProfileOpen}
-                setCompleteProfileOpen={setCompleteProfileOpen}
-                profileSetupData={profileSetupData}
-                updateProfileSetupData={updateProfileSetupData}
-                onCompleteProfileSubmit={handleCompleteProfileSubmit}
-                userSubscribedList={userSubscribedList}
-                setUserSubscribedList={setUserSubscribedList}
-              />
-            )
-          )}
-          {current.id === "byproduct-combined" && (
-            <ByProductCombinedScreen
-              products={(current as CombinedScr).products}
-              active={(current as CombinedScr).active}
+        {current.id === "home" && (
+          activeRole === "representative" ? (
+            <RepDashboardScreen
               push={push}
-              replace={replace}
-              onBack={pop}
-              isPickedBP={isPickedBP}
-              togglePickBP={togglePickBP}
+              initialUserData={initialUserData}
+              onSwitchRole={onSwitchRole}
+              hasRepAccount={hasRepAccount}
+            />
+          ) : (
+            <HomeScreenSwitch
+              push={push}
               locationScope={locationScope}
-              onOpenLocation={() => setLocSheet(true)}
-              onSelectLocation={(s) => setLocationScope(s)}
-              profileCompleted={profileCompleted}
-              onOpenSubscribe={() => setCompleteProfileOpen(true)}
-            />
-          )}
-          {current.id === "product-rates" && (
-            <ProductRatesScreen
-              key={`${(current as ComRatesScr).product}|${(current as ComRatesScr).byproduct}`}
-              replace={replace}
-              vertical={(current as ComRatesScr).vertical}
-              product={(current as ComRatesScr).product}
-              byproduct={(current as ComRatesScr).byproduct}
-              onBack={pop}
-              push={push}
-              isPickedBP={isPickedBP}
+              setFeedOpen={(v) => {
+                if (v) openFeed({});
+                else setFeedOpen(false);
+              }}
+              pickedByproducts={pickedByproducts}
               togglePickBP={togglePickBP}
-              locationScope={locationScope}
-              onOpenLocation={() => setLocSheet(true)}
-              initialRateType={(current as ComRatesScr).initialRateType}
-              initialMandi={(current as ComRatesScr).initialMandi}
-              initialScope={(current as ComRatesScr).initialScope}
-              initialVariety={(current as ComRatesScr).initialVariety}
-              initialNewOld={(current as ComRatesScr).initialNewOld}
-              initialColor={(current as ComRatesScr).initialColor}
-              initialSpec={(current as ComRatesScr).initialSpec}
-              initialCondition={(current as ComRatesScr).initialCondition}
-              initialOrigin={(current as ComRatesScr).initialOrigin}
-              initialMoisture={(current as ComRatesScr).initialMoisture}
-              initialStatDate={(current as ComRatesScr).initialStatDate}
-              initialAvgMin={(current as ComRatesScr).initialAvgMin}
-              initialAvgMax={(current as ComRatesScr).initialAvgMax}
-              initialTotalArrival={(current as ComRatesScr).initialTotalArrival}
-              initialMarkets={(current as ComRatesScr).initialMarkets}
-            />
-          )}
-          {current.id === "compare" && (
-            <Suspense fallback={<div className="flex-1" style={{ background: "#F1F7F4" }} />}>
-              <CompareScreen
-                productIcon={(division) => getproductIconSrc(division)}
-                // Free trial: every product can be compared; afterwards only paid ones.
-                ownedProducts={profileCompleted ? userSubscribedList : undefined}
-                renderLocationPicker={(picker) => (
-                  <MultiLocSheet
-                    multiProvince
-                    selected={picker.selected}
-                    dataMandiNames={picker.dataNames}
-                    onApply={picker.onApply}
-                    onClose={picker.onClose}
-                  />
-                )}
-              />
-            </Suspense>
-          )}
-          {current.id === "news" && (
-            <NewsVideosScreen
+              isPickedBP={isPickedBP}
+              setPickedByproducts={setPickedByproducts}
+              voiceGuideActive={voicePhase === "orientation"}
+              onVoiceGuideClose={() => setVoicePhase("idle")}
+              initialUserData={initialUserData}
+              activeRole={activeRole}
+              hasRepAccount={hasRepAccount}
+              onSwitchRole={onSwitchRole}
+              onStartRepOnboarding={onStartRepOnboarding}
+              onRestartOnboarding={onRestartOnboarding}
               profileCompleted={profileCompleted}
-              onOpenCompleteProfile={() => setCompleteProfileOpen(true)}
-              onActiveReelChange={(reel, isPlaying, isMuted) => {
-                currentVideoStateRef.current = { reel, isPlaying, isMuted };
-              }}
-              onMinimize={(reel, isPlaying, isMuted) => {
-                setFloatingVideo({ reel, isPlaying, isMuted });
-                handleNav("home");
-              }}
+              setProfileCompleted={setProfileCompleted}
+              completeProfileOpen={completeProfileOpen}
+              setCompleteProfileOpen={setCompleteProfileOpen}
+              profileSetupData={profileSetupData}
+              updateProfileSetupData={updateProfileSetupData}
+              onCompleteProfileSubmit={handleCompleteProfileSubmit}
+              userSubscribedList={userSubscribedList}
+              setUserSubscribedList={setUserSubscribedList}
             />
-          )}
-          {current.id === "billing" && (
-            <BillingScreen
-              product={(current as BillingScr).product}
-              vertical={(current as BillingScr).vertical}
-              onBack={pop}
-              push={push}
-              onSubscribeSuccess={handleSubscribeProduct}
+          )
+        )}
+        {current.id === "byproduct-combined" && (
+          <ByProductCombinedScreen
+            products={(current as CombinedScr).products}
+            active={(current as CombinedScr).active}
+            push={push}
+            replace={replace}
+            onBack={pop}
+            isPickedBP={isPickedBP}
+            togglePickBP={togglePickBP}
+            locationScope={locationScope}
+            onOpenLocation={() => setLocSheet(true)}
+            onSelectLocation={(s) => setLocationScope(s)}
+            profileCompleted={profileCompleted}
+            onOpenSubscribe={() => setCompleteProfileOpen(true)}
+          />
+        )}
+        {current.id === "product-rates" && (
+          <ProductRatesScreen
+            key={`${(current as ComRatesScr).product}|${(current as ComRatesScr).byproduct}`}
+            replace={replace}
+            vertical={(current as ComRatesScr).vertical}
+            product={(current as ComRatesScr).product}
+            byproduct={(current as ComRatesScr).byproduct}
+            onBack={pop}
+            push={push}
+            isPickedBP={isPickedBP}
+            togglePickBP={togglePickBP}
+            locationScope={locationScope}
+            onOpenLocation={() => setLocSheet(true)}
+            initialRateType={(current as ComRatesScr).initialRateType}
+            initialMandi={(current as ComRatesScr).initialMandi}
+            initialScope={(current as ComRatesScr).initialScope}
+            initialVariety={(current as ComRatesScr).initialVariety}
+            initialNewOld={(current as ComRatesScr).initialNewOld}
+            initialColor={(current as ComRatesScr).initialColor}
+            initialSpec={(current as ComRatesScr).initialSpec}
+            initialCondition={(current as ComRatesScr).initialCondition}
+            initialOrigin={(current as ComRatesScr).initialOrigin}
+            initialMoisture={(current as ComRatesScr).initialMoisture}
+            initialStatDate={(current as ComRatesScr).initialStatDate}
+            initialAvgMin={(current as ComRatesScr).initialAvgMin}
+            initialAvgMax={(current as ComRatesScr).initialAvgMax}
+            initialTotalArrival={(current as ComRatesScr).initialTotalArrival}
+            initialMarkets={(current as ComRatesScr).initialMarkets}
+          />
+        )}
+        {current.id === "compare" && (
+          <Suspense fallback={<div className="flex-1" style={{ background: "#F1F7F4" }} />}>
+            <CompareScreen
+              productIcon={(division) => getproductIconSrc(division)}
+              // Free trial: every product can be compared; afterwards only paid ones.
+              ownedProducts={profileCompleted ? userSubscribedList : undefined}
+              renderLocationPicker={(picker) => (
+                <MultiLocSheet
+                  multiProvince
+                  selected={picker.selected}
+                  dataMandiNames={picker.dataNames}
+                  onApply={picker.onApply}
+                  onClose={picker.onClose}
+                />
+              )}
             />
-          )}
-        </div>
-        {floatingVideo && current.id !== "news" && (
-          <FloatingMiniPlayer
-            video={floatingVideo}
-            onExpand={() => {
-              handleNav("news");
-              setFloatingVideo(null);
+          </Suspense>
+        )}
+        {current.id === "news" && (
+          <NewsVideosScreen
+            profileCompleted={profileCompleted}
+            onOpenCompleteProfile={() => setCompleteProfileOpen(true)}
+            onActiveReelChange={(reel, isPlaying, isMuted) => {
+              currentVideoStateRef.current = { reel, isPlaying, isMuted };
             }}
-            onClose={() => setFloatingVideo(null)}
-            onTogglePlay={() => {
-              setFloatingVideo((prev) =>
-                prev ? { ...prev, isPlaying: !prev.isPlaying } : null,
-              );
+            onMinimize={(reel, isPlaying, isMuted) => {
+              setFloatingVideo({ reel, isPlaying, isMuted });
+              handleNav("home");
             }}
           />
         )}
-        <BottomNav
-          active={navActive}
-          onNav={handleNav}
-          onVoiceTap={handleVoiceTap}
-          onVoiceHold={handleVoiceHold}
-          voiceActive={voicePhase !== "idle"}
-        />
-        {voicePhase === "query" && (
-          <VoiceQueryOverlay
-            onClose={() => setVoicePhase("idle")}
-            onNavigate={(s) => {
-              setVoicePhase("idle");
-              setActiveNav("home");
-              setStack([{ id: "home" }, s]);
-            }}
-          />
-        )}
-        {feedOpen && (
-          <FeedModal
-            initialFilter={feedFilter}
-            onClose={() => setFeedOpen(false)}
-          />
-        )}
-        {locSheet && (
-          <LocationScopeSheet
-            scope={locationScope}
-            onSelect={(s) => {
-              setLocationScope(s);
-              setLocSheet(false);
-            }}
-            onClose={() => setLocSheet(false)}
-          />
-        )}
-        {completeProfileOpen && (
-          <CompleteProfileModal
-            data={profileSetupData}
-            onUpdateData={updateProfileSetupData}
-            onClose={() => setCompleteProfileOpen(false)}
-            onComplete={handleCompleteProfileSubmit}
-            initialUserData={initialUserData}
+        {current.id === "billing" && (
+          <BillingScreen
+            product={(current as BillingScr).product}
+            vertical={(current as BillingScr).vertical}
+            onBack={pop}
+            push={push}
+            onSubscribeSuccess={handleSubscribeProduct}
           />
         )}
       </div>
+      {floatingVideo && current.id !== "news" && (
+        <FloatingMiniPlayer
+          video={floatingVideo}
+          onExpand={() => {
+            handleNav("news");
+            setFloatingVideo(null);
+          }}
+          onClose={() => setFloatingVideo(null)}
+          onTogglePlay={() => {
+            setFloatingVideo((prev) =>
+              prev ? { ...prev, isPlaying: !prev.isPlaying } : null,
+            );
+          }}
+        />
+      )}
+      <BottomNav
+        active={navActive}
+        onNav={handleNav}
+        onVoiceTap={handleVoiceTap}
+        onVoiceHold={handleVoiceHold}
+        voiceActive={voicePhase !== "idle"}
+      />
+      {voicePhase === "query" && (
+        <VoiceQueryOverlay
+          onClose={() => setVoicePhase("idle")}
+          onNavigate={(s) => {
+            setVoicePhase("idle");
+            setActiveNav("home");
+            setStack([{ id: "home" }, s]);
+          }}
+        />
+      )}
+      {feedOpen && (
+        <FeedModal
+          initialFilter={feedFilter}
+          onClose={() => setFeedOpen(false)}
+        />
+      )}
+      {locSheet && (
+        <LocationScopeSheet
+          scope={locationScope}
+          onSelect={(s) => {
+            setLocationScope(s);
+            setLocSheet(false);
+          }}
+          onClose={() => setLocSheet(false)}
+        />
+      )}
+      {completeProfileOpen && (
+        <CompleteProfileModal
+          data={profileSetupData}
+          onUpdateData={updateProfileSetupData}
+          onClose={() => setCompleteProfileOpen(false)}
+          onComplete={handleCompleteProfileSubmit}
+          initialUserData={initialUserData}
+        />
+      )}
+    </div>
   );
 }
 

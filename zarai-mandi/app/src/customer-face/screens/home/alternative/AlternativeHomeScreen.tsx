@@ -18,7 +18,7 @@ import {
   type LocationScope,
   type ProfileSetupData,
   type RateItem,
-  
+
   type Screen,
 } from "../../../shared/types";
 import { speakText, stopSpeaking } from "../../../shared/voice";
@@ -89,10 +89,10 @@ export function AlternativeHomeScreen({
   const {
     lang,
     setLang,
-    
+
     tc,
-    
-    
+
+
     voiceEnabled: homeVoiceEnabled,
     setVoiceEnabled: homeSetVoiceEnabled,
   } = useLang();

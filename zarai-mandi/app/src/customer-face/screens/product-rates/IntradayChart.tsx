@@ -34,7 +34,7 @@ export function IntradayChart({
   ariaLabel: string;
 }) {
   const W = 340;
-  const axisW = 44;
+  const axisW = 50;
   const plotW = W - axisW;
   const H = height;
   const top = 26;
@@ -57,10 +57,10 @@ export function IntradayChart({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} role="img" aria-label={ariaLabel} style={{ display: "block" }}>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} role="img" aria-label={ariaLabel} style={{ display: "block", direction: "ltr" }}>
         {axis && (
           <text
-            x={f.ur ? 2 : W - 2}
+            x={f.ur ? 4 : W - 2}
             y={13}
             textAnchor={f.ur ? "start" : "end"}
             fontSize="11"
@@ -77,7 +77,7 @@ export function IntradayChart({
           return (
             <g key={v}>
               <line x1={f.ur ? axisW : 0} x2={f.ur ? W : plotW} y1={ty} y2={ty} stroke="#EEF1EF" strokeDasharray="3 4" />
-              <text x={f.ur ? 2 : W - 2} y={ty + 4} textAnchor={f.ur ? "start" : "end"} fontSize="11.5" fontWeight="500" fill={C.faint} style={{ fontVariantNumeric: "tabular-nums" }}>
+              <text x={f.ur ? axisW - 5 : W - 2} y={ty + 4} textAnchor="end" fontSize="11.5" fontWeight="500" fill={C.faint} style={{ fontVariantNumeric: "tabular-nums" }}>
                 {axis.format(v)}
               </text>
             </g>

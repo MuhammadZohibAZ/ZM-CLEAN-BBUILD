@@ -335,9 +335,8 @@ export function ByProductNationalCard({
       {/* Top Header: Full Width Title & Rate Type (Always visible so by-product name is identifiable) */}
       <div className="relative z-10 w-full mb-1.5">
         <h3
-          className={`text-[14px] sm:text-[15px] font-black leading-tight tracking-tight break-words ${
-            !stats.hasData ? 'text-[#143B33]/90' : 'text-[#143B33]'
-          }`}
+          className={`text-[14px] sm:text-[15px] font-black leading-tight tracking-tight break-words ${!stats.hasData ? 'text-[#143B33]/90' : 'text-[#143B33]'
+            }`}
           style={{
             fontFamily: lang === 'ur' ? URDU_FONT : "'Inter', sans-serif",
           }}
@@ -346,9 +345,8 @@ export function ByProductNationalCard({
           {tc(stats.byproduct)}
         </h3>
         <p
-          className={`text-[10.5px] sm:text-[11px] font-bold mt-0.5 leading-tight break-words ${
-            !stats.hasData ? 'text-[#087F63]/75' : 'text-[#087F63]'
-          }`}
+          className={`text-[10.5px] sm:text-[11px] font-bold mt-0.5 leading-tight break-words ${!stats.hasData ? 'text-[#087F63]/75' : 'text-[#087F63]'
+            }`}
           style={{ fontFamily: lang === 'ur' ? URDU_FONT : 'inherit' }}
         >
           {onRateTypeChange && stats.allRateTypes.length > 1 ? (
@@ -430,39 +428,39 @@ export function ByProductNationalCard({
           {/* Row 3 (left out on compact cards, e.g. Home on short screens) */}
           {!compact && (
             <div className="mt-auto">
-          <div className="h-px w-full my-1.5" style={{ background: '#E7F0EB' }} />
+              <div className="h-px w-full my-1.5" style={{ background: '#E7F0EB' }} />
 
-          {/* Row 3: Locations on Left + Time Pill on Bottom-Right */}
-          <div className="flex items-end justify-between w-full">
-            <LocationStatCell
-              marketCount={stats.markets}
-              lang={lang}
-            />
+              {/* Row 3: Locations on Left + Time Pill on Bottom-Right */}
+              <div className="flex items-end justify-between w-full">
+                <LocationStatCell
+                  marketCount={stats.markets}
+                  lang={lang}
+                />
 
-            {/* Time Pill on Bottom-Right */}
-            <div
-              className="flex-shrink-0 flex items-center gap-1 text-[8.5px] sm:text-[9px] font-bold text-[#065F46] bg-[#E8F8F3] border border-[#BCE8D8] py-0.5 px-1.5 sm:px-2 rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.03)] mb-0.5"
-              style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-            >
-              <svg
-                width="10"
-                height="10"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#087F63"
-                strokeWidth="2.4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="flex-shrink-0"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-              </svg>
-              <span className="whitespace-nowrap">
-                {getCardUpdatedAgo(stats.catalogId || stats.byproduct, lang, cardStatsDay(stats, selectedDate))}
-              </span>
-            </div>
-          </div>
+                {/* Time Pill on Bottom-Right */}
+                <div
+                  className="flex-shrink-0 flex items-center gap-1 text-[8.5px] sm:text-[9px] font-bold text-[#065F46] bg-[#E8F8F3] border border-[#BCE8D8] py-0.5 px-1.5 sm:px-2 rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.03)] mb-0.5"
+                  style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                >
+                  <svg
+                    width="10"
+                    height="10"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#087F63"
+                    strokeWidth="2.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="flex-shrink-0"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                  <span className="whitespace-nowrap">
+                    {getCardUpdatedAgo(stats.catalogId || stats.byproduct, lang, cardStatsDay(stats, selectedDate))}
+                  </span>
+                </div>
+              </div>
             </div>
           )}
         </div>
