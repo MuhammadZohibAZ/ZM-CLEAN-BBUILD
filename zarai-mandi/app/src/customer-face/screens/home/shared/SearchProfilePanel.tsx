@@ -274,14 +274,14 @@ export function SearchProfilePanel({
           )}
         </label>
 
-        {/* Complete profile: prompts with a ping, a "!" and an occasional nudge */}
+        {/* Complete profile: yellow chip with a "!" (static, no animation) */}
         <AnimatePresence initial={false}>
           {showChip && (
             <motion.button
               key="profile"
               type="button"
               onClick={onOpenProfile}
-              className="zm-attention-wiggle tap-target relative flex-shrink-0 flex items-center gap-2 rounded-full text-start"
+              className="tap-target relative flex-shrink-0 flex items-center gap-2 rounded-full text-start"
               initial={{ width: 0, opacity: 0 }}
               animate={{ width: isUr ? 150 : 142, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
@@ -290,8 +290,6 @@ export function SearchProfilePanel({
               aria-label={isUr ? "پروفائل مکمل کریں" : "Complete your profile"}
             >
               <span className="relative flex-shrink-0 flex items-center justify-center" style={{ width: 36, height: 36 }}>
-                {/* Ping radiating from the step ring */}
-                <span aria-hidden className="zm-ping absolute inset-0 rounded-full" style={{ border: "2px solid #F59E0B" }} />
                 <svg width="36" height="36" viewBox="0 0 36 36" className="absolute inset-0" style={{ transform: "rotate(-90deg)" }}>
                   <circle cx="18" cy="18" r="14" fill="#FFFFFF" stroke="#F3E3C6" strokeWidth="3.5" />
                   <circle
@@ -321,7 +319,7 @@ export function SearchProfilePanel({
               {/* "!" — something to do */}
               <span
                 aria-hidden
-                className="zm-badge-pop absolute flex items-center justify-center rounded-full"
+                className="absolute flex items-center justify-center rounded-full"
                 style={{
                   top: -6,
                   [isUr ? "left" : "right"]: -4,

@@ -11,10 +11,6 @@ export function CompleteProfileHeader({ s }: { s: CompleteProfileState }) {
       className="px-5 pt-4 pb-3 flex-shrink-0 bg-white"
       style={{ borderBottom: "1px solid #D5E2DD" }}
     >
-      <div
-        className="w-10 h-1 rounded-full mx-auto mb-3"
-        style={{ background: "#C7D6D0" }}
-      />
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2.5">
           <button

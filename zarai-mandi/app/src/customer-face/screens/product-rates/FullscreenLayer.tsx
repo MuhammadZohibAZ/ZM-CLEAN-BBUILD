@@ -113,7 +113,7 @@ export function FullscreenLayer({
           gap: 10,
           padding: rotated
             ? "8px max(12px, env(safe-area-inset-bottom)) 8px max(12px, env(safe-area-inset-top))"
-            : "max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left))",
+            : "max(8px, env(safe-area-inset-top), calc(var(--zm-bleed-top) + 4px)) max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left))",
           borderBottom: `1px solid ${C.line}`,
           background: C.surface,
           flexShrink: 0,

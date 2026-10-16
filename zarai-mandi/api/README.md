@@ -27,6 +27,9 @@ npm install
 npm start            # -> listening on :8090
 ```
 
+`src/app.js` holds the routes; `src/server.js` runs them locally and
+`api/index.js` + `vercel.json` run them as a Vercel function (see `../DEPLOY.md`).
+
 The frontend (`../app`) talks to this via `VITE_MARKET_API_URL` (default
 `http://localhost:8090`, see `../app/src/lib/api.ts`).
 

@@ -260,8 +260,8 @@ export function BottomNav({
           className={`w-[56px] h-[56px] rounded-full flex items-center justify-center transition-all duration-200 outline-none select-none cursor-pointer ${voiceActive
             ? "bg-[#FEE2E2] border-2 border-[#EF4444] shadow-md animate-pulse"
             : isPressing
-              ? "bg-[#06614B] border-2 border-[#86EFAC] shadow-md scale-95"
-              : "bg-[#087F63] shadow-[0_10px_24px_-8px_rgba(6,60,48,0.55)] hover:scale-105 active:scale-95"
+              ? "bg-[#087F63] border-2 border-[#86EFAC] shadow-md scale-95"
+              : "bg-white/90 backdrop-blur-xl border border-[#087F63]/15 shadow-[0_10px_28px_-8px_rgba(6,60,48,0.28),0_2px_6px_rgba(6,60,48,0.06)] hover:scale-105 active:scale-95"
             }`}
         >
           {voiceActive ? (
@@ -284,7 +284,7 @@ export function BottomNav({
               ))}
             </div>
           ) : (
-            <MicSVG size={24} color="#FFFFFF" />
+            <MicSVG size={24} color={isPressing ? "#FFFFFF" : "#087F63"} />
           )}
         </motion.button>
       </div>

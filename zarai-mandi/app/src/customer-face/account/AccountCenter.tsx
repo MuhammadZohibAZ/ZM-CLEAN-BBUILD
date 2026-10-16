@@ -1,16 +1,19 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import { ProductIcon } from "../components/ProductIcon";
 import { PRODUCT_DIVISIONS, SUBSCRIBED_PRODUCTS } from "../shared/data/catalog";
 import { MANDI_DATA } from "../shared/data/mandiLocation";
 import { URDU_FONT, useLang } from "../shared/i18n/LangProvider";
 import { speakText } from "../shared/voice";
+import { LEGAL, type LegalDoc } from "./legalContent";
 
 // ─── ACCOUNT CENTER ───────────────────────────────────────────────────────────
 // Everything behind the profile button on the home screen: the account menu
-// and each sheet it opens (edit profile, subscriptions, voice & language,
-// representative, contact us — incl. historical data requests — log out). HomeScreen only holds
-// which view is open and the saved profile; all form state lives here.
+// and each page it opens (edit profile, subscriptions, voice & language,
+// representative, contact us — incl. historical data requests — terms, privacy,
+// refunds, deactivate / delete account, log out). Each view is a full page; a
+// page opened from the menu goes back to the menu. HomeScreen only holds which
+// view is open and the saved profile; all form state lives here.
 
 // Contact details — edit here to change them everywhere in this section.
 export const ZM_CONTACT = {
@@ -48,6 +51,9 @@ export type AccountView =
   | "voice"
   | "rep"
   | "help"
+  | LegalDoc
+  | "deactivate"
+  | "delete"
   | "logout";
 
 export interface AccountProfile {
@@ -175,6 +181,50 @@ const ICON_PATHS: Record<string, React.ReactNode> = {
       <line x1="19" y1="12" x2="22" y2="12" />
     </>
   ),
+  shield: (
+    <>
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <path d="M9 12l2 2 4-4" />
+    </>
+  ),
+  file: (
+    <>
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+      <line x1="8" y1="13" x2="16" y2="13" />
+      <line x1="8" y1="17" x2="13" y2="17" />
+    </>
+  ),
+  receipt: (
+    <>
+      <path d="M4 2v20l3-2 3 2 2-2 2 2 3-2 3 2V2l-3 2-3-2-2 2-2-2-3 2z" />
+      <line x1="8" y1="9" x2="16" y2="9" />
+      <line x1="8" y1="13" x2="14" y2="13" />
+    </>
+  ),
+  pause: (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <line x1="10" y1="9" x2="10" y2="15" />
+      <line x1="14" y1="9" x2="14" y2="15" />
+    </>
+  ),
+  trash: (
+    <>
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+      <path d="M10 11v6 M14 11v6" />
+      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+    </>
+  ),
+  external: (
+    <>
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+      <polyline points="15 3 21 3 21 9" />
+      <line x1="10" y1="14" x2="21" y2="3" />
+    </>
+  ),
+  back: <polyline points="15 18 9 12 15 6" />,
 };
 
 // Every city with a mandi, for the profile's location (just cities: no
@@ -236,75 +286,117 @@ function Icon({
 
 // ─── PRIMITIVES ───────────────────────────────────────────────────────────────
 
-function Sheet({
+/** A full-screen account page: back arrow, title, scrolling body. */
+function Page({
   title,
   subtitle,
-  onClose,
+  onBack,
   zIndex = 350,
-  maxHeight = "90vh",
-  dismissable = true,
   isUr,
   children,
 }: {
   title: string;
   subtitle?: string;
-  onClose: () => void;
+  /** Back arrow: to the menu when opened from it, otherwise closes. */
+  onBack: () => void;
   zIndex?: number;
-  maxHeight?: string;
-  dismissable?: boolean;
   isUr: boolean;
   children: React.ReactNode;
 }) {
   return (
     <div
-      className="zm-sheet-overlay"
-      style={{ zIndex }}
-      onClick={() => dismissable && onClose()}
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
+      className="zm-page-in"
+      dir={isUr ? "rtl" : "ltr"}
+      style={{ position: "fixed", inset: 0, zIndex, display: "flex", flexDirection: "column", background: C.surface }}
     >
       <div
-        className="zm-sheet-high"
+        className="flex items-center gap-3 px-4 pb-3 flex-shrink-0"
+        // Clears the phone status bar (and the desktop mockup's, via --zm-bleed-top).
+        style={{ paddingTop: "max(14px, env(safe-area-inset-top, 0px), calc(var(--zm-bleed-top) + 6px))", borderBottom: `1px solid ${C.border}`, background: C.card }}
+      >
+        <button
+          type="button"
+          onClick={onBack}
+          aria-label={isUr ? "واپس" : "Back"}
+          className="tap-target w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition active:scale-95"
+          style={{ background: "#EEF3F1", color: C.ink }}
+        >
+          <Icon name="back" size={20} strokeWidth={2.4} style={{ transform: isUr ? "scaleX(-1)" : undefined }} />
+        </button>
+        <div className="min-w-0 flex-1">
+          <p
+            className="font-bold truncate"
+            style={{ color: C.ink, fontSize: isUr ? 20 : 18, fontFamily: isUr ? URDU_FONT : "inherit", lineHeight: isUr ? 1.7 : 1.25 }}
+          >
+            {title}
+          </p>
+          {subtitle && (
+            <p className="text-xs mt-0.5 truncate" style={{ color: C.muted }}>
+              {subtitle}
+            </p>
+          )}
+        </div>
+      </div>
+      <div className="flex-1 overflow-y-auto p-5 space-y-5" style={{ paddingBottom: "max(24px, env(safe-area-inset-bottom))" }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/** Centred confirm dialog (log out, deactivate, delete). */
+function ConfirmDialog({
+  isUr,
+  icon,
+  title,
+  body,
+  cancel,
+  confirm,
+  onCancel,
+  onConfirm,
+}: {
+  isUr: boolean;
+  icon: keyof typeof ICON_PATHS;
+  title: string;
+  body: string;
+  cancel: string;
+  confirm: string;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <div
+      role="alertdialog"
+      aria-modal="true"
+      style={{ position: "fixed", inset: 0, zIndex: 400, display: "flex", alignItems: "center", justifyContent: "center", padding: 16, background: "rgba(3, 30, 24, 0.72)" }}
+      onClick={onCancel}
+    >
+      <div
+        className="bg-white rounded-3xl p-6 shadow-2xl max-w-sm w-full text-center"
         dir={isUr ? "rtl" : "ltr"}
-        style={{ background: C.surface, maxHeight }}
+        style={{ animation: "zmModalIn 0.2s ease-out", border: `1px solid ${C.border}`, fontFamily: isUr ? URDU_FONT : "inherit" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div
-          className="px-5 pt-3 pb-3 flex-shrink-0"
-          style={{ borderBottom: `1px solid ${C.border}`, background: C.card }}
-        >
-          <div
-            className="w-10 h-1 rounded-full mx-auto mb-3"
-            style={{ background: "#C7D6D0" }}
-          />
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p
-                className="font-bold truncate"
-                style={{
-                  color: C.ink,
-                  fontSize: isUr ? 19 : 17,
-                  fontFamily: isUr ? URDU_FONT : "inherit",
-                }}
-              >
-                {title}
-              </p>
-              {subtitle && (
-                <p className="text-xs mt-0.5" style={{ color: C.muted }}>
-                  {subtitle}
-                </p>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Close"
-              className="tap-target w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-              style={{ background: "#EEF3F1", color: C.muted }}
-            >
-              <Icon name="close" size={16} strokeWidth={2.4} />
-            </button>
-          </div>
+        <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: C.dangerBg }}>
+          <Icon name={icon} size={22} color={C.danger} />
         </div>
-        <div className="flex-1 overflow-y-auto p-5 space-y-5">{children}</div>
+        <h3 className="text-base font-bold mb-1" style={{ color: C.ink }}>
+          {title}
+        </h3>
+        <p className="text-sm mb-5" style={{ color: C.muted, lineHeight: isUr ? 1.9 : 1.5 }}>
+          {body}
+        </p>
+        <div className="flex gap-2.5">
+          <PrimaryButton variant="secondary" onClick={onCancel}>
+            {cancel}
+          </PrimaryButton>
+          <PrimaryButton variant="danger" onClick={onConfirm}>
+            {confirm}
+          </PrimaryButton>
+        </div>
       </div>
     </div>
   );
@@ -565,6 +657,24 @@ export function AccountCenter({
   const L = (en: string, ur: string) => (isUr ? ur : en);
 
   const close = () => onViewChange(null);
+  // Remember where a page was opened from: pages opened from the menu go back to it.
+  const lastView = useRef<AccountView | null>(null);
+  const fromMenu = useRef(false);
+  if (view !== lastView.current) {
+    fromMenu.current = !!view && view !== "menu" && (lastView.current === "menu" || (fromMenu.current && lastView.current !== null));
+    lastView.current = view;
+  }
+  const back = () => (fromMenu.current ? onViewChange("menu") : close());
+
+  // Deactivate / delete
+  const [confirmAction, setConfirmAction] = useState<"deactivate" | "delete" | null>(null);
+  const [leaveReason, setLeaveReason] = useState<string | null>(null);
+  const [deleteAck, setDeleteAck] = useState(false);
+  useEffect(() => {
+    setConfirmAction(null);
+    setLeaveReason(null);
+    setDeleteAck(false);
+  }, [view]);
 
   // Edit-profile form + contact OTP step
   const [editName, setEditName] = useState(profile.name);
@@ -632,11 +742,10 @@ export function AccountCenter({
   // ── MENU ────────────────────────────────────────────────────────────────────
   if (view === "menu") {
     return (
-      <Sheet
+      <Page
         title={L("Account", "اکاؤنٹ")}
-        onClose={close}
+        onBack={close}
         zIndex={310}
-        maxHeight="92vh"
         isUr={isUr}
       >
         {/* Profile summary — tap to edit */}
@@ -796,6 +905,37 @@ export function AccountCenter({
           </Card>
         </div>
 
+        <div>
+          <SectionLabel>{L("Legal", "قانونی")}</SectionLabel>
+          <Card>
+            <Row isUr={isUr} icon="file" label={L("Terms & Conditions", "شرائط و ضوابط")} onClick={() => onViewChange("terms")} />
+            <Row isUr={isUr} icon="shield" label={L("Privacy Policy", "رازداری کی پالیسی")} onClick={() => onViewChange("privacy")} />
+            <Row isUr={isUr} icon="receipt" label={L("Cancellation & Refunds", "منسوخی اور رقم کی واپسی")} onClick={() => onViewChange("refunds")} last />
+          </Card>
+        </div>
+
+        <div>
+          <SectionLabel>{L("Manage account", "اکاؤنٹ کا انتظام")}</SectionLabel>
+          <Card>
+            <Row
+              isUr={isUr}
+              icon="pause"
+              label={L("Deactivate account", "اکاؤنٹ غیر فعال کریں")}
+              sub={L("Take a break — sign in again to come back", "وقفہ لیں — واپس آنے کے لیے دوبارہ سائن اِن کریں")}
+              onClick={() => onViewChange("deactivate")}
+            />
+            <Row
+              isUr={isUr}
+              icon="trash"
+              danger
+              label={L("Delete account", "اکاؤنٹ حذف کریں")}
+              sub={L("Permanently remove your account and data", "اکاؤنٹ اور ڈیٹا مستقل طور پر ختم کریں")}
+              onClick={() => onViewChange("delete")}
+              last
+            />
+          </Card>
+        </div>
+
         <Card>
           <Row
             isUr={isUr}
@@ -808,18 +948,16 @@ export function AccountCenter({
           />
         </Card>
         <div className="h-2" />
-      </Sheet>
+      </Page>
     );
   }
 
   // ── EDIT PROFILE ────────────────────────────────────────────────────────────
   if (view === "edit") {
     return (
-      <Sheet
+      <Page
         title={verifyStep ? L("Verify Contact", "رابطے کی تصدیق") : L("Edit Profile", "پروفائل ترمیم کریں")}
-        onClose={close}
-        maxHeight="92vh"
-        dismissable={!verifyStep}
+        onBack={verifyStep ? () => setVerifyStep(false) : back}
         isUr={isUr}
       >
         {!verifyStep ? (
@@ -1039,7 +1177,7 @@ export function AccountCenter({
             </div>
           </>
         )}
-      </Sheet>
+      </Page>
     );
   }
 
@@ -1051,7 +1189,7 @@ export function AccountCenter({
     const others = PRODUCT_DIVISIONS.filter((d) => !userSubscribedList.includes(d.name));
 
     return (
-      <Sheet title={L("My Subscriptions", "میری سبسکرپشنز")} onClose={close} maxHeight="92vh" isUr={isUr}>
+      <Page title={L("My Subscriptions", "میری سبسکرپشنز")} onBack={back} isUr={isUr}>
         <div
           className="p-4 rounded-2xl text-white"
           style={{ background: `linear-gradient(135deg, ${C.deep}, ${C.primary})` }}
@@ -1149,14 +1287,14 @@ export function AccountCenter({
             ? L("Unlock multiple commodities", "ایک ساتھ متعدد اجناس ان لاک کریں")
             : L("Complete profile & subscribe", "پروفائل مکمل کریں اور سبسکرائب کریں")}
         </PrimaryButton>
-      </Sheet>
+      </Page>
     );
   }
 
   // ── VOICE & LANGUAGE ────────────────────────────────────────────────────────
   if (view === "voice") {
     return (
-      <Sheet title={L("Voice & Language", "آواز اور زبان")} onClose={close} isUr={isUr}>
+      <Page title={L("Voice & Language", "آواز اور زبان")} onBack={back} isUr={isUr}>
         <div>
           <SectionLabel>{L("App language", "ایپ کی زبان")}</SectionLabel>
           <div className="grid grid-cols-2 gap-2">
@@ -1202,14 +1340,14 @@ export function AccountCenter({
         </div>
 
         <PrimaryButton onClick={close}>{L("Done", "ٹھیک ہے")}</PrimaryButton>
-      </Sheet>
+      </Page>
     );
   }
 
   // ── BECOME A REPRESENTATIVE ─────────────────────────────────────────────────
   if (view === "rep") {
     return (
-      <Sheet title={L("Become a Representative", "نمائندہ بنیں")} onClose={close} maxHeight="85vh" isUr={isUr}>
+      <Page title={L("Become a Representative", "نمائندہ بنیں")} onBack={back} isUr={isUr}>
         <div className="flex flex-col items-center text-center gap-3 pt-1">
           <div
             className="w-14 h-14 rounded-2xl flex items-center justify-center"
@@ -1240,7 +1378,7 @@ export function AccountCenter({
             {L("Cancel", "منسوخ کریں")}
           </PrimaryButton>
         </div>
-      </Sheet>
+      </Page>
     );
   }
 
@@ -1286,7 +1424,7 @@ export function AccountCenter({
     ];
 
     return (
-      <Sheet title={L("Contact Us", "ہم سے رابطہ کریں")} onClose={close} maxHeight="92vh" isUr={isUr}>
+      <Page title={L("Contact Us", "ہم سے رابطہ کریں")} onBack={back} isUr={isUr}>
         {/* One WhatsApp entry point for everything the team provides */}
         <div
           className="p-4 rounded-2xl"
@@ -1422,50 +1560,237 @@ export function AccountCenter({
           )}
         </div>
         <div className="h-2" />
-      </Sheet>
+      </Page>
+    );
+  }
+
+  // ── TERMS / PRIVACY / REFUNDS ───────────────────────────────────────────────
+  if (view === "terms" || view === "privacy" || view === "refunds") {
+    const doc = LEGAL[view];
+    const tx = (b: { en: string; ur: string }) => (isUr ? b.ur : b.en);
+    const urText: React.CSSProperties = isUr ? { fontFamily: URDU_FONT, lineHeight: 1.9 } : { lineHeight: 1.55 };
+    return (
+      <Page title={tx(doc.title)} subtitle={L("Zarai Mandi", "زرعی منڈی")} onBack={back} isUr={isUr}>
+        {/* In short */}
+        <div className="rounded-2xl p-4" style={{ background: C.mint, border: `1px solid ${C.mintBorder}` }}>
+          <p className="text-[11px] font-bold uppercase tracking-wider mb-1.5" style={{ color: C.primary }}>
+            {L("In short", "خلاصہ")}
+          </p>
+          <p className="text-sm font-medium" style={{ color: C.ink, ...urText }}>
+            {tx(doc.summary)}
+          </p>
+        </div>
+
+        {doc.sections.map((sec, i) => (
+          <div key={i}>
+            <SectionLabel>{`${i + 1}. ${tx(sec.title)}`}</SectionLabel>
+            <Card className="px-4 py-3">
+              <ul className="space-y-2.5">
+                {sec.points.map((pt, k) => (
+                  <li key={k} className="flex gap-2.5 text-sm" style={{ color: C.ink, ...urText }}>
+                    <span aria-hidden className="mt-2 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: C.bright }} />
+                    <span>{tx(pt)}</span>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          </div>
+        ))}
+
+        <div>
+          <SectionLabel>{L("More", "مزید")}</SectionLabel>
+          <Card>
+            <Row
+              isUr={isUr}
+              icon="external"
+              label={L("Read the full policy", "مکمل پالیسی پڑھیں")}
+              sub={doc.url.replace("https://", "")}
+              href={doc.url}
+              trailing={<span />}
+            />
+            <Row isUr={isUr} icon="mail" label={L("Questions? Email us", "سوالات؟ ای میل کریں")} sub={<Ltr>{ZM_CONTACT.email}</Ltr>} href={`mailto:${ZM_CONTACT.email}`} trailing={<span />} />
+            <Row isUr={isUr} icon="whatsapp" label={L("WhatsApp", "واٹس ایپ")} sub={<Ltr>{ZM_CONTACT.whatsappDisplay}</Ltr>} href={waLink(L("Hi, I have a question about your policies.", "السلام علیکم، پالیسی کے بارے میں سوال ہے۔"))} trailing={<span />} last />
+          </Card>
+        </div>
+      </Page>
+    );
+  }
+
+  // ── DEACTIVATE / DELETE ACCOUNT ─────────────────────────────────────────────
+  if (view === "deactivate" || view === "delete") {
+    const isDelete = view === "delete";
+    const urText: React.CSSProperties = isUr ? { fontFamily: URDU_FONT, lineHeight: 1.9 } : { lineHeight: 1.5 };
+    const points = isDelete
+      ? [
+          L("Your profile, favourites, saved reels and settings are erased.", "آپ کی پروفائل، پسندیدہ، محفوظ ریلز اور ترتیبات مٹا دی جائیں گی۔"),
+          L("Any active subscription ends and is not refunded.", "کوئی بھی فعال سبسکرپشن ختم ہو جائے گی اور رقم واپس نہیں ہوگی۔"),
+          L("Payment records are kept only as long as the law requires.", "ادائیگی کا ریکارڈ صرف قانون کے مطابق مدت تک رکھا جائے گا۔"),
+          L("This can't be undone — you would need to sign up again.", "یہ واپس نہیں ہو سکتا — دوبارہ استعمال کے لیے نیا اکاؤنٹ بنانا ہوگا۔"),
+        ]
+      : [
+          L("Your profile is hidden and alerts stop.", "آپ کی پروفائل چھپ جائے گی اور الرٹس بند ہو جائیں گے۔"),
+          L("Your data and favourites are kept safe.", "آپ کا ڈیٹا اور پسندیدہ محفوظ رہیں گے۔"),
+          L("A running subscription is not paused or refunded.", "جاری سبسکرپشن نہ رُکے گی نہ اس کی رقم واپس ہوگی۔"),
+          L("Come back anytime: sign in with your number and everything is restored.", "کسی بھی وقت واپس آئیں: اپنے نمبر سے سائن اِن کریں، سب بحال ہو جائے گا۔"),
+        ];
+    const reasons = [
+      L("Taking a break", "وقفہ لے رہا ہوں"),
+      L("Not using it much", "زیادہ استعمال نہیں کرتا"),
+      L("Too many alerts", "بہت زیادہ الرٹس"),
+      L("Rates not useful", "ریٹس مفید نہیں"),
+      L("Other", "کوئی اور وجہ"),
+    ];
+    const canGo = !isDelete || deleteAck;
+    return (
+      <Page
+        title={isDelete ? L("Delete account", "اکاؤنٹ حذف کریں") : L("Deactivate account", "اکاؤنٹ غیر فعال کریں")}
+        subtitle={profile.phone}
+        onBack={back}
+        isUr={isUr}
+      >
+        <div
+          className="rounded-2xl p-4 flex gap-3"
+          style={{ background: isDelete ? C.dangerBg : C.mint, border: `1px solid ${isDelete ? "#F5C2C2" : C.mintBorder}` }}
+        >
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "#FFFFFF" }}>
+            <Icon name={isDelete ? "trash" : "pause"} size={20} color={isDelete ? C.danger : C.primary} />
+          </div>
+          <div className="min-w-0">
+            <p className="font-bold text-sm" style={{ color: isDelete ? C.danger : C.deep, ...urText }}>
+              {isDelete ? L("This is permanent", "یہ مستقل ہے") : L("Your account is paused, not deleted", "اکاؤنٹ رُکے گا، حذف نہیں ہوگا")}
+            </p>
+            <p className="text-xs mt-0.5" style={{ color: C.muted, ...urText }}>
+              {L("What happens:", "کیا ہوگا:")}
+            </p>
+          </div>
+        </div>
+
+        <Card className="px-4 py-3">
+          <ul className="space-y-2.5">
+            {points.map((pt) => (
+              <li key={pt} className="flex gap-2.5 text-sm" style={{ color: C.ink, ...urText }}>
+                <span aria-hidden className="mt-2 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: isDelete ? C.danger : C.bright }} />
+                <span>{pt}</span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+
+        <div>
+          <SectionLabel>{L("Why are you leaving? (optional)", "آپ کیوں جا رہے ہیں؟ (اختیاری)")}</SectionLabel>
+          <div className="flex flex-wrap gap-2">
+            {reasons.map((r) => {
+              const on = leaveReason === r;
+              return (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => setLeaveReason(on ? null : r)}
+                  className="tap-target px-3.5 py-2 rounded-full text-[13px] font-semibold transition active:scale-95"
+                  style={{
+                    background: on ? C.primary : C.card,
+                    color: on ? "#fff" : C.ink,
+                    border: `1px solid ${on ? C.primary : C.border}`,
+                    fontFamily: isUr ? URDU_FONT : "inherit",
+                  }}
+                >
+                  {r}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {isDelete ? (
+          <>
+            <Card>
+              <Row
+                isUr={isUr}
+                icon="pause"
+                label={L("Just need a break?", "صرف وقفہ چاہیے؟")}
+                sub={L("Deactivate instead — keep your data", "اس کے بجائے غیر فعال کریں — ڈیٹا محفوظ رہے گا")}
+                onClick={() => onViewChange("deactivate")}
+                last
+              />
+            </Card>
+            <label className="flex items-start gap-3 px-1 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={deleteAck}
+                onChange={(e) => setDeleteAck(e.target.checked)}
+                className="mt-1 w-4 h-4 flex-shrink-0"
+                style={{ accentColor: C.danger }}
+              />
+              <span className="text-sm" style={{ color: C.ink, ...urText }}>
+                {L("I understand my account and data will be deleted and this can't be undone.", "میں سمجھتا ہوں کہ میرا اکاؤنٹ اور ڈیٹا حذف ہو جائے گا اور یہ واپس نہیں ہو سکتا۔")}
+              </span>
+            </label>
+          </>
+        ) : null}
+
+        <button
+          type="button"
+          disabled={!canGo}
+          onClick={() => setConfirmAction(isDelete ? "delete" : "deactivate")}
+          className="tap-target w-full py-3.5 rounded-xl font-bold text-sm transition active:scale-[0.99]"
+          style={{
+            background: isDelete ? (canGo ? C.danger : "#F1B5B5") : C.card,
+            color: isDelete ? "#fff" : C.danger,
+            border: isDelete ? "none" : `1.5px solid ${C.danger}`,
+            fontFamily: isUr ? URDU_FONT : "inherit",
+          }}
+        >
+          {isDelete ? L("Delete my account", "میرا اکاؤنٹ حذف کریں") : L("Deactivate account", "اکاؤنٹ غیر فعال کریں")}
+        </button>
+        <p className="text-xs text-center px-2" style={{ color: C.muted, ...urText }}>
+          {L("Need help instead? ", "مدد چاہیے؟ ")}
+          <a href={waLink(L("Hi, I need help with my account.", "السلام علیکم، اکاؤنٹ کے بارے میں مدد چاہیے۔"))} target="_blank" rel="noopener noreferrer" style={{ color: C.primary, fontWeight: 700 }}>
+            {L("Chat with us on WhatsApp", "واٹس ایپ پر بات کریں")}
+          </a>
+        </p>
+
+        {confirmAction && (
+          <ConfirmDialog
+            isUr={isUr}
+            icon={isDelete ? "trash" : "pause"}
+            title={isDelete ? L("Delete your account?", "اکاؤنٹ حذف کریں؟") : L("Deactivate your account?", "اکاؤنٹ غیر فعال کریں؟")}
+            body={
+              isDelete
+                ? L("Your account and data will be removed permanently.", "آپ کا اکاؤنٹ اور ڈیٹا مستقل طور پر ختم ہو جائے گا۔")
+                : L("You'll be signed out. Sign in again anytime to reactivate.", "آپ سائن آؤٹ ہو جائیں گے۔ دوبارہ فعال کرنے کے لیے کسی بھی وقت سائن اِن کریں۔")
+            }
+            cancel={L("Cancel", "منسوخ کریں")}
+            confirm={isDelete ? L("Delete", "حذف کریں") : L("Deactivate", "غیر فعال کریں")}
+            onCancel={() => setConfirmAction(null)}
+            onConfirm={() => {
+              close();
+              onToast(
+                isDelete
+                  ? L("Your account has been deleted", "آپ کا اکاؤنٹ حذف کر دیا گیا")
+                  : L("Account deactivated — sign in to come back", "اکاؤنٹ غیر فعال — واپسی کے لیے سائن اِن کریں"),
+              );
+              onRestartOnboarding?.(isDelete ? "register" : "signin");
+            }}
+          />
+        )}
+      </Page>
     );
   }
 
   // ── LOG OUT ─────────────────────────────────────────────────────────────────
   return (
-    <div
-      className="zm-sheet-overlay"
-      style={{ zIndex: 360, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
-      onClick={close}
-    >
-      <div
-        className="bg-white rounded-3xl p-6 shadow-2xl max-w-sm w-full text-center"
-        dir={isUr ? "rtl" : "ltr"}
-        style={{ animation: "screenEnter 0.2s ease-out", border: `1px solid ${C.border}` }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div
-          className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3"
-          style={{ background: C.dangerBg }}
-        >
-          <Icon name="logout" size={22} color={C.danger} />
-        </div>
-        <h3 className="text-base font-bold mb-1" style={{ color: C.ink }}>
-          {L("Log out?", "لاگ آؤٹ کریں؟")}
-        </h3>
-        <p className="text-sm mb-5" style={{ color: C.muted }}>
-          {L("You can sign back in anytime.", "آپ کسی بھی وقت دوبارہ سائن ان کر سکتے ہیں۔")}
-        </p>
-        <div className="flex gap-2.5">
-          <PrimaryButton variant="secondary" onClick={close}>
-            {L("Cancel", "منسوخ کریں")}
-          </PrimaryButton>
-          <PrimaryButton
-            variant="danger"
-            onClick={() => {
-              close();
-              onRestartOnboarding?.("signin");
-            }}
-          >
-            {L("Log Out", "لاگ آؤٹ")}
-          </PrimaryButton>
-        </div>
-      </div>
-    </div>
+    <ConfirmDialog
+      isUr={isUr}
+      icon="logout"
+      title={L("Log out?", "لاگ آؤٹ کریں؟")}
+      body={L("You can sign back in anytime.", "آپ کسی بھی وقت دوبارہ سائن ان کر سکتے ہیں۔")}
+      cancel={L("Cancel", "منسوخ کریں")}
+      confirm={L("Log Out", "لاگ آؤٹ")}
+      onCancel={back}
+      onConfirm={() => {
+        close();
+        onRestartOnboarding?.("signin");
+      }}
+    />
   );
 }

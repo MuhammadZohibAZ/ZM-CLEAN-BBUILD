@@ -1460,3 +1460,23 @@ body {
 .zm-chip-active-highlight {
   animation: zm-chip-pulse-glow 2.4s infinite ease-in-out;
 }
+/* ─── Centred modal + full pages (complete profile, account pages) ──────── */
+@keyframes zmModalIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes zmPageIn {
+  from { opacity: 0.6; transform: translateX(28px); }
+  to { opacity: 1; transform: none; }
+}
+[dir="rtl"] .zm-page-in,
+.zm-page-in[dir="rtl"] {
+  animation-name: zmPageInRtl;
+}
+@keyframes zmPageInRtl {
+  from { opacity: 0.6; transform: translateX(-28px); }
+  to { opacity: 1; transform: none; }
+}
+.zm-page-in {
+  animation: zmPageIn 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}

@@ -51,7 +51,8 @@ The language is app-wide: `LangProvider` sits in `App.tsx` above onboarding and 
 | **Alternative:** screen layout, its own profile drawer | `alternative/AlternativeHomeScreen.tsx` |
 | **Alternative:** product circles rail | `alternative/ProductRail.tsx` |
 | **Alternative:** 3D by-product card carousel + jump dots | `alternative/HomeByproductCarousel.tsx`, `alternative/ByproductJumpIndicator.tsx` |
-| Account menu, Edit profile (city + detect location), Contact us | `customer-face/account/AccountCenter.tsx` · `AccountCenter` |
+| Account pages (full screen, back → menu): menu, Edit profile (city + detect location), Subscriptions, Voice & language, Contact us, Terms / Privacy / Refunds, Deactivate / Delete account, Log out | `customer-face/account/AccountCenter.tsx` · `AccountCenter` |
+| Short policy texts (from zaraimandi.com, English + Urdu) | `customer-face/account/legalContent.ts` |
 | Complete-profile / subscribe flow | see **Complete Profile** below |
 
 ## Screen 2 — By-products (`customer-face/screens/byproducts/`)
@@ -89,7 +90,7 @@ The language is app-wide: `LangProvider` sits in `App.tsx` above onboarding and 
 ## Complete Profile (`customer-face/sheets/complete-profile/`)
 
 Opened from Home's "Complete profile" chip, locked products and the account menu.
-`CompleteProfileModal.tsx` is the sheet's layout; every part reads the shared state from `useCompleteProfile`.
+`CompleteProfileModal.tsx` is the layout (one centred modal, same size for every step); every part reads the shared state from `useCompleteProfile`.
 
 | Part on screen | File · component |
 |---|---|
