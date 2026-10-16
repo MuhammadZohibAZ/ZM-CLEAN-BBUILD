@@ -79,7 +79,7 @@ The language is app-wide: `LangProvider` sits in `App.tsx` above onboarding and 
 | Rate list picker / attribute sheet base | `PickerSheet.tsx`, `ui.tsx` (`BottomSheet`, `Segmented`, `Chip`, `Icon`, …) |
 | Price card + sparkline + "no reports" buttons | `PriceHero.tsx` (`PriceHero`, `EmptyActions`) |
 | Best places + map card | `BestPlaces.tsx`, `components/ExpandableMandiMapCard.tsx`, `components/MandiMapGL.tsx` |
-| Mandi table / cards, full-screen table + calendar button | `MandiSection.tsx` |
+| Mandi table / cards, full-screen table + calendar button (the table gets rows not narrowed by rate/attribute and applies the rail's values itself, so a column header lists every value and can override the rail for the table only; the table calendar is table-only too; the filter rail drives the whole page) | `MandiSection.tsx`; table day state `tableDate` in `ProductRatesScreen.tsx` |
 | Mandi detail sheet (trend ↔ history, 1D–1Y) | `MandiDetailSheet.tsx` |
 | Trends tab (ranges, candles, rate types, movers) | `TrendsTab.tsx`, `TrendChart.tsx`, `CandleChart.tsx`, `IntradayChart.tsx` |
 | Data loading / maths | `useMarketData.ts`, `selectors.ts`, `format.ts`, `types.ts`, `theme.ts` |

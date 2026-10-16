@@ -4,9 +4,9 @@ import { createPortal } from "react-dom";
 import { inDevicePreview, requestDeviceOrientation } from "../../../lib/device-orientation";
 import { attrValue } from "./Filters";
 import { arrow, shortRate, signed, stripMandi, type Fmt } from "./format";
-import { ALL_RATES, type MandiEntry } from "./selectors";
+import { ALL_RATES, ATTR_KEYS, type MandiEntry } from "./selectors";
 import { C } from "./theme";
-import type { AttrKey, ChangeInterval, SortKey } from "./types";
+import type { AttrFilters, AttrKey, ChangeInterval, SortKey } from "./types";
 import { PickerSheet } from "./PickerSheet";
 import { EmptyActions, type EmptyAction } from "./PriceHero";
 import { RangeSheet } from "./RangeSheet";
@@ -30,7 +30,6 @@ export function MandiSection({
   periodLabel,
   datePicker,
   regionLabel,
-  rateLabel,
   sort,
   onSort,
   interval,
@@ -42,8 +41,7 @@ export function MandiSection({
   emptyNote,
   mode,
   rate,
-  rates,
-  onRate,
+  railFilters,
 }: {
   f: Fmt;
   t: (s: string) => string;
@@ -53,7 +51,6 @@ export function MandiSection({
   date: string;
   /** Province the list covers (follows the chosen location); none = all Pakistan. */
   regionLabel?: string;
-  rateLabel?: string;
   sort: SortKey;
   onSort: (s: SortKey) => void;
   interval: ChangeInterval;
@@ -68,7 +65,7 @@ export function MandiSection({
   mode?: "table" | "cards";
   /** A custom period in place of the single day (e.g. "12 Sep – 22 Sep"). */
   periodLabel?: string;
-  /** Full-screen table's calendar button: a day or a date range (the columns filter the rest). */
+  /** Full-screen table's calendar button: a day or a date range for the table only (the columns filter the rest). */
   datePicker?: {
     dates: string[];
     latest: string;
@@ -77,17 +74,28 @@ export function MandiSection({
     onDayRange: (r: { start: string; end: string } | null) => void;
     lockHistory: boolean;
   };
+  /**
+   * The filter rail's rate type and attributes. `entries` are not narrowed by
+   * them: the table applies them itself, so a column header can list every
+   * value and override the rail for the table only.
+   */
   rate?: string;
-  rates?: Array<{ id: string; label: string; count?: number; disabled?: boolean }>;
-  onRate?: (r: string) => void;
+  railFilters?: AttrFilters;
 }) {
   const [viewMode, setViewMode] = useState<"table" | "cards">(mode || "table");
   const [picker, setPicker] = useState<string | null>(null);
-  const activeRate = rate || ALL_RATES;
-  const isRateFiltered = activeRate !== ALL_RATES;
-  const rateHeaderLabel = isRateFiltered ? shortRate(tr(activeRate)) : f.tx("Rate", "ریٹ");
   // Per-column value filters set from the table headers (none by default).
+  // They narrow the table only; the price card above follows the filter rail.
+  // undefined = follow the rail, "" = all values, anything else = that value.
   const [colFilters, setColFilters] = useState<Partial<Record<ValueCol, string>>>({});
+  // A change in the filter rail replaces the table's own column filters.
+  const railKey = JSON.stringify([rate, railFilters]);
+  useEffect(() => setColFilters({}), [railKey]);
+  const railValue = (k: ValueCol): string =>
+    k === "rate" ? (rate && rate !== ALL_RATES ? rate : "") : k === "unit" ? "" : railFilters?.[k as AttrKey] || "";
+  const colValue = (k: ValueCol): string => colFilters[k] ?? railValue(k);
+  const shownRate = colValue("rate");
+  const rateHeaderLabel = shownRate ? shortRate(tr(shownRate)) : f.tx("Rate", "ریٹ");
   const cellValue = (e: MandiEntry, key: ValueCol): string => {
     const r = e.row;
     if (key === "rate") return r.rateType || "";
@@ -95,14 +103,23 @@ export function MandiSection({
     if (key === "quality") return (r.quality || "").trim();
     return String(r[key] ?? "").trim();
   };
+  // Same matching as the rail (selectors.passesFilters): case and % ignored.
+  const norm = (v: string) => v.toLowerCase().replace(/[%%]/g, "").trim();
+  const VALUE_COLS: ValueCol[] = ["rate", ...ATTR_KEYS, "unit"];
+  const passes = (e: MandiEntry, value: (k: ValueCol) => string, skip?: ValueCol) =>
+    VALUE_COLS.every((k) => {
+      const v = k === skip ? "" : value(k);
+      return !v || norm(cellValue(e, k)) === norm(v);
+    });
   const entries = useMemo(
-    () => entriesIn.filter((e) => (Object.entries(colFilters) as [ValueCol, string][]).every(([k, v]) => !v || cellValue(e, k) === v)),
-    [entriesIn, colFilters],
+    () => entriesIn.filter((e) => passes(e, colValue)),
+    [entriesIn, colFilters, railKey], // eslint-disable-line react-hooks/exhaustive-deps
   );
-  const activeColFilters = Object.values(colFilters).filter(Boolean).length;
+  // Every value of the column, for the rows the other columns keep.
   const valueOptions = (key: ValueCol) => {
     const counts = new Map<string, number>();
     for (const e of entriesIn) {
+      if (!passes(e, colValue, key)) continue;
       const v = cellValue(e, key);
       if (v) counts.set(v, (counts.get(v) ?? 0) + 1);
     }
@@ -303,12 +320,12 @@ export function MandiSection({
               )}
             </th>
             <th style={{ ...thBase, minWidth: 58 }}>
-              {headBtn(rateHeaderLabel, false, () => setPicker("col:rate"))}
+              {headBtn(rateHeaderLabel, colFilters.rate !== undefined, () => setPicker("col:rate"))}
             </th>
             <th style={{ ...thBase, minWidth: 70 }}>
               {headBtn(
                 sort === "change" ? f.tx(`Change (${interval}D) ↕`, `تبدیلی (${f.digits(interval)} دن) ↕`) : f.tx(`Change (${interval}D)`, `تبدیلی (${f.digits(interval)} دن)`),
-                sort === "change",
+                sort === "change" || interval !== 1,
                 () => setPicker("interval"),
               )}
             </th>
@@ -320,12 +337,12 @@ export function MandiSection({
               )}
             </th>
             {specCols.map((c) => {
-              const v = colFilters[c.key];
+              const v = colValue(c.key);
               return (
                 <th key={c.key} style={{ ...thBase }}>
                   {headBtn(
                     v ? (c.key === "unit" ? f.unit(v) : c.key === "quality" ? t(cleanQuality(v)) : attrValue(f, t, c.key as AttrKey, v)) : c.label,
-                    !!v,
+                    colFilters[c.key] !== undefined,
                     () => setPicker(`col:${c.key}`),
                   )}
                 </th>
@@ -379,7 +396,8 @@ export function MandiSection({
       </button>
     ) : null;
 
-  const cleanRate = rateLabel ? shortRate(rateLabel) : "";
+  // The table's rate type (its own Rate column filter, else the rail's).
+  const cleanRate = shownRate ? shortRate(tr(shownRate)) : "";
   const sectionHeading = cleanRate
     ? f.tx(`${cleanRate} Rates`, `${cleanRate} ریٹس`)
     : f.tx("All Rates", "تمام ریٹس");
@@ -460,19 +478,6 @@ export function MandiSection({
         </div>
       </div>
 
-      {activeColFilters > 0 && (
-        <div style={{ padding: "0 16px 8px" }}>
-          <button
-            type="button"
-            onClick={() => setColFilters({})}
-            style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 30, padding: "0 12px", borderRadius: 15, border: `1px solid ${C.brandBorder}`, background: "rgba(16, 185, 129, 0.1)", color: C.brand, fontSize: 12.5, fontWeight: 700, fontFamily: f.font }}
-          >
-            {f.tx(`${activeColFilters} column filter${activeColFilters > 1 ? "s" : ""} · ${entries.length} of ${entriesIn.length} rows`, `${f.digits(activeColFilters)} کالم فلٹر · ${f.digits(entries.length)} از ${f.digits(entriesIn.length)}`)}
-            <Icon name="close" size={12} width={2.6} color={C.brand} />
-          </button>
-        </div>
-      )}
-
       {viewMode === "cards" && (
         <div data-zm-hscroll className="zm-hide-scrollbar" style={{ display: "flex", gap: 8, padding: "0 16px 12px", overflowX: "auto", scrollbarWidth: "none" }}>
           <button type="button" style={pillBtn(sort !== "none")} onClick={() => setPicker("sort")}>
@@ -480,10 +485,10 @@ export function MandiSection({
             {sortLabel[sort]}
             <Icon name="chevDown" size={12} width={2.6} color={C.muted} />
           </button>
-          <button type="button" style={pillBtn(false)} onClick={() => setPicker("interval")}>
-            <Icon name="clock" size={14} width={2.4} color={C.muted} />
+          <button type="button" style={pillBtn(interval !== 1)} onClick={() => setPicker("interval")}>
+            <Icon name="clock" size={14} width={2.4} color={interval !== 1 ? "#FFFFFF" : C.muted} />
             {f.tx(`${interval}D change`, `${f.digits(interval)} دن تبدیلی`)}
-            <Icon name="chevDown" size={12} width={2.6} color={C.muted} />
+            <Icon name="chevDown" size={12} width={2.6} color={interval !== 1 ? "#FFFFFF" : C.muted} />
           </button>
         </div>
       )}
@@ -567,43 +572,21 @@ export function MandiSection({
         />
       )}
 
-      {picker === "col:rate" && (
-        <PickerSheet
-          f={f}
-          title={f.tx("Rate type", "ریٹ کی قسم")}
-          value={[activeRate]}
-          onChange={(v) => {
-            const next = v[0];
-            onRate?.(next);
-            setPicker(null);
-          }}
-          onClose={() => setPicker(null)}
-          options={
-            rates && rates.length > 0
-              ? rates.map((r) => ({
-                  id: r.id,
-                  label: r.id === ALL_RATES ? f.tx("All", "تمام") : r.label,
-                  meta: r.count ? f.tx(`${r.count} location${r.count === 1 ? "" : "s"}`, `${f.digits(r.count)} مقامات`) : f.tx("no reports", "رپورٹ نہیں"),
-                  disabled: !r.count && r.id !== activeRate,
-                }))
-              : [
-                  { id: ALL_RATES, label: f.tx("All", "تمام") },
-                  ...valueOptions("rate").map(([v, n]) => ({ id: v, label: `${shortRate(tr(v))} · ${f.digits(n)}` })),
-                ]
-          }
-        />
-      )}
-
-      {picker?.startsWith("col:") && picker !== "col:rate" && (() => {
+      {picker?.startsWith("col:") && (() => {
         const key = picker.slice(4) as ValueCol;
-        const label = specCols.find((c) => c.key === key)?.label ?? key;
-        const show = (v: string) => (key === "unit" ? f.unit(v) : key === "quality" ? t(cleanQuality(v)) : attrValue(f, t, key as AttrKey, v));
+        const label = key === "rate" ? f.tx("Rate type", "ریٹ کی قسم") : specCols.find((c) => c.key === key)?.label ?? key;
+        const show = (v: string) =>
+          key === "rate" ? shortRate(tr(v)) : key === "unit" ? f.unit(v) : key === "quality" ? t(cleanQuality(v)) : attrValue(f, t, key as AttrKey, v);
         return (
           <PickerSheet
             f={f}
             title={f.tx(`Filter by ${label}`, `${label} سے فلٹر`)}
-            value={[colFilters[key] ?? "__all"]}
-            onChange={(v) => setColFilters((prev) => ({ ...prev, [key]: v[0] === "__all" ? undefined : v[0] }))}
+            value={[colValue(key) || "__all"]}
+            onChange={(v) => {
+              const next = v[0] === "__all" ? "" : v[0];
+              // Back to the rail's value = no table filter for this column.
+              setColFilters((prev) => ({ ...prev, [key]: norm(next) === norm(railValue(key)) ? undefined : next }));
+            }}
             onClose={() => setPicker(null)}
             options={[
               { id: "__all", label: f.tx("All", "تمام") },

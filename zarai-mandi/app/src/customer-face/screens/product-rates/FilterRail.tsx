@@ -14,7 +14,8 @@ type Open = "day" | "rate" | "quality" | null;
  *   [ Location | Day | Rate | (Quality) ]
  * Each part shows a small caption and the current value, so the whole
  * selection reads at a glance; tapping a part opens its list. A changed part
- * turns green and gets its own ✕ to clear it, so the bar never grows.
+ * turns green and gets its own ✕ to clear it, so the bar never grows. Values
+ * the tapped by-product card opened with look like defaults (no green, no ✕).
  */
 export function FilterRail({
   f,
@@ -36,6 +37,7 @@ export function FilterRail({
   onClearLocation,
   rateFromCard = false,
   filtersFromCard = false,
+  dateFromCard = false,
   showDate = true,
   variant = "bar",
   allowRange = false,
@@ -73,6 +75,7 @@ export function FilterRail({
       caption: isLatest ? f.tx("Day · latest", "دن · تازہ") : f.tx("Day", "دن"),
       value: f.day(date),
       active: !isLatest,
+      fromCard: dateFromCard,
       grow: 1.0,
       onClick: () => setOpen("day"),
       onClear: () => onDate(latest),
@@ -136,7 +139,9 @@ export function FilterRail({
         }}
       >
         {parts.map((p, i) => {
-          const clearable = p.active && !!p.onClear && !p.fromCard;
+          // Set by the card, not the user: shown plain, like a default.
+          const on = p.active && !p.fromCard;
+          const clearable = on && !!p.onClear;
           return (
             <div
               key={p.key}
@@ -145,7 +150,7 @@ export function FilterRail({
                 flex: variant === "map" ? "1 1 auto" : `${p.grow} 1 0`,
                 minWidth: variant === "map" ? 0 : "max-content",
                 borderInlineStart: i ? `1px solid ${C.line}` : "none",
-                background: p.active ? C.brandTint : "transparent",
+                background: on ? C.brandTint : "transparent",
                 transition: "background 200ms",
               }}
             >
@@ -176,7 +181,7 @@ export function FilterRail({
                   style={{
                     fontSize: variant === "map" ? 10.5 : 11,
                     fontWeight: 500,
-                    color: p.active ? C.brandDeep : C.muted,
+                    color: on ? C.brandDeep : C.muted,
                     lineHeight: 1.2,
                     whiteSpace: "nowrap",
                     maxWidth: "100%",
@@ -191,7 +196,7 @@ export function FilterRail({
                     style={{
                       fontSize: variant === "map" ? 12.5 : 13,
                       fontWeight: 600,
-                      color: p.active ? C.brandDeep : C.ink,
+                      color: on ? C.brandDeep : C.ink,
                       lineHeight: 1.2,
                       whiteSpace: "nowrap",
                       minWidth: 0,

@@ -153,14 +153,17 @@ export function ProductRatesScreen({
   // Pick the starting day once reports arrive: the requested day if it has
   // reports (and history is not locked), otherwise the latest day with reports
   // for the card's rate and attribute (the newest day can be a partial export).
+  // The day the card opened on: the rail shows it like a default (no ✕).
+  const arrivalDay = useRef<string | null>(null);
   useEffect(() => {
     if (!dates.length) return;
     const wanted = initialStatDate ? initialStatDate.slice(0, 10) : "";
     if (!date || !dates.includes(date) || (lockHistory && date !== latest)) {
-      if (lockHistory) return setDate(latest);
       const matching = new Set(rows.filter((r) => passesFilters(r, arrival.filters, arrival.rate)).map((r) => r.date));
       const upTo = dates.includes(wanted) ? wanted : latest;
-      setDate([...dates].reverse().find((d) => d <= upTo && matching.has(d)) || upTo);
+      const start = lockHistory ? latest : [...dates].reverse().find((d) => d <= upTo && matching.has(d)) || upTo;
+      if (arrivalDay.current === null) arrivalDay.current = start;
+      setDate(start);
     }
   }, [dates, latest, lockHistory]); // eslint-disable-line react-hooks/exhaustive-deps
   const day = date || latest;
@@ -190,15 +193,24 @@ export function ProductRatesScreen({
   const availableRates = new Set(scopeDayAnyRate.map((r) => r.rateType));
   const filterGroups = filterOptions(scopeRows.filter((r) => r.date === day && passesFilters(r, {}, rate)));
 
+  // The full-screen table's calendar picks a day or period for the table only
+  // (null = follow the filter rail). Any day change from the rail clears it.
+  const [tableDate, setTableDate] = useState<{ day: string; range: { start: string; end: string } | null } | null>(null);
+  useEffect(() => setTableDate(null), [day, dayRange]);
+  const tableDay = tableDate ? tableDate.day : day;
+  const tableRange = tableDate ? tableDate.range : dayRange;
+
+  // Not narrowed by rate or attributes: MandiSection applies the rail's filters
+  // itself, so its column headers can offer every value.
   const entries = useMemo(() => {
-    const keepRow = (r: MarketRow) => passesFilters(r, filters, rate) && (!listProvince || r.province === listProvince);
+    const keepRow = (r: MarketRow) => !listProvince || r.province === listProvince;
     return sortEntries(
-      dayRange ? rangeEntries(rows, dayRange, keepRow) : mandiEntries(rows, dates, day, interval, keepRow),
+      tableRange ? rangeEntries(rows, tableRange, keepRow) : mandiEntries(rows, dates, tableDay, interval, keepRow),
       sort,
       scope.kind === "mandi" ? scope.label : undefined,
     );
-  }, [rows, dates, day, interval, filters, rate, listProvince, sort, scope, dayRange]);
-  const periodLabel = dayRange ? `${f.day(dayRange.start)} – ${f.day(dayRange.end)}` : undefined;
+  }, [rows, dates, tableDay, interval, listProvince, sort, scope, tableRange]);
+  const periodLabel = tableRange ? `${f.day(tableRange.start)} – ${f.day(tableRange.end)}` : undefined;
 
   // Same maths as the headline number, so tapping a day shows matching values.
   const sparkSource = useMemo(() => {
@@ -352,6 +364,7 @@ export function ProductRatesScreen({
     onFilters: setFilters,
     rateFromCard: rate !== ALL_RATES && rate === arrival.rate,
     filtersFromCard: Object.values(filters).some(Boolean) && sameFilters(filters, arrival.filters),
+    dateFromCard: !dayRange && day === arrivalDay.current,
     resultCount: stats.mandis,
     isDefault: scope.kind === "pakistan" && day === latest && rate === ALL_RATES && !Object.values(filters).some(Boolean),
     locationActive: scope.kind !== "pakistan",
@@ -546,14 +559,19 @@ export function ProductRatesScreen({
               tm={tm}
               tr={tr}
               entries={entries}
-              date={day}
+              date={tableDay}
               periodLabel={periodLabel}
-              datePicker={{ dates, latest, onDate: setDate, dayRange, onDayRange: setDayRange, lockHistory }}
+              datePicker={{
+                dates,
+                latest,
+                onDate: (d) => setTableDate({ day: d, range: null }),
+                dayRange: tableRange,
+                onDayRange: (r) => setTableDate({ day: tableDay, range: r }),
+                lockHistory,
+              }}
               regionLabel={listProvince ? tm(listProvince) : undefined}
-              rateLabel={rate === ALL_RATES ? "" : rateLabel}
               rate={rate}
-              rates={filterUi.rates}
-              onRate={setRate}
+              railFilters={filters}
               sort={sort}
               onSort={setSort}
               interval={interval}
@@ -561,7 +579,7 @@ export function ProductRatesScreen({
               selectedMandi={scope.kind === "mandi" ? scope.label : undefined}
               primary={primaryAttr(getProductSpecialAttrType(byproduct, product))}
               loading={loading}
-              emptyNote={dayRange ? null : emptyState}
+              emptyNote={tableRange || tableDate ? null : emptyState}
               onOpen={(e) => {
                 setDetail({ mandi: e.row.mandiName, rate: e.row.rateType });
                 const m = stripMandi(e.row.mandiName);
