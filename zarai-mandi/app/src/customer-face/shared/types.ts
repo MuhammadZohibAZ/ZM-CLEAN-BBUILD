@@ -38,7 +38,6 @@ export type Screen =
     initialTotalArrival?: number;
     initialMarkets?: number;
   }
-  | { id: "compare" }
   | { id: "news" }
   | {
     id: "billing";
@@ -51,7 +50,7 @@ export type LocationScope = {
   label: string;
 };
 
-export type NavTab = "home" | "compare" | "news" | "voice";
+export type NavTab = "home" | "news" | "voice";
 export type TimeRange = "day" | "week" | "month" | "year";
 
 export type FeedMsg = {

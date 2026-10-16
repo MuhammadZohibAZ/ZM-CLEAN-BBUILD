@@ -12,6 +12,7 @@ export type Series = { color: string; values: number[]; lo?: number[]; hi?: numb
  *    and each new day gives a tiny haptic tick (Android);
  *  - the line draws itself in and bars grow whenever the data changes;
  *  - zero values mean "no report" and are skipped, never drawn as a crash.
+ *  - with `onSpan` (full screen): pinch or mouse wheel zooms the number of days.
  */
 export function TrendChart({
   f,
@@ -29,6 +30,9 @@ export function TrendChart({
   hideSlider = false,
   candles = false,
   onPanDays,
+  span,
+  onSpan,
+  width,
   animKey,
   yFormat,
   yUnit,
@@ -54,6 +58,12 @@ export function TrendChart({
   candles?: boolean;
   /** Enables drag-to-pan through time. Called with whole days: + = earlier. */
   onPanDays?: (deltaDays: number) => void;
+  /** Visible days, for pinch / wheel zoom (with onSpan). */
+  span?: number;
+  /** Enables pinch / wheel zoom: called with the new number of visible days. */
+  onSpan?: (days: number) => void;
+  /** Drawing width in px (full screen fills its box); default 340 scales to fit. */
+  width?: number;
   /** Replays the draw-in animation only when this changes (not while panning). */
   animKey?: string;
   yFormat?: (v: number) => string;
@@ -75,6 +85,13 @@ export function TrendChart({
     timer: null,
     applied: 0,
   });
+  // Two fingers = pinch zoom (only with onSpan).
+  const pointers = useRef(new Map<number, number>()); // id -> clientX
+  const pinch = useRef<{ dist: number; base: number } | null>(null);
+  const pinchDist = () => {
+    const xs = [...pointers.current.values()];
+    return xs.length >= 2 ? Math.abs(xs[0] - xs[1]) : 0;
+  };
   const endGesture = (tapX?: number) => {
     const g = gesture.current;
     if (g.timer) window.clearTimeout(g.timer);
@@ -83,7 +100,7 @@ export function TrendChart({
     g.timer = null;
     setTouching(false);
   };
-  const W = 340;
+  const W = width ?? 340;
   const axisW = compact ? 0 : 54;
   const plotW = W - axisW;
   const H = height;
@@ -264,13 +281,29 @@ export function TrendChart({
         role="img"
         aria-label={ariaLabel}
         style={{ display: "block", direction: "ltr", touchAction: onIdx ? "pan-y" : undefined, WebkitTapHighlightColor: "transparent", userSelect: "none" }}
+        onWheel={(e) => {
+          if (!onSpan || span === undefined) return;
+          const step = Math.max(1, Math.round(span * 0.12));
+          onSpan(span + (e.deltaY > 0 ? step : -step));
+        }}
         onPointerDown={(e) => {
-          if (!onIdx && !onPanDays) return;
+          if (!onIdx && !onPanDays && !onSpan) return;
           try {
             e.currentTarget.setPointerCapture(e.pointerId);
           } catch {
             /* capture unsupported */
           }
+          pointers.current.set(e.pointerId, e.clientX);
+          if (pointers.current.size === 2 && onSpan && span !== undefined) {
+            const g0 = gesture.current;
+            if (g0.timer) window.clearTimeout(g0.timer);
+            g0.mode = "idle";
+            g0.timer = null;
+            setTouching(false);
+            pinch.current = { dist: pinchDist(), base: span };
+            return;
+          }
+          if (pinch.current) return;
           const g = gesture.current;
           g.x = e.clientX;
           g.y = e.clientY;
@@ -291,6 +324,12 @@ export function TrendChart({
           }, onPanDays ? 260 : 180);
         }}
         onPointerMove={(e) => {
+          if (pointers.current.has(e.pointerId)) pointers.current.set(e.pointerId, e.clientX);
+          if (pinch.current && onSpan) {
+            const d = pinchDist();
+            if (pinch.current.dist > 0 && d > 0) onSpan(Math.round(pinch.current.base / (d / pinch.current.dist)));
+            return;
+          }
           const g = gesture.current;
           if (g.mode === "pending") {
             const dx = Math.abs(e.clientX - g.x);
@@ -323,8 +362,19 @@ export function TrendChart({
             pick(e.clientX);
           }
         }}
-        onPointerUp={(e) => endGesture(e.clientX)}
-        onPointerCancel={() => endGesture()}
+        onPointerUp={(e) => {
+          pointers.current.delete(e.pointerId);
+          if (pinch.current) {
+            if (pointers.current.size === 0) pinch.current = null;
+            return;
+          }
+          endGesture(e.clientX);
+        }}
+        onPointerCancel={(e) => {
+          pointers.current.delete(e.pointerId);
+          if (pointers.current.size === 0) pinch.current = null;
+          endGesture();
+        }}
         onLostPointerCapture={() => gesture.current.mode !== "idle" && endGesture()}
       >
         <defs>

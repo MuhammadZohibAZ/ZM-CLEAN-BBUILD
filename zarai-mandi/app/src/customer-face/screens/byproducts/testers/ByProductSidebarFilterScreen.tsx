@@ -8,7 +8,7 @@ import { useRateAttributeCards } from "./rateAttributeCards";
 import type { TesterBodyProps } from "./splitCards";
 
 // Tester variant of the by-product screen: a filter drawer. Closed by default;
-// the Filters button slides a panel over half the screen (rate type and special
+// a floating Filters button slides a panel over half the screen (rate type and special
 // attribute only). The cards move to the other half in one column and stay
 // scrollable while the panel is open. With no rate picked, every card shows its
 // own most received rate; picking a rate applies it to all cards (tap it again
@@ -25,6 +25,7 @@ export function ByProductSidebarFilterScreen(props: TesterBodyProps) {
   } = useRateAttributeCards(props, { perCardDefault: true });
   const [open, setOpen] = useState(false);
   const active = rate !== null || attrs.length > 0;
+  const activeCount = (rate !== null ? 1 : 0) + attrs.length;
   const shortRate = (r: string) => tr(r).replace(/\s*Rate$/i, "");
   const start = f.ur ? "right" : "left";
 
@@ -233,80 +234,50 @@ export function ByProductSidebarFilterScreen(props: TesterBodyProps) {
   );
 
   return (
-    <>
-      {/* Top strip: Filters button + what is applied (tap a chip to remove it) */}
-      <div dir={f.dir} className="flex-shrink-0" style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", background: C.surface, borderBottom: `1px solid ${C.lineSoft}`, fontFamily: f.font }}>
-        <button
-          type="button"
-          aria-expanded={open}
-          onClick={() => setOpen((v) => !v)}
-          style={{
-            position: "relative",
-            height: 34,
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "0 12px",
-            borderRadius: 11,
-            border: `1px solid ${open ? C.brand : C.line}`,
-            background: open ? C.brand : C.surface,
-            color: open ? "#FFFFFF" : C.ink,
-            fontSize: 13,
-            fontWeight: 700,
-            fontFamily: f.font,
-            flexShrink: 0,
-          }}
-        >
-          <Icon name="filter" size={14} width={2.4} color={open ? "#FFFFFF" : C.ink2} />
-          {f.tx("Filters", "فلٹر")}
-          {active && !open && (
-            <span aria-hidden="true" style={{ position: "absolute", top: -3, [f.ur ? "left" : "right"]: -3, width: 10, height: 10, borderRadius: 5, background: C.brand, border: "2px solid #FFFFFF" }} />
-          )}
-        </button>
-        <div className="zm-hide-scrollbar" style={{ flex: 1, minWidth: 0, display: "flex", gap: 6, overflowX: "auto", scrollbarWidth: "none" }}>
-          {rate && (
-            <button type="button" onClick={() => setRate(null)} style={stripChip(f.font)} aria-label={f.tx(`Remove ${shortRate(rate)}`, `${shortRate(rate)} ہٹائیں`)}>
-              {shortRate(rate)}
-              <Icon name="close" size={8} width={2.8} color={C.brandDeep} />
-            </button>
-          )}
-          {attrs.map((a) => {
-            const [type, ...rest] = a.split("|");
-            const label = valueLabel(type, rest.join("|"));
-            return (
-              <button key={a} type="button" onClick={() => toggleAttr(a)} style={stripChip(f.font)} aria-label={f.tx(`Remove ${label}`, `${label} ہٹائیں`)}>
-                {label}
-                <Icon name="close" size={8} width={2.8} color={C.brandDeep} />
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Body: the drawer slides over the cards; the cards keep scrolling beside it */}
-      <div dir={f.dir} style={{ position: "relative", flex: 1, minHeight: 0, overflow: "hidden", fontFamily: f.font }}>
-        {cardList}
-        {drawer}
-      </div>
-    </>
+    // The cards fill the screen; a small floating Filters button (above the
+    // bottom nav, at the end side) opens the drawer.
+    <div dir={f.dir} style={{ position: "relative", flex: 1, minHeight: 0, overflow: "hidden", fontFamily: f.font }}>
+      {cardList}
+      {drawer}
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-label={activeCount ? f.tx(`Filters, ${activeCount} applied`, `فلٹر، ${f.digits(activeCount)} لاگو`) : f.tx("Filters", "فلٹر")}
+        onClick={() => setOpen(true)}
+        style={{
+          position: "absolute",
+          bottom: "calc(env(safe-area-inset-bottom, 0px) + 100px)",
+          [f.ur ? "left" : "right"]: 16,
+          zIndex: 30,
+          height: 40,
+          display: "flex",
+          alignItems: "center",
+          gap: 7,
+          padding: "0 14px",
+          borderRadius: 20,
+          border: "none",
+          background: activeCount ? C.brand : C.surface,
+          color: activeCount ? "#FFFFFF" : C.ink,
+          boxShadow: "0 6px 18px rgba(6, 45, 36, 0.22)",
+          fontSize: 13.5,
+          fontWeight: 700,
+          fontFamily: f.font,
+          opacity: open ? 0 : 1,
+          pointerEvents: open ? "none" : "auto",
+          transition: `opacity ${DRAWER_MS}ms ease`,
+        }}
+      >
+        <Icon name="filter" size={15} width={2.4} color={activeCount ? "#FFFFFF" : C.ink2} />
+        {f.tx("Filters", "فلٹر")}
+        {activeCount > 0 && (
+          <span
+            aria-hidden="true"
+            style={{ minWidth: 20, height: 20, padding: "0 6px", borderRadius: 10, background: "#FFFFFF", color: C.brandDeep, fontSize: 11.5, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}
+          >
+            {f.digits(activeCount)}
+          </span>
+        )}
+      </button>
+    </div>
   );
-}
-
-function stripChip(font: string) {
-  return {
-    display: "flex",
-    alignItems: "center",
-    gap: 5,
-    height: 28,
-    padding: "0 7px 0 10px",
-    borderRadius: 14,
-    border: "none",
-    background: C.brandTint,
-    color: C.brandDeep,
-    fontSize: 12,
-    fontWeight: 600,
-    fontFamily: font,
-    whiteSpace: "nowrap" as const,
-    flexShrink: 0,
-  };
 }

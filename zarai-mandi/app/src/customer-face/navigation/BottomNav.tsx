@@ -81,15 +81,6 @@ export function BottomNav({
     pointerIdRef.current = null;
   };
 
-  const tabIndexMap: Record<string, number> = {
-    home: 0,
-    compare: 1,
-    news: 2,
-    voice: 3,
-  };
-
-  const currentActiveIndex = voiceActive ? 3 : (tabIndexMap[active] ?? 0);
-
   const tabs: {
     id: NavTab;
     label: string;
@@ -112,44 +103,6 @@ export function BottomNav({
             <path
               d="M9 21V12h6v9"
               fill={isActive ? "#0B5E4A" : "#C7D8D1"}
-            />
-          </svg>
-        ),
-      },
-      {
-        id: "compare",
-        label: t("nav.compare"),
-        brandColor: "#0B5E4A",
-        icon: (isActive) => (
-          <svg
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <rect
-              x="3"
-              y="3"
-              width="7"
-              height="18"
-              rx="2"
-              stroke={isActive ? "#ffffff" : "#183B34"}
-              strokeWidth="2"
-            />
-            <rect
-              x="14"
-              y="3"
-              width="7"
-              height="18"
-              rx="2"
-              fill={isActive ? "#ffffff" : "#183B34"}
-            />
-            <path
-              d="M6 8h1M6 13h1"
-              stroke={isActive ? "#0B5E4A" : "#ffffff"}
-              strokeWidth="2"
-              strokeLinecap="round"
             />
           </svg>
         ),
@@ -189,17 +142,20 @@ export function BottomNav({
         ),
       },
     ];
+  // The highlighted tab (none while the voice overlay is open).
+  const currentActiveIndex = voiceActive ? -1 : Math.max(0, tabs.findIndex((x) => x.id === active));
 
   return (
     <nav
       // Floats over the bottom of the screen so each screen's background runs
       // behind it; screens keep their content clear via --zm-nav-space.
-      className="zm-bottom-nav-shell absolute bottom-0 inset-x-0 z-50 ltr-only w-full px-3 pt-1 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] mb-2 flex justify-center items-center gap-2.5 pointer-events-none [&>*]:pointer-events-auto"
+      className="zm-bottom-nav-shell absolute bottom-0 inset-x-0 z-50 ltr-only w-full px-4 pt-1 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] mb-2 flex justify-center items-center pointer-events-none [&>*]:pointer-events-auto"
       style={{ direction: "ltr" }}
     >
-      {/* Navigation Cockpit */}
-      <div className="relative flex items-center h-[50px] p-1 bg-white/85 backdrop-blur-xl rounded-full border border-[#087F63]/15 shadow-[0_10px_28px_-8px_rgba(6,60,48,0.28),0_2px_6px_rgba(6,60,48,0.06)]">
-        <div className="flex items-center gap-1 h-full">
+      <div className="flex items-center gap-2.5 w-full max-w-[400px]">
+      {/* Navigation Cockpit: fills the row, tabs share it equally */}
+      <div className="relative flex-1 min-w-0 flex items-center h-[56px] p-1.5 bg-white/90 backdrop-blur-xl rounded-full border border-[#087F63]/15 shadow-[0_10px_28px_-8px_rgba(6,60,48,0.28),0_2px_6px_rgba(6,60,48,0.06)]">
+        <div className="flex items-center gap-1 h-full w-full">
           {tabs.map((tab, idx) => {
             const isTabActive = currentActiveIndex === idx;
 
@@ -210,7 +166,8 @@ export function BottomNav({
                   triggerHaptic(8);
                   onNav(tab.id);
                 }}
-                className="relative flex items-center justify-center h-[40px] px-3.5 rounded-full outline-none select-none group transition-transform active:scale-95"
+                aria-current={isTabActive ? "page" : undefined}
+                className="relative flex-1 min-w-0 flex items-center justify-center h-full px-3 rounded-full outline-none select-none group transition-transform active:scale-95"
               >
                 {/* Brand-Colored Sliding Capsule */}
                 {isTabActive && (
@@ -228,7 +185,7 @@ export function BottomNav({
                 )}
 
                 {/* Tab Icon (22px) & Label */}
-                <div className="relative z-10 flex items-center gap-1.5">
+                <div className="relative z-10 flex items-center gap-2">
                   <motion.div
                     animate={{
                       scale: isTabActive ? 1.05 : 1,
@@ -241,7 +198,7 @@ export function BottomNav({
                   </motion.div>
 
                   <span
-                    className={`text-[11px] tracking-tight font-medium transition-colors duration-150 ${isTabActive
+                    className={`text-[13px] tracking-tight font-medium whitespace-nowrap transition-colors duration-150 ${isTabActive
                       ? "text-white font-semibold"
                       : "text-[#183B34] group-hover:text-[#087F63]"
                       }`}
@@ -255,25 +212,25 @@ export function BottomNav({
         </div>
       </div>
 
-      {/* Voice Satellite Button (Exact w-10 h-10 Sizing) */}
-      <div className="relative flex items-center justify-center w-10 h-10 flex-shrink-0">
-        {/* Real-time Hold Charging Ring calibrated for 40px */}
+      {/* Voice button: right end of the bar, like WhatsApp's mic (tap = guide, hold = ask) */}
+      <div className="relative flex items-center justify-center w-[56px] h-[56px] flex-shrink-0">
+        {/* Hold charging ring around the 56px button */}
         <svg
-          className="absolute -inset-1 w-12 h-12 -rotate-90 pointer-events-none z-20"
-          viewBox="0 0 48 48"
+          className="absolute -inset-1 w-16 h-16 -rotate-90 pointer-events-none z-20"
+          viewBox="0 0 64 64"
         >
           <motion.circle
-            cx="24"
-            cy="24"
-            r="21"
+            cx="32"
+            cy="32"
+            r="30"
             fill="none"
             stroke="url(#emeraldHoldExactGradient)"
             strokeWidth="2.5"
             strokeLinecap="round"
-            strokeDasharray="132"
-            initial={{ strokeDashoffset: 132 }}
+            strokeDasharray="189"
+            initial={{ strokeDashoffset: 189 }}
             animate={{
-              strokeDashoffset: isPressing ? 0 : 132,
+              strokeDashoffset: isPressing ? 0 : 189,
             }}
             transition={{
               duration: isPressing ? 0.38 : 0.1,
@@ -289,7 +246,7 @@ export function BottomNav({
           </defs>
         </svg>
 
-        {/* The Exact w-10 h-10 Voice Button */}
+        {/* The voice button */}
         <motion.button
           aria-label={t("nav.voice")}
           onPointerDown={handleVoiceDown}
@@ -300,11 +257,11 @@ export function BottomNav({
             scale: isPressing ? 0.92 : voiceActive ? 1.1 : 1,
           }}
           transition={{ type: "spring", stiffness: 500, damping: 28 }}
-          className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 outline-none select-none cursor-pointer ${voiceActive
+          className={`w-[56px] h-[56px] rounded-full flex items-center justify-center transition-all duration-200 outline-none select-none cursor-pointer ${voiceActive
             ? "bg-[#FEE2E2] border-2 border-[#EF4444] shadow-md animate-pulse"
             : isPressing
-              ? "bg-[#087F63] border-2 border-[#86EFAC] shadow-md scale-95"
-              : "bg-white/85 backdrop-blur-xl border border-[#087F63]/20 shadow-[0_6px_18px_-6px_rgba(6,60,48,0.3)] hover:scale-105 active:scale-95"
+              ? "bg-[#06614B] border-2 border-[#86EFAC] shadow-md scale-95"
+              : "bg-[#087F63] shadow-[0_10px_24px_-8px_rgba(6,60,48,0.55)] hover:scale-105 active:scale-95"
             }`}
         >
           {voiceActive ? (
@@ -327,12 +284,10 @@ export function BottomNav({
               ))}
             </div>
           ) : (
-            <MicSVG
-              size={20}
-              color={isPressing ? "#FFFFFF" : "#087F63"}
-            />
+            <MicSVG size={24} color="#FFFFFF" />
           )}
         </motion.button>
+      </div>
       </div>
     </nav>
   );

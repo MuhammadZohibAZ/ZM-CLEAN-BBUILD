@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import type { TimelineResult } from "../../../data/realCommodityData";
@@ -7,6 +7,7 @@ import { arrow, shortRate, signed, stripMandi, type Fmt } from "./format";
 import { PickerSheet } from "./PickerSheet";
 import { RangeSheet } from "./RangeSheet";
 import { CandleChart, type CandleData } from "./CandleChart";
+import { ExpandButton, FullscreenLayer, useBoxSize } from "./FullscreenLayer";
 import { DK, type ActiveAttrBadge } from "./PriceHero";
 import { ALL_RATES, passesFilters, statsFor } from "./selectors";
 import { Sparkline } from "./Sparkline";
@@ -89,6 +90,10 @@ export function TrendsTab({
   const [offset, setOffset] = useState(0);
   const [spanState, setSpanState] = useState(14);
   const [chartType, setChartType] = useState<"line" | "candles">("line");
+  // Full-screen chart (Binance style): the same card filling the screen, with zoom.
+  const [expanded, setExpanded] = useState(false);
+  const closeExpanded = useCallback(() => setExpanded(false), []);
+  const [fsBoxRef, fsBox] = useBoxSize<HTMLDivElement>();
   const TL = TIMELINE.length;
   const MIN_SPAN = Math.min(5, TL);
   useEffect(() => {
@@ -380,8 +385,457 @@ export function TrendsTab({
     </div>
   );
 
+  // Full screen: the chart box is measured, the charts fill it.
+  const fsChartW = expanded && fsBox.w > 0 ? fsBox.w - 8 : undefined;
+  const fsChartH = Math.max(140, fsBox.h - 10);
+  // The chart card (also shown full screen).
+  const chartCard = (
+    <div
+      style={{
+        position: "relative",
+        overflow: "hidden",
+        color: DK.text,
+        background: DK.bg,
+        ...(expanded
+          ? { flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }
+          : { borderRadius: 22, border: DK.border, boxShadow: DK.shadow }),
+      }}
+    >
+      <div
+        aria-hidden="true"
+        style={{ position: "absolute", top: -120, insetInlineEnd: -90, width: 260, height: 260, borderRadius: "50%", background: "radial-gradient(circle, rgba(47,181,138,0.12), rgba(47,181,138,0) 70%)", pointerEvents: "none" }}
+      />
+
+      {/* Card top bar: what (price / arrivals) on the left, when (period) on the right */}
+      <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6, padding: "12px 10px 0" }}>
+        <div role="group" aria-label={f.tx("Chart", "چارٹ")} style={{ display: "flex", padding: 2.5, borderRadius: 10, background: DK.chip, flexShrink: 0 }}>
+          {(["price", "arrival"] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              aria-pressed={mode === m}
+              onClick={() => setMode(m)}
+              style={{
+                height: 27,
+                padding: "0 8px",
+                border: "none",
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 600,
+                fontFamily: f.font,
+                background: mode === m ? C.surface : "transparent",
+                color: mode === m ? C.ink : C.muted,
+                boxShadow: mode === m ? "0 1px 3px rgba(15,26,23,0.12)" : "none",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {m === "price" ? f.tx("Price", "قیمت") : f.tx("Arrivals", "آمد")}
+            </button>
+          ))}
+        </div>
+        <div
+          role="group"
+          aria-label={f.tx("Period", "مدت")}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+            minWidth: 0,
+            overflowX: "auto",
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+            WebkitOverflowScrolling: "touch",
+            paddingRight: 2,
+          }}
+        >
+          {(["1D", "1W", "2W", "1M", "6M", "1Y"] as Range[]).map((r) => {
+            const on = range === r;
+            return (
+              <button
+                key={r}
+                type="button"
+                aria-pressed={on}
+                onClick={() => setRange(r)}
+                style={{
+                  height: 27,
+                  minWidth: 25,
+                  padding: "0 3.5px",
+                  border: "none",
+                  borderRadius: 13,
+                  fontSize: 11.5,
+                  fontWeight: 600,
+                  fontFamily: f.font,
+                  background: on ? C.ink : "transparent",
+                  color: on ? "#FFFFFF" : C.muted,
+                  flexShrink: 0,
+                }}
+              >
+                {rangeLabel[r]}
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            aria-pressed={range === "CUSTOM"}
+            aria-label={f.tx("Custom period", "مخصوص مدت")}
+            title={f.tx("Custom period", "مخصوص مدت")}
+            onClick={() => setPickerOpen(true)}
+            style={{
+              width: 26,
+              height: 27,
+              border: "none",
+              borderRadius: 13,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: range === "CUSTOM" ? C.ink : "transparent",
+              flexShrink: 0,
+            }}
+          >
+            <Icon name="calendar" size={14} width={2.2} color={range === "CUSTOM" ? "#FFFFFF" : C.muted} />
+          </button>
+        </div>
+      </div>
+
+      {isPrice && !hasPrice ? (
+        <p style={{ position: "relative", margin: "28px 16px", textAlign: "center", fontSize: 14, fontWeight: 500, color: DK.sub, lineHeight: f.lh }}>
+          {f.tx("No price reports for this rate type and place yet.", "اس ریٹ اور مقام کی ابھی کوئی رپورٹ نہیں۔")}
+        </p>
+      ) : (
+        <>
+          <div style={{ position: "relative", padding: "10px 16px 0", display: "flex", flexDirection: "column", gap: 3 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+              <span style={{ fontSize: 12.5, fontWeight: 500, color: DK.sub, lineHeight: f.lh, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {isPrice
+                  ? compare
+                    ? f.tx(`${shortRate(tr(set[0]))} · average per 40 kg`, `${shortRate(tr(set[0]))} · اوسط فی 40 کلو`)
+                    : `${focus === ALL_RATES ? f.tx("All rates", "تمام ریٹ") : shortRate(tr(focus))} · ${f.tx("average per 40 kg", "اوسط فی 40 کلو")}`
+                  : f.tx("Arrivals · all rate types", "آمد · تمام ریٹ")}
+              </span>
+              {isPrice && !compare && (
+                <div role="group" aria-label={f.tx("Chart type", "چارٹ کی قسم")} style={{ display: "flex", gap: 2, padding: 2, borderRadius: 10, background: DK.chip, flexShrink: 0, marginInlineStart: "auto" }}>
+                  {(["line", "candles"] as const).map((t) => {
+                    const on = chartType === t;
+                    return (
+                      <button
+                        key={t}
+                        type="button"
+                        aria-pressed={on}
+                        aria-label={t === "line" ? f.tx("Line chart", "لائن چارٹ") : f.tx("Candle chart", "کینڈل چارٹ")}
+                        title={t === "line" ? f.tx("Line", "لائن") : f.tx("Candles", "کینڈل")}
+                        onClick={() => setChartType(t)}
+                        style={{
+                          width: 32,
+                          height: 26,
+                          border: "none",
+                          borderRadius: 8,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          background: on ? C.surface : "transparent",
+                          boxShadow: on ? "0 1px 3px rgba(15,26,23,0.12)" : "none",
+                        }}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={on ? C.ink : C.muted} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          {t === "line" ? (
+                            <path d="M3 17l5-6 4 3 8-9" />
+                          ) : (
+                            <path d="M7 3v4 M7 17v4 M5 7h4v10H5z M17 3v6 M17 17v4 M15 9h4v8h-4z" />
+                          )}
+                        </svg>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {!expanded && <ExpandButton f={f} label={f.tx("Full-screen chart", "پوری اسکرین چارٹ")} onClick={() => setExpanded(true)} />}
+            </div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+              <span style={{ fontSize: f.ur ? 26 : 30, fontWeight: 700, letterSpacing: "-0.03em", lineHeight: f.ur ? 1.7 : 1.1, fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate" }}>
+                {isPrice ? (prices[i] > 0 ? f.rs(headValue) : "—") : `${f.num(headValue)}`}
+                {!isPrice && <span style={{ fontSize: 15, fontWeight: 600, color: DK.sub }}> {f.tx("bags", "بوریاں")}</span>}
+              </span>
+              {(isPrice ? prices[i] > 0 : true) && (
+                <span
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 700,
+                    fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate",
+                    color: signed(isPrice ? pct : arrPct) > 0 ? DK.up : signed(isPrice ? pct : arrPct) < 0 ? DK.down : DK.sub,
+                  }}
+                >
+                  {arrow(isPrice ? pct : arrPct)} {isPrice ? `${absChange >= 0 ? "+" : "−"}${f.num(Math.abs(absChange))} ` : ""}({f.pct(isPrice ? pct : arrPct)})
+                </span>
+              )}
+            </div>
+            <span style={{ fontSize: 12.5, fontWeight: 500, color: DK.faint, lineHeight: f.lh }}>
+              {f.dayFullWeekdayYear(dates[i])}
+            </span>
+            {!expanded && activeAttrs && activeAttrs.length > 0 && (
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 5, flexWrap: "wrap", marginTop: 4 }}>
+                {activeAttrs.map((attr) => (
+                  <span
+                    key={`${attr.key}-${attr.value}`}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 4,
+                      padding: "2px 7.5px",
+                      borderRadius: 7,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      background: "rgba(245, 158, 11, 0.12)",
+                      color: "#D97706",
+                      border: "1px solid rgba(245, 158, 11, 0.28)",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    <span>{attr.display}</span>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {isPrice && compare && (
+            <div style={{ position: "relative", display: "flex", flexWrap: "wrap", gap: "6px 14px", padding: "10px 16px 0" }}>
+              {set.map((rt) => {
+                const v = slice(tl(rt).prices)[i];
+                return (
+                  <span key={rt} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, fontWeight: 600 }}>
+                    <span style={{ width: 12, height: 3, borderRadius: 2, background: tone(rt) }} />
+                    {shortRate(tr(rt))}
+                    <span style={{ color: DK.sub, fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate" }}>{v > 0 ? f.num(v) : "—"}</span>
+                  </span>
+                );
+              })}
+            </div>
+          )}
+
+          <div ref={expanded ? fsBoxRef : undefined} style={{ position: "relative", padding: "6px 4px 0", ...(expanded ? { flex: 1, minHeight: 0, overflow: "hidden" } : {}) }}>
+            {/* Pan state: where you are in the history */}
+            {canPan && (off > 0 || off >= maxOffset) && (
+              <div style={{ position: "absolute", top: 8, insetInlineStart: 12, insetInlineEnd: 56, zIndex: 4, display: "flex", justifyContent: "space-between", pointerEvents: "none" }}>
+                <span style={{ fontSize: 11.5, fontWeight: 600, color: C.muted, padding: "3px 8px", borderRadius: 8, background: "rgba(255,255,255,0.85)", visibility: off >= maxOffset ? "visible" : "hidden" }}>
+                  {f.tx("Start of reports", "رپورٹس کا آغاز")}
+                </span>
+                {off > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setOffset(0)}
+                    style={{ pointerEvents: "auto", height: 26, padding: "0 10px", borderRadius: 13, border: "none", background: C.ink, color: "#fff", fontSize: 12.5, fontWeight: 600, fontFamily: f.font, display: "flex", alignItems: "center", gap: 4 }}
+                  >
+                    {f.tx("Latest", "تازہ ترین")} {f.ur ? "‹" : "›"}
+                  </button>
+                )}
+              </div>
+            )}
+            {expanded && fsBox.w === 0 ? null : range === "1D" ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+                  {[-1, 1].map((step) => {
+                    const back = step < 0;
+                    const can = back ? i > 0 || off < maxOffset : i < len - 1 || off > 0;
+                    const go = () => {
+                      if (back) {
+                        if (i > 0) setIdx(i - 1);
+                        else panDays(1);
+                      } else if (i < len - 1) setIdx(i + 1);
+                      else panDays(-1);
+                    };
+                    const btn = (
+                      <button
+                        key={step}
+                        type="button"
+                        disabled={!can}
+                        onClick={go}
+                        aria-label={back ? f.tx("Previous day", "پچھلا دن") : f.tx("Next day", "اگلا دن")}
+                        style={{ width: 30, height: 30, borderRadius: 15, border: `1px solid ${C.line}`, background: C.surface, color: can ? C.ink : C.faint, fontSize: 16, fontWeight: 700, opacity: can ? 1 : 0.5 }}
+                      >
+                        {(back ? !f.ur : f.ur) ? "‹" : "›"}
+                      </button>
+                    );
+                    return back ? (
+                      <span key="b" style={{ display: "contents" }}>
+                        {btn}
+                        <span style={{ minWidth: 120, textAlign: "center", fontSize: 13, fontWeight: 700, color: C.ink }}>{f.day(dates[i], true)}</span>
+                      </span>
+                    ) : (
+                      btn
+                    );
+                  })}
+                </div>
+                <IntradayChart
+                  key={`${dates[i]}|${mode}|${focus}`}
+                  f={f}
+                  height={expanded ? fsChartH - 36 : undefined}
+                  width={fsChartW}
+                  unit={isPrice ? "rupees" : "bags"}
+                  color={C.brand}
+                  points={intraday}
+                  ariaLabel={f.tx("The selected day on a 24-hour axis", "منتخب دن 24 گھنٹے کے محور پر")}
+                />
+              </div>
+            ) : isPrice && chartType === "candles" && !compare ? (
+              <CandleChart
+                f={f}
+                data={candleData}
+                latestClose={latestClose}
+                idx={idx !== null && idx < len ? idx : null}
+                onIdx={setIdx}
+                span={span}
+                onSpan={setSpanKeepRight}
+                onPanDays={canPan ? panDays : undefined}
+                animKey={`${range}|${focus}|${custom.start}|${custom.end}`}
+                height={expanded ? fsChartH - 24 : 290}
+                width={fsChartW}
+              />
+            ) : isPrice ? (
+              <TrendChart
+                f={f}
+                hideSlider
+                height={expanded ? fsChartH : 210}
+                width={fsChartW}
+                span={span}
+                onSpan={expanded ? setSpanKeepRight : undefined}
+                dates={dates}
+                series={series}
+                bars={compare ? undefined : arr}
+                connectGaps={true}
+                candles={chartType === "candles" && !compare}
+                onPanDays={canPan ? panDays : undefined}
+                animKey={`${range}|${focus}|${compare}|${set.join(",")}|${chartType}|${custom.start}|${custom.end}`}
+                idx={i}
+                onIdx={setIdx}
+                yUnit="rupees"
+                tooltip={(k) => {
+                  if (prices[k] > 0) {
+                    return {
+                      title: f.day(dates[k], true),
+                      value: chartType === "candles" && !compare && mins[k] > 0 ? `${f.num(mins[k])}–${f.num(maxs[k])}` : f.rs(prices[k]),
+                    };
+                  }
+                  let prevK = -1;
+                  for (let p = k - 1; p >= 0; p--) if (prices[p] > 0) { prevK = p; break; }
+                  let nextK = -1;
+                  for (let p = k + 1; p < prices.length; p++) if (prices[p] > 0) { nextK = p; break; }
+                  if (prevK >= 0 || nextK >= 0) {
+                    const refVal = prevK >= 0 && nextK >= 0
+                      ? Math.round(prices[prevK] + (prices[nextK] - prices[prevK]) * ((k - prevK) / (nextK - prevK)))
+                      : prices[prevK >= 0 ? prevK : nextK];
+                    return {
+                      title: `${f.day(dates[k], true)} (${f.tx("Est.", "تخمینہ")})`,
+                      value: f.rs(refVal),
+                    };
+                  }
+                  return null;
+                }}
+                ariaLabel={f.tx("Price trend. Slide for earlier days, hold to read values.", "قیمت کا رجحان")}
+              />
+            ) : (
+              <TrendChart
+                f={f}
+                hideSlider
+                connectGaps={true}
+                onPanDays={canPan ? panDays : undefined}
+                animKey={`arr|${range}|${custom.start}|${custom.end}`}
+                height={expanded ? fsChartH : 210}
+                width={fsChartW}
+                span={span}
+                onSpan={expanded ? setSpanKeepRight : undefined}
+                dates={dates}
+                series={[]}
+                bars={arr}
+                barsOnly
+                idx={i}
+                onIdx={setIdx}
+                yUnit="bags"
+                tooltip={(k) => ({ title: f.day(dates[k], true), value: arr[k] > 0 ? `${f.num(arr[k])} ${f.tx("bags", "بوریاں")}` : f.tx("no report", "رپورٹ نہیں") })}
+                ariaLabel={f.tx("Arrivals trend. Drag to see any day.", "آمد کا رجحان")}
+              />
+            )}
+          </div>
+
+          <div style={{ position: "relative", display: expanded ? "none" : "flex", gap: 10, padding: "12px 16px 14px", borderTop: `1px solid ${DK.line}` }}>
+            {isPrice && range === "1D" ? (
+              <>
+                {/* 1D: the selected day only (highest max, lowest min, average across mandis). */}
+                {(() => {
+                  const dayHi = showCandles ? candleData.high[i] : maxs[i];
+                  const dayLo = showCandles ? candleData.low[i] : mins[i];
+                  const dayAvg = prices[i];
+                  const label = f.day(dates[i]);
+                  const none = f.tx("no report", "رپورٹ نہیں");
+                  return (
+                    <>
+                      {darkStat(f.tx("High", "زیادہ"), dayHi > 0 ? f.num(dayHi) : "—", dayHi > 0 ? label : none)}
+                      {darkStat(f.tx("Low", "کم"), dayLo > 0 ? f.num(dayLo) : "—", dayLo > 0 ? label : none)}
+                      {darkStat(f.tx("Average", "اوسط"), dayAvg > 0 ? f.num(dayAvg) : "—", dayAvg > 0 ? label : none)}
+                    </>
+                  );
+                })()}
+              </>
+            ) : !isPrice && range === "1D" ? (
+              <>
+                {darkStat(f.tx("That day", "اس دن"), f.num(arr[i] || 0), f.day(dates[i]))}
+                {darkStat(f.tx("Day before", "پچھلا دن"), i > 0 ? f.num(arr[i - 1] || 0) : "—", i > 0 ? f.day(dates[i - 1]) : undefined)}
+                {darkStat(
+                  f.tx("Change", "تبدیلی"),
+                  i > 0 && arr[i - 1] > 0 ? `${arrow(arrPct)} ${f.pct(arrPct)}` : "—",
+                  f.tx("bags", "بوریاں"),
+                )}
+              </>
+            ) : isPrice ? (
+              <>
+                {(() => {
+                  // Candle mode: High / Low are the wicks (match the chart's markers).
+                  if (!showCandles) return null;
+                  let h = -1;
+                  let l = -1;
+                  candleData.high.forEach((v, k) => v > 0 && (h < 0 || v > candleData.high[h]) && (h = k));
+                  candleData.low.forEach((v, k) => v > 0 && (l < 0 || v < candleData.low[l]) && (l = k));
+                  return (
+                    <>
+                      {darkStat(f.tx("High", "زیادہ"), h >= 0 ? f.num(candleData.high[h]) : "—", h >= 0 ? f.day(dates[h]) : undefined)}
+                      {darkStat(f.tx("Low", "کم"), l >= 0 ? f.num(candleData.low[l]) : "—", l >= 0 ? f.day(dates[l]) : undefined)}
+                    </>
+                  );
+                })()}
+                {!showCandles && darkStat(f.tx("High", "زیادہ"), f.num(hiO.p), f.day(dates[hiO.k]))}
+                {!showCandles && darkStat(f.tx("Low", "کم"), f.num(loO.p), f.day(dates[loO.k]))}
+                {darkStat(f.tx("Average", "اوسط"), f.num(avgP), f.tx(`${valid.length} days`, `${f.digits(valid.length)} دن`))}
+              </>
+            ) : (
+              <>
+                {darkStat(f.tx("Total", "کل"), f.num(totalArr), f.tx("bags", "بوریاں"))}
+                {darkStat(f.tx("Peak", "زیادہ"), f.num(peakArr), peakArr > 0 ? f.day(dates[arr.indexOf(peakArr)]) : undefined)}
+                {darkStat(f.tx("Daily avg", "روزانہ"), f.num(totalArr / Math.max(arrDays, 1)), f.tx("bags", "بوریاں"))}
+                {darkStat(f.tx("Days", "دن"), f.digits(arrDays), f.tx(`of ${len}`, `${f.digits(len)} میں`))}
+              </>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+
   return (
     <div style={{ paddingBottom: 32 }}>
+      {expanded && (
+        <FullscreenLayer
+          f={f}
+          title={isPrice ? f.tx("Price trend", "قیمت کا رجحان") : f.tx("Arrivals", "آمد")}
+          subtitle={`${locationLabel} · ${f.day(dates[0])} – ${f.day(dates[len - 1])}`}
+          onClose={closeExpanded}
+        >
+          {chartCard}
+          <p style={{ margin: 0, padding: "4px 12px max(8px, env(safe-area-inset-bottom))", fontSize: 11.5, fontWeight: 500, color: C.faint, textAlign: "center", background: DK.bg }}>
+            {range === "1D"
+              ? f.tx("Use ‹ › to change the day", "دن بدلنے کے لیے ‹ › استعمال کریں")
+              : f.tx("Pinch or scroll to zoom · drag for other days · hold to read values", "زوم کے لیے چٹکی یا اسکرول · دوسرے دنوں کے لیے کھسکائیں · قیمت کے لیے دبائے رکھیں")}
+          </p>
+        </FullscreenLayer>
+      )}
       {pickerOpen && (
         <RangeSheet
           f={f}
@@ -397,413 +851,7 @@ export function TrendsTab({
 
       {/* Chart card */}
       <div ref={chartRef} style={{ padding: "12px 16px 0", scrollMarginTop: 8 }}>
-        <div style={{ position: "relative", overflow: "hidden", borderRadius: 22, color: DK.text, background: DK.bg, border: DK.border, boxShadow: DK.shadow }}>
-          <div
-            aria-hidden="true"
-            style={{ position: "absolute", top: -120, insetInlineEnd: -90, width: 260, height: 260, borderRadius: "50%", background: "radial-gradient(circle, rgba(47,181,138,0.12), rgba(47,181,138,0) 70%)", pointerEvents: "none" }}
-          />
-
-          {/* Card top bar: what (price / arrivals) on the left, when (period) on the right */}
-          <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6, padding: "12px 10px 0" }}>
-            <div role="group" aria-label={f.tx("Chart", "چارٹ")} style={{ display: "flex", padding: 2.5, borderRadius: 10, background: DK.chip, flexShrink: 0 }}>
-              {(["price", "arrival"] as const).map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  aria-pressed={mode === m}
-                  onClick={() => setMode(m)}
-                  style={{
-                    height: 27,
-                    padding: "0 8px",
-                    border: "none",
-                    borderRadius: 8,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    fontFamily: f.font,
-                    background: mode === m ? C.surface : "transparent",
-                    color: mode === m ? C.ink : C.muted,
-                    boxShadow: mode === m ? "0 1px 3px rgba(15,26,23,0.12)" : "none",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {m === "price" ? f.tx("Price", "قیمت") : f.tx("Arrivals", "آمد")}
-                </button>
-              ))}
-            </div>
-            <div
-              role="group"
-              aria-label={f.tx("Period", "مدت")}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1.5,
-                minWidth: 0,
-                overflowX: "auto",
-                scrollbarWidth: "none",
-                msOverflowStyle: "none",
-                WebkitOverflowScrolling: "touch",
-                paddingRight: 2,
-              }}
-            >
-              {(["1D", "1W", "2W", "1M", "6M", "1Y"] as Range[]).map((r) => {
-                const on = range === r;
-                return (
-                  <button
-                    key={r}
-                    type="button"
-                    aria-pressed={on}
-                    onClick={() => setRange(r)}
-                    style={{
-                      height: 27,
-                      minWidth: 25,
-                      padding: "0 3.5px",
-                      border: "none",
-                      borderRadius: 13,
-                      fontSize: 11.5,
-                      fontWeight: 600,
-                      fontFamily: f.font,
-                      background: on ? C.ink : "transparent",
-                      color: on ? "#FFFFFF" : C.muted,
-                      flexShrink: 0,
-                    }}
-                  >
-                    {rangeLabel[r]}
-                  </button>
-                );
-              })}
-              <button
-                type="button"
-                aria-pressed={range === "CUSTOM"}
-                aria-label={f.tx("Custom period", "مخصوص مدت")}
-                title={f.tx("Custom period", "مخصوص مدت")}
-                onClick={() => setPickerOpen(true)}
-                style={{
-                  width: 26,
-                  height: 27,
-                  border: "none",
-                  borderRadius: 13,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: range === "CUSTOM" ? C.ink : "transparent",
-                  flexShrink: 0,
-                }}
-              >
-                <Icon name="calendar" size={14} width={2.2} color={range === "CUSTOM" ? "#FFFFFF" : C.muted} />
-              </button>
-            </div>
-          </div>
-
-          {isPrice && !hasPrice ? (
-            <p style={{ position: "relative", margin: "28px 16px", textAlign: "center", fontSize: 14, fontWeight: 500, color: DK.sub, lineHeight: f.lh }}>
-              {f.tx("No price reports for this rate type and place yet.", "اس ریٹ اور مقام کی ابھی کوئی رپورٹ نہیں۔")}
-            </p>
-          ) : (
-            <>
-              <div style={{ position: "relative", padding: "10px 16px 0", display: "flex", flexDirection: "column", gap: 3 }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                  <span style={{ fontSize: 12.5, fontWeight: 500, color: DK.sub, lineHeight: f.lh, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {isPrice
-                      ? compare
-                        ? f.tx(`${shortRate(tr(set[0]))} · average per 40 kg`, `${shortRate(tr(set[0]))} · اوسط فی 40 کلو`)
-                        : `${focus === ALL_RATES ? f.tx("All rates", "تمام ریٹ") : shortRate(tr(focus))} · ${f.tx("average per 40 kg", "اوسط فی 40 کلو")}`
-                      : f.tx("Arrivals · all rate types", "آمد · تمام ریٹ")}
-                  </span>
-                  {isPrice && !compare && (
-                    <div role="group" aria-label={f.tx("Chart type", "چارٹ کی قسم")} style={{ display: "flex", gap: 2, padding: 2, borderRadius: 10, background: DK.chip, flexShrink: 0 }}>
-                      {(["line", "candles"] as const).map((t) => {
-                        const on = chartType === t;
-                        return (
-                          <button
-                            key={t}
-                            type="button"
-                            aria-pressed={on}
-                            aria-label={t === "line" ? f.tx("Line chart", "لائن چارٹ") : f.tx("Candle chart", "کینڈل چارٹ")}
-                            title={t === "line" ? f.tx("Line", "لائن") : f.tx("Candles", "کینڈل")}
-                            onClick={() => setChartType(t)}
-                            style={{
-                              width: 32,
-                              height: 26,
-                              border: "none",
-                              borderRadius: 8,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              background: on ? C.surface : "transparent",
-                              boxShadow: on ? "0 1px 3px rgba(15,26,23,0.12)" : "none",
-                            }}
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={on ? C.ink : C.muted} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                              {t === "line" ? (
-                                <path d="M3 17l5-6 4 3 8-9" />
-                              ) : (
-                                <path d="M7 3v4 M7 17v4 M5 7h4v10H5z M17 3v6 M17 17v4 M15 9h4v8h-4z" />
-                              )}
-                            </svg>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: f.ur ? 26 : 30, fontWeight: 700, letterSpacing: "-0.03em", lineHeight: f.ur ? 1.7 : 1.1, fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate" }}>
-                    {isPrice ? (prices[i] > 0 ? f.rs(headValue) : "—") : `${f.num(headValue)}`}
-                    {!isPrice && <span style={{ fontSize: 15, fontWeight: 600, color: DK.sub }}> {f.tx("bags", "بوریاں")}</span>}
-                  </span>
-                  {(isPrice ? prices[i] > 0 : true) && (
-                    <span
-                      style={{
-                        fontSize: 14,
-                        fontWeight: 700,
-                        fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate",
-                        color: signed(isPrice ? pct : arrPct) > 0 ? DK.up : signed(isPrice ? pct : arrPct) < 0 ? DK.down : DK.sub,
-                      }}
-                    >
-                      {arrow(isPrice ? pct : arrPct)} {isPrice ? `${absChange >= 0 ? "+" : "−"}${f.num(Math.abs(absChange))} ` : ""}({f.pct(isPrice ? pct : arrPct)})
-                    </span>
-                  )}
-                </div>
-                <span style={{ fontSize: 12.5, fontWeight: 500, color: DK.faint, lineHeight: f.lh }}>
-                  {f.dayFullWeekdayYear(dates[i])}
-                </span>
-                {activeAttrs && activeAttrs.length > 0 && (
-                  <div style={{ display: "inline-flex", alignItems: "center", gap: 5, flexWrap: "wrap", marginTop: 4 }}>
-                    {activeAttrs.map((attr) => (
-                      <span
-                        key={`${attr.key}-${attr.value}`}
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 4,
-                          padding: "2px 7.5px",
-                          borderRadius: 7,
-                          fontSize: 11,
-                          fontWeight: 700,
-                          background: "rgba(245, 158, 11, 0.12)",
-                          color: "#D97706",
-                          border: "1px solid rgba(245, 158, 11, 0.28)",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        <span>{attr.display}</span>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {isPrice && compare && (
-                <div style={{ position: "relative", display: "flex", flexWrap: "wrap", gap: "6px 14px", padding: "10px 16px 0" }}>
-                  {set.map((rt) => {
-                    const v = slice(tl(rt).prices)[i];
-                    return (
-                      <span key={rt} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, fontWeight: 600 }}>
-                        <span style={{ width: 12, height: 3, borderRadius: 2, background: tone(rt) }} />
-                        {shortRate(tr(rt))}
-                        <span style={{ color: DK.sub, fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate" }}>{v > 0 ? f.num(v) : "—"}</span>
-                      </span>
-                    );
-                  })}
-                </div>
-              )}
-
-              <div style={{ position: "relative", padding: "6px 4px 0" }}>
-                {/* Pan state: where you are in the history */}
-                {canPan && (off > 0 || off >= maxOffset) && (
-                  <div style={{ position: "absolute", top: 8, insetInlineStart: 12, insetInlineEnd: 56, zIndex: 4, display: "flex", justifyContent: "space-between", pointerEvents: "none" }}>
-                    <span style={{ fontSize: 11.5, fontWeight: 600, color: C.muted, padding: "3px 8px", borderRadius: 8, background: "rgba(255,255,255,0.85)", visibility: off >= maxOffset ? "visible" : "hidden" }}>
-                      {f.tx("Start of reports", "رپورٹس کا آغاز")}
-                    </span>
-                    {off > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => setOffset(0)}
-                        style={{ pointerEvents: "auto", height: 26, padding: "0 10px", borderRadius: 13, border: "none", background: C.ink, color: "#fff", fontSize: 12.5, fontWeight: 600, fontFamily: f.font, display: "flex", alignItems: "center", gap: 4 }}
-                      >
-                        {f.tx("Latest", "تازہ ترین")} {f.ur ? "‹" : "›"}
-                      </button>
-                    )}
-                  </div>
-                )}
-                {range === "1D" ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-                      {[-1, 1].map((step) => {
-                        const back = step < 0;
-                        const can = back ? i > 0 || off < maxOffset : i < len - 1 || off > 0;
-                        const go = () => {
-                          if (back) {
-                            if (i > 0) setIdx(i - 1);
-                            else panDays(1);
-                          } else if (i < len - 1) setIdx(i + 1);
-                          else panDays(-1);
-                        };
-                        const btn = (
-                          <button
-                            key={step}
-                            type="button"
-                            disabled={!can}
-                            onClick={go}
-                            aria-label={back ? f.tx("Previous day", "پچھلا دن") : f.tx("Next day", "اگلا دن")}
-                            style={{ width: 30, height: 30, borderRadius: 15, border: `1px solid ${C.line}`, background: C.surface, color: can ? C.ink : C.faint, fontSize: 16, fontWeight: 700, opacity: can ? 1 : 0.5 }}
-                          >
-                            {(back ? !f.ur : f.ur) ? "‹" : "›"}
-                          </button>
-                        );
-                        return back ? (
-                          <span key="b" style={{ display: "contents" }}>
-                            {btn}
-                            <span style={{ minWidth: 120, textAlign: "center", fontSize: 13, fontWeight: 700, color: C.ink }}>{f.day(dates[i], true)}</span>
-                          </span>
-                        ) : (
-                          btn
-                        );
-                      })}
-                    </div>
-                    <IntradayChart
-                      key={`${dates[i]}|${mode}|${focus}`}
-                      f={f}
-                      unit={isPrice ? "rupees" : "bags"}
-                      color={C.brand}
-                      points={intraday}
-                      ariaLabel={f.tx("The selected day on a 24-hour axis", "منتخب دن 24 گھنٹے کے محور پر")}
-                    />
-                  </div>
-                ) : isPrice && chartType === "candles" && !compare ? (
-                  <CandleChart
-                    f={f}
-                    data={candleData}
-                    latestClose={latestClose}
-                    idx={idx !== null && idx < len ? idx : null}
-                    onIdx={setIdx}
-                    span={span}
-                    onSpan={setSpanKeepRight}
-                    onPanDays={canPan ? panDays : undefined}
-                    animKey={`${range}|${focus}|${custom.start}|${custom.end}`}
-                    height={290}
-                  />
-                ) : isPrice ? (
-                  <TrendChart
-                    f={f}
-                    hideSlider
-                    height={210}
-                    dates={dates}
-                    series={series}
-                    bars={compare ? undefined : arr}
-                    connectGaps={true}
-                    candles={chartType === "candles" && !compare}
-                    onPanDays={canPan ? panDays : undefined}
-                    animKey={`${range}|${focus}|${compare}|${set.join(",")}|${chartType}|${custom.start}|${custom.end}`}
-                    idx={i}
-                    onIdx={setIdx}
-                    yUnit="rupees"
-                    tooltip={(k) => {
-                      if (prices[k] > 0) {
-                        return {
-                          title: f.day(dates[k], true),
-                          value: chartType === "candles" && !compare && mins[k] > 0 ? `${f.num(mins[k])}–${f.num(maxs[k])}` : f.rs(prices[k]),
-                        };
-                      }
-                      let prevK = -1;
-                      for (let p = k - 1; p >= 0; p--) if (prices[p] > 0) { prevK = p; break; }
-                      let nextK = -1;
-                      for (let p = k + 1; p < prices.length; p++) if (prices[p] > 0) { nextK = p; break; }
-                      if (prevK >= 0 || nextK >= 0) {
-                        const refVal = prevK >= 0 && nextK >= 0
-                          ? Math.round(prices[prevK] + (prices[nextK] - prices[prevK]) * ((k - prevK) / (nextK - prevK)))
-                          : prices[prevK >= 0 ? prevK : nextK];
-                        return {
-                          title: `${f.day(dates[k], true)} (${f.tx("Est.", "تخمینہ")})`,
-                          value: f.rs(refVal),
-                        };
-                      }
-                      return null;
-                    }}
-                    ariaLabel={f.tx("Price trend. Slide for earlier days, hold to read values.", "قیمت کا رجحان")}
-                  />
-                ) : (
-                  <TrendChart
-                    f={f}
-                    hideSlider
-                    connectGaps={true}
-                    onPanDays={canPan ? panDays : undefined}
-                    animKey={`arr|${range}|${custom.start}|${custom.end}`}
-                    height={210}
-                    dates={dates}
-                    series={[]}
-                    bars={arr}
-                    barsOnly
-                    idx={i}
-                    onIdx={setIdx}
-                    yUnit="bags"
-                    tooltip={(k) => ({ title: f.day(dates[k], true), value: arr[k] > 0 ? `${f.num(arr[k])} ${f.tx("bags", "بوریاں")}` : f.tx("no report", "رپورٹ نہیں") })}
-                    ariaLabel={f.tx("Arrivals trend. Drag to see any day.", "آمد کا رجحان")}
-                  />
-                )}
-              </div>
-
-              <div style={{ position: "relative", display: "flex", gap: 10, padding: "12px 16px 14px", borderTop: `1px solid ${DK.line}` }}>
-                {isPrice && range === "1D" ? (
-                  <>
-                    {/* 1D: the selected day only (highest max, lowest min, average across mandis). */}
-                    {(() => {
-                      const dayHi = showCandles ? candleData.high[i] : maxs[i];
-                      const dayLo = showCandles ? candleData.low[i] : mins[i];
-                      const dayAvg = prices[i];
-                      const label = f.day(dates[i]);
-                      const none = f.tx("no report", "رپورٹ نہیں");
-                      return (
-                        <>
-                          {darkStat(f.tx("High", "زیادہ"), dayHi > 0 ? f.num(dayHi) : "—", dayHi > 0 ? label : none)}
-                          {darkStat(f.tx("Low", "کم"), dayLo > 0 ? f.num(dayLo) : "—", dayLo > 0 ? label : none)}
-                          {darkStat(f.tx("Average", "اوسط"), dayAvg > 0 ? f.num(dayAvg) : "—", dayAvg > 0 ? label : none)}
-                        </>
-                      );
-                    })()}
-                  </>
-                ) : !isPrice && range === "1D" ? (
-                  <>
-                    {darkStat(f.tx("That day", "اس دن"), f.num(arr[i] || 0), f.day(dates[i]))}
-                    {darkStat(f.tx("Day before", "پچھلا دن"), i > 0 ? f.num(arr[i - 1] || 0) : "—", i > 0 ? f.day(dates[i - 1]) : undefined)}
-                    {darkStat(
-                      f.tx("Change", "تبدیلی"),
-                      i > 0 && arr[i - 1] > 0 ? `${arrow(arrPct)} ${f.pct(arrPct)}` : "—",
-                      f.tx("bags", "بوریاں"),
-                    )}
-                  </>
-                ) : isPrice ? (
-                  <>
-                    {(() => {
-                      // Candle mode: High / Low are the wicks (match the chart's markers).
-                      if (!showCandles) return null;
-                      let h = -1;
-                      let l = -1;
-                      candleData.high.forEach((v, k) => v > 0 && (h < 0 || v > candleData.high[h]) && (h = k));
-                      candleData.low.forEach((v, k) => v > 0 && (l < 0 || v < candleData.low[l]) && (l = k));
-                      return (
-                        <>
-                          {darkStat(f.tx("High", "زیادہ"), h >= 0 ? f.num(candleData.high[h]) : "—", h >= 0 ? f.day(dates[h]) : undefined)}
-                          {darkStat(f.tx("Low", "کم"), l >= 0 ? f.num(candleData.low[l]) : "—", l >= 0 ? f.day(dates[l]) : undefined)}
-                        </>
-                      );
-                    })()}
-                    {!showCandles && darkStat(f.tx("High", "زیادہ"), f.num(hiO.p), f.day(dates[hiO.k]))}
-                    {!showCandles && darkStat(f.tx("Low", "کم"), f.num(loO.p), f.day(dates[loO.k]))}
-                    {darkStat(f.tx("Average", "اوسط"), f.num(avgP), f.tx(`${valid.length} days`, `${f.digits(valid.length)} دن`))}
-                  </>
-                ) : (
-                  <>
-                    {darkStat(f.tx("Total", "کل"), f.num(totalArr), f.tx("bags", "بوریاں"))}
-                    {darkStat(f.tx("Peak", "زیادہ"), f.num(peakArr), peakArr > 0 ? f.day(dates[arr.indexOf(peakArr)]) : undefined)}
-                    {darkStat(f.tx("Daily avg", "روزانہ"), f.num(totalArr / Math.max(arrDays, 1)), f.tx("bags", "بوریاں"))}
-                    {darkStat(f.tx("Days", "دن"), f.digits(arrDays), f.tx(`of ${len}`, `${f.digits(len)} میں`))}
-                  </>
-                )}
-              </div>
-            </>
-          )}
-        </div>
+        {expanded ? null : chartCard}
         <p style={{ margin: "8px 4px 0", fontSize: 11.5, fontWeight: 500, color: C.faint, textAlign: "center" }}>
           {range === "1D"
             ? f.tx("Use ‹ › to change the day · bar = when the rate came in", "دن بدلنے کے لیے ‹ › استعمال کریں · بار = ریٹ آنے کا وقت")

@@ -11,7 +11,7 @@ Where each part of the app lives. Paths are under `app/src/`.
 | Customer / rep switch, testing pill, onboarding entry | `App.tsx` |
 | Desktop phone mockup + variant panel | `DevicePreview.tsx`, `lib/device-bridge.ts` |
 | Screen stack, navigation, favourites (`togglePickBP`), location scope | `CustomerFaceApp.tsx` |
-| Bottom nav (Home · Compare · Reels) | `customer-face/navigation/BottomNav.tsx` |
+| Bottom nav (Home · Reels; Compare is archived for V1) | `customer-face/navigation/BottomNav.tsx` |
 | Voice overlay | `customer-face/navigation/VoiceQueryOverlay.tsx` |
 | API client (all `fetch…` calls) | `lib/api.ts` |
 | Language, Urdu text, name/number translation (`t`, `tc`, `tm`, `tr`, `tn`) | `customer-face/shared/i18n/` |
@@ -80,8 +80,9 @@ The language is app-wide: `LangProvider` sits in `App.tsx` above onboarding and 
 | Price card + sparkline + "no reports" buttons | `PriceHero.tsx` (`PriceHero`, `EmptyActions`) |
 | Best places + map card | `BestPlaces.tsx`, `components/ExpandableMandiMapCard.tsx`, `components/MandiMapGL.tsx` |
 | Mandi table / cards, full-screen table + calendar button (the table gets rows not narrowed by rate/attribute and applies the rail's values itself, so a column header lists every value and can override the rail for the table only; the table calendar is table-only too; the filter rail drives the whole page) | `MandiSection.tsx`; table day state `tableDate` in `ProductRatesScreen.tsx` |
-| Mandi detail sheet (trend ↔ history, 1D–1Y) | `MandiDetailSheet.tsx` |
-| Trends tab (ranges, candles, rate types, movers) | `TrendsTab.tsx`, `TrendChart.tsx`, `CandleChart.tsx`, `IntradayChart.tsx` |
+| Mandi detail sheet (trend ↔ history, 1D–1Y; full-screen history table with the mandi table's columns; full-screen chart with zoom / pan) | `MandiDetailSheet.tsx` |
+| Trends tab (ranges, candles, rate types, movers; ⤢ opens the chart card full screen with pinch / wheel zoom) | `TrendsTab.tsx`, `TrendChart.tsx`, `CandleChart.tsx`, `IntradayChart.tsx` |
+| **Full-screen layer** (close, title, Portrait / Landscape, rotation) + ⤢ button + box-size hook — used by the mandi table, detail sheet and Trends tab | `FullscreenLayer.tsx` · `FullscreenLayer`, `ExpandButton`, `useBoxSize` |
 | Data loading / maths | `useMarketData.ts`, `selectors.ts`, `format.ts`, `types.ts`, `theme.ts` |
 | Other filter layouts (not shown; `FILTER_UI` in the screen) | `FilterDock.tsx`, `FilterDrawer.tsx` |
 
@@ -122,7 +123,6 @@ Opened by "Unlock" in My Subscriptions and "Subscribe" on locked data.
 
 | Part | File |
 |---|---|
-| Compare tab | `components/compare/` (`CompareScreen`, `ZaraiMandiCompare`, PDF in `report-pdf.ts`) |
 | Reels tab + mini player | `customer-face/screens/ZaraiReelsScreen.tsx`, `customer-face/components/FloatingMiniPlayer.tsx` |
 | Rep dashboard | `customer-face/screens/RepDashboardScreen.tsx` |
 | Feed popup, app-wide location sheet | `customer-face/sheets/FeedModal.tsx`, `customer-face/sheets/LocationScopeSheet.tsx` |
@@ -134,6 +134,8 @@ Opened by "Unlock" in My Subscriptions and "Subscribe" on locked data.
 ## Archived (not built)
 
 `app/_archive/` holds files no longer reachable from the app (old rates screen, old sheets, Search / Mandi list / Live market / Rates result screens, onboarding steps the flow never reached — Dashboard, Interests, Location, Subscription, Payment, Loading — with their data in `_archive/onboarding/unused-data.ts`, …), same folder layout as `src/`. Move a file back into `src/` to use it again.
+
+**Compare tab (not in V1):** `_archive/components/compare/` (screen, styles, PDF report) and `_archive/customer-face/sheets/MultiLocSheet.tsx`. `_archive/components/compare/RESTORE.md` has the nav button, screen and type code to put back.
 
 ## Images
 

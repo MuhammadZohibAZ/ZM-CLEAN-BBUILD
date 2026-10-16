@@ -1,13 +1,12 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import { createPortal } from "react-dom";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 
-import { inDevicePreview, requestDeviceOrientation } from "../../../lib/device-orientation";
 import { attrValue } from "./Filters";
 import { arrow, shortRate, signed, stripMandi, type Fmt } from "./format";
 import { ALL_RATES, ATTR_KEYS, type MandiEntry } from "./selectors";
 import { C } from "./theme";
 import type { AttrFilters, AttrKey, ChangeInterval, SortKey } from "./types";
 import { PickerSheet } from "./PickerSheet";
+import { FullscreenLayer } from "./FullscreenLayer";
 import { EmptyActions, type EmptyAction } from "./PriceHero";
 import { RangeSheet } from "./RangeSheet";
 import { Sparkline, sparkTone } from "./Sparkline";
@@ -18,7 +17,7 @@ const SORTS: SortKey[] = ["none", "priceHigh", "priceLow", "arrivalHigh", "arriv
 /** Columns whose header filters by value (the rest sort). */
 type ValueCol = "rate" | AttrKey | "unit" | "quality";
 const PREVIEW = 6;
-const cleanQuality = (q?: string | null) => (q || "").replace(/\s*(Quality|معیار)$/i, "").trim();
+export const cleanQuality = (q?: string | null) => (q || "").replace(/\s*(Quality|معیار)$/i, "").trim();
 
 export function MandiSection({
   f,
@@ -127,57 +126,10 @@ export function MandiSection({
   };
   const [showAll, setShowAll] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
+  const closeFullscreen = useCallback(() => setFullscreen(false), []);
   const [calOpen, setCalOpen] = useState(false);
-  const [landscape, setLandscape] = useState(true);
 
   useEffect(() => setShowAll(false), [regionLabel, date]);
-
-  // Full-screen table. One rotation mechanism at a time:
-  // - desktop phone mockup: ask the mockup to rotate (no CSS rotation);
-  // - real phone: try the native orientation lock; if the screen is still
-  //   portrait (lock unsupported / refused), rotate the layer with CSS.
-  const preview = inDevicePreview();
-  const [portraitScreen, setPortraitScreen] = useState(() => typeof window !== "undefined" && window.innerHeight > window.innerWidth);
-  useEffect(() => {
-    if (!fullscreen) return;
-    const check = () => setPortraitScreen(window.innerHeight > window.innerWidth);
-    check();
-    window.addEventListener("resize", check);
-    window.addEventListener("orientationchange", check);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKey = (ev: KeyboardEvent) => ev.key === "Escape" && setFullscreen(false);
-    window.addEventListener("keydown", onKey);
-    return () => {
-      window.removeEventListener("resize", check);
-      window.removeEventListener("orientationchange", check);
-      window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [fullscreen]);
-  useEffect(() => {
-    const want = fullscreen && landscape ? "landscape" : "portrait";
-    if (preview) {
-      requestDeviceOrientation(want);
-      return;
-    }
-    const o = typeof screen !== "undefined" ? (screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> }) : undefined;
-    try {
-      if (fullscreen && landscape) o?.lock?.("landscape").catch(() => { });
-      else o?.unlock?.();
-    } catch {
-      /* orientation lock unsupported */
-    }
-  }, [fullscreen, landscape, preview]);
-  useEffect(() => () => {
-    if (inDevicePreview()) requestDeviceOrientation("portrait");
-    try {
-      screen.orientation?.unlock?.();
-    } catch {
-      /* ignore */
-    }
-  }, []);
-  const rotated = fullscreen && landscape && !preview && portraitScreen;
 
   const mandiCount = new Set(entries.map((e) => e.row.mandiName)).size;
   const visible = showAll ? entries : entries.slice(0, PREVIEW);
@@ -624,10 +576,7 @@ export function MandiSection({
           </div>
           <button
             type="button"
-            onClick={() => {
-              setLandscape(true);
-              setFullscreen(true);
-            }}
+            onClick={() => setFullscreen(true)}
             style={{ marginTop: 10, width: "100%", height: 48, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, borderRadius: 24, border: "none", background: C.surface, color: C.ink, fontSize: 14, fontWeight: 600, fontFamily: f.font }}
           >
             <Icon name="landscape" size={16} color={C.ink2} width={2.2} />
@@ -643,114 +592,51 @@ export function MandiSection({
         </div>
       )}
 
-      {fullscreen &&
-        createPortal(
-          <div
-            dir={f.dir}
-            role="dialog"
-            aria-modal="true"
-            aria-label={f.tx("Mandi rates table", "منڈی ریٹس ٹیبل")}
-            className="zm-product-rates zm-fadein"
+      {fullscreen && (
+        <FullscreenLayer
+          f={f}
+          title={f.tx("Mandi rates", "منڈی ریٹس")}
+          // The date / period sits on the calendar button beside it.
+          subtitle={
+            datePicker
+              ? f.tx(`${entries.length} rows · PKR per 40 kg`, `${f.digits(entries.length)} قطاریں · روپے فی 40 کلو`)
+              : f.tx(`${periodLabel || f.day(date)} · ${entries.length} rows · PKR per 40 kg`, `${periodLabel || f.day(date)} · ${f.digits(entries.length)} قطاریں · روپے فی 40 کلو`)
+          }
+          actions={
+            <>
+        {datePicker && (
+          <button
+            type="button"
+            onClick={() => setCalOpen(true)}
+            aria-label={f.tx(`Dates: ${periodLabel || f.day(date)}`, `تاریخیں: ${periodLabel || f.day(date)}`)}
             style={{
-              position: "fixed",
-              zIndex: 10000,
+              height: 38,
               display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
-              background: C.surface,
-              color: C.ink,
+              alignItems: "center",
+              gap: 6,
+              padding: "0 12px",
+              borderRadius: 12,
+              border: `1px solid ${datePicker.dayRange || date !== datePicker.latest ? C.brand : C.line}`,
+              background: datePicker.dayRange || date !== datePicker.latest ? C.brandTint : C.surface,
+              color: C.brandDeep,
+              fontSize: 13,
+              fontWeight: 600,
               fontFamily: f.font,
-              ...(rotated
-                ? { top: "50%", left: "50%", width: "100dvh", height: "100dvw", transform: "translate(-50%, -50%) rotate(90deg)" }
-                : { inset: 0 }),
+              flexShrink: 0,
+              whiteSpace: "nowrap",
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                padding: rotated ? "8px max(12px, env(safe-area-inset-bottom)) 8px max(12px, env(safe-area-inset-top))" : "max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left))",
-                borderBottom: `1px solid ${C.line}`,
-                background: C.surface,
-                flexShrink: 0,
-              }}
-            >
-              <button type="button" aria-label={f.tx("Close", "بند کریں")} onClick={() => setFullscreen(false)} style={{ width: 40, height: 40, borderRadius: 20, border: "none", background: C.chip, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Icon name="close" size={18} width={2.4} color={C.ink} />
-              </button>
-              <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
-                <span style={{ fontWeight: 700, fontSize: 15, lineHeight: f.lh, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{f.tx("Mandi rates", "منڈی ریٹس")}</span>
-                {/* The date / period sits on the calendar button beside it. */}
-                <span style={{ fontWeight: 500, fontSize: 12, color: C.muted, lineHeight: f.lh, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                  {datePicker
-                    ? f.tx(`${entries.length} rows · PKR per 40 kg`, `${f.digits(entries.length)} قطاریں · روپے فی 40 کلو`)
-                    : f.tx(`${periodLabel || f.day(date)} · ${entries.length} rows · PKR per 40 kg`, `${periodLabel || f.day(date)} · ${f.digits(entries.length)} قطاریں · روپے فی 40 کلو`)}
-                </span>
-              </div>
-              {datePicker && (
-                <button
-                  type="button"
-                  onClick={() => setCalOpen(true)}
-                  aria-label={f.tx(`Dates: ${periodLabel || f.day(date)}`, `تاریخیں: ${periodLabel || f.day(date)}`)}
-                  style={{
-                    height: 38,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    padding: "0 12px",
-                    borderRadius: 12,
-                    border: `1px solid ${datePicker.dayRange || date !== datePicker.latest ? C.brand : C.line}`,
-                    background: datePicker.dayRange || date !== datePicker.latest ? C.brandTint : C.surface,
-                    color: C.brandDeep,
-                    fontSize: 13,
-                    fontWeight: 600,
-                    fontFamily: f.font,
-                    flexShrink: 0,
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  <Icon name="calendar" size={16} width={2.2} color={C.brandDeep} />
-                  {periodLabel || f.day(date)}
-                </button>
-              )}
-              <div role="group" aria-label={f.tx("Orientation", "رخ")} style={{ display: "flex", gap: 2, padding: 3, borderRadius: 12, background: C.track, flexShrink: 0 }}>
-                {([false, true] as const).map((l) => (
-                  <button
-                    key={String(l)}
-                    type="button"
-                    aria-pressed={landscape === l}
-                    aria-label={l ? f.tx("Landscape", "افقی") : f.tx("Portrait", "عمودی")}
-                    onClick={() => setLandscape(l)}
-                    style={{
-                      height: 32,
-                      minWidth: 38,
-                      justifyContent: "center",
-                      padding: landscape ? "0 10px" : 0,
-                      border: "none",
-                      borderRadius: 9,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
-                      fontSize: 12.5,
-                      fontWeight: 600,
-                      fontFamily: f.font,
-                      color: landscape === l ? C.ink : C.muted,
-                      background: landscape === l ? C.surface : "transparent",
-                      boxShadow: landscape === l ? "0 1px 3px rgba(15,26,23,0.12)" : "none",
-                      transition: "background 200ms, color 200ms",
-                    }}
-                  >
-                    <span aria-hidden style={{ width: l ? 14 : 9, height: l ? 9 : 14, borderRadius: 2.5, border: `1.8px solid currentColor` }} />
-                    {landscape && (l ? f.tx("Landscape", "افقی") : f.tx("Portrait", "عمودی"))}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {table}
-          </div>,
-          document.body,
+            <Icon name="calendar" size={16} width={2.2} color={C.brandDeep} />
+            {periodLabel || f.day(date)}
+          </button>
         )}
+            </>
+          }
+          onClose={closeFullscreen}
+        >
+          {table}
+        </FullscreenLayer>
+      )}
       {calOpen && datePicker && (
         <RangeSheet
           f={f}
@@ -777,7 +663,8 @@ function changeColor(c: number | null) {
   return signed(c) > 0 ? C.up : signed(c) < 0 ? C.down : C.muted;
 }
 
-function colLabel(f: Fmt, k: AttrKey) {
+/** Column titles for the attribute columns (also used by the mandi detail history table). */
+export function colLabel(f: Fmt, k: AttrKey) {
   const L: Record<AttrKey, [string, string]> = {
     newOld: ["Crop", "فصل"],
     variety: ["Variety", "قسم"],

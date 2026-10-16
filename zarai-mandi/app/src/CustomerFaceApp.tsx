@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 
 import { FloatingMiniPlayer } from "./customer-face/components/FloatingMiniPlayer";
 import { BottomNav } from "./customer-face/navigation/BottomNav";
@@ -14,7 +14,6 @@ import {
   SUBSCRIBED_PRODUCTS,
   TODAY_ONLY_PRODUCTS,
 } from "./customer-face/shared/data/catalog";
-import { getproductIconSrc } from "./customer-face/shared/data/icons";
 import { ZARAI_REELS, type ZaraiReel } from "./customer-face/shared/data/reels";
 import { useLang } from "./customer-face/shared/i18n/LangProvider";
 import { ZM_THEME_CSS } from "./customer-face/shared/theme";
@@ -32,10 +31,8 @@ import { setFullBleed } from "./lib/device-bridge";
 import { CompleteProfileModal } from "./customer-face/sheets/complete-profile/CompleteProfileModal";
 import { FeedModal } from "./customer-face/sheets/FeedModal";
 import { LocationScopeSheet } from "./customer-face/sheets/LocationScopeSheet";
-import { MultiLocSheet } from "./customer-face/sheets/MultiLocSheet";
 
 // Compare (with its live-data adapter) is split out of the main bundle.
-const CompareScreen = lazy(() => import("./components/compare/CompareScreen"));
 
 function AppInner({
   initialUserData,
@@ -227,7 +224,7 @@ function AppInner({
         setFloatingVideo(null);
       }
       setActiveNav(tab);
-      if (tab === "home" || tab === "compare" || tab === "news") {
+      if (tab === "home" || tab === "news") {
         setStack([{ id: tab }]);
       }
     };
@@ -235,7 +232,6 @@ function AppInner({
     if (voiceEnabled) {
       let speech = "";
       if (tab === "home") speech = lang === "ur" ? "مرکزی صفحہ" : "Home";
-      else if (tab === "compare") speech = lang === "ur" ? "موازنہ" : "Compare";
       else if (tab === "news") speech = lang === "ur" ? "ویڈیوز" : "Videos";
       if (speech) speakText(speech);
       setTimeout(doNav, 850);
@@ -276,7 +272,7 @@ function AppInner({
   };
 
   const navActive: NavTab =
-    (["compare", "news"] as NavTab[]).includes(activeNav) &&
+    (["news"] as NavTab[]).includes(activeNav) &&
       stack.length === 1
       ? activeNav
       : "home";
@@ -383,24 +379,6 @@ function AppInner({
             initialTotalArrival={(current as ComRatesScr).initialTotalArrival}
             initialMarkets={(current as ComRatesScr).initialMarkets}
           />
-        )}
-        {current.id === "compare" && (
-          <Suspense fallback={<div className="flex-1" style={{ background: "#F1F7F4" }} />}>
-            <CompareScreen
-              productIcon={(division) => getproductIconSrc(division)}
-              // Free trial: every product can be compared; afterwards only paid ones.
-              ownedProducts={profileCompleted ? userSubscribedList : undefined}
-              renderLocationPicker={(picker) => (
-                <MultiLocSheet
-                  multiProvince
-                  selected={picker.selected}
-                  dataMandiNames={picker.dataNames}
-                  onApply={picker.onApply}
-                  onClose={picker.onClose}
-                />
-              )}
-            />
-          </Suspense>
         )}
         {current.id === "news" && (
           <NewsVideosScreen

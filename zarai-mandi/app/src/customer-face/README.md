@@ -14,7 +14,7 @@ and the `current.id → <Screen />` routing.
 | --- | --- |
 | `screens/home/` | Pieces of the Home screen: `SearchProfilePanel` (search + Complete Your Profile card on the hero), `ProductRail` (product picker, ♥ Favorites pinned), `HomeByproductCarousel` (date + 3D ring of by-product cards), `ByproductJumpIndicator` (‹ pill ›, dots; the pill opens the radial by-product picker `src/components/ui/radial-menu.tsx`), `homeMemory` |
 | `screens/` | One file per screen: `HomeScreen`, `SearchScreen`, `ProductSelectScreen`, `ByProductSelectScreen`, `ByProductCombinedScreen`, `RatesResultScreen`, `ProductRatesScreen`, `MandiListScreen`, `MandiDetailScreen`, `ZaraiReelsScreen`, `LiveMarketScreen`, `BillingScreen`, `RepDashboardScreen`, `VoiceScreen` |
-| `sheets/` | Bottom sheets & modals: `CompleteProfileModal`, `FeedModal`, `MultiLocSheet`, `LocationScopeSheet`, `LocationSheet`, `MandiPickerSheet`, `PriceTypeSheet`, `HistoricalRequestSheet`, `DatePickerSheet`, `DeepViewLocationSheet` |
+| `sheets/` | Bottom sheets & modals: `CompleteProfileModal`, `FeedModal`, `LocationScopeSheet`, `LocationSheet`, `MandiPickerSheet`, `PriceTypeSheet`, `HistoricalRequestSheet`, `DatePickerSheet`, `DeepViewLocationSheet` |
 | `navigation/` | `BottomNav`, `VoiceQueryOverlay`, `VoiceOrientationOverlay` |
 | `components/` | Small UI pieces used by more than one screen (`ProductIcon`, `RateCard`, `ScrollRow`, `CircleTile`, `ZMMessage`, `ByProductNationalCard`, `ByproductDatePill`, `FloatingMiniPlayer`, SVG icons, …) |
 | `shared/types.ts` | Shared types: `Screen` (the route list), `RateItem`, `LocationScope`, `FeedMsg`, `RichRow`, `AppProps`, `ProfileSetupData`, … |

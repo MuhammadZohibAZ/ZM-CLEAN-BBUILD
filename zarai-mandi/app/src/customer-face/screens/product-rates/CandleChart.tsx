@@ -45,6 +45,7 @@ export function CandleChart({
   onPanDays,
   animKey,
   height = 300,
+  width,
 }: {
   f: Fmt;
   data: CandleData;
@@ -56,9 +57,11 @@ export function CandleChart({
   onPanDays?: (deltaDays: number) => void;
   animKey: string;
   height?: number;
+  /** Drawing width in px (full screen fills its box); default 360 scales to fit. */
+  width?: number;
 }) {
   const svgRef = useRef<SVGSVGElement | null>(null);
-  const W = 360;
+  const W = width ?? 360;
   const AX = 50; // right price axis
   const plotW = W - AX;
   const H = height;

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 
 import { MANDI_DATA } from "../../shared/data/mandiLocation";
 import { getMandiWikiProfile } from "../../shared/data/mandiProfilesUrdu";
@@ -6,7 +6,9 @@ import { attrLabel, attrValue } from "./Filters";
 import { arrow, normLoc, shortRate, stripMandi, type Fmt } from "./format";
 import { statsFor } from "./selectors";
 import { C } from "./theme";
+import { ExpandButton, FullscreenLayer, useBoxSize } from "./FullscreenLayer";
 import { IntradayChart, type IntradayPoint } from "./IntradayChart";
+import { cleanQuality, colLabel } from "./MandiSection";
 import { RangeSheet } from "./RangeSheet";
 import { TrendChart } from "./TrendChart";
 import type { AttrKey, MarketRow } from "./types";
@@ -77,6 +79,15 @@ export function MandiDetailSheet({
   const [custom, setCustom] = useState<{ start: string; end: string } | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
+  // Full-screen views: the history table, and the trend chart (zoom + pan).
+  const [histFs, setHistFs] = useState(false);
+  const [chartFs, setChartFs] = useState(false);
+  const closeHistFs = useCallback(() => setHistFs(false), []);
+  const closeChartFs = useCallback(() => setChartFs(false), []);
+  const [chartBoxRef, chartBox] = useBoxSize<HTMLDivElement>();
+  // Days shown after zooming / panning the full-screen chart (null = the period's days).
+  const [zoom, setZoom] = useState<{ start: number; end: number } | null>(null);
+  const [fsIdx, setFsIdx] = useState<number | null>(null);
   // Trend charts and the day-by-day table share one horizontally swiped area.
   const pager = useRef<HTMLDivElement | null>(null);
   const [page, setPage] = useState(0);
@@ -156,9 +167,30 @@ export function MandiDetailSheet({
   const customStart = custom ? TIMELINE.indexOf(custom.start) : -1;
   const customEnd = custom ? TIMELINE.indexOf(custom.end) : -1;
   const isCustom = range === "CUSTOM" && customStart >= 0 && customEnd >= customStart;
-  const winEnd = isCustom ? customEnd + 1 : viewEnd;
-  const winStart = isCustom ? customStart : Math.max(0, winEnd - (range === "1D" || range === "CUSTOM" ? 30 : SHEET_RANGE_DAYS[range]));
+  const baseEnd = isCustom ? customEnd + 1 : viewEnd;
+  const baseStart = isCustom ? customStart : Math.max(0, baseEnd - (range === "1D" || range === "CUSTOM" ? 30 : SHEET_RANGE_DAYS[range]));
+  // A new period drops the zoom.
+  useEffect(() => setZoom(null), [range, custom]);
+  const zoomed = zoom && range !== "1D" ? zoom : null;
+  const winEnd = zoomed ? zoomed.end : baseEnd;
+  const winStart = zoomed ? zoomed.start : baseStart;
   const winDates = TIMELINE.slice(winStart, winEnd);
+  // Pinch / wheel: keep the right edge, change the number of days (at least 3).
+  const zoomTo = (days: number) =>
+    setZoom((z) => {
+      const cur = z ?? { start: baseStart, end: baseEnd };
+      const span = Math.max(3, Math.min(TIMELINE.length, days));
+      const start = Math.max(0, cur.end - span);
+      return { start, end: Math.min(TIMELINE.length, start + span) };
+    });
+  // Drag: + = earlier days.
+  const panDays = (d: number) =>
+    setZoom((z) => {
+      const cur = z ?? { start: baseStart, end: baseEnd };
+      const span = cur.end - cur.start;
+      const end = Math.max(span, Math.min(TIMELINE.length, cur.end - d));
+      return { start: end - span, end };
+    });
   const win = (a: number[]) => a.slice(winStart, winEnd);
   const winIdx = winDates.length - 1;
 
@@ -189,14 +221,21 @@ export function MandiDetailSheet({
   }, [range, mine, date, rate, view]);
 
   // Day-by-day table for this mandi and rate type, newest first (reported days only).
+  // `rows` are the day's reports, for the attribute columns of the full table.
+  const rowsByDay = useMemo(() => {
+    const m = new Map<string, MarketRow[]>();
+    for (const r of mine) if (r.rateType === rate) m.set(r.date, [...(m.get(r.date) || []), r]);
+    return m;
+  }, [mine, rate]);
   const history = TIMELINE.map((d, k) => ({ d, k }))
     .filter(({ k }) => series.lo[k] > 0)
     .reverse()
     .map(({ d, k }, i, list) => {
       const older = list[i + 1];
       const change = older && series.mid[older.k] > 0 ? ((series.mid[k] - series.mid[older.k]) / series.mid[older.k]) * 100 : null;
-      return { d, min: series.lo[k], max: series.hi[k], arrival: series.arr[k], change };
+      return { d, min: series.lo[k], max: series.hi[k], arrival: series.arr[k], change, rows: rowsByDay.get(d) || [] };
     });
+  const dayLabel = (d: string) => (d.slice(0, 4) === date.slice(0, 4) ? f.day(d) : `${f.day(d)} '${f.digits(d.slice(2, 4))}`);
 
   const spoken = f.tx(
     `${byproductName}, ${stripMandi(mandiName)} Mandi, ${shortRate(rate)} rate, ${Math.round(s.min)} to ${Math.round(s.max)} rupees per 40 kilo`,
@@ -214,6 +253,162 @@ export function MandiDetailSheet({
     <div style={{ display: "flex", flexDirection: "column", gap: 2, padding: 10, borderRadius: 14, background: bg, minWidth: 0 }}>
       <span style={{ fontSize: 12.5, fontWeight: 600, color: C.muted }}>{label}</span>
       <span style={{ fontSize: 15, fontWeight: 700, color: valColor, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{value}</span>
+    </div>
+  );
+
+  // ── Trend chart (sheet and full screen) ──
+  const viewToggle = (
+    <Segmented
+      label={f.tx("Chart", "چارٹ")}
+      value={view}
+      onChange={setView}
+      font={f.font}
+      options={[
+        { id: "price", label: f.tx("Price trend", "قیمت کا رجحان"), color: C.brand },
+        { id: "arrival", label: f.tx("Arrival trend", "آمد کا رجحان"), color: C.arrival },
+      ]}
+    />
+  );
+  const periodButtons = (
+    <>
+      {SHEET_RANGES.map((r) => {
+        const on = range === r.id && !zoomed;
+        return (
+          <button
+            key={r.id}
+            type="button"
+            aria-pressed={on}
+            onClick={() => {
+              setRange(r.id);
+              setZoom(null);
+            }}
+            style={{ height: 27, minWidth: 25, padding: "0 4px", border: "none", borderRadius: 13, fontSize: 11.5, fontWeight: 600, fontFamily: f.font, background: on ? C.ink : "transparent", color: on ? "#FFFFFF" : C.muted, flexShrink: 0 }}
+          >
+            {f.tx(r.en, r.ur)}
+          </button>
+        );
+      })}
+      <button
+        type="button"
+        aria-pressed={range === "CUSTOM"}
+        aria-label={f.tx("Custom period", "مخصوص مدت")}
+        title={f.tx("Custom period", "مخصوص مدت")}
+        onClick={() => setPickerOpen(true)}
+        style={{ width: 26, height: 27, border: "none", borderRadius: 13, display: "flex", alignItems: "center", justifyContent: "center", background: range === "CUSTOM" ? C.ink : "transparent", flexShrink: 0 }}
+      >
+        <Icon name="calendar" size={14} width={2.2} color={range === "CUSTOM" ? "#FFFFFF" : C.muted} />
+      </button>
+    </>
+  );
+  // `full`: the full-screen chart (fills width × height, zoom, pan, finger read-out).
+  const chartEl = (height: number, width?: number, full = false) => {
+    const pickIdx = full && fsIdx !== null ? Math.min(fsIdx, winIdx) : winIdx;
+    const fullProps = full
+      ? { width, span: winDates.length, onSpan: zoomTo, onPanDays: panDays, onIdx: setFsIdx }
+      : {};
+    if (range === "1D")
+      return (
+        <IntradayChart
+          key={`${date}|${view}|${rate}`}
+          f={f}
+          height={height}
+          width={width}
+          unit={view === "price" ? "rupees" : "bags"}
+          color={view === "price" ? C.brand : C.arrival}
+          points={intraday}
+          ariaLabel={f.tx(`${f.day(date, true)} on a 24-hour axis`, `${f.day(date, true)}، 24 گھنٹے کے محور پر`)}
+        />
+      );
+    if (view === "price")
+      return (
+        <TrendChart
+          key={`p|${range}|${custom?.start}|${custom?.end}|${full}`}
+          f={f}
+          height={height}
+          dates={winDates}
+          connectGaps
+          hideSlider
+          animKey={`p|${range}|${custom?.start}|${custom?.end}|${rate}`}
+          tooltip={(k) => (series.lo[winStart + k] > 0 ? { title: f.day(winDates[k], true), value: `${f.num(series.lo[winStart + k])}–${f.num(series.hi[winStart + k])}` } : null)}
+          series={[{ color, values: win(series.mid), lo: win(series.lo), hi: win(series.hi) }]}
+          idx={pickIdx}
+          yUnit="rupees"
+          ariaLabel={f.tx("Price over the period", "مدت بھر کی قیمت")}
+          {...fullProps}
+        />
+      );
+    return (
+      <TrendChart
+        key={`a|${range}|${custom?.start}|${custom?.end}|${full}`}
+        f={f}
+        height={height}
+        dates={winDates}
+        series={[]}
+        bars={win(series.arr)}
+        barsOnly
+        hideSlider
+        animKey={`a|${range}|${custom?.start}|${custom?.end}|${rate}`}
+        tooltip={(k) => ({ title: f.day(winDates[k], true), value: series.arr[winStart + k] > 0 ? `${f.num(series.arr[winStart + k])} ${f.tx("bags", "بوریاں")}` : f.tx("no report", "رپورٹ نہیں") })}
+        idx={pickIdx}
+        yUnit="bags"
+        ariaLabel={f.tx("Arrivals over the period", "مدت بھر کی آمد")}
+        {...fullProps}
+      />
+    );
+  };
+
+  // ── Full history table: the same columns as the mandi table ──
+  const histCols: { key: AttrKey | "unit"; label: string }[] = [
+    ...(["newOld", "moisture", "color", "variety", "origin", "spec", "quality"] as AttrKey[]).map((k) => ({ key: k, label: colLabel(f, k) })),
+    { key: "unit", label: f.tx("Unit", "اکائی") },
+  ];
+  const cellText = (rows: MarketRow[], key: AttrKey | "unit") =>
+    join(
+      rows.map((r) =>
+        key === "unit" ? f.unit(r.arrivalUnit || "") : key === "quality" ? t(cleanQuality(r.quality)) : r[key] ? attrValue(f, t, key, String(r[key])) : "",
+      ),
+    ).join(", ");
+  // Columns with values first (as in the mandi table).
+  const histColsSorted = [...histCols].sort((a, b) => Number(history.some((h) => cellText(h.rows, b.key))) - Number(history.some((h) => cellText(h.rows, a.key))));
+  const fth: CSSProperties = { position: "sticky", top: 0, zIndex: 2, background: C.surfaceAlt, padding: "7px 10px", borderBottom: `1px solid ${C.line}`, whiteSpace: "nowrap", textAlign: "center", fontSize: 11, fontWeight: 700, color: C.ink2 };
+  const ftd: CSSProperties = { padding: "8px 10px", borderBottom: `1px solid ${C.lineSoft}`, whiteSpace: "nowrap", textAlign: "center", fontWeight: 500, color: C.ink2, fontSize: 12.5 };
+  const fullHistory = (
+    <div data-zm-hscroll className="zm-hide-scrollbar" style={{ direction: "ltr", overflow: "auto", flex: 1, minHeight: 0, paddingBottom: "env(safe-area-inset-bottom)", overscrollBehavior: "contain" }}>
+      <table style={{ borderCollapse: "separate", borderSpacing: 0, minWidth: 640, width: "100%", fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate", fontFamily: f.font }}>
+        <thead>
+          <tr>
+            <th style={{ ...fth, insetInlineStart: 0, zIndex: 3, textAlign: "start", borderInlineEnd: `1px solid ${C.line}`, minWidth: 85 }}>{f.tx("Date", "تاریخ")}</th>
+            <th style={{ ...fth, minWidth: 85 }}>{f.tx("Min–Max", "کم–زیادہ")}</th>
+            <th style={{ ...fth, minWidth: 58 }}>{f.tx("Rate", "ریٹ")}</th>
+            <th style={{ ...fth, minWidth: 70 }}>{f.tx("Change", "تبدیلی")}</th>
+            <th style={{ ...fth, minWidth: 72 }}>{f.tx("Arrival", "آمد")}</th>
+            {histColsSorted.map((c) => (
+              <th key={c.key} style={fth}>{c.label}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {history.map((h) => {
+            const bg = h.d === date ? C.brandTint : C.surface;
+            return (
+              <tr key={h.d}>
+                <td style={{ ...ftd, background: bg, position: "sticky", insetInlineStart: 0, zIndex: 1, textAlign: "start", fontWeight: 700, color: C.ink, borderInlineEnd: `1px solid ${C.line}` }}>{dayLabel(h.d)}</td>
+                <td style={{ ...ftd, background: bg, fontWeight: 700, color: C.brand }}>{`${f.num(h.min)} – ${f.num(h.max)}`}</td>
+                <td style={{ ...ftd, background: bg, padding: "8px 3px" }}>
+                  <span style={{ padding: "2px 6px", borderRadius: 5, fontSize: 11.5, fontWeight: 600, color: C.ink2, background: C.chip }}>{shortRate(tr(rate))}</span>
+                </td>
+                <td style={{ ...ftd, background: bg, fontWeight: 700, color: h.change === null ? C.faint : h.change > 0 ? C.up : h.change < 0 ? C.down : C.muted }}>
+                  {h.change === null ? "—" : `${arrow(h.change)} ${f.pct(h.change)}`}
+                </td>
+                <td style={{ ...ftd, background: bg, fontWeight: 600, color: h.arrival > 0 ? C.arrival : C.faint }}>{h.arrival > 0 ? f.num(h.arrival) : "—"}</td>
+                {histColsSorted.map((c) => (
+                  <td key={c.key} style={{ ...ftd, background: bg }}>{cellText(h.rows, c.key) || "—"}</td>
+                ))}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 
@@ -430,129 +625,61 @@ export function MandiDetailSheet({
             style={{ display: "flex", overflowX: "auto", scrollSnapType: "x mandatory", scrollbarWidth: "none", overscrollBehaviorX: "contain" }}
           >
             <section aria-label={f.tx("Trend", "رجحان")} style={{ flex: "0 0 100%", minWidth: 0, scrollSnapAlign: "start", display: "flex", flexDirection: "column", gap: 10 }}>
-              <Segmented
-                label={f.tx("Chart", "چارٹ")}
-                value={view}
-                onChange={setView}
-                font={f.font}
-                options={[
-                  { id: "price", label: f.tx("Price trend", "قیمت کا رجحان"), color: C.brand },
-                  { id: "arrival", label: f.tx("Arrival trend", "آمد کا رجحان"), color: C.arrival },
-                ]}
-              />
-              <div role="group" aria-label={f.tx("Period", "مدت")} style={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
-                {pickerOpen && (
-                  <RangeSheet
-                    f={f}
-                    dates={reportDays}
-                    value={custom || { start: reportDays[Math.max(0, reportDays.length - 21)], end: reportDays[reportDays.length - 1] }}
-                    onClose={() => setPickerOpen(false)}
-                    onApply={(r) => {
-                      setCustom(r);
-                      setRange("CUSTOM");
-                    }}
-                  />
-                )}
-                {SHEET_RANGES.map((r) => {
-                  const on = range === r.id;
-                  return (
-                    <button
-                      key={r.id}
-                      type="button"
-                      aria-pressed={on}
-                      onClick={() => setRange(r.id)}
-                      style={{ height: 27, minWidth: 25, padding: "0 4px", border: "none", borderRadius: 13, fontSize: 11.5, fontWeight: 600, fontFamily: f.font, background: on ? C.ink : "transparent", color: on ? "#FFFFFF" : C.muted, flexShrink: 0 }}
-                    >
-                      {f.tx(r.en, r.ur)}
-                    </button>
-                  );
-                })}
-                <button
-                  type="button"
-                  aria-pressed={range === "CUSTOM"}
-                  aria-label={f.tx("Custom period", "مخصوص مدت")}
-                  title={f.tx("Custom period", "مخصوص مدت")}
-                  onClick={() => setPickerOpen(true)}
-                  style={{ width: 26, height: 27, border: "none", borderRadius: 13, display: "flex", alignItems: "center", justifyContent: "center", background: range === "CUSTOM" ? C.ink : "transparent", flexShrink: 0 }}
-                >
-                  <Icon name="calendar" size={14} width={2.2} color={range === "CUSTOM" ? "#FFFFFF" : C.muted} />
-                </button>
+              {viewToggle}
+              <div role="group" aria-label={f.tx("Period", "مدت")} style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 2 }}>
+                <span style={{ marginInlineEnd: "auto" }}>
+                  <ExpandButton f={f} label={f.tx("Full-screen chart", "پوری اسکرین چارٹ")} onClick={() => setChartFs(true)} />
+                </span>
+                {periodButtons}
               </div>
               {isCustom && (
                 <span style={{ marginTop: -4, fontSize: 12, fontWeight: 600, color: C.muted, textAlign: "end" }}>
                   {`${f.day(custom!.start)} – ${f.day(custom!.end)}`}
                 </span>
               )}
-              {range === "1D" ? (
-                <IntradayChart
-                  key={`${date}|${view}|${rate}`}
-                  f={f}
-                  height={170}
-                  unit={view === "price" ? "rupees" : "bags"}
-                  color={view === "price" ? C.brand : C.arrival}
-                  points={intraday}
-                  ariaLabel={f.tx(`${f.day(date, true)} on a 24-hour axis`, `${f.day(date, true)}، 24 گھنٹے کے محور پر`)}
-                />
-              ) : view === "price" ? (
-                <TrendChart
-                  key={`p|${range}|${custom?.start}|${custom?.end}`}
-                  f={f}
-                  height={170}
-                  dates={winDates}
-                  connectGaps
-                  hideSlider
-                  tooltip={(k) => (series.lo[winStart + k] > 0 ? { title: f.day(winDates[k], true), value: `${f.num(series.lo[winStart + k])}–${f.num(series.hi[winStart + k])}` } : null)}
-                  series={[{ color, values: win(series.mid), lo: win(series.lo), hi: win(series.hi) }]}
-                  idx={winIdx}
-                  yUnit="rupees"
-                  ariaLabel={f.tx("Price over the period", "مدت بھر کی قیمت")}
-                />
-              ) : (
-                <TrendChart
-                  key={`a|${range}|${custom?.start}|${custom?.end}`}
-                  f={f}
-                  height={170}
-                  dates={winDates}
-                  series={[]}
-                  bars={win(series.arr)}
-                  barsOnly
-                  hideSlider
-                  idx={winIdx}
-                  yUnit="bags"
-                  ariaLabel={f.tx("Arrivals over the period", "مدت بھر کی آمد")}
-                />
-              )}
+              {chartEl(170)}
             </section>
             <section aria-label={f.tx("History", "تاریخ وار")} style={{ flex: "0 0 100%", minWidth: 0, scrollSnapAlign: "start" }}>
               {history.length === 0 ? (
                 <p style={{ margin: 0, padding: "24px 4px", textAlign: "center", fontSize: 13, color: C.muted }}>{f.tx("No earlier reports for this rate.", "اس ریٹ کی کوئی پچھلی رپورٹ نہیں۔")}</p>
               ) : (
-                <div className="zm-hide-scrollbar" style={{ maxHeight: 214, overflowY: "auto", scrollbarWidth: "none" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontVariantNumeric: "tabular-nums", fontFamily: f.font }}>
-                    <thead>
-                      <tr>
-                        <th style={TH}>{f.tx("Date", "تاریخ")}</th>
-                        <th style={TH}>{f.tx("Min", "کم")}</th>
-                        <th style={TH}>{f.tx("Max", "زیادہ")}</th>
-                        <th style={TH}>{f.tx("Change", "تبدیلی")}</th>
-                        <th style={TH}>{f.tx("Arrival", "آمد")}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {history.map((h) => (
-                        <tr key={h.d} style={{ borderBottom: `1px solid ${C.lineSoft}`, background: h.d === date ? C.brandTint : undefined }}>
-                          <td style={{ ...TD, color: C.ink2 }}>{h.d.slice(0, 4) === date.slice(0, 4) ? f.day(h.d) : `${f.day(h.d)} '${f.digits(h.d.slice(2, 4))}`}</td>
-                          <td style={TD}>{f.num(h.min)}</td>
-                          <td style={TD}>{f.num(h.max)}</td>
-                          <td style={{ ...TD, color: h.change === null ? C.faint : h.change > 0 ? C.up : h.change < 0 ? C.down : C.muted }}>
-                            {h.change === null ? "—" : `${arrow(h.change)} ${f.pct(h.change)}`}
-                          </td>
-                          <td style={{ ...TD, color: h.arrival > 0 ? C.arrival : C.faint }}>{h.arrival > 0 ? f.num(h.arrival) : "—"}</td>
+                <>
+                  <div className="zm-hide-scrollbar" style={{ maxHeight: 214, overflowY: "auto", scrollbarWidth: "none" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontVariantNumeric: "tabular-nums", fontFamily: f.font }}>
+                      <thead>
+                        <tr>
+                          <th style={TH}>{f.tx("Date", "تاریخ")}</th>
+                          <th style={TH}>{f.tx("Min", "کم")}</th>
+                          <th style={TH}>{f.tx("Max", "زیادہ")}</th>
+                          <th style={TH}>{f.tx("Change", "تبدیلی")}</th>
+                          <th style={TH}>{f.tx("Arrival", "آمد")}</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {history.map((h) => (
+                          <tr key={h.d} style={{ borderBottom: `1px solid ${C.lineSoft}`, background: h.d === date ? C.brandTint : undefined }}>
+                            <td style={{ ...TD, color: C.ink2 }}>{dayLabel(h.d)}</td>
+                            <td style={TD}>{f.num(h.min)}</td>
+                            <td style={TD}>{f.num(h.max)}</td>
+                            <td style={{ ...TD, color: h.change === null ? C.faint : h.change > 0 ? C.up : h.change < 0 ? C.down : C.muted }}>
+                              {h.change === null ? "—" : `${arrow(h.change)} ${f.pct(h.change)}`}
+                            </td>
+                            <td style={{ ...TD, color: h.arrival > 0 ? C.arrival : C.faint }}>{h.arrival > 0 ? f.num(h.arrival) : "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {/* Same button as the mandi table's full-screen view. */}
+                  <button
+                    type="button"
+                    onClick={() => setHistFs(true)}
+                    style={{ marginTop: 8, width: "100%", height: 42, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, borderRadius: 21, border: `1px solid ${C.line}`, background: C.surface, color: C.ink, fontSize: 13.5, fontWeight: 600, fontFamily: f.font }}
+                  >
+                    <Icon name="landscape" size={16} color={C.ink2} width={2.2} />
+                    {f.tx(`Full-screen table · all ${history.length}`, `پوری اسکرین ٹیبل · تمام ${f.digits(history.length)}`)}
+                  </button>
+                </>
               )}
             </section>
           </div>
@@ -577,6 +704,54 @@ export function MandiDetailSheet({
           </div>
         )}
       </div>
+
+      {pickerOpen && (
+        <RangeSheet
+          f={f}
+          dates={reportDays}
+          value={custom || { start: reportDays[Math.max(0, reportDays.length - 21)], end: reportDays[reportDays.length - 1] }}
+          onClose={() => setPickerOpen(false)}
+          onApply={(r) => {
+            setCustom(r);
+            setRange("CUSTOM");
+          }}
+        />
+      )}
+
+      {histFs && (
+        <FullscreenLayer
+          f={f}
+          title={f.tx(`${name} Mandi · ${byproductName}`, `${name} منڈی · ${byproductName}`)}
+          subtitle={f.tx(`${shortRate(tr(rate))} rate · ${history.length} days · PKR per 40 kg`, `${shortRate(tr(rate))} · ${f.digits(history.length)} دن · روپے فی 40 کلو`)}
+          onClose={closeHistFs}
+        >
+          {fullHistory}
+        </FullscreenLayer>
+      )}
+
+      {chartFs && (
+        <FullscreenLayer
+          f={f}
+          title={f.tx(`${name} Mandi · ${byproductName}`, `${name} منڈی · ${byproductName}`)}
+          subtitle={`${shortRate(tr(rate))} · ${winDates.length ? `${f.day(winDates[0])} – ${f.day(winDates[winDates.length - 1])}` : ""}`}
+          onClose={closeChartFs}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px 4px", flexWrap: "wrap" }}>
+            <div style={{ flex: "1 1 220px", minWidth: 0 }}>{viewToggle}</div>
+            <div role="group" aria-label={f.tx("Period", "مدت")} style={{ display: "flex", alignItems: "center", gap: 2 }}>
+              {periodButtons}
+            </div>
+          </div>
+          <div ref={chartBoxRef} style={{ flex: 1, minHeight: 0, padding: "4px 8px 0", overflow: "hidden" }}>
+            {chartBox.w > 0 && chartBox.h > 0 && chartEl(Math.max(140, chartBox.h - 12), chartBox.w - 16, true)}
+          </div>
+          <p style={{ margin: 0, padding: "4px 12px max(8px, env(safe-area-inset-bottom))", fontSize: 11.5, fontWeight: 500, color: C.faint, textAlign: "center" }}>
+            {range === "1D"
+              ? f.tx("The day on a 24-hour axis", "دن 24 گھنٹے کے محور پر")
+              : f.tx("Pinch or scroll to zoom · drag for other days · hold to read values", "زوم کے لیے چٹکی یا اسکرول · دوسرے دنوں کے لیے کھسکائیں · قیمت کے لیے دبائے رکھیں")}
+          </p>
+        </FullscreenLayer>
+      )}
     </BottomSheet>
   );
 }

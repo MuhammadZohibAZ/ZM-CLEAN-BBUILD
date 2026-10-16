@@ -24,6 +24,7 @@ export function IntradayChart({
   points,
   color = C.brand,
   height = 210,
+  width,
   ariaLabel,
 }: {
   f: Fmt;
@@ -31,9 +32,11 @@ export function IntradayChart({
   points: IntradayPoint[];
   color?: string;
   height?: number;
+  /** Drawing width in px (full screen fills its box); default 340 scales to fit. */
+  width?: number;
   ariaLabel: string;
 }) {
-  const W = 340;
+  const W = width ?? 340;
   const axisW = 50;
   const plotW = W - axisW;
   const H = height;
