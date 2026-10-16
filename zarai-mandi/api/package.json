@@ -6,13 +6,15 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch-path=src src/server.js",
-    "etl": "python3 db/etl_load.py"
+    "etl": "python3 db/etl_load.py",
+    "sync-attrs": "node -e \"require('fs').copyFileSync('../app/src/customer-face/shared/data/specialAttributes.json','db/specialAttributes.json')\"",
+    "deploy": "npm run sync-attrs && vercel deploy --prod --yes --scope final-yappers"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.19.2"
   },
   "engines": {
-    "node": "22.x"
+    "node": "24.x"
   }
 }

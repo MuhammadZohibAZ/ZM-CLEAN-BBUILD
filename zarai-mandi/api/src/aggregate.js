@@ -527,10 +527,15 @@ function buildLocationFilter(locationKind, locationLabel, params) {
 // User-designated special attribute per product/by-product. Shared with the
 // app (byproductStats.ts) so the API and the cards always agree; keys are
 // normalized names (lowercase, alphanumeric only).
-const SPECIAL_ATTRIBUTES_PATH = new URL(
+// The app's copy is the source; db/specialAttributes.json is a synced copy
+// (`npm run sync-attrs`) for deployments without the app folder (Vercel).
+const APP_SPECIAL_ATTRIBUTES = new URL(
   "../../app/src/customer-face/shared/data/specialAttributes.json",
   import.meta.url
 );
+const SPECIAL_ATTRIBUTES_PATH = fs.existsSync(APP_SPECIAL_ATTRIBUTES)
+  ? APP_SPECIAL_ATTRIBUTES
+  : new URL("../db/specialAttributes.json", import.meta.url);
 const SPECIAL_PRODUCT_ATTRIBUTES = Object.assign(
   {},
   ...Object.entries(JSON.parse(fs.readFileSync(SPECIAL_ATTRIBUTES_PATH, "utf8")))

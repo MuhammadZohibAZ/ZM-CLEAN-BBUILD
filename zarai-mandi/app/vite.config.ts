@@ -1,6 +1,7 @@
 import { defineConfig, type HtmlTagDescriptor, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import fs from 'node:fs'
 import path from 'node:path'
 
 import siteConfiguration from './.figma/make/site.json'
@@ -23,6 +24,7 @@ export default defineConfig(({ mode }) => {
       figmaErrorOverlayReplay(),
       figmaReactRefreshBoundaryFallback(),
       figmaMakeKitPlugin({ storiesGlob: '/src/**/*.stories.{ts,tsx,js,jsx}' }),
+      copySrcIcons(),
     ],
     // Loaded lazily (Compare → Download PDF); pre-bundle so the dev server
     // doesn't need to re-optimize and reload on first use.
@@ -357,6 +359,26 @@ function figmaMakeKitPlugin(options: { storiesGlob: string | string[] }): Plugin
           next(err as Error)
         }
       })
+    },
+  }
+}
+
+/**
+ * Icons are referenced by path (`/src/icons/...`, see
+ * customer-face/shared/data/icons.ts). The dev server serves them from src;
+ * the production build copies the folder to dist/src/icons so the same paths
+ * work when deployed (e.g. Vercel).
+ */
+function copySrcIcons(): Plugin {
+  let outDir = 'dist'
+  return {
+    name: 'zm-copy-src-icons',
+    apply: 'build',
+    configResolved(config) {
+      outDir = path.resolve(config.root, config.build.outDir)
+    },
+    closeBundle() {
+      fs.cpSync(path.resolve(__dirname, 'src/icons'), path.join(outDir, 'src/icons'), { recursive: true })
     },
   }
 }

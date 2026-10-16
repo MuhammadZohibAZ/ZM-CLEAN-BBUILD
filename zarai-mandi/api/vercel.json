@@ -1,10 +1,15 @@
 {
   "functions": {
     "api/index.js": {
-      "includeFiles": "db/zarai_mandi.sqlite",
+      "includeFiles": "db/{zarai_mandi.sqlite,specialAttributes.json}",
       "memory": 1024,
       "maxDuration": 30
     }
   },
-  "rewrites": [{ "source": "/(.*)", "destination": "/api" }]
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/api"
+    }
+  ]
 }

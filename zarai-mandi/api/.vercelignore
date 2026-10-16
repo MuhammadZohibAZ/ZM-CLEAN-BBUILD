@@ -1,0 +1,10 @@
+# Upload only what the API function needs: code + the live database.
+node_modules
+db/*.py
+db/*.csv
+db/schema.sql
+db/*.sqlite-shm
+db/*.sqlite-wal
+db/*backup*.sqlite
+check_data.js
+.env*
