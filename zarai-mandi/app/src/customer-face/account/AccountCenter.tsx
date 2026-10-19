@@ -304,7 +304,10 @@ function Page({
   children: React.ReactNode;
 }) {
   return (
+    // Keyed by title: a new page gets a fresh scroll area (starts at the top)
+    // instead of keeping the previous page's scroll position.
     <div
+      key={title}
       role="dialog"
       aria-modal="true"
       aria-label={title}
@@ -1571,16 +1574,6 @@ export function AccountCenter({
     const urText: React.CSSProperties = isUr ? { fontFamily: URDU_FONT, lineHeight: 1.9 } : { lineHeight: 1.55 };
     return (
       <Page title={tx(doc.title)} subtitle={L("Zarai Mandi", "زرعی منڈی")} onBack={back} isUr={isUr}>
-        {/* In short */}
-        <div className="rounded-2xl p-4" style={{ background: C.mint, border: `1px solid ${C.mintBorder}` }}>
-          <p className="text-[11px] font-bold uppercase tracking-wider mb-1.5" style={{ color: C.primary }}>
-            {L("In short", "خلاصہ")}
-          </p>
-          <p className="text-sm font-medium" style={{ color: C.ink, ...urText }}>
-            {tx(doc.summary)}
-          </p>
-        </div>
-
         {doc.sections.map((sec, i) => (
           <div key={i}>
             <SectionLabel>{`${i + 1}. ${tx(sec.title)}`}</SectionLabel>

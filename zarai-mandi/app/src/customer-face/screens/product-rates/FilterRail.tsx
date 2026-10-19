@@ -311,15 +311,6 @@ export function FilterRail({
           {groups.map((g) => (
             <div key={g.key} style={{ display: "flex", flexDirection: "column", gap: 10, padding: "14px 0", borderBottom: `1px solid ${C.lineSoft}` }}>
               <span style={{ fontSize: 15, fontWeight: 700 }}>{attrLabel(f, g.key)}</span>
-              {/* One value only: selecting or clearing it shows the same prices, say why. */}
-              {g.options.length === 1 && (
-                <span style={{ marginTop: -6, fontSize: 12.5, fontWeight: 500, color: C.muted, lineHeight: f.lh }}>
-                  {f.tx(
-                    `Every ${rateLabel} report on ${f.day(date)} is ${attrValue(f, t, g.key, g.options[0].value)}, so the prices are the same with or without it.`,
-                    `${f.day(date)} کی ہر ${rateLabel} رپورٹ ${attrValue(f, t, g.key, g.options[0].value)} ہے، اس لیے اس کے ساتھ یا بغیر قیمتیں ایک جیسی ہیں۔`,
-                  )}
-                </span>
-              )}
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 {g.options.map((o) => {
                   const on = filters[g.key] === o.value;

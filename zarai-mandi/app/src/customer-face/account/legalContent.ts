@@ -8,8 +8,6 @@ type Bi = { en: string; ur: string };
 export type LegalSection = { title: Bi; points: Bi[] };
 export type LegalContent = {
   title: Bi;
-  /** One-paragraph "in short" summary at the top. */
-  summary: Bi;
   sections: LegalSection[];
   url: string;
 };
@@ -19,10 +17,6 @@ export const LEGAL_URL = "https://zaraimandi.com/terms-and-conditions";
 export const LEGAL: Record<LegalDoc, LegalContent> = {
   terms: {
     title: { en: "Terms & Conditions", ur: "شرائط و ضوابط" },
-    summary: {
-      en: "By using Zarai Mandi you accept these terms. Use the app lawfully, keep your details true, and use rates as guidance — decisions are your own.",
-      ur: "زرعی منڈی استعمال کر کے آپ ان شرائط کو قبول کرتے ہیں۔ ایپ قانونی طور پر استعمال کریں، اپنی معلومات درست رکھیں، اور ریٹس کو رہنمائی سمجھیں — فیصلے آپ کے اپنے ہیں۔",
-    },
     sections: [
       {
         title: { en: "Who can use it", ur: "کون استعمال کر سکتا ہے" },
@@ -72,10 +66,6 @@ export const LEGAL: Record<LegalDoc, LegalContent> = {
 
   privacy: {
     title: { en: "Privacy Policy", ur: "رازداری کی پالیسی" },
-    summary: {
-      en: "We collect only what we need to run your account and subscription, never sell it, and share it only with partners who help deliver the service (such as payment providers).",
-      ur: "ہم صرف وہی معلومات لیتے ہیں جو آپ کے اکاؤنٹ اور سبسکرپشن کے لیے ضروری ہوں، انہیں فروخت نہیں کرتے، اور صرف سروس فراہم کرنے والے شراکت داروں (جیسے ادائیگی کمپنیاں) سے شیئر کرتے ہیں۔",
-    },
     sections: [
       {
         title: { en: "What we collect", ur: "ہم کیا جمع کرتے ہیں" },
@@ -121,10 +111,6 @@ export const LEGAL: Record<LegalDoc, LegalContent> = {
 
   refunds: {
     title: { en: "Cancellation & Refunds", ur: "منسوخی اور رقم کی واپسی" },
-    summary: {
-      en: "Try the free demo before you subscribe: subscriptions are digital services and are not refundable. You can move an unused balance to another commodity.",
-      ur: "سبسکرائب کرنے سے پہلے مفت ڈیمو آزمائیں: سبسکرپشن ڈیجیٹل سروس ہے اور اس کی رقم واپس نہیں ہوتی۔ بچا ہوا بیلنس کسی دوسری جنس پر منتقل کیا جا سکتا ہے۔",
-    },
     sections: [
       {
         title: { en: "Cancelling", ur: "منسوخی" },
