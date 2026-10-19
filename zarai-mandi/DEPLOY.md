@@ -12,33 +12,39 @@ variable (set on `zarai-mandi-app` for Production, Preview and Development).
 Without it the app calls `http://localhost:8090`, which on a phone is the phone
 itself, so every card, trend and map would be empty.
 
-## Deploying changes
+## Deploying changes (one command)
 
-Both projects are deployed from this computer with the Vercel CLI (logged in
-as the account that owns final-yappers). Each folder is linked to its project
-(`.vercel/`, not committed).
+From `zarai-mandi/`:
 
 ```bash
-# Website (after app changes)
-cd zarai-mandi/app
-npm run deploy
-
-# API (after API or data changes)
-cd zarai-mandi/api
-npm run deploy      # first copies the app's specialAttributes.json into db/
+npm run deploy           # check → deploy API if it changed → deploy app → test live
+npm run deploy:check     # only the checks, nothing deployed
+npm run deploy -- --api  # force an API redeploy
 ```
 
-`npm run deploy` runs `vercel deploy --prod --yes --scope final-yappers`. If
-it reports "An unexpected internal error occurred", run it again (a Vercel-side
-hiccup).
+(`npm run deploy` inside `app/` or `api/` runs the same thing.)
 
-Also push to GitHub as usual so the code stays in sync.
+`scripts/deploy.mjs` deploys **nothing** unless every check passes, so a broken
+change never reaches the live site:
+
+1. the app type-checks (`tsc`) and builds (`vite build`, icons copied);
+2. the API, started locally on the current database, returns data for the
+   endpoints the app uses (health, dataset, verticals, Wheat / Rice /
+   Fertilizer cards);
+3. the API is redeployed whenever its code, database or config changed since
+   the last deploy (so the app and API never drift apart), then tested live;
+4. the app is deployed and the live site is checked (built with the API
+   address, icons served, live API answering).
+
+A Vercel "unexpected internal error" is retried automatically. The Vercel CLI
+must be logged in to the account that owns final-yappers; each folder is linked
+to its project (`.vercel/`, not committed). Push to GitHub as usual as well.
 
 ## How the API runs on Vercel
 
 - `api/api/index.js` is the only function; `api/vercel.json` sends every path to
   it and bundles `db/zarai_mandi.sqlite` and `db/specialAttributes.json`.
-- On a cold start the 98 MB database is copied to `/tmp` (SQLite needs a
+- On a cold start the ~91 MB database is copied to `/tmp` (SQLite needs a
   writable folder), so the first request after a quiet period is slower.
 - Node 24 (`node:sqlite`), see `api/package.json`.
 - `api/.vercelignore` keeps the upload to the code + live database.
@@ -54,9 +60,20 @@ Also push to GitHub as usual so the code stays in sync.
 
 ## Updating the data
 
-Rebuild `api/db/zarai_mandi.sqlite` (see `api/README.md`), then
-`cd api && npm run deploy`, and commit + push. GitHub rejects files over
-100 MB; the current database is about 98 MB.
+```bash
+cd zarai-mandi/api
+python db/etl_sqlite.py     # commodity export + data/Fast uni.xlsx (fertilizer)
+cd .. && npm run deploy
+```
+
+Then commit + push. The build keeps the database under GitHub's 100 MB limit
+(currently ~91 MB) by keeping only the indexes the API uses.
+
+Fertilizer (`api/db/fertilizer.py`): each brand product ("Sona Urea") is a
+by-product of Fertilizer, priced per 50 kg bag, rate type Dealer, location
+"All Pakistan" (the file has no stations), limited to the commodity export's
+dates. It also writes `app/src/customer-face/shared/data/fertilizerBrands.json`
+(by-product → company), which the cards show as **Company**.
 
 ## Not on Vercel
 

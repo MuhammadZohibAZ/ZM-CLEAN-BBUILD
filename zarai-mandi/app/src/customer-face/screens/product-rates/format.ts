@@ -1,4 +1,5 @@
 import { toUrduDigits, URDU_FONT } from "../../shared/i18n/LangProvider";
+import { CROP_PRICE_UNIT, type PriceUnit } from "../../shared/data/fertilizer";
 import { BODY_FONT, DISPLAY_FONT } from "./theme";
 
 export type Lang = "en" | "ur";
@@ -10,8 +11,9 @@ const DAYS_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const DAYS_EN_FULL = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const DAYS_UR = ["اتوار", "پیر", "منگل", "بدھ", "جمعرات", "جمعہ", "ہفتہ"];
 
-/** Language-aware formatting helpers, created once per render. */
-export function makeFmt(lang: Lang) {
+/** Language-aware formatting helpers, created once per render. `unit`: the
+ * price unit of the product shown (per 40 kg; fertilizer per 50 kg bag). */
+export function makeFmt(lang: Lang, unit: PriceUnit = CROP_PRICE_UNIT) {
   const ur = lang === "ur";
   const digits = (v: string | number) => (ur ? toUrduDigits(v) : String(v));
   const num = (n: number) => digits(Math.round(n).toLocaleString("en-US"));
@@ -48,6 +50,10 @@ export function makeFmt(lang: Lang) {
     dayYear,
     dayFullYear,
     dayFullWeekdayYear,
+    /** "per 40 kg" / "per 50 kg bag" in the current language. */
+    per: ur ? unit.ur : unit.en,
+    /** The unit as read aloud ("per 40 kilo"). */
+    perSpoken: ur ? unit.spokenUr : unit.spokenEn,
     /** Pick the English or Urdu string. */
     tx: (en: string, urText: string) => (ur ? urText : en),
     /** Arrival unit from the data ("50 kg") in the current language. */

@@ -54,6 +54,8 @@ function AppInner({
   const { lang, voiceEnabled } = useLang();
   const [stack, setStack] = useState<Screen[]>([{ id: "home" }]);
   const [activeNav, setActiveNav] = useState<NavTab>("home");
+  // Bumped by the Settings tab: Home opens its account pages.
+  const [accountRequest, setAccountRequest] = useState(0);
   const [feedOpen, setFeedOpen] = useState(false);
   const [feedFilter, setFeedFilter] = useState<FeedFilter>({
     products: [],
@@ -223,6 +225,13 @@ function AppInner({
         // User entered video section -> clear floating mini player
         setFloatingVideo(null);
       }
+      if (tab === "settings") {
+        // Settings = the account pages, opened over Home.
+        setActiveNav("home");
+        setStack([{ id: "home" }]);
+        setAccountRequest((n) => n + 1);
+        return;
+      }
       setActiveNav(tab);
       if (tab === "home" || tab === "news") {
         setStack([{ id: tab }]);
@@ -232,7 +241,8 @@ function AppInner({
     if (voiceEnabled) {
       let speech = "";
       if (tab === "home") speech = lang === "ur" ? "مرکزی صفحہ" : "Home";
-      else if (tab === "news") speech = lang === "ur" ? "ویڈیوز" : "Videos";
+      else if (tab === "news") speech = lang === "ur" ? "تفریح" : "Entertainment";
+      else if (tab === "settings") speech = lang === "ur" ? "ترتیبات" : "Settings";
       if (speech) speakText(speech);
       setTimeout(doNav, 850);
       return;
@@ -305,6 +315,7 @@ function AppInner({
           ) : (
             <HomeScreenSwitch
               push={push}
+              openAccountRequest={accountRequest}
               locationScope={locationScope}
               setFeedOpen={(v) => {
                 if (v) openFeed({});

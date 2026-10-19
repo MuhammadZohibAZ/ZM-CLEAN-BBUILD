@@ -22,7 +22,7 @@ export function FullscreenLayer({
   subtitle,
   actions,
   onClose,
-  defaultLandscape = true,
+  defaultLandscape = false,
   children,
 }: {
   f: Fmt;
@@ -31,6 +31,7 @@ export function FullscreenLayer({
   /** Buttons shown before the orientation switch (e.g. a calendar). */
   actions?: ReactNode;
   onClose: () => void;
+  /** Opens in portrait unless set; the switch in the header changes it. */
   defaultLandscape?: boolean;
   /** Fills the rest of the layer (a flex column). */
   children: ReactNode;

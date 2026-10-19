@@ -1,4 +1,5 @@
 import { type ProdDiv, type ProductSel } from "../types";
+import { FERTILIZER_BYPRODUCTS } from "./fertilizer";
 
 //  COMPLETE VERTICALS DATA
 
@@ -244,21 +245,8 @@ export const VERTICALS: Record<
     icon: "agri-inputs",
     urdu: "زرعی ان پٹس",
     products: {
-      Fertilizer: [
-        "Urea",
-        "DAP",
-        "NP",
-        "NPK",
-        "SOP-G",
-        "SSP",
-        "MOP",
-        "Ammonium Nitrate",
-        "Ammonium Sulphate",
-        "TSP",
-        "CAN",
-        "Zabardast Urea",
-        "Pak Arab Guara",
-      ],
+      // Brand products from data/Fast uni.xlsx (see fertilizer.ts).
+      Fertilizer: FERTILIZER_BYPRODUCTS,
       Pesticide: [
         "Chlorphenapyr 36% SC",
         "Clothianidin 20% EC",

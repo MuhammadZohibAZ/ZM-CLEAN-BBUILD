@@ -2,7 +2,8 @@ export const TRANS: Record<string, { en: string; ur: string }> = {
   // Navigation
   "nav.home": { en: "Home", ur: "ہوم" },
   "nav.compare": { en: "Compare", ur: "موازنہ" },
-  "nav.news": { en: "Reels", ur: "ویڈیوز" },
+  "nav.news": { en: "Entertainment", ur: "تفریح" },
+  "nav.settings": { en: "Settings", ur: "ترتیبات" },
 
 
   // Common

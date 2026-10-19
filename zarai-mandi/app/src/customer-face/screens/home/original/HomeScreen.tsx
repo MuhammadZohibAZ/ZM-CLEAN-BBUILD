@@ -58,6 +58,7 @@ export function HomeScreen({
   onCompleteProfileSubmit: parentOnCompleteProfileSubmit,
   userSubscribedList: parentUserSubscribedList,
   setUserSubscribedList: parentSetUserSubscribedList,
+  openAccountRequest = 0,
 }: {
   push: (s: Screen) => void;
   setFeedOpen: (v: boolean) => void;
@@ -66,6 +67,8 @@ export function HomeScreen({
   isPickedBP: (item: RateItem) => boolean;
   setPickedByproducts: React.Dispatch<React.SetStateAction<RateItem[]>>;
   voiceGuideActive?: boolean;
+  /** Changes when the Settings tab is tapped: open the account pages. */
+  openAccountRequest?: number;
   onVoiceGuideClose?: () => void;
   initialUserData?: AppProps["initialUserData"];
   activeRole?: "customer" | "representative";
@@ -89,6 +92,9 @@ export function HomeScreen({
   const { lang, tc, voiceEnabled: homeVoiceEnabled } = useLang();
 
   const [localProfileCompleted, setLocalProfileCompleted] = useState(false);
+  useEffect(() => {
+    if (openAccountRequest) setAccountView("menu");
+  }, [openAccountRequest]); // eslint-disable-line react-hooks/exhaustive-deps
   const profileCompleted = parentProfileCompleted ?? localProfileCompleted;
   const setProfileCompleted =
     parentSetProfileCompleted || setLocalProfileCompleted;

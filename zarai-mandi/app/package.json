@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "format": "oxfmt",
-    "deploy": "vercel deploy --prod --yes --scope final-yappers"
+    "deploy": "npm --prefix .. run deploy"
   },
   "dependencies": {
     "clsx": "^2.1.1",

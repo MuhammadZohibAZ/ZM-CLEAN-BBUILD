@@ -3,6 +3,10 @@
 
 Usage:
     python3 db/etl_sqlite.py [path/to/export.xlsx] [--out path.sqlite] [--allow-missing-locations]
+                             [--fertilizer data/Fast uni.xlsx | --no-fertilizer]
+
+Fertilizer prices come from their own export (see fertilizer.py) and are added
+after the commodity rows.
 
 Accepts both export layouts:
   - 1-month export: sheet "Commodity Prices", header on row 7 (after a title block)
@@ -26,6 +30,9 @@ import re
 import sqlite3
 import sys
 import openpyxl
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import fertilizer  # noqa: E402
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # The year of prices the app serves (prepared by data/prepare_year_prices.py:
@@ -130,6 +137,8 @@ def main():
     ap.add_argument("--out", default=SQLITE_PATH, help="SQLite file to (re)build")
     ap.add_argument("--allow-missing-locations", action="store_true",
                     help="load even if Province/District/Station are mostly empty")
+    ap.add_argument("--fertilizer", default=fertilizer.DEFAULT_XLSX, help="fertilizer export (Fast uni.xlsx)")
+    ap.add_argument("--no-fertilizer", action="store_true", help="skip the fertilizer export")
     args = ap.parse_args()
     xlsx_path, out_path = os.path.abspath(args.xlsx), os.path.abspath(args.out)
 
@@ -160,7 +169,7 @@ def main():
 
     CREATE TABLE price_records (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        row_num INTEGER NOT NULL UNIQUE,
+        row_num INTEGER NOT NULL,  -- ingestion order (commodity rows from 1, fertilizer from 10,000,000)
         record_date TEXT NOT NULL,
         price_type TEXT,
         product TEXT NOT NULL,
@@ -344,17 +353,20 @@ def main():
             "--allow-missing-locations to load anyway. The existing database was left untouched."
         )
 
+    if not args.no_fertilizer:
+        if os.path.exists(args.fertilizer):
+            fertilizer.load(cur, os.path.abspath(args.fertilizer))
+            conn.commit()
+        else:
+            print(f"Fertilizer export not found ({args.fertilizer}); fertilizer stays empty")
+
     print("Creating indexes...")
     cur.executescript("""
-        CREATE INDEX idx_pr_prod_bp ON price_records(product, by_product);
+        -- Every API query filters on product + by_product first (a few thousand
+        -- rows), then date / rate type / location, so these two cover them.
+        -- Single-column location / rate-type / price_valid indexes were dropped
+        -- (unused, ~40 MB): the database must stay under GitHub's 100 MB limit.
         CREATE INDEX idx_pr_date ON price_records(record_date);
-        CREATE INDEX idx_pr_ptype ON price_records(price_type);
-        CREATE INDEX idx_pr_station ON price_records(station);
-        CREATE INDEX idx_pr_district ON price_records(district);
-        CREATE INDEX idx_pr_province ON price_records(province);
-        CREATE INDEX idx_pr_pvalid ON price_records(price_valid);
-        -- A year of data (~300k rows): per-by-product queries filter on
-        -- product + by_product and then by date / rate type.
         CREATE INDEX idx_pr_prod_bp_date ON price_records(product, by_product, record_date);
         CREATE INDEX idx_pr_prod_bp_ptype ON price_records(product, by_product, price_type, record_date);
     """)
@@ -448,6 +460,7 @@ def main():
 
     cur.execute("ANALYZE")
     conn.commit()
+    conn.execute("VACUUM")
     cur.close()
     conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
     conn.close()

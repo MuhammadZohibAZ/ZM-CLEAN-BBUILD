@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { type CardStats, type CardSpecialAttr } from "../../lib/api";
 
 import { getProductSpecialAttrType } from "../shared/data/byproductStats";
+import { fertilizerCompany, isFertilizer, priceUnitFor } from "../shared/data/fertilizer";
 import { latestDatasetDay } from "../shared/data/datasetDates";
 import { toUrduDigits, URDU_FONT, useLang } from "../shared/i18n/LangProvider";
 import { type ByproductNationalStats, type SpecialAttrInfo } from "../shared/types";
@@ -287,6 +288,13 @@ export function ByProductNationalCard({
     : '—';
   const specialAttrColor = hasAttrValue ? '#ff7b00ff' : undefined;
 
+  // Fertilizer: the attribute cell shows the company (each brand product has
+  // one), and prices are per 50 kg bag.
+  const division = stats.product || vertical || product;
+  const company = isFertilizer(division) ? fertilizerCompany(stats.byproduct) : null;
+  const unit = priceUnitFor(division);
+  const perUnit = lang === 'ur' ? unit.ur : unit.en;
+
   // Arrival value: show bags count if > 0, otherwise show '—'
   const hasArrival = stats.hasData && stats.totalArrival > 0;
   // The unit is set smaller so long counts still fit beside the attribute cell.
@@ -394,7 +402,7 @@ export function ByProductNationalCard({
                   ? formatPrice(stats.avgMin)
                   : '—'
               }
-              caption={lang === 'ur' ? 'فی 40 کلو' : 'per 40 kg'}
+              caption={perUnit}
             />
             <CardStatCell
               divider
@@ -404,7 +412,7 @@ export function ByProductNationalCard({
                   ? formatPrice(stats.avgMax)
                   : '—'
               }
-              caption={lang === 'ur' ? 'فی 40 کلو' : 'per 40 kg'}
+              caption={perUnit}
             />
           </div>
 
@@ -415,13 +423,13 @@ export function ByProductNationalCard({
             <CardStatCell
               label={lang === 'ur' ? 'کل آمد' : 'Total arrival'}
               value={arrivalValue}
-              caption={lang === 'ur' ? 'فی 40 کلو' : 'per 40 kg'}
+              caption={perUnit}
             />
             <CardStatCell
               divider
-              label={specialAttrLabel}
-              value={specialAttrValue}
-              valueColor={specialAttrColor}
+              label={company ? (lang === 'ur' ? 'کمپنی' : 'Company') : specialAttrLabel}
+              value={company ?? specialAttrValue}
+              valueColor={company ? undefined : specialAttrColor}
             />
           </div>
 

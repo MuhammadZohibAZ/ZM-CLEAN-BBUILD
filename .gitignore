@@ -35,3 +35,6 @@ Thumbs.db
 *.db-wal
 *.db-shm
 *backup*.sqlite
+
+# Office lock files
+~$*

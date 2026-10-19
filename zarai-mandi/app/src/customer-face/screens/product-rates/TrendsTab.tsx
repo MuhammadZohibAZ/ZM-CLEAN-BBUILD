@@ -17,6 +17,7 @@ import { IntradayChart, type IntradayPoint } from "./IntradayChart";
 import type { AttrFilters, MarketRow } from "./types";
 import { Card, Icon, Segmented, useCountUp } from "./ui";
 import { TIMELINE } from "./useMarketData";
+import { makeZoomThrottle, stepPreset } from "./zoomPresets";
 
 // 1D shows the same two weeks as 2W (so any bar can be picked) but its
 // High / Low / Average are for the selected day only.
@@ -124,6 +125,12 @@ export function TrendsTab({
   useEffect(() => setIdx(null), [custom, mode]);
   const panDays = (d: number) => setOffset((o) => Math.max(0, Math.min(maxOffset, o + d)));
   const setSpanKeepRight = (s: number) => setSpanState(Math.max(MIN_SPAN, Math.min(TL, s)));
+  // Full screen: pinch / wheel steps through the period buttons (1W → 2W → 1M …).
+  const zoomThrottle = useRef(makeZoomThrottle()).current;
+  const zoomToPreset = (s: number) => {
+    const next = stepPreset(span, s, RANGE_DAYS);
+    if (next && zoomThrottle()) setRange(next);
+  };
   const canPan = maxOffset > 0;
 
   const slice = (a: number[]) => a.slice(start, end);
@@ -508,8 +515,8 @@ export function TrendsTab({
               <span style={{ fontSize: 12.5, fontWeight: 500, color: DK.sub, lineHeight: f.lh, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {isPrice
                   ? compare
-                    ? f.tx(`${shortRate(tr(set[0]))} · average per 40 kg`, `${shortRate(tr(set[0]))} · اوسط فی 40 کلو`)
-                    : `${focus === ALL_RATES ? f.tx("All rates", "تمام ریٹ") : shortRate(tr(focus))} · ${f.tx("average per 40 kg", "اوسط فی 40 کلو")}`
+                    ? f.tx(`${shortRate(tr(set[0]))} · average ${f.per}`, `${shortRate(tr(set[0]))} · اوسط ${f.per}`)
+                    : `${focus === ALL_RATES ? f.tx("All rates", "تمام ریٹ") : shortRate(tr(focus))} · ${f.tx(`average ${f.per}`, `اوسط ${f.per}`)}`
                   : f.tx("Arrivals · all rate types", "آمد · تمام ریٹ")}
               </span>
               {isPrice && !compare && (
@@ -684,7 +691,7 @@ export function TrendsTab({
                 idx={idx !== null && idx < len ? idx : null}
                 onIdx={setIdx}
                 span={span}
-                onSpan={setSpanKeepRight}
+                onSpan={expanded ? zoomToPreset : setSpanKeepRight}
                 onPanDays={canPan ? panDays : undefined}
                 animKey={`${range}|${focus}|${custom.start}|${custom.end}`}
                 height={expanded ? fsChartH - 24 : 290}
@@ -697,7 +704,7 @@ export function TrendsTab({
                 height={expanded ? fsChartH : 210}
                 width={fsChartW}
                 span={span}
-                onSpan={expanded ? setSpanKeepRight : undefined}
+                onSpan={expanded ? zoomToPreset : undefined}
                 dates={dates}
                 series={series}
                 bars={compare ? undefined : arr}
@@ -742,7 +749,7 @@ export function TrendsTab({
                 height={expanded ? fsChartH : 210}
                 width={fsChartW}
                 span={span}
-                onSpan={expanded ? setSpanKeepRight : undefined}
+                onSpan={expanded ? zoomToPreset : undefined}
                 dates={dates}
                 series={[]}
                 bars={arr}

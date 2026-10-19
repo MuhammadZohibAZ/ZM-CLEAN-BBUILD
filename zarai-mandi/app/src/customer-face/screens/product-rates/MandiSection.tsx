@@ -361,8 +361,8 @@ export function MandiSection({
           <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700, letterSpacing: "-0.01em", lineHeight: f.ur ? 1.6 : 1.2 }}>{sectionHeading}</h2>
           <span style={{ fontSize: 12, fontWeight: 500, color: C.muted, lineHeight: f.lh }}>
             {regionLabel
-              ? f.tx(`${mandiCount} location${mandiCount === 1 ? "" : "s"} in ${regionLabel} · PKR per 40 kg`, `${regionLabel} میں ${f.digits(mandiCount)} مقامات · روپے فی 40 کلو`)
-              : f.tx(`${mandiCount} location${mandiCount === 1 ? "" : "s"} · PKR per 40 kg`, `${f.digits(mandiCount)} مقامات · روپے فی 40 کلو`)}
+              ? f.tx(`${mandiCount} location${mandiCount === 1 ? "" : "s"} in ${regionLabel} · PKR ${f.per}`, `${regionLabel} میں ${f.digits(mandiCount)} مقامات · روپے ${f.per}`)
+              : f.tx(`${mandiCount} location${mandiCount === 1 ? "" : "s"} · PKR ${f.per}`, `${f.digits(mandiCount)} مقامات · روپے ${f.per}`)}
           </span>
         </div>
 
@@ -599,8 +599,8 @@ export function MandiSection({
           // The date / period sits on the calendar button beside it.
           subtitle={
             datePicker
-              ? f.tx(`${entries.length} rows · PKR per 40 kg`, `${f.digits(entries.length)} قطاریں · روپے فی 40 کلو`)
-              : f.tx(`${periodLabel || f.day(date)} · ${entries.length} rows · PKR per 40 kg`, `${periodLabel || f.day(date)} · ${f.digits(entries.length)} قطاریں · روپے فی 40 کلو`)
+              ? f.tx(`${entries.length} rows · PKR ${f.per}`, `${f.digits(entries.length)} قطاریں · روپے ${f.per}`)
+              : f.tx(`${periodLabel || f.day(date)} · ${entries.length} rows · PKR ${f.per}`, `${periodLabel || f.day(date)} · ${f.digits(entries.length)} قطاریں · روپے ${f.per}`)
           }
           actions={
             <>

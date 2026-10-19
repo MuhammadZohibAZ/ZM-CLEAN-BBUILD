@@ -19,6 +19,7 @@ import { FilterRail } from "./FilterRail";
 import { makeFmt, shortRate, stripMandi } from "./format";
 import { MandiDetailSheet } from "./MandiDetailSheet";
 import { MandiSection } from "./MandiSection";
+import { priceUnitFor } from "../../shared/data/fertilizer";
 import { PriceHero } from "./PriceHero";
 import { FilterLocationSheet } from "./FilterLocationSheet";
 import { PickerSheet } from "./PickerSheet";
@@ -85,7 +86,7 @@ export function ProductRatesScreen({
   initialStatDate,
 }: ProductRatesProps) {
   const { lang, t, tc, tm, tr, voiceEnabled } = useLang();
-  const f = makeFmt(lang);
+  const f = makeFmt(lang, priceUnitFor(getDivisionForProduct(vertical, product)));
   useEffect(ensureFonts, []);
 
   const name = byproduct || product;
@@ -299,8 +300,8 @@ export function ProductRatesScreen({
     if (!stats.count) return;
     speakText(
       f.tx(
-        `${name} in ${locationLabel}, ${rateLabel}, ${Math.round(stats.min)} to ${Math.round(stats.max)} rupees per 40 kilo`,
-        `${tc(name)}، ${locationLabel}، ${rateLabel}، ${Math.round(stats.min)} سے ${Math.round(stats.max)} روپے فی چالیس کلو`,
+        `${name} in ${locationLabel}, ${rateLabel}, ${Math.round(stats.min)} to ${Math.round(stats.max)} rupees ${f.perSpoken}`,
+        `${tc(name)}، ${locationLabel}، ${rateLabel}، ${Math.round(stats.min)} سے ${Math.round(stats.max)} روپے ${f.perSpoken}`,
       ),
     );
   };
@@ -403,8 +404,10 @@ export function ProductRatesScreen({
       list.push({ key: "moisture", label: attrLabel(f, "moisture"), value: band, display: attrValue(f, t, "moisture", band) });
     }
 
-    // 3. If no filter is set for the byproduct's primary special attribute, check if all day rows share a single unique attribute
-    if (primaryKey && !filters[primaryKey] && !band) {
+    // 3. If no filter is set for the byproduct's primary special attribute, check if all day rows share a single unique attribute.
+    // Only while the filters are still the ones the card opened with: once the user clears or
+    // changes them, the badge must go too (it would otherwise look impossible to clear).
+    if (primaryKey && !filters[primaryKey] && !band && sameFilters(filters, arrival.filters)) {
       const uniqueValues = Array.from(
         new Set(dayRows.map((r) => r[primaryKey] as string).filter(Boolean))
       );

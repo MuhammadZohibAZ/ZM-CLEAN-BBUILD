@@ -9,6 +9,7 @@ import { C } from "./theme";
 import { ExpandButton, FullscreenLayer, useBoxSize } from "./FullscreenLayer";
 import { IntradayChart, type IntradayPoint } from "./IntradayChart";
 import { cleanQuality, colLabel } from "./MandiSection";
+import { makeZoomThrottle, stepPreset } from "./zoomPresets";
 import { RangeSheet } from "./RangeSheet";
 import { TrendChart } from "./TrendChart";
 import type { AttrKey, MarketRow } from "./types";
@@ -85,9 +86,11 @@ export function MandiDetailSheet({
   const closeHistFs = useCallback(() => setHistFs(false), []);
   const closeChartFs = useCallback(() => setChartFs(false), []);
   const [chartBoxRef, chartBox] = useBoxSize<HTMLDivElement>();
-  // Days shown after zooming / panning the full-screen chart (null = the period's days).
+  // Days shown after panning the full-screen chart (null = the period's days).
   const [zoom, setZoom] = useState<{ start: number; end: number } | null>(null);
+  // Day under the finger (hold the chart to read it), in the sheet and full screen.
   const [fsIdx, setFsIdx] = useState<number | null>(null);
+  const zoomThrottle = useRef(makeZoomThrottle()).current;
   // Trend charts and the day-by-day table share one horizontally swiped area.
   const pager = useRef<HTMLDivElement | null>(null);
   const [page, setPage] = useState(0);
@@ -175,14 +178,13 @@ export function MandiDetailSheet({
   const winEnd = zoomed ? zoomed.end : baseEnd;
   const winStart = zoomed ? zoomed.start : baseStart;
   const winDates = TIMELINE.slice(winStart, winEnd);
-  // Pinch / wheel: keep the right edge, change the number of days (at least 3).
-  const zoomTo = (days: number) =>
-    setZoom((z) => {
-      const cur = z ?? { start: baseStart, end: baseEnd };
-      const span = Math.max(3, Math.min(TIMELINE.length, days));
-      const start = Math.max(0, cur.end - span);
-      return { start, end: Math.min(TIMELINE.length, start + span) };
-    });
+  // Pinch / wheel: step to the next longer / shorter period button.
+  const zoomTo = (days: number) => {
+    const next = stepPreset(winEnd - winStart, days, SHEET_RANGE_DAYS);
+    if (!next || !zoomThrottle()) return;
+    setRange(next);
+    setZoom(null);
+  };
   // Drag: + = earlier days.
   const panDays = (d: number) =>
     setZoom((z) => {
@@ -193,6 +195,7 @@ export function MandiDetailSheet({
     });
   const win = (a: number[]) => a.slice(winStart, winEnd);
   const winIdx = winDates.length - 1;
+  useEffect(() => setFsIdx(null), [winStart, winEnd]);
 
   // Days this mandi reported the rate (the custom picker offers only these).
   const reportDays = useMemo(() => {
@@ -238,8 +241,8 @@ export function MandiDetailSheet({
   const dayLabel = (d: string) => (d.slice(0, 4) === date.slice(0, 4) ? f.day(d) : `${f.day(d)} '${f.digits(d.slice(2, 4))}`);
 
   const spoken = f.tx(
-    `${byproductName}, ${stripMandi(mandiName)} Mandi, ${shortRate(rate)} rate, ${Math.round(s.min)} to ${Math.round(s.max)} rupees per 40 kilo`,
-    `${byproductName}، ${name} منڈی، ${shortRate(tr(rate))}، ${Math.round(s.min)} سے ${Math.round(s.max)} روپے فی چالیس کلو`,
+    `${byproductName}, ${stripMandi(mandiName)} Mandi, ${shortRate(rate)} rate, ${Math.round(s.min)} to ${Math.round(s.max)} rupees ${f.perSpoken}`,
+    `${byproductName}، ${name} منڈی، ${shortRate(tr(rate))}، ${Math.round(s.min)} سے ${Math.round(s.max)} روپے ${f.perSpoken}`,
   );
 
   const tradedFields = [
@@ -272,7 +275,7 @@ export function MandiDetailSheet({
   const periodButtons = (
     <>
       {SHEET_RANGES.map((r) => {
-        const on = range === r.id && !zoomed;
+        const on = range === r.id;
         return (
           <button
             key={r.id}
@@ -302,10 +305,9 @@ export function MandiDetailSheet({
   );
   // `full`: the full-screen chart (fills width × height, zoom, pan, finger read-out).
   const chartEl = (height: number, width?: number, full = false) => {
-    const pickIdx = full && fsIdx !== null ? Math.min(fsIdx, winIdx) : winIdx;
-    const fullProps = full
-      ? { width, span: winDates.length, onSpan: zoomTo, onPanDays: panDays, onIdx: setFsIdx }
-      : {};
+    const pickIdx = fsIdx !== null ? Math.min(fsIdx, winIdx) : winIdx;
+    // Hold to read a day (as in the Trends tab); full screen adds zoom + pan.
+    const fullProps = full ? { width, span: winDates.length, onSpan: zoomTo, onPanDays: panDays, onIdx: setFsIdx } : { onIdx: setFsIdx };
     if (range === "1D")
       return (
         <IntradayChart
@@ -561,7 +563,7 @@ export function MandiDetailSheet({
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: C.ink2 }}>
-                <span style={{ color: C.ink, fontWeight: 700 }}>{shortRate(tr(rate))}</span> · {f.tx("per 40 kg", "فی 40 کلو")}
+                <span style={{ color: C.ink, fontWeight: 700 }}>{shortRate(tr(rate))}</span> · {f.per}
               </span>
               <span style={{ fontFamily: f.display, fontSize: f.ur ? "clamp(19px, 5.2vw, 24px)" : 30, fontWeight: 700, letterSpacing: "-0.02em", lineHeight: f.ur ? 1.6 : 1.1, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
                 {s.min > 0 ? (
@@ -722,7 +724,7 @@ export function MandiDetailSheet({
         <FullscreenLayer
           f={f}
           title={f.tx(`${name} Mandi · ${byproductName}`, `${name} منڈی · ${byproductName}`)}
-          subtitle={f.tx(`${shortRate(tr(rate))} rate · ${history.length} days · PKR per 40 kg`, `${shortRate(tr(rate))} · ${f.digits(history.length)} دن · روپے فی 40 کلو`)}
+          subtitle={f.tx(`${shortRate(tr(rate))} rate · ${history.length} days · PKR ${f.per}`, `${shortRate(tr(rate))} · ${f.digits(history.length)} دن · روپے ${f.per}`)}
           onClose={closeHistFs}
         >
           {fullHistory}

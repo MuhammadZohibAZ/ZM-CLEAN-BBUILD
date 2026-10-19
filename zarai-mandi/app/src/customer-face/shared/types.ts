@@ -50,7 +50,8 @@ export type LocationScope = {
   label: string;
 };
 
-export type NavTab = "home" | "news" | "voice";
+/** "settings" opens the account pages (it is not a screen of its own). */
+export type NavTab = "home" | "news" | "settings" | "voice";
 export type TimeRange = "day" | "week" | "month" | "year";
 
 export type FeedMsg = {

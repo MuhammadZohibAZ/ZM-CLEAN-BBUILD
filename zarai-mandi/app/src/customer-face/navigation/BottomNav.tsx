@@ -5,6 +5,9 @@ import { useLang } from "../shared/i18n/LangProvider";
 import { type NavTab } from "../shared/types";
 
 // BOTTOM NAV
+// Home · Entertainment · Settings. The voice button comes back in version 2:
+// its code is kept below and shows again when VOICE_IN_NAV is true.
+const VOICE_IN_NAV = false;
 
 export function BottomNav({
   active,
@@ -141,6 +144,17 @@ export function BottomNav({
           </svg>
         ),
       },
+      {
+        id: "settings",
+        label: t("nav.settings"),
+        brandColor: "#0B5E4A",
+        icon: (isActive) => (
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={isActive ? "#ffffff" : "#183B34"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          </svg>
+        ),
+      },
     ];
   // The highlighted tab (none while the voice overlay is open).
   const currentActiveIndex = voiceActive ? -1 : Math.max(0, tabs.findIndex((x) => x.id === active));
@@ -152,7 +166,7 @@ export function BottomNav({
       className="zm-bottom-nav-shell absolute bottom-0 inset-x-0 z-50 ltr-only w-full px-4 pt-1 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] mb-2 flex justify-center items-center pointer-events-none [&>*]:pointer-events-auto"
       style={{ direction: "ltr" }}
     >
-      <div className="flex items-center gap-2.5 w-full max-w-[400px]">
+      <div className={`flex items-center gap-2.5 w-full ${VOICE_IN_NAV ? "max-w-[400px]" : "max-w-[340px]"}`}>
       {/* Navigation Cockpit: fills the row, tabs share it equally */}
       <div className="relative flex-1 min-w-0 flex items-center h-[56px] p-1.5 bg-white/90 backdrop-blur-xl rounded-full border border-[#087F63]/15 shadow-[0_10px_28px_-8px_rgba(6,60,48,0.28),0_2px_6px_rgba(6,60,48,0.06)]">
         <div className="flex items-center gap-1 h-full w-full">
@@ -167,7 +181,7 @@ export function BottomNav({
                   onNav(tab.id);
                 }}
                 aria-current={isTabActive ? "page" : undefined}
-                className="relative flex-1 min-w-0 flex items-center justify-center h-full px-3 rounded-full outline-none select-none group transition-transform active:scale-95"
+                className="relative flex-1 min-w-0 flex items-center justify-center h-full px-2 rounded-full outline-none select-none group transition-transform active:scale-95"
               >
                 {/* Brand-Colored Sliding Capsule */}
                 {isTabActive && (
@@ -198,7 +212,7 @@ export function BottomNav({
                   </motion.div>
 
                   <span
-                    className={`text-[13px] tracking-tight font-medium whitespace-nowrap transition-colors duration-150 ${isTabActive
+                    className={`text-[12px] tracking-tight font-medium whitespace-nowrap overflow-hidden text-ellipsis transition-colors duration-150 ${isTabActive
                       ? "text-white font-semibold"
                       : "text-[#183B34] group-hover:text-[#087F63]"
                       }`}
@@ -212,6 +226,8 @@ export function BottomNav({
         </div>
       </div>
 
+      {VOICE_IN_NAV && (
+      <>
       {/* Voice button: right end of the bar, like WhatsApp's mic (tap = guide, hold = ask) */}
       <div className="relative flex items-center justify-center w-[56px] h-[56px] flex-shrink-0">
         {/* Hold charging ring around the 56px button */}
@@ -288,6 +304,8 @@ export function BottomNav({
           )}
         </motion.button>
       </div>
+      </>
+      )}
       </div>
     </nav>
   );
