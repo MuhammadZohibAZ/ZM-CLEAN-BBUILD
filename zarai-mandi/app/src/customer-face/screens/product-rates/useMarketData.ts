@@ -9,7 +9,7 @@ import {
   type TrendPoint,
 } from "../../../lib/api";
 import { DATASET_DATES } from "../../shared/data/datasetDates";
-import { ALL_RATE_TYPES } from "../../shared/data/rates";
+import { ALL_RATE_TYPES, canonicalRateType } from "../../shared/data/rates";
 import type { LocationScope } from "../../shared/types";
 import type { MarketRow } from "./types";
 
@@ -156,7 +156,7 @@ function toRow(r: {
   return {
     id: r.id,
     date: (r.record_date || "").slice(0, 10),
-    rateType: r.price_type || "",
+    rateType: canonicalRateType(r.price_type),
     // The API can send nulls; every text field here is always a string.
     mandiName: `${(r.station || "Unknown").trim()} Mandi`,
     district: (r.district || "").trim(),

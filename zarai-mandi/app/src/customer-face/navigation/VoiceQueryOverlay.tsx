@@ -80,7 +80,7 @@ export function VoiceQueryOverlay({
             vertical: "Grains",
             product: "Wheat",
             byproduct: "Wheat",
-            initialRateType: "Mill Rate",
+            initialRateType: "Ex-Mill Rate",
             initialMandi: "Pakpattan Mandi",
             initialVariety: "Sona Moti",
             initialNewOld: "New",

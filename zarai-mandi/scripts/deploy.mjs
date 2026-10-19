@@ -51,8 +51,20 @@ async function getJson(url, tries = 3) {
   return null;
 }
 
-// What the app needs from the API, with real data.
-async function testApi(base) {
+// What the app needs from the API, with real data. A freshly deployed API can
+// be slow for a moment (cold starts copy the database), so a failed round is
+// retried before it counts.
+async function testApi(base, rounds = 4) {
+  let result;
+  for (let i = 0; i < rounds; i++) {
+    result = await testApiOnce(base);
+    if (!result.problems.length) return result;
+    await new Promise((r) => setTimeout(r, 10_000));
+  }
+  return result;
+}
+
+async function testApiOnce(base) {
   const problems = [];
   const health = await getJson(`${base}/api/health`);
   if (!health?.ok || !(health.priceRecords > 0)) problems.push("/api/health has no price records");

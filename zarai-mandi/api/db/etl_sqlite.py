@@ -58,6 +58,23 @@ MAIZE_MOISTURE_BANDS = {
 }
 
 
+# The app shows nine rate types; other names are the same rate (Farm gate =
+# Farm, Mill / Mill gate = Ex-Mill). Keep in step with RATE_TYPE_ALIASES in
+# app/src/customer-face/shared/data/rates.ts.
+RATE_TYPE_ALIASES = {
+    "farm gate rate": "Farm Rate",
+    "farmgate rate": "Farm Rate",
+    "mill rate": "Ex-Mill Rate",
+    "mill gate rate": "Ex-Mill Rate",
+    "millgate rate": "Ex-Mill Rate",
+}
+
+
+def rate_type(s):
+    s = norm(s)
+    return RATE_TYPE_ALIASES.get(s.lower(), s) if s else s
+
+
 def norm(s):
     if s is None:
         return None
@@ -302,7 +319,7 @@ def main():
         batch.append((
             row_num,
             record_date,
-            norm(row[col_idx.get("Price_Type", 1)]),
+            rate_type(row[col_idx.get("Price_Type", 1)]),
             norm(row[col_idx.get("Product", 2)]),
             norm(row[col_idx.get("By_Product", 3)]),
             norm(row[col_idx.get("Province", 4)]),

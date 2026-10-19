@@ -1,17 +1,29 @@
+// The nine rate types the app shows (filter rail order). Other names in the
+// data are the same rate under another name: see RATE_TYPE_ALIASES.
 export const ALL_RATE_TYPES = [
   "Mandi Rate",
+  "Farm Rate",
   "Wholesale Rate",
-  "Retail Rate",
   "Stock Rate",
+  "Ex-Mill Rate",
   "Broker Rate",
   "Dealer Rate",
-  "Farm Rate",
-  "Mill Rate",
-  "Ex-Mill Rate",
-  "Mill Gate Rate",
-  "Farm Gate Rate",
   "Export Rate",
+  "Retail Rate",
 ];
+/** Farm gate = Farm; Mill / Mill gate = Ex-Mill (also folded in api/db/etl_sqlite.py). */
+export const RATE_TYPE_ALIASES: Record<string, string> = {
+  "farm gate rate": "Farm Rate",
+  "farmgate rate": "Farm Rate",
+  "mill rate": "Ex-Mill Rate",
+  "mill gate rate": "Ex-Mill Rate",
+  "millgate rate": "Ex-Mill Rate",
+};
+/** The app's name for a rate type (aliases folded, unknown names kept). */
+export function canonicalRateType(name?: string | null): string {
+  const raw = (name || "").trim();
+  return RATE_TYPE_ALIASES[raw.toLowerCase()] ?? raw;
+}
 export const RATE_TYPE_URDU: Record<string, string> = {
   "Farm Rate": "فارم ریٹ",
   "Broker Rate": "بروکر ریٹ",

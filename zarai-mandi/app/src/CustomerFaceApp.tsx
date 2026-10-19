@@ -54,7 +54,8 @@ function AppInner({
   const { lang, voiceEnabled } = useLang();
   const [stack, setStack] = useState<Screen[]>([{ id: "home" }]);
   const [activeNav, setActiveNav] = useState<NavTab>("home");
-  // Bumped by the Settings tab: Home opens its account pages.
+  // Set by the Settings tab: Home opens its account pages once, then clears it
+  // (Home is re-created on every tab switch and would otherwise open them again).
   const [accountRequest, setAccountRequest] = useState(0);
   const [feedOpen, setFeedOpen] = useState(false);
   const [feedFilter, setFeedFilter] = useState<FeedFilter>({
@@ -316,6 +317,7 @@ function AppInner({
             <HomeScreenSwitch
               push={push}
               openAccountRequest={accountRequest}
+              onAccountRequestHandled={() => setAccountRequest(0)}
               locationScope={locationScope}
               setFeedOpen={(v) => {
                 if (v) openFeed({});

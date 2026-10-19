@@ -7,7 +7,7 @@ import { getDivisionForProduct, isProductTodayOnly } from "../../shared/data/cat
 import { byproductsForSelection, mainByproductRank } from "../../shared/data/byproductCards";
 import { fetchByProducts } from "../../../lib/api";
 import { getProvinceFromLoc } from "../../shared/data/mandis";
-import { ALL_RATE_TYPES } from "../../shared/data/rates";
+import { ALL_RATE_TYPES, canonicalRateType } from "../../shared/data/rates";
 import { URDU_FONT, useLang } from "../../shared/i18n/LangProvider";
 import type { LocationScope } from "../../shared/types";
 import { speakText } from "../../shared/voice";
@@ -54,7 +54,7 @@ const FILTER_UI = "rail" as "rail" | "drawer" | "dock";
 const PAKISTAN: LocationScope = { kind: "pakistan", label: "All Pakistan" };
 
 function normaliseRate(raw?: string) {
-  const r = (raw || "").trim().toLowerCase();
+  const r = canonicalRateType(raw).toLowerCase();
   if (!r) return ALL_RATES;
   return ALL_RATE_TYPES.find((t) => t.toLowerCase() === r || t.toLowerCase().startsWith(r)) || ALL_RATES;
 }

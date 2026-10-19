@@ -94,54 +94,16 @@ export function BottomNav({
         id: "home",
         label: t("nav.home"),
         brandColor: "#0B5E4A",
-        icon: (isActive) => (
-          <svg
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill={isActive ? "#ffffff" : "#183B34"}
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1V9.5z" />
-            <path
-              d="M9 21V12h6v9"
-              fill={isActive ? "#0B5E4A" : "#C7D8D1"}
-            />
-          </svg>
-        ),
+        icon: (isActive) => <NavIcon active={isActive} d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6.5h-6V21H4a1 1 0 0 1-1-1z" />,
       },
       {
         id: "news",
         label: t("nav.news"),
         brandColor: "#0B5E4A",
         icon: (isActive) => (
-          <svg
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <rect
-              x="3"
-              y="3"
-              width="18"
-              height="18"
-              rx="5"
-              stroke={isActive ? "#ffffff" : "#183B34"}
-              strokeWidth="2"
-            />
-            <path
-              d="M7 3L10.5 8M13.5 3L17 8M3 8H21"
-              stroke={isActive ? "#ffffff" : "#183B34"}
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-            <polygon
-              points="10,11 16,14.5 10,18"
-              fill={isActive ? "#ffffff" : "#183B34"}
-            />
-          </svg>
+          <NavIcon active={isActive} d="M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4z">
+            <path d="M10 8.8v6.4a.5.5 0 0 0 .76.43l5.2-3.2a.5.5 0 0 0 0-.86l-5.2-3.2a.5.5 0 0 0-.76.43z" fill="currentColor" stroke="none" />
+          </NavIcon>
         ),
       },
       {
@@ -149,10 +111,9 @@ export function BottomNav({
         label: t("nav.settings"),
         brandColor: "#0B5E4A",
         icon: (isActive) => (
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={isActive ? "#ffffff" : "#183B34"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <NavIcon active={isActive} d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z">
             <circle cx="12" cy="12" r="3" />
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-          </svg>
+          </NavIcon>
         ),
       },
     ];
@@ -166,9 +127,9 @@ export function BottomNav({
       className="zm-bottom-nav-shell absolute bottom-0 inset-x-0 z-50 ltr-only w-full px-4 pt-1 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] mb-2 flex justify-center items-center pointer-events-none [&>*]:pointer-events-auto"
       style={{ direction: "ltr" }}
     >
-      <div className={`flex items-center gap-2.5 w-full ${VOICE_IN_NAV ? "max-w-[400px]" : "max-w-[340px]"}`}>
+      <div className={`flex items-center gap-2.5 w-full ${VOICE_IN_NAV ? "max-w-[400px]" : "max-w-[320px]"}`}>
       {/* Navigation Cockpit: fills the row, tabs share it equally */}
-      <div className="relative flex-1 min-w-0 flex items-center h-[56px] p-1.5 bg-white/90 backdrop-blur-xl rounded-full border border-[#087F63]/15 shadow-[0_10px_28px_-8px_rgba(6,60,48,0.28),0_2px_6px_rgba(6,60,48,0.06)]">
+      <div className="relative flex-1 min-w-0 flex items-center h-[60px] p-1.5 bg-white/90 backdrop-blur-xl rounded-[30px] border border-[#087F63]/15 shadow-[0_10px_28px_-8px_rgba(6,60,48,0.28),0_2px_6px_rgba(6,60,48,0.06)]">
         <div className="flex items-center gap-1 h-full w-full">
           {tabs.map((tab, idx) => {
             const isTabActive = currentActiveIndex === idx;
@@ -181,7 +142,7 @@ export function BottomNav({
                   onNav(tab.id);
                 }}
                 aria-current={isTabActive ? "page" : undefined}
-                className="relative flex-1 min-w-0 flex items-center justify-center h-full px-2 rounded-full outline-none select-none group transition-transform active:scale-95"
+                className="relative flex-1 min-w-0 flex items-center justify-center h-full px-1 rounded-[24px] outline-none select-none group transition-transform active:scale-95"
               >
                 {/* Brand-Colored Sliding Capsule */}
                 {isTabActive && (
@@ -194,17 +155,14 @@ export function BottomNav({
                       mass: 0.55,
                     }}
                     style={{ backgroundColor: tab.brandColor }}
-                    className="absolute inset-0 rounded-full shadow-[0_3px_10px_rgba(8,94,74,0.35)]"
+                    className="absolute inset-0 rounded-[24px] shadow-[0_3px_10px_rgba(8,94,74,0.35)]"
                   />
                 )}
 
-                {/* Tab Icon (22px) & Label */}
-                <div className="relative z-10 flex items-center gap-2">
+                {/* Icon above label: every tab the same shape and width */}
+                <div className="relative z-10 flex flex-col items-center gap-0.5 min-w-0 max-w-full">
                   <motion.div
-                    animate={{
-                      scale: isTabActive ? 1.05 : 1,
-                      y: isTabActive ? -0.5 : 0,
-                    }}
+                    animate={{ scale: isTabActive ? 1.06 : 1 }}
                     transition={{ type: "spring", stiffness: 400, damping: 25 }}
                     className="flex items-center justify-center"
                   >
@@ -212,7 +170,7 @@ export function BottomNav({
                   </motion.div>
 
                   <span
-                    className={`text-[12px] tracking-tight font-medium whitespace-nowrap overflow-hidden text-ellipsis transition-colors duration-150 ${isTabActive
+                    className={`text-[10.5px] leading-none tracking-tight font-semibold whitespace-nowrap overflow-hidden text-ellipsis max-w-full transition-colors duration-150 ${isTabActive
                       ? "text-white font-semibold"
                       : "text-[#183B34] group-hover:text-[#087F63]"
                       }`}
@@ -308,5 +266,26 @@ export function BottomNav({
       )}
       </div>
     </nav>
+  );
+}
+
+/** Nav icons share one style: 22px outline, 2px round strokes, white when active. */
+function NavIcon({ active, d, children }: { active: boolean; d: string; children?: React.ReactNode }) {
+  return (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      style={{ color: active ? "#FFFFFF" : "#183B34" }}
+    >
+      <path d={d} />
+      {children}
+    </svg>
   );
 }

@@ -99,7 +99,7 @@
 :root {
   --zm-bleed-top: 0px;
   /* Room the floating bottom nav takes; screens pad their content by it. */
-  --zm-nav-space: calc(82px + env(safe-area-inset-bottom, 0px));
+  --zm-nav-space: calc(86px + env(safe-area-inset-bottom, 0px));
 }
 
 html.zm-device[data-zm-bleed] {

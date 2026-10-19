@@ -57,6 +57,7 @@ export function AlternativeHomeScreen({
   userSubscribedList: parentUserSubscribedList,
   setUserSubscribedList: parentSetUserSubscribedList,
   openAccountRequest = 0,
+  onAccountRequestHandled,
   locationScope = { kind: "pakistan", label: "All Pakistan" },
 }: {
   push: (s: Screen) => void;
@@ -66,8 +67,9 @@ export function AlternativeHomeScreen({
   isPickedBP: (item: RateItem) => boolean;
   setPickedByproducts: React.Dispatch<React.SetStateAction<RateItem[]>>;
   voiceGuideActive?: boolean;
-  /** Changes when the Settings tab is tapped: open the account pages. */
+  /** Set when the Settings tab is tapped: open the account pages, then call onAccountRequestHandled. */
   openAccountRequest?: number;
+  onAccountRequestHandled?: () => void;
   onVoiceGuideClose?: () => void;
   initialUserData?: AppProps["initialUserData"];
   activeRole?: "customer" | "representative";
@@ -102,7 +104,9 @@ export function AlternativeHomeScreen({
 
   const [profileOpen, setProfileOpen] = useState(false);
   useEffect(() => {
-    if (openAccountRequest) setProfileOpen(true);
+    if (!openAccountRequest) return;
+    setProfileOpen(true);
+    onAccountRequestHandled?.();
   }, [openAccountRequest]); // eslint-disable-line react-hooks/exhaustive-deps
   const [localProfileCompleted, setLocalProfileCompleted] = useState(false);
   const profileCompleted = parentProfileCompleted ?? localProfileCompleted;

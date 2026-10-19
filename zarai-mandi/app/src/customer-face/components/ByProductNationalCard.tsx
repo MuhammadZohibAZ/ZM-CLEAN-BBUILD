@@ -113,6 +113,9 @@ export function getCardUpdatedAgo(
   return lang === 'ur' ? preset.ur : preset.en;
 }
 
+/** Orange for a card's special-attribute value (and a fertilizer's company). */
+const SPECIAL_ATTR_VALUE_COLOR = '#ff7b00ff';
+
 export function CardStatCell({
   label,
   value,
@@ -286,7 +289,7 @@ export function ByProductNationalCard({
   const specialAttrValue = hasAttrValue
     ? (lang === 'ur' ? specialAttrValueUr(stats.specialAttr!, tc) : stats.specialAttr!.valueEn)
     : '—';
-  const specialAttrColor = hasAttrValue ? '#ff7b00ff' : undefined;
+  const specialAttrColor = hasAttrValue ? SPECIAL_ATTR_VALUE_COLOR : undefined;
 
   // Fertilizer: the attribute cell shows the company (each brand product has
   // one), and prices are per 50 kg bag.
@@ -429,7 +432,7 @@ export function ByProductNationalCard({
               divider
               label={company ? (lang === 'ur' ? 'کمپنی' : 'Company') : specialAttrLabel}
               value={company ?? specialAttrValue}
-              valueColor={company ? undefined : specialAttrColor}
+              valueColor={company ? SPECIAL_ATTR_VALUE_COLOR : specialAttrColor}
             />
           </div>
 
