@@ -1,104 +1,64 @@
-# Zarai Mandi App (cleaned build)
+# Zarai Mandi App
 
-This is a pruned copy of the Zarai Mandi project (source: `Rayyan-624/ZM_Revamping`,
-folder `FULL APP/` + `urdu-tts-backend/`), keeping only the files actually loaded
-when the app runs.
+Commodity prices from Pakistan's mandis, in Urdu and English, with an Urdu voice.
 
 ## Structure
 
-- `app/` — the React + Vite frontend (was `FULL APP/`). Entry point:
-  `src/main.tsx` → `src/App.tsx` → `src/OnboardingFlow.tsx` / `src/CustomerFaceApp.tsx`.
-  Commodity price data is fetched live from `api/` via `src/lib/api.ts`
-  (`VITE_MARKET_API_URL`, default `http://localhost:8090`).
-- `api/` — the Postgres-backed market data REST API (Node/Express). Loads
-  the real 40,959-record commodity price export and the 468-entry
-  customer-facing catalog, and implements the Avg Min/Max, arrival and
-  special-attribute aggregation rules from
+- `app/` — the React + Vite website. Entry point: `src/main.tsx` →
+  `src/App.tsx` → `src/OnboardingFlow.tsx` / `src/CustomerFaceApp.tsx`.
+  Prices, trends and maps come from `api/` via `src/lib/api.ts`
+  (`VITE_MARKET_API_URL`, default `http://localhost:8090`). See `app/CODEMAP.md`.
+- `api/` — the market data REST API (Node/Express on SQLite,
+  `db/zarai_mandi.sqlite`): Avg Min/Max, arrival and special-attribute rules from
   `docs/Zarai_Mandi_Mandatory_Optional_Attributes_and_Card_Policy.pdf`.
-  See `api/README.md` for setup, schema, and the full endpoint reference.
-- `backend/` — the Urdu neural TTS FastAPI service (was `urdu-tts-backend/`),
-  called by `app/src/components/VoiceAssistant.tsx` at `/api/tts`.
-- `data/` — the source commodity price workbook
-  (`All Commodity Prices - 15-Aug-2026 to 14-Sept-2026.xlsx`, sheet 2 has
-  **40,966** data rows) and `mandis.json` (structured mandi list, not yet
-  wired into the map view).
-- `docs/` — the policy/spec PDFs `api/` implements:
-  `Zarai_Mandi_Mandatory_Optional_Attributes_and_Card_Policy.pdf`,
-  `Zarai_Mandi_Leadership_Card_Evidence_5_Pages.pdf` (the 468-entry
-  catalog source), `Verticals Fields sheet - Verticals.pdf`,
-  `ZM_latest_colors.pdf`.
+  See `api/README.md` for loading data and the endpoint reference.
+- `tts/` — makes the Urdu voice pack (Uzma's voice) the app speaks from; see
+  "Urdu voice" below.
+- `data/` — source spreadsheets for `api/db/etl_sqlite.py`: a year of prices
+  (`prices_2025-09-23_to_2026-09-23 (1).xlsx`, prepared by
+  `prepare_year_prices.py`), fertilizer brands (`Fast uni.xlsx`) and the
+  verticals sheet behind `sync_special_attributes.py`.
+- `docs/` — the card policy, verticals field sheet and brand colours.
+- `scripts/deploy.mjs` — the checked deploy to Vercel (`DEPLOY.md`).
 
 ## Running it
 
 ```bash
-npm install          # installs the root orchestrator (concurrently)
-npm run dev           # runs TTS backend (:8000) + market API (:8090) + frontend (:8445) together
+npm install          # installs the orchestrator (concurrently)
+npm run dev          # market API (:8090) + website (:8445) together
 ```
 
-The market API needs Postgres set up once first -- see `api/README.md`
-("Setup") for creating the database and loading the data; `npm run dev`
-only starts the already-configured `api/` server, it doesn't provision
-Postgres for you.
-
-Or run each piece on its own:
+Or one at a time:
 
 ```bash
-cd app && npm install && npm run dev      # frontend only (:8445)
-cd api && npm install && npm start        # market API only (:8090), after api/README.md's Setup
+cd api && npm install && npm start      # market API (:8090)
+cd app && npm install && npm run dev    # website (:8445)
 ```
 
-## What was removed from the original project
+## Urdu voice
 
-Traced the real dependency graph from `main.tsx` (static imports, the
-`react-native-responsive-screen` → `src/responsive.ts` Vite alias, and the
-dynamic `/src/icons/...` runtime paths used by `CustomerFaceApp.tsx`'s
-`PRODUCTS_PATH` / `BYPRODUCTS_PATH` icon maps) and dropped everything not
-reachable from it:
+The app speaks Urdu from pre-made clips in `app/public/voice_pack/` (MP3s plus
+`manifest.json`), played in the browser by `app/src/lib/voicePack.ts`, so the
+voice works anywhere the site is hosted. A sentence is spoken with the fewest
+clips that cover it (whole phrases where they exist, single words and number
+words otherwise); text the pack can't fully say falls back to the device's own
+voice. `app/src/lib/urduText.ts` and `tts/urdu_text.py` hold the same text rules
+and must stay in step.
 
-- `dist/` — stale build output (regenerate with `npm run build`, not source).
-- `src/demos/` and the duplicate `src/components/ui/{ExpandableMandiMapCard,
-  VoiceAssistant,ZaraiMandiMap,expand-map}.tsx` — superseded copies; the real
-  ones used by the app live directly under `src/components/`.
-- `src/imports/pasted_text/*.md`, `data_hierarch_V1.html`, `template.html`,
-  coordinate JSONs, wireframe/screenshot PNGs, and ~35 one-off `image-N.png`
-  files — Figma Make design-chat scratch files, never imported by the app.
-- Duplicate/unused image variants in `src/assets/`, `public/assets/
-  backgrounds/`, and `public/videos/` (the app imports the `src/videos/*.mp4`
-  copies, not the `public/videos/` ones; `bg_pakistan.png` vs `.jpg`, etc.).
-- `src/icons/products/` and `src/icons/by-products/` were kept **in full** —
-  they look unused by static analysis (referenced only via runtime string
-  paths, not `import` statements) but are in fact wired up through the
-  `PRODUCTS_PATH`/`BYPRODUCTS_PATH` lookup tables in `CustomerFaceApp.tsx`.
-- Reference PDFs/xlsx that lived inside `src/` (not imported by any code)
-  were moved to `docs/` and `data/` instead of being deleted, since they're
-  the spec for the next phase (Postgres schema + data import).
+Adding or updating speech (needs `pip install edge-tts soundfile numpy`):
 
-Verified by running `npm run build` and `npm run dev` against this pruned
-tree and confirming both the static imports and the `/src/icons/...` runtime
-paths resolve (HTTP 200), so no runtime asset was cut.
+```bash
+node tts/extract_phrases.mjs > tts/phrases.json   # after adding Urdu text to the app
+python tts/generate_pack_edge.py                  # makes only the missing clips
+python tts/generate_pack_edge.py --only "نیا جملہ" # add or redo one phrase
+```
 
-## Phase 2: real data
+Then commit and deploy (`npm run deploy`, see `DEPLOY.md`).
 
-`app/src/data/realCommodityData.ts`'s bundled mock timeline/mandi-row
-constants are being replaced screen by screen with live calls to `api/`.
-Wired so far (verified in-browser, screenshots taken against the running
-app):
+## Still on bundled sample data
 
-- The by-product card grid (`ByProductCombinedScreen` /
-  `ByProductNationalCard`) — Avg Min/Max, arrival, markets, special
-  attribute (including the Maize moisture D-rule bands), and the
-  "No Data Available" overlay for catalog entries with zero records this
-  month.
-- The by-product detail screen (`ProductRatesScreen`)'s Overview tab —
-  every real mandi row, grouped/filterable exactly as before.
-- The by-product detail screen's Trends tab — both the Price Trend and
-  Arrival Trend charts, for every observed price type, with real
-  reporting gaps carried forward rather than shown as a fake price crash
-  to zero.
-
-Not yet wired (still on the old bundled mock data): `AnalyticsScreen`,
-`LiveMarketScreen`, and the per-mandi-row inline expand graph inside
-`ProductRatesScreen`'s table (`getRealMandiInlineGraphData`). `getExcelTimeline`,
-`getRowsForProducts` and `calculateByproductSummary` are left in place
-(unused by the two screens above, but still called from those
-not-yet-wired screens) rather than deleted, to avoid widening this pass.
+`app/src/data/realCommodityData.ts` (13 MB) is the old one-month sample
+dataset. Most screens use the live API, but these still read it: the
+favourites carousel on the alternative home screen (`calculateByproductSummary`),
+the market feed sheet (`FEED_MESSAGES`), and the by-product list helpers in
+`shared/data/byproductCards.ts`. Moving them to the API would let the file go.

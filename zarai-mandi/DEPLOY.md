@@ -75,8 +75,8 @@ by-product of Fertilizer, priced per 50 kg bag, rate type Dealer, location
 dates. It also writes `app/src/customer-face/shared/data/fertilizerBrands.json`
 (by-product → company), which the cards show as **Company**.
 
-## Not on Vercel
+## Urdu voice
 
-- The text-to-speech backend (`backend/`, Python) is not deployed. The app's
-  spoken read-outs use the phone's own speech, so they keep working; only the
-  `VoiceAssistant` component calls that backend (`VITE_TTS_API_URL`).
+The voice pack is plain files in `app/public/voice_pack/`, so it deploys with the
+app; there is no speech server. To add speech, see "Urdu voice" in `README.md`,
+then deploy as above.

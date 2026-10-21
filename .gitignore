@@ -38,3 +38,6 @@ Thumbs.db
 
 # Office lock files
 ~$*
+
+# Vercel CLI project links (per machine)
+.vercel/

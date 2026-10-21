@@ -17,7 +17,6 @@ import {
   getVerticalAttributeValues,
   getVerticalRateCounts,
 } from "./aggregate.js";
-import { registerCompareRoutes } from "./compare.js";
 
 const app = express();
 app.use(cors());
@@ -189,6 +188,5 @@ app.get("/api/by-products/:id/trend-all", async (req, res) => {
   res.json(result);
 });
 
-registerCompareRoutes(app);
 
 export default app;

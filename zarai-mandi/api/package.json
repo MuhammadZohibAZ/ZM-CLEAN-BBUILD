@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch-path=src src/server.js",
-    "etl": "python3 db/etl_load.py",
+    "etl": "python3 db/etl_sqlite.py",
     "sync-attrs": "node -e \"require('fs').copyFileSync('../app/src/customer-face/shared/data/specialAttributes.json','db/specialAttributes.json')\"",
     "deploy": "npm --prefix .. run deploy"
   },

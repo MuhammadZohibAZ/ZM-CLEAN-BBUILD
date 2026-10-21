@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "npm --prefix zarai-mandi run dev",
     "start": "npm --prefix zarai-mandi start",
-    "dev:backend": "npm --prefix zarai-mandi run dev:backend",
     "dev:api": "npm --prefix zarai-mandi run dev:api",
-    "dev:frontend": "npm --prefix zarai-mandi run dev:frontend"
+    "dev:frontend": "npm --prefix zarai-mandi run dev:frontend",
+    "deploy": "npm --prefix zarai-mandi run deploy"
   }
 }

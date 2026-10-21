@@ -1,6 +1,6 @@
 # Zarai Mandi Market API
 
-A small Postgres-backed REST API that replaces the old build-time-bundled
+A small SQLite-backed REST API that replaces the old build-time-bundled
 mock dataset (`app/src/data/realCommodityData.ts`) with live queries over
 the real commodity price export, implementing the aggregation rules in
 `../docs/Zarai_Mandi_Mandatory_Optional_Attributes_and_Card_Policy.pdf`.
@@ -9,8 +9,6 @@ the real commodity price export, implementing the aggregation rules in
 
 The API runs on SQLite (`node:sqlite`, Node 22+), from `db/zarai_mandi.sqlite`.
 `db/etl_sqlite.py` builds that file from a commodity price export.
-(`db/etl_load.py` + `db/schema.sql` are the older Postgres loader; the
-running API no longer uses them.)
 
 ```bash
 # 1. One-off: Python with openpyxl
@@ -46,7 +44,7 @@ The loader:
 - prints the date range and how filled Province/District/Station/Price_Type are;
 - **stops without touching the current database if Province/District/Station
   are under 50% filled**, because the map, location filters, market counts,
-  trend graphs and Compare only count prices from an identifiable market
+  and trend graphs only count prices from an identifiable market
   (province + district + station) with a rate type. Pass
   `--allow-missing-locations` to load such an export anyway;
 - skips rows with no Product/By_Product (and says how many);
@@ -58,7 +56,7 @@ runs the API against it (handy for trying a new export on a second port with
 `PORT=8091`).
 
 Everything date-related in the API is derived from the data (latest day =
-`max(record_date)`, compare range = min/max date), so a longer export needs no
+`max(record_date)`, date range = min/max date), so a longer export needs no
 code changes.
 
 ## Data model
@@ -87,7 +85,7 @@ code changes.
   ungraded `Potato (...)` variants beyond the six already excluded,
   `Quinoa`, `Egg Tray`, and two `Taara Meera` (wild mustard) rows that
   have no catalog entry at all. See `db/catalog_aliases.csv` for the full
-  alias table and `db/etl_load.py`'s log output for what's left
+  alias table and `db/etl_sqlite.py`'s log output for what's left
   unmatched on each load.
 - **`by_product_attribute_stats`** -- per by-product, per attribute
   (`color`, `new_old`, `origin`, `variety`, `specification`, `quality`,
@@ -110,7 +108,7 @@ code changes.
   Avg Min 127.50 / Avg Max 147.50).
 - **Moisture D-rule** (section 6): Maize Grades A-D get their declared
   11-14% / 14-16% / 16-18% / 18-20% band hard-coded
-  (`MAIZE_MOISTURE_BANDS` in `db/etl_load.py`) and it always wins over
+  (`MAIZE_MOISTURE_BANDS` in `db/etl_sqlite.py`) and it always wins over
   any observed value, regardless of fill rate.
 - **Arrivals**: the export has no `arrival_event_id`, revision timestamp,
   or quote ID (policy section 2 says so explicitly), so we can't prove
@@ -155,8 +153,8 @@ optional query params on the per-by-product endpoints.
 
 ## Performance
 
-The whole dataset is 40,959 rows -- trivial for Postgres. With the
-indexes in `db/schema.sql`, every endpoint above responds in single-digit
+The whole dataset is 40,959 rows -- trivial for SQLite. With the
+indexes `db/etl_sqlite.py` creates, every endpoint above responds in single-digit
 to low-tens of milliseconds locally (measured: card-stats batch for a
 10-entry division ~60ms including 4 queries per card; single-by-product
 summary/records/trend ~20-30ms). The frontend additionally caches GET

@@ -26,11 +26,6 @@ export default defineConfig(({ mode }) => {
       figmaMakeKitPlugin({ storiesGlob: '/src/**/*.stories.{ts,tsx,js,jsx}' }),
       copySrcIcons(),
     ],
-    // Loaded lazily (Compare → Download PDF); pre-bundle so the dev server
-    // doesn't need to re-optimize and reload on first use.
-    optimizeDeps: {
-      include: ['jspdf', 'jspdf-autotable'],
-    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
