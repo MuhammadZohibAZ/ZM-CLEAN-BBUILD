@@ -16,12 +16,22 @@ let maxLen = 0;
 let context: AudioContext | null = null;
 const clips = new Map<string, Promise<AudioBuffer>>();
 
-function loadManifest(): Promise<Map<string, string>> {
-  manifest ??= fetch(`${PACK_URL}manifest.json`)
-    .then((r) => {
+async function fetchManifest(): Promise<Record<string, string>> {
+  // One retry: a dropped request on a weak mobile connection shouldn't cost the voice.
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const r = await fetch(`${PACK_URL}manifest.json`);
       if (!r.ok) throw new Error(`voice pack manifest: ${r.status}`);
-      return r.json() as Promise<Record<string, string>>;
-    })
+      return (await r.json()) as Record<string, string>;
+    } catch (err) {
+      if (attempt >= 1) throw err;
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+    }
+  }
+}
+
+function loadManifest(): Promise<Map<string, string>> {
+  manifest ??= fetchManifest()
     .then((files) => {
       maxLen = Math.max(0, ...Object.keys(files).map((t) => t.split(" ").length));
       return new Map(Object.entries(files));
