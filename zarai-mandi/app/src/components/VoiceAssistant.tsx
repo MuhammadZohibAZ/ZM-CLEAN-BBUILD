@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, Volume2, VolumeX } from "lucide-react";
 
-import { audioContext, speakFromPack, type PackSpeech } from "../lib/voicePack";
+import { speakFromPack, unlockAudio, type PackSpeech } from "../lib/voicePack";
 
 export interface SpeakOptions {
   lang?: "ur-PK" | "en-US" | "ur" | "en";
@@ -77,9 +77,9 @@ export async function speakUrdu(text: string, options: SpeakOptions = {}): Promi
 
   // Unlock audio now, while still inside the tap that asked for speech (phones require it).
   try {
-    audioContext();
+    unlockAudio();
   } catch {
-    // no Web Audio: the fallbacks below still work
+    // no audio element: the device voice below still works
   }
   try {
     const speech = await speakFromPack(cleaned, controller.signal);

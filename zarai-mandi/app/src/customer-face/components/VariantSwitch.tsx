@@ -2,11 +2,13 @@ import { useEffect, useRef, useState } from "react";
 
 import { onScreenVariantPick, publishScreenVariants } from "../../lib/device-bridge";
 import { inDevicePreview } from "../../lib/device-orientation";
+import { TEST_MODE } from "../../lib/testMode";
 import { URDU_FONT, useLang } from "../shared/i18n/LangProvider";
 
 // Testing switch between alternative versions of a screen. In the desktop
 // phone mockup it sits outside the phone (like the testing pill); on a real
-// phone it's a floating "Test" button. The first option is the default and
+// phone it's a floating "Test" button. Only in test mode (lib/testMode.ts);
+// visitors always get the first option. The first option is the default and
 // the choice is remembered on this device only.
 
 export type VariantOption<T extends string> = {
@@ -19,6 +21,7 @@ export type VariantOption<T extends string> = {
 
 export function useStoredVariant<T extends string>(storageKey: string, ids: readonly T[]): [T, (v: T) => void] {
   const [variant, setVariant] = useState<T>(() => {
+    if (!TEST_MODE) return ids[0]; // visitors always get the default version
     try {
       const saved = window.localStorage.getItem(storageKey) as T | null;
       return saved && ids.includes(saved) ? saved : ids[0];
@@ -58,7 +61,7 @@ export function VariantSwitch<T extends string>({
 
   // In the mockup: offer the versions to the picker beside the phone.
   useEffect(() => {
-    if (!inDevice) return;
+    if (!inDevice || !TEST_MODE) return;
     publishScreenVariants({
       title: "Screen version (testing)",
       active: variant,
@@ -67,7 +70,7 @@ export function VariantSwitch<T extends string>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inDevice, variant, idsKey]);
   useEffect(() => {
-    if (!inDevice) return;
+    if (!inDevice || !TEST_MODE) return;
     const off = onScreenVariantPick((id) => {
       if (ids.includes(id as T)) onChangeRef.current(id as T);
     });
@@ -89,7 +92,7 @@ export function VariantSwitch<T extends string>({
     return () => document.removeEventListener("pointerdown", close);
   }, [open]);
 
-  if (inDevice) return null;
+  if (inDevice || !TEST_MODE) return null;
 
   return (
     <div

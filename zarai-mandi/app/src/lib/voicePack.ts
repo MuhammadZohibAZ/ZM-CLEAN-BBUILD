@@ -43,17 +43,63 @@ function loadManifest(): Promise<Map<string, string>> {
   return manifest;
 }
 
-/**
- * The shared AudioContext, resumed. Call it while handling a tap: phones only
- * let audio start from a user gesture, and a context resumed then stays usable.
- */
-export function audioContext(): AudioContext {
+// Decodes the MP3 clips (no sound goes through it, so it needn't be resumed).
+function audioContext(): AudioContext {
   if (!context) {
     const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     context = new Ctx();
   }
-  if (context.state === "suspended") void context.resume();
   return context;
+}
+
+// Speech plays through one shared <audio> element, not Web Audio: iPhones mute
+// Web Audio when the ring/silent switch is on, but media playback still sounds.
+let player: HTMLAudioElement | null = null;
+let playerUrl: string | null = null;
+let unlocked = false;
+// 0.01 s of silence, played during the first tap so later plays are allowed.
+const SILENCE = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQQAAACAgICA";
+
+/**
+ * Call while handling a tap: phones only let audio start from a user gesture,
+ * and the element started then may play again later (after the clips load).
+ */
+export function unlockAudio(): void {
+  const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
+  if (session) session.type = "playback"; // Safari 16.4+: sound even in silent mode
+  if (!player) {
+    player = new Audio();
+    player.setAttribute("playsinline", "");
+    player.preload = "auto";
+  }
+  // Until a play has succeeded (it fails outside a tap), try again on each call.
+  if (!unlocked && player.paused) {
+    player.src = SILENCE;
+    player.play().then(() => (unlocked = true), () => {});
+  }
+}
+
+/** 16-bit mono WAV, which every browser's <audio> plays. */
+function wavBlob(samples: Float32Array, rate: number): Blob {
+  const data = new DataView(new ArrayBuffer(44 + samples.length * 2));
+  const text = (at: number, s: string) => [...s].forEach((c, i) => data.setUint8(at + i, c.charCodeAt(0)));
+  text(0, "RIFF");
+  data.setUint32(4, 36 + samples.length * 2, true);
+  text(8, "WAVEfmt ");
+  data.setUint32(16, 16, true);
+  data.setUint16(20, 1, true); // PCM
+  data.setUint16(22, 1, true); // mono
+  data.setUint32(24, rate, true);
+  data.setUint32(28, rate * 2, true);
+  data.setUint16(32, 2, true);
+  data.setUint16(34, 16, true);
+  text(36, "data");
+  data.setUint32(40, samples.length * 2, true);
+  for (let i = 0; i < samples.length; i++) {
+    const v = Math.max(-1, Math.min(1, samples[i]));
+    data.setInt16(44 + i * 2, v < 0 ? v * 0x8000 : v * 0x7fff, true);
+  }
+  return new Blob([data], { type: "audio/wav" });
 }
 
 function loadClip(file: string): Promise<AudioBuffer> {
@@ -96,7 +142,7 @@ export interface PackSpeech {
 
 /** Plays `text` from the pack, or returns null when the pack can't say all of it. */
 export async function speakFromPack(text: string, signal?: AbortSignal): Promise<PackSpeech | null> {
-  const ctx = audioContext();
+  unlockAudio();
   const planned = await planSpeech(text);
   if (!planned) return null;
   const files = await loadManifest();
@@ -112,8 +158,7 @@ export async function speakFromPack(text: string, signal?: AbortSignal): Promise
       length += b.length;
     });
   });
-  const joined = ctx.createBuffer(1, length, rate);
-  const out = joined.getChannelData(0);
+  const out = new Float32Array(length);
   let at = 0;
   buffers.forEach((chunk, c) => {
     if (c) at += Math.round(CHUNK_GAP * rate);
@@ -124,21 +169,22 @@ export async function speakFromPack(text: string, signal?: AbortSignal): Promise
     });
   });
 
-  const source = ctx.createBufferSource();
-  source.buffer = joined;
-  source.connect(ctx.destination);
+  const audio = player!;
+  if (playerUrl) URL.revokeObjectURL(playerUrl);
+  playerUrl = URL.createObjectURL(wavBlob(out, rate));
   let finish: () => void = () => {};
   const done = new Promise<void>((resolve) => (finish = resolve));
-  source.onended = () => finish();
+  const onEnd = () => finish();
+  audio.addEventListener("ended", onEnd, { once: true });
+  audio.addEventListener("error", onEnd, { once: true });
   const stop = () => {
-    try {
-      source.stop();
-    } catch {
-      // already stopped
-    }
+    audio.pause();
+    audio.removeEventListener("ended", onEnd);
     finish();
   };
   signal?.addEventListener("abort", stop, { once: true });
-  source.start();
+  audio.src = playerUrl;
+  await audio.play();
+  unlocked = true;
   return { done, stop };
 }

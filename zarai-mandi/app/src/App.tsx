@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { inDevicePreview } from "./lib/device-orientation"
+import { TEST_MODE } from "./lib/testMode"
 import { onDevCommand, publishDevControls } from "./lib/device-bridge"
 import OnboardingFlow, { type OnboardingUserData } from "./onboarding/OnboardingFlow"
 import CustomerFaceApp from "./CustomerFaceApp"
@@ -69,9 +70,9 @@ export default function App() {
   const inDevice = inDevicePreview()
 
   useEffect(() => {
-    publishDevControls({ label: devLabel, action: devAction, title: devTitle })
+    if (TEST_MODE) publishDevControls({ label: devLabel, action: devAction, title: devTitle })
   }, [devLabel, devAction, devTitle])
-  useEffect(() => onDevCommand(() => devActionRef.current()), [])
+  useEffect(() => (TEST_MODE ? onDevCommand(() => devActionRef.current()) : undefined), [])
 
   return (
     // One language for onboarding and the app (theme CSS comes with CustomerFaceApp).
@@ -87,12 +88,14 @@ export default function App() {
         }}
       >
         {/* Floating Mode Toggle Pill for Testing & Role Switching */}
-        {!inDevice && (
+        {TEST_MODE && !inDevice && (
           <div
             style={{
+              // Right edge above the bottom nav: at the top it covered the header's
+              // buttons (in Urdu, the voice toggle).
               position: "fixed",
-              top: 10,
-              right: 14,
+              bottom: 104,
+              right: 10,
               zIndex: 9999,
               display: "flex",
               alignItems: "center",
