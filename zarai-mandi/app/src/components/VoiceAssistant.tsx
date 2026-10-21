@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, Volume2, VolumeX } from "lucide-react";
 
+import { audioContext, speakFromPack, type PackSpeech } from "../lib/voicePack";
+
 export interface SpeakOptions {
   lang?: "ur-PK" | "en-US" | "ur" | "en";
   signal?: AbortSignal;
@@ -16,12 +18,7 @@ export interface VoiceAssistantProps {
   color?: string;
 }
 
-const TTS_API_URL =
-  (import.meta.env.VITE_TTS_API_URL as string | undefined)?.replace(/\/$/, "") ||
-  "/api/tts";
-
-let activeAudio: HTMLAudioElement | null = null;
-let activeObjectUrl: string | null = null;
+let activePack: PackSpeech | null = null;
 let activeRequest: AbortController | null = null;
 
 export function cleanSpokenText(text: string): string {
@@ -31,16 +28,8 @@ export function cleanSpokenText(text: string): string {
 function releaseActiveAudio(): void {
   activeRequest?.abort();
   activeRequest = null;
-  if (activeAudio) {
-    activeAudio.pause();
-    activeAudio.removeAttribute("src");
-    activeAudio.load();
-    activeAudio = null;
-  }
-  if (activeObjectUrl) {
-    URL.revokeObjectURL(activeObjectUrl);
-    activeObjectUrl = null;
-  }
+  activePack?.stop();
+  activePack = null;
   if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
 }
 
@@ -66,7 +55,11 @@ function speakWithBrowser(text: string, lang: "ur-PK" | "en-US"): HTMLAudioEleme
   return placeholder;
 }
 
-/** Uses the backend's facebook/mms-tts-urd model and keeps the existing API. */
+/**
+ * Speaks Urdu from the app's own voice pack (public/voice_pack, Uzma's voice).
+ * Text the pack can't fully say goes to the device's own voice. Returns an
+ * element that fires "ended" / "error".
+ */
 export async function speakUrdu(text: string, options: SpeakOptions = {}): Promise<HTMLAudioElement> {
   releaseActiveAudio();
   const cleaned = cleanSpokenText(text);
@@ -82,44 +75,30 @@ export async function speakUrdu(text: string, options: SpeakOptions = {}): Promi
     else options.signal.addEventListener("abort", () => controller.abort(), { once: true });
   }
 
+  // Unlock audio now, while still inside the tap that asked for speech (phones require it).
   try {
-    const response = await fetch(TTS_API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: cleaned, language: "ur" }),
-      signal: controller.signal,
-    });
-    activeRequest = null;
-    if (!response.ok) {
-      const message = await response.text().catch(() => "");
-      throw new Error(message || `Urdu TTS failed (${response.status}).`);
-    }
-
-    const blob = await response.blob();
-    if (!blob.size) throw new Error("The TTS server returned empty audio.");
-    const objectUrl = URL.createObjectURL(blob);
-    const audio = new Audio(objectUrl);
-    audio.preload = "auto";
-    activeAudio = audio;
-    activeObjectUrl = objectUrl;
-
-    const cleanup = () => {
-      if (activeAudio === audio) activeAudio = null;
-      if (activeObjectUrl === objectUrl) activeObjectUrl = null;
-      URL.revokeObjectURL(objectUrl);
-    };
-    audio.addEventListener("ended", cleanup, { once: true });
-    audio.addEventListener("error", cleanup, { once: true });
-    await audio.play();
-    return audio;
-  } catch (err) {
-    activeRequest = null;
-    if (err instanceof DOMException && err.name === "AbortError") {
-      throw err;
-    }
-    console.warn("Urdu TTS backend unreachable or error, falling back to browser synthesis:", err);
-    return speakWithBrowser(cleaned, "ur-PK");
+    audioContext();
+  } catch {
+    // no Web Audio: the fallbacks below still work
   }
+  try {
+    const speech = await speakFromPack(cleaned, controller.signal);
+    if (speech) {
+      if (activeRequest === controller) activeRequest = null;
+      activePack = speech;
+      const handle = new Audio();
+      void speech.done.then(() => {
+        if (activePack === speech) activePack = null;
+        handle.dispatchEvent(new Event("ended"));
+      });
+      return handle;
+    }
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") throw err;
+    console.warn("Voice pack unavailable, using the fallback voice:", err);
+  }
+  if (activeRequest === controller) activeRequest = null;
+  return speakWithBrowser(cleaned, "ur-PK");
 }
 
 export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({

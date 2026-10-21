@@ -1,0 +1,6294 @@
+{
+ "count": 1567,
+ "files": [
+  "CustomerFaceApp.tsx",
+  "components/MandiMapGL.tsx",
+  "components/VoiceAssistant.tsx",
+  "components/ZaraiMandiMap.tsx",
+  "customer-face/account/AccountCenter.tsx",
+  "customer-face/navigation/VoiceQueryOverlay.tsx",
+  "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx",
+  "customer-face/screens/home/alternative/HomeByproductCarousel.tsx",
+  "customer-face/screens/home/original/HomeScreen.tsx",
+  "customer-face/screens/home/shared/HomeHero.tsx",
+  "customer-face/screens/product-rates/MandiDetailSheet.tsx",
+  "customer-face/screens/product-rates/ProductRatesScreen.tsx",
+  "customer-face/shared/i18n/LangProvider.tsx",
+  "customer-face/shared/i18n/dataNamesUrdu.ts",
+  "customer-face/shared/i18n/urduDictionary.ts",
+  "customer-face/shared/voice.ts",
+  "customer-face/sheets/LocationScopeSheet.tsx",
+  "customer-face/sheets/LocationSheet.tsx",
+  "customer-face/sheets/MultiLocSheet.tsx"
+ ],
+ "phrases": [
+  {
+   "text": "واپس",
+   "source": "CustomerFaceApp.tsx"
+  },
+  {
+   "text": "مرکزی صفحہ",
+   "source": "CustomerFaceApp.tsx"
+  },
+  {
+   "text": "موازنہ",
+   "source": "CustomerFaceApp.tsx"
+  },
+  {
+   "text": "ویڈیوز",
+   "source": "CustomerFaceApp.tsx"
+  },
+  {
+   "text": "تقریباً",
+   "source": "components/MandiMapGL.tsx"
+  },
+  {
+   "text": "گھنٹے",
+   "source": "components/MandiMapGL.tsx"
+  },
+  {
+   "text": "منٹ",
+   "source": "components/MandiMapGL.tsx"
+  },
+  {
+   "text": "کا نقشہ لوڈ ہو رہا ہے",
+   "source": "components/MandiMapGL.tsx"
+  },
+  {
+   "text": "منڈیاں",
+   "source": "components/MandiMapGL.tsx"
+  },
+  {
+   "text": "زوم ان",
+   "source": "components/MandiMapGL.tsx"
+  },
+  {
+   "text": "زوم آؤٹ",
+   "source": "components/MandiMapGL.tsx"
+  },
+  {
+   "text": "پورا پاکستان",
+   "source": "components/MandiMapGL.tsx"
+  },
+  {
+   "text": "میرا مقام",
+   "source": "components/MandiMapGL.tsx"
+  },
+  {
+   "text": "نقشہ لوڈ نہیں ہو سکا — انٹرنیٹ چیک کریں",
+   "source": "components/MandiMapGL.tsx"
+  },
+  {
+   "text": "منڈیوں کا مقام نامعلوم",
+   "source": "components/MandiMapGL.tsx"
+  },
+  {
+   "text": "اس دن کوئی رپورٹ نہیں",
+   "source": "components/MandiMapGL.tsx"
+  },
+  {
+   "text": "بوریاں",
+   "source": "components/MandiMapGL.tsx"
+  },
+  {
+   "text": "آمد رپورٹ نہیں",
+   "source": "components/MandiMapGL.tsx"
+  },
+  {
+   "text": "تفصیل",
+   "source": "components/MandiMapGL.tsx"
+  },
+  {
+   "text": "سڑک کا راستہ معلوم ہو رہا ہے…",
+   "source": "components/MandiMapGL.tsx"
+  },
+  {
+   "text": "سڑک سے",
+   "source": "components/MandiMapGL.tsx"
+  },
+  {
+   "text": "کلومیٹر",
+   "source": "components/MandiMapGL.tsx"
+  },
+  {
+   "text": "کلومیٹر (سیدھی لکیر)",
+   "source": "components/MandiMapGL.tsx"
+  },
+  {
+   "text": "سڑک کا راستہ دستیاب نہیں",
+   "source": "components/MandiMapGL.tsx"
+  },
+  {
+   "text": "راستہ ہٹائیں",
+   "source": "components/MandiMapGL.tsx"
+  },
+  {
+   "text": "ہٹائیں",
+   "source": "components/MandiMapGL.tsx"
+  },
+  {
+   "text": "آپ کا مقام معلوم ہو رہا ہے…",
+   "source": "components/MandiMapGL.tsx"
+  },
+  {
+   "text": "مقام کی اجازت نہیں ملی",
+   "source": "components/MandiMapGL.tsx"
+  },
+  {
+   "text": "یہ منڈی مجھ سے کتنی دور ہے؟",
+   "source": "components/MandiMapGL.tsx"
+  },
+  {
+   "text": "آواز بند کریں",
+   "source": "components/VoiceAssistant.tsx"
+  },
+  {
+   "text": "آواز سنیں",
+   "source": "components/VoiceAssistant.tsx"
+  },
+  {
+   "text": "پاکستان میں",
+   "source": "components/ZaraiMandiMap.tsx"
+  },
+  {
+   "text": "کی منڈیاں تلاش کریں",
+   "source": "components/ZaraiMandiMap.tsx"
+  },
+  {
+   "text": "نقشہ بند کریں",
+   "source": "components/ZaraiMandiMap.tsx"
+  },
+  {
+   "text": "قریبی منڈیاں",
+   "source": "components/ZaraiMandiMap.tsx"
+  },
+  {
+   "text": "لسٹ چھپائیں",
+   "source": "components/ZaraiMandiMap.tsx"
+  },
+  {
+   "text": "چھپائیں",
+   "source": "components/ZaraiMandiMap.tsx"
+  },
+  {
+   "text": "تلاش کریں...",
+   "source": "components/ZaraiMandiMap.tsx"
+  },
+  {
+   "text": "کوئی منڈی نہیں ملی",
+   "source": "components/ZaraiMandiMap.tsx"
+  },
+  {
+   "text": "قریبی منڈیاں دیکھیں",
+   "source": "components/ZaraiMandiMap.tsx"
+  },
+  {
+   "text": "پروفائل اور مقام کامیابی سے تبدیل ہو گیا",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "زرعی منڈی پرو",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "مفت ٹرائل · 2 دن باقی",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "اکاؤنٹ",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "پروفائل مکمل کریں",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "سیٹ اپ جاری رکھیں · مرحلہ",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "میری سبسکرپشنز",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "نمائندہ ڈیش بورڈ پر جائیں",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "نمائندہ بنیں",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "اکاؤنٹ تبدیل کریں",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "منڈی کے لیے نمائندہ اکاؤنٹ بنائیں",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "ترجیحات",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "آواز اور زبان",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "اردو",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "آواز فعال",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "آواز بند",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "مدد",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "ہم سے رابطہ کریں",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "منڈی اپڈیٹس، تجارتی ڈائریکٹری، بین الاقوامی ریٹس، تاریخی ڈیٹا",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "لاگ آؤٹ",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "رابطے کی تصدیق",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "پروفائل ترمیم کریں",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "نام",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "فون نمبر / ای میل",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "فون یا ای میل تبدیل کرنے کی صورت میں OTP تصدیق ضروری ہوگی۔",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "شہر",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "آپ کا مقام معلوم کیا جا رہا ہے…",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "میرا مقام معلوم کریں",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "مقام معلوم نہیں ہو سکا۔ نیچے سے اپنا شہر چنیں۔",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "شہر تلاش کریں",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "کوئی شہر نہیں ملا",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "تبدیلیاں محفوظ کریں",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "موجودہ",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "نیا",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "4 ہندسوں کا OTP کوڈ درج کریں",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "کامیابی سے تصدیق ہو گئی",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "براہ کرم مکمل 4 ہندسوں کا کوڈ درج کریں",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "تصدیق کریں اور محفوظ کریں",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "واپس جائیں",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "موجودہ پلان",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "مفت ٹرائل",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "فعال",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "2 دن باقی",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "ٹرائل رسائی",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "سبسکرائب شدہ اجناس",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "تجدید",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "ٹرائل",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "مزید اجناس",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "ماہ",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "ان لاک کریں",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "ایک ساتھ متعدد اجناس ان لاک کریں",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "پروفائل مکمل کریں اور سبسکرائب کریں",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "ایپ کی زبان",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "آواز کا معاون",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "ریٹس بول کر سنائیں",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "کارڈ پر کلک کرنے پر بول کر بتائیں",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "آواز کا نمونہ سنیں",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "زرعی منڈی میں خوش آمدید۔ آواز کا نظام بالکل ٹھیک کام کر رہا ہے۔",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "ٹھیک ہے",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "منڈی نمائندہ اکاؤنٹ",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "اپنی منڈی کے روزانہ ریٹس جمع کروائیں۔ آپ ایک ہی اکاؤنٹ سے کسٹمر اور نمائندہ ڈیش بورڈ کے درمیان تبدیل کر سکتے ہیں۔",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "رجسٹریشن شروع کریں",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "منسوخ کریں",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "غلہ منڈی اپڈیٹس",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "تجارتی ڈائریکٹری",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "بین الاقوامی ریٹس",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "تاریخی ڈیٹا",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "منڈی کے ریٹس کتنی بار اپ ڈیٹ ہوتے ہیں؟",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "صبح 8 بجے سے شام 6 بجے تک ہر 15 منٹ بعد ریٹس اپ ڈیٹ کیے جاتے ہیں۔",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "کیا میں اپنی اجناس تبدیل کر سکتا ہوں؟",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "جی ہاں، آپ کسی بھی وقت اپنی اجناس اور منڈیاں تبدیل کر سکتے ہیں۔",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "ایپ میں کتنا پرانا ڈیٹا موجود ہے؟",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "ایپ میں آپ کے سائن اپ کی تاریخ کے بعد کا مکمل ڈیٹا دستیاب ہے۔ اس سے پہلے کا ڈیٹا چاہیے تو اوپر واٹس ایپ پر رابطہ کریں، ہماری ٹیم آپ کو فراہم کرے گی۔",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "ادائیگی کے کون سے طریقے دستیاب ہیں؟",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "JazzCash، EasyPaisa، SadaPay، NayaPay اور تمام بینک ٹرانسفرز۔",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "واٹس ایپ پر مزید حاصل کریں",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "واٹس ایپ پر بات کریں",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "ہم سے بات کریں",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "ٹول فری ہیلپ لائن",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "ای میل",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "اکثر پوچھے گئے سوالات",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "رائے بھیجیں",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "شکریہ! آپ کا پیغام موصول ہو گیا ہے۔",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "اپنا پیغام یہاں لکھیں...",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "پیغام بھیجیں",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "لاگ آؤٹ کریں؟",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "آپ کسی بھی وقت دوبارہ سائن ان کر سکتے ہیں۔",
+   "source": "customer-face/account/AccountCenter.tsx"
+  },
+  {
+   "text": "فرمائیے، میں سن رہا ہوں",
+   "source": "customer-face/navigation/VoiceQueryOverlay.tsx"
+  },
+  {
+   "text": "پاکپتن منڈی میں گندم کا مل ریٹ",
+   "source": "customer-face/navigation/VoiceQueryOverlay.tsx"
+  },
+  {
+   "text": "پاکپتن منڈی میں گندم کا مل ریٹ 2850 روپے ہے۔",
+   "source": "customer-face/navigation/VoiceQueryOverlay.tsx"
+  },
+  {
+   "text": "سن رہے ہیں…",
+   "source": "customer-face/navigation/VoiceQueryOverlay.tsx"
+  },
+  {
+   "text": "مثال کے طور پر کہیں: \"پاکپتن منڈی میں گندم، مل ریٹ\"",
+   "source": "customer-face/navigation/VoiceQueryOverlay.tsx"
+  },
+  {
+   "text": "سمجھ رہے ہیں…",
+   "source": "customer-face/navigation/VoiceQueryOverlay.tsx"
+  },
+  {
+   "text": "آواز کا اسسٹنٹ",
+   "source": "customer-face/navigation/VoiceQueryOverlay.tsx"
+  },
+  {
+   "text": "آپ کا مطلوبہ ریٹ تلاش کر لیا گیا ہے۔",
+   "source": "customer-face/navigation/VoiceQueryOverlay.tsx"
+  },
+  {
+   "text": "گندم · پاکپتن منڈی · مل ریٹ",
+   "source": "customer-face/navigation/VoiceQueryOverlay.tsx"
+  },
+  {
+   "text": "محمد عارف",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "پسندیدہ",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "اکاؤنٹ اور پروفائل",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "بند کریں",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "سیٹ اپ جاری رکھیں (مرحلہ",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "نام، فون نمبر / ای میل",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "فعال زرعی منڈی پرو پلان",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "مفت ٹرائل جاری ہے (۲ دن)",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "تاریخی ڈیٹا کی ضرورت ہے",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "سائن اپ سے پہلے کی تاریخوں کا ڈیٹا حاصل کریں",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "نمائندہ بنیں (پارٹنر)",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "مدد اور کسٹمر سپورٹ",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "24/7 واٹس ایپ اور ہیلپ لائن",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "سائن آؤٹ کریں اور محفوظ رہیں",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "صوبہ منتخب کریں",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "منڈی / مقام منتخب کریں",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "فون نمبر / ای میل کی تبدیلی کی تصدیق",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "سابقہ نمبر / ای میل:",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "نیا نمبر / ای میل:",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "۴ ہندسوں کا OTP کوڈ درج کریں",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "کامیابی سے تصدیق ہو گئی!",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "براہ کرم مکمل ۴ ہندسوں کا کوڈ درج کریں (جیسے ۱۲۳۴)",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "OTP تصدیق اور محفوظ کریں",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "← واپس جائیں",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "مقام اور منڈی کا انتخاب",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "بنیادی منڈی منتخب کریں",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "منڈی محفوظ کریں",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "۲ دن باقی",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "مفت ٹرائل ایکسپلوریشن پاس",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "سبسکرائب شدہ اجناس (ٹرائل ایکسس)",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "ٹرائل میں فعال",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "پروفائل مکمل کریں اور مستقل سبسکرائب کریں →",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "فعال ممبر",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "آپ کی فعال سبسکرائب شدہ اجناس",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "رجسٹریشن:",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "تجدید:",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "دیگر اجناس ان لاک کریں",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "ان لاک کریں →",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "ایک ساتھ متعدد اجناس ان لاک کریں →",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "آواز اور زبان کی سیٹنگز",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "ایپ کی زبان منتخب کریں",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "اردو (Urdu)",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "آواز کا معاون (Voice Assistant)",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "منڈی کے ریٹس پر کلک کرنے پر بول کر بتائیں",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "بولنے کی رفتار",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "سیٹنگز محفوظ کریں",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "زرعی منڈی کے باضابطہ نمائندہ بنیں",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "منڈی پارٹنر اور نمائندہ اکاؤنٹ",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "رجسٹریشن شروع کریں →",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "تاریخی منڈی ڈیٹا آرکائیو",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "سائن اپ سے پہلے کی تاریخوں کا ریکارڈ",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "ایپ میں آپ کے سائن اپ ہونے کی تاریخ کے بعد کا مکمل ڈیٹا خودکار طور پر محفوظ اور دستیاب ہے۔ اگر آپ کو اپنے سبسکرائب کرنے سے پہلے کی تاریخوں یا پرانے مہینوں کا تفصیلی تاریخی ڈیٹا درکار ہے، تو براہِ کرم ہماری سپورٹ ٹیم سے رابطہ کریں۔",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "سمجھ آ گیا",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "ایپ سیٹنگز اور الرٹس",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "وزن اور قیمت کی اکائی",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "من (40kg)",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "ٹن (Metric Ton)",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "الرٹس اور اطلاعات",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "صبح اور شام واٹس ایپ پر ریٹس حاصل کریں",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "بغیر انٹرنیٹ ایس ایم ایس ریٹس",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "صبح منڈی کھلنے پر نوٹیفکیشن",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "واٹس ایپ سپورٹ",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "اکثر پوچھے گئے سوالات (FAQ)",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "صبح 8 بجے سے شام 6 بجے تک ہر 15 منٹ بعد لائیو ریٹس منڈیوں سے براہ راست اپ ڈیٹ کیے جاتے ہیں۔",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "کیا میں اپنے پسندیدہ اجناس منتخب کر سکتا ہوں؟",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "جی ہاں، آپ کسی بھی وقت اپنی پسندیدہ اجناس اور منڈیاں تبدیل کر سکتے ہیں۔",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "JazzCash، EasyPaisa، SadaPay، NayaPay اور تمام پاکستانی بینک ٹرانسفرز دستیاب ہیں۔",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "رائے یا شکایت درج کریں",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "زرعی منڈی کے بارے میں",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "زرعی منڈی پاکستان کے تمام کسانوں، بیوپاریوں، آڑھتیوں اور مل مالکان کے لیے ایک جدید ترین ڈیجیٹل مارکیٹ پلیٹ فارم ہے جہاں روزانہ کے ریٹس، آمد کے اعداد و شمار اور منڈی رپورٹس براہ راست دستیاب ہیں۔",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "ڈیٹا سورس",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "سپورٹڈ اجناس",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "لائسنس",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "کیا آپ واقعی لاگ آؤٹ کرنا چاہتے ہیں؟",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "لاگ آؤٹ کریں",
+   "source": "customer-face/screens/home/alternative/AlternativeHomeScreen.tsx"
+  },
+  {
+   "text": "تجاویز · کسی ریٹ پر ♡ دبائیں",
+   "source": "customer-face/screens/home/alternative/HomeByproductCarousel.tsx"
+  },
+  {
+   "text": "کوئی ضمنی مصنوعات نہیں ملیں",
+   "source": "customer-face/screens/home/alternative/HomeByproductCarousel.tsx"
+  },
+  {
+   "text": "ضمنی مصنوعات",
+   "source": "customer-face/screens/home/alternative/HomeByproductCarousel.tsx"
+  },
+  {
+   "text": "آواز فعال ہے",
+   "source": "customer-face/screens/home/shared/HomeHero.tsx"
+  },
+  {
+   "text": "نوٹیفکیشنز",
+   "source": "customer-face/screens/home/shared/HomeHero.tsx"
+  },
+  {
+   "text": "تمام منڈی الرٹس اور نوٹیفکیشنز فعال ہیں",
+   "source": "customer-face/screens/home/shared/HomeHero.tsx"
+  },
+  {
+   "text": "پروفائل",
+   "source": "customer-face/screens/home/shared/HomeHero.tsx"
+  },
+  {
+   "text": "نمائندہ ڈیش بورڈ پر تبدیل ہو گئے",
+   "source": "customer-face/screens/home/shared/HomeHero.tsx"
+  },
+  {
+   "text": "کسٹمر ڈیش بورڈ پر تبدیل ہو گئے",
+   "source": "customer-face/screens/home/shared/HomeHero.tsx"
+  },
+  {
+   "text": "پروفائل ترمیم",
+   "source": "customer-face/screens/home/shared/HomeHero.tsx"
+  },
+  {
+   "text": "نام اور مقام تبدیل کریں",
+   "source": "customer-face/screens/home/shared/HomeHero.tsx"
+  },
+  {
+   "text": "1د",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "1ہ",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "2ہ",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "1م",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "6م",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "1س",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "ضلع",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "،",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "منڈی،",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "سے",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "روپے فی چالیس کلو",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "خصوصیات",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "آمد",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "آمد کی اکائی",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "منڈی",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "منڈی کی معلومات اور پس منظر",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "یہ ریٹ سنیں",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "اس منڈی کو اوپر دکھائیں",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "منڈی کا تعارف و پس منظر",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "اہم فصلیں",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "گندم",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "مکئی",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "چاول",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "کپاس",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "گنا",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "مال مویشی",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "پھل",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "سبزیاں",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "گندم، اجناس",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "ڈسٹرکٹ / صوبہ",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "پنجاب",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "فی 40 کلو",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "روپے",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "کوئی تبدیلی نہیں",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "بمقابلہ",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "گزشتہ کل سے",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "آج کی منڈی رینک",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "میں",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "واحد",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "رجحان یا ٹیبل",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "رجحان",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "تاریخ وار",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "چارٹ",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "قیمت کا رجحان",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "آمد کا رجحان",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "مدت",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "مخصوص مدت",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "، 24 گھنٹے کے محور پر",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "مدت بھر کی قیمت",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "مدت بھر کی آمد",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "اس ریٹ کی کوئی پچھلی رپورٹ نہیں۔",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "تاریخ",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "کم",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "زیادہ",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "تبدیلی",
+   "source": "customer-face/screens/product-rates/MandiDetailSheet.tsx"
+  },
+  {
+   "text": "صوبہ",
+   "source": "customer-face/screens/product-rates/ProductRatesScreen.tsx"
+  },
+  {
+   "text": "ان فلٹرز کے لیے",
+   "source": "customer-face/screens/product-rates/ProductRatesScreen.tsx"
+  },
+  {
+   "text": "دکھائیں",
+   "source": "customer-face/screens/product-rates/ProductRatesScreen.tsx"
+  },
+  {
+   "text": "پورا پاکستان دکھائیں",
+   "source": "customer-face/screens/product-rates/ProductRatesScreen.tsx"
+  },
+  {
+   "text": "فلٹر صاف کریں",
+   "source": "customer-face/screens/product-rates/ProductRatesScreen.tsx"
+  },
+  {
+   "text": "کو",
+   "source": "customer-face/screens/product-rates/ProductRatesScreen.tsx"
+  },
+  {
+   "text": "کوئی رپورٹ نہیں۔",
+   "source": "customer-face/screens/product-rates/ProductRatesScreen.tsx"
+  },
+  {
+   "text": "ابھی کوئی رپورٹ نہیں۔",
+   "source": "customer-face/screens/product-rates/ProductRatesScreen.tsx"
+  },
+  {
+   "text": "تمام ریٹ",
+   "source": "customer-face/screens/product-rates/ProductRatesScreen.tsx"
+  },
+  {
+   "text": "مقام کا انتخاب",
+   "source": "customer-face/screens/product-rates/ProductRatesScreen.tsx"
+  },
+  {
+   "text": "پرانا",
+   "source": "customer-face/screens/product-rates/ProductRatesScreen.tsx"
+  },
+  {
+   "text": "پسندیدہ سے ہٹا دیا گیا",
+   "source": "customer-face/screens/product-rates/ProductRatesScreen.tsx"
+  },
+  {
+   "text": "پسندیدہ میں شامل کر دیا گیا",
+   "source": "customer-face/screens/product-rates/ProductRatesScreen.tsx"
+  },
+  {
+   "text": "جائزہ",
+   "source": "customer-face/screens/product-rates/ProductRatesScreen.tsx"
+  },
+  {
+   "text": "رجحانات",
+   "source": "customer-face/screens/product-rates/ProductRatesScreen.tsx"
+  },
+  {
+   "text": "ریٹس لوڈ نہیں ہو سکے۔ انٹرنیٹ چیک کریں۔",
+   "source": "customer-face/screens/product-rates/ProductRatesScreen.tsx"
+  },
+  {
+   "text": "جائزہ کارڈز",
+   "source": "customer-face/screens/product-rates/ProductRatesScreen.tsx"
+  },
+  {
+   "text": "قیمت کا جائزہ",
+   "source": "customer-face/screens/product-rates/ProductRatesScreen.tsx"
+  },
+  {
+   "text": "بہترین منڈیاں اور نقشہ",
+   "source": "customer-face/screens/product-rates/ProductRatesScreen.tsx"
+  },
+  {
+   "text": "، ریٹ",
+   "source": "customer-face/screens/product-rates/ProductRatesScreen.tsx"
+  },
+  {
+   "text": "ضمنی مصنوع",
+   "source": "customer-face/screens/product-rates/ProductRatesScreen.tsx"
+  },
+  {
+   "text": "ڈیٹا نہیں",
+   "source": "customer-face/screens/product-rates/ProductRatesScreen.tsx"
+  },
+  {
+   "text": "1121 باسمتی-1",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "1121 باسمتی-2",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "1121 کچا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "1121 اسٹیم",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "1121 سفید",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "1509 کچا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "1509 سیلا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "1509 اسٹیم",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "1509 اسٹیم باسمتی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "1509 اسٹیم سیلا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "1509 سفید",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "1718 کچا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "1718 اسٹیم",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "1847 کچا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "1847 اسٹیم",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "386 باسمتی-نیا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "386 باسمتی-پرانا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ایبٹ آباد",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "عادل پور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "زرعی مداخل",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "احمد پور شرقیہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "احمد پور لمہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "احمد پور سیال",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "عجوہ کھجور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "اجوائن",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "اکبری منڈی - چینی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "الفالفا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "علی پور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "الہ آباد",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بادام (امریکی)",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بادام (آسٹریلوی)",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بادام (دیسی)",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بادام",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "عنبر کھجور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "امونیم نائٹریٹ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "امونیم سلفیٹ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سیب گولڈن",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سیب کالا کولو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "خوبانی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "تارا میرا تیل",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "عارف والا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ہینگ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "اصیل چھوارا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "اصیل کھجور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "اصیل خشک کھجور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ایشیا گھی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "اٹھارہ ہزاری",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آواران",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بدین",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "باجوڑ ایجنسی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بالاکوٹ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "برنگ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بارکھان",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "برسیم",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "تخم ملنگا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بیگم جنگی کھجور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بیلہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بھلوال",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کریلا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کالا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کالا اصیل چھوارا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کالا چنا - بڑا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کالا چنا - چھوٹا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کالا زیرہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کالی مرچ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کالی مرچ پاؤڈر",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کلونجی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کلونجی تیل",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لوکی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بینگن",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بروکلی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "برائلر",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ٹوٹا اری 6",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بروکر ریٹ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بھورا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بچیکی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بچیری",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بھینس / 100-150 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بھینس / 150-200 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بھینس / 200-250 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بھینس / 250-300 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بھینس / 300-350 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بھینس / 350-400 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بھینس / 400 کلو سے زیادہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بھینس / 100 کلو سے کم",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بونیر",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مکھن",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سی-9 باسمتی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سی-9 سیلا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سی-9 اسٹیم",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سی-9 سفید",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بند گوبھی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "اونٹ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "اونٹ / 100-150 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "اونٹ / 150-200 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "اونٹ / 200-250 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "اونٹ / 250-300 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "اونٹ / 300-350 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "اونٹ / 350-400 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "اونٹ / 400-450 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "اونٹ / 450-500 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "اونٹ / 500 کلو سے زیادہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کیمیلینا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کین",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کینولا میل",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کینولا تیل",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کینولا بیج",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "شملہ مرچ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "گاجر",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "نقد",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کاجو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ارنڈ کا بیج",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ارنڈ کا تیل",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "تھیلا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مویشی منڈی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "پھول گوبھی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چاغی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چک جھمرہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چمن",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چمبڑ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چارسدہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چوبارہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چیکو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چیری",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چیا بیج",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چیچہ وطنی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مرچ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مرچیں",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چائنیز گاجر",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چشتیاں",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کلورفیناپائر 36% SC",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چوک اعظم",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چوک میتلا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چوک منڈا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چوک سرور شہید",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چوہڑ جمالی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چونیاں",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دار چینی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "گھی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "زیر درجہ بندی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کلوتھیانیڈن 20% EC",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لونگ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ناریل پاؤڈر (پسا کھوپرا)",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ثابت ناریل (کھوپرا)",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دھنیا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دھنیا پاؤڈر",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مکئی نشاستہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "گائے",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "گائے / 100-150 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "گائے / 150-200 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "گائے / 200-250 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "گائے / 250-300 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "گائے / 300-350 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "گائے / 350-400 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "گائے / 400 کلو سے زیادہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "گائے / 100 کلو سے کم",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کھیرا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سفید زیرہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ڈی آئی خان",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دادو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ڈہرکی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ڈیری",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ڈیری / بھینس کا دودھ - ملائی کے ساتھ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ڈیری / بھینس کا دودھ - ملائی کے بغیر",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ڈیری / گائے کا دودھ - ملائی کے ساتھ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ڈیری / گائے کا دودھ - ملائی کے بغیر",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ڈالڈا گھی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دریا خان",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ڈسکہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ڈیلر ریٹ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ڈیرہ اللہ یار",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ڈیرہ بگٹی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دائرہ دین پناہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ڈیرہ غازی خان",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ڈیرہ اسماعیل خان",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ڈیرہ مراد جمالی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دیسی مرچ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ڈھکی خشک کھجور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ڈگری",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دلکش",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دیپالپور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ڈپلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ڈوکری",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کشمش",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "خشک میوہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "خشک لیموں",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دلے والا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ڈونگا بونگا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دنیا پور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "انڈوں کی ٹرے",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "انرچ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ایکس مل ریٹ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "برآمد ریٹ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیض گنج",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیض آباد",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فالسہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فقیر والی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فارم گیٹ ریٹ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فتح جنگ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فتح پور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فاضل پور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیڈ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیڈ / کالا چھوارا کٹر",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیڈ / کینولا میل",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیڈ / چنا آٹی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیڈ / مکئی سائلیج",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیڈ / بنولہ کھل",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیڈ / چھوارا رنگ کٹ کٹر",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیڈ / ہاتھی گھاس",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیڈ / سبز چارہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیڈ / جنتر",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیڈ / چونا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیڈ / لوسرن چارہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیڈ / مکئی چارہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیڈ / مکئی گریڈ اے",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیڈ / مکئی گریڈ بی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیڈ / مکئی گریڈ سی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیڈ / ماش کٹا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیڈ / مسور کٹا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیڈ / مونگ کٹا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیڈ / سرسوں کھل",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیڈ / سرسوں کھل کٹر",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیڈ / چاول پالش",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیڈ / جوار",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیڈ / سویا بین میل",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیڈ / ونڈا (40-50% مکئی)",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیڈ / ونڈا کنسنٹریشن",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیڈ / گندم چوکر",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیڈ / گندم چھلکا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیڈ / گندم دلیہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فیڈ / گندم بھوسہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سونف",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "انجیر",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ماہی گیری",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ماہی گیری / مچھلی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فلور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فورٹ عباس",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "فروٹر",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "گمبٹ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لہسن G1",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "جرمن",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "گکھڑ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "گھارو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "گھوٹکی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "گلائفوسیٹ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بکری / 10-15 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بکری / 15-20 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بکری / 20-25 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بکری / 25-30 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بکری / 30-35 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بکری / 35-40 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بکری / 40-45 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بکری / 45-50 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بکری / 50-55 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بکری / 55-60 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بکری / 60-65 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بکری / 65-70 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بکری / 70-75 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بکری / 75-80 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بکری / 80-85 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بکری / 85-90 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بکری / 90-95 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بکری / 95-100 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "گوجرہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "گولارچی تعلقہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "گولڈن ہاٹ F1",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "گریڈ اے",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "گریڈ سی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کالا چنا - باریک اے ایس",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کالا چنا - موٹا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کالا چنا - باریک",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چنے کی دال - موٹا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چنے کی دال - موٹا اے ایس",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چنے کی دال - باریک",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چنے کی دال - باریک اے ایس",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سفید چنا 7 ملی میٹر",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سفید چنا 9 ملی میٹر",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چکوترا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "انگور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سبز",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ہری مرچ - بڑی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ہری مرچ - درمیانی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ہری مرچ - چھوٹی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "گرین فاسفیٹ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "گوار",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "گوجر خان",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "گجرات",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "گوادر",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ہالا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ہری شہزادی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ہری پور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ہارون آباد",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "حاصل پور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "حویلی لکھا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "حویلیاں",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ہزارہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "جڑی بوٹیاں",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "شہد",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "حب",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ہائبرڈ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ہائبرڈ مرچ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "اری 6",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "اری 6 ثابت-1",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "اری 6 سفید",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "اری 9",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "اری ٹوٹا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "اسپغول",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "اسپغول چھلکا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "جیکب آباد",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "جعفر آباد",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "جائفل",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "جلالپور بھٹیاں",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "جلالپور جٹاں",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "جام صاحب",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "جام پور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "جامشورو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "جمسور کھجور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "جنڈیالہ شیر خان",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "جڑانوالہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "جاتی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "جھل جاؤ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "جوڑیا بازار - چینی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "جوہی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کبیر والا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کہروڑ پکا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کہوٹہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کائنات ڈبل اسٹیم",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کاکڑ خراسان",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کالام",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "قلات",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کالی شہزادی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کمالیہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کمر مشانی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کمیر",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کاموکی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کاموکی (واہنڈو)",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کندھ کوٹ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کنڈیاری",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کنڈیارو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کنگن پور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کرک",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کربلا کھجور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کشمیر گھی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کشمور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "خیرپور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "خیرپور ناتھن شاہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "خان گڑھ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "خان پور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "خاران",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کھپرو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کھڑیانوالہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "خضدار",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "خیبر ایجنسی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "خیبر گھی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کوہاٹ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کوہستان",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کوہلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کوٹ ادو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کوٹ مومن",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کوٹ سمابہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کوٹری",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کلاچی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کنری",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کپرا کھجور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لاہور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لاہور شہر",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لکھا روڈ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لاکھڑا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لکی مروت",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لال 386 نیا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لال 386 پرانا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لالہ موسیٰ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "میمنا / 10-15 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "میمنا / 15-20 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "میمنا / 20-25 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "میمنا / 25-30 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "میمنا / 30-35 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "میمنا / 35-40 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "میمنا / 40-45 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "میمنا / 45-50 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "میمنا / 50-55 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "میمنا / 55-60 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "میمنا / 60-65 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "میمنا / 65-70 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "میمنا / 70-75 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "میمنا / 75-80 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "میمنا / 80-85 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "میمنا / 85-90 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "میمنا / 90-95 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "میمنا / 95-100 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لنڈی کوتل",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بڑی الائچی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بڑی کشمش",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لاڑکانہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لسبیلہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لیئر",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لیموں",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چائنہ لیموں",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لیاقت پور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لوڈنگ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لونگی مرچ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لورالائی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لڈن",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "میلسی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مکئی گریڈ اے",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مکئی گریڈ بی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مکئی گریڈ سی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مکئی گریڈ ڈی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آم الماس",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آم فجری",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آم لنگڑا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آم سرولی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آم سندھڑی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آم سرمئی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "منگووال",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مانسہرہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مردان",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مروٹ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ثابت ماش - 2",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ماش چھلکا - موٹا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ماش چھلکا - باریک",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ماش چھلکا - باریک-2",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ماش دھلی - 1",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ماش دھلی - 2",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ماش دھلی - موٹا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ماش دھلی - باریک",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لال مسور دال",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ثابت مسور - 1",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ثابت مسور - 2",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مٹیاری",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ماتلی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مضافتی کھجور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "میہڑ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "محراب پور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "خربوزہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "میسوٹرائن + ایٹرازین 50% WP",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "میسوٹرائن + ایٹرازین 55% WP",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "میاں چنوں",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "میانوالی بنگلہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مل گیٹ ریٹ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چاول (ملڈ)",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "باجرہ گریڈ اے",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "باجرہ گریڈ بی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "باجرہ گریڈ سی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "منچن آباد",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "میرپور بٹھورو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "میرپور خاص",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "میرپور ماتھیلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "میرپور ساکرو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مکس (خشک، گیلا)",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مونگی بنگلہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ثابت مونگ - 1",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ثابت مونگ - 2",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مونگ چھلکا - 1",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مونگ دھلی - 1",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مونگ دھلی - 2",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مونگی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ایم او پی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مورو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "محمد پور دیوان",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مرید والا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مریدکے",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "موسیٰ خیل",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سرسوں کھل",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ناکو چاول",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "نر چھوارا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "نارنگ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ناشپاتی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "نصیر آباد",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "نوکوٹ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "نوشہرو فیروز",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "نوکنڈی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "نوشہرہ ورکاں",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "نوشہرہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "این پی کے",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "شمال مغربی ایجنسی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بھنڈی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "پیاز گریڈ اے",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "پیاز گریڈ بی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "پیاز گریڈ سی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دیگر اقسام",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دھان 1509",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دھان 1692",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دھان 1718",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دھان 1847",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دھان 386",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دھان 86",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دھان سی-9",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دھان ڈائمنڈ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دھان اری",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دھان اری 6",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دھان اری 9",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دھان اری-فائن",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دھان کائنات-1121",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دھان ایل پی-18",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دھان پی پی-7",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دھان سپر",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دھان سپر 515",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دھان سپری",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "پاک عرب کین",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "پاک عرب گوارا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "پنجگور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "پنو عاقل",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "پپیتا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "پسنی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "پسرور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "پتوکی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آڑو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مٹر",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "پیرو مل",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کیڑے مار دوا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "پھول نگر",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ارہر - بڑی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ارہر - موٹا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ارہر - باریک",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "پنڈی بھٹیاں",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "پنڈی گھیب",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "انناس",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "پپلاں",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "پیر محل",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "پیرو لاشاری",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "پشین",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "پستہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو بخارا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "انار",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو (گولی)",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو (ایل آر)",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو (موزیکا)",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو (راویرا)",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو (سانتا)",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو (اسٹون)",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو ایسٹراس گریڈ اے",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو ایسٹراس گریڈ بی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو ایسٹراس گریڈ سی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو بیج گریڈ اے",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو بیج گریڈ بی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو بیج گریڈ سی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو کرڈا گریڈ اے",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو کرڈا گریڈ بی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو کرڈا گریڈ سی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو گولی گریڈ اے",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو گولی گریڈ بی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو گولی گریڈ سی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو اسمی گریڈ اے",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو اسمی گریڈ بی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو اسمی گریڈ سی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو لال گریڈ اے",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو لال گریڈ بی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو لال گریڈ سی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو ایل آر گریڈ اے",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو ایل آر گریڈ بی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو ایل آر گریڈ سی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو موزیکا گریڈ اے",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو موزیکا گریڈ بی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو موزیکا گریڈ سی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو راویرا گریڈ اے",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو راویرا گریڈ بی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو راویرا گریڈ سی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو سانتا گریڈ اے",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو سانتا گریڈ بی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو سانتا گریڈ سی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو اسٹون گریڈ اے",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو اسٹون گریڈ بی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو اسٹون گریڈ سی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو سفید گریڈ اے",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو سفید گریڈ بی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "آلو سفید گریڈ سی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "پولٹری",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "پولٹری / برائلر",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "پی پی-7",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "اسپغول بیج",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "پونیا 1121-1",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "پونیا 1121-2",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "پونیا باسمتی-1",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "قبولہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "قلعہ دیدار سنگھ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "قائد آباد",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "کینوا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ربی کھجور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "راجن پور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "رنگ کٹ اصیل چھوارا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "رنگ کٹ کالا اصیل خشک کھجور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "رنگ کٹ ڈھکی خشک کھجور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "رنگ کٹ نر چھوارا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "رانی پور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "رتو ڈیرو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سرخ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لال مرچ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لال مرچ پاؤڈر",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ثابت لال مرچ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لال دیسی مرچ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لال ہائبرڈ مرچ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لال لوبیا - بڑا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لال لونگی مرچ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لال لوبیا - 1",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لال لوبیا - 2",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لال رچ اسٹار مرچ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لال شنگری مرچ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "لال سمر کوئین مرچ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سرخی مائل بھورا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "رچ اسٹار مرچ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "توری",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "رسالپور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "روہڑی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "رہو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ٹینڈا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "رستم",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ایس میٹولاکلور 960EC 800ML",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "صادق آباد",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سعید آباد",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "زعفران",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سیدو شریف",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سکرنڈ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سالب مصری",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سالب پنجہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "صالح پٹ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سمبڑیال",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سمندری",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سنگن",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سانگھڑ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سرسبز",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سیہون",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سیلا 1121-1",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سیلا 1121-2",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سیلا 386",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سیلا پنجاب",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "تل گریڈ اے",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "تل گریڈ بی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "تل گریڈ سی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "تل کا تیل",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "شہداد کوٹ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "شہداد پور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "شاہدرہ - لاہور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "شہید بینظیر آباد (نواب شاہ)",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "شاہ پور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "شاہ پور صدر",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "شکرگڑھ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "شانگلہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "شریفہ کھجور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "شرقپور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بھیڑ / 10-15 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بھیڑ / 15-20 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بھیڑ / 20-25 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بھیڑ / 25-30 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بھیڑ / 30-35 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بھیڑ / 35-40 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بھیڑ / 40-45 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بھیڑ / 45-50 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بھیڑ / 50-55 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بھیڑ / 55-60 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بھیڑ / 60-65 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بھیڑ / 65-70 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بھیڑ / 70-75 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بھیڑ / 75-80 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بھیڑ / 80-85 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بھیڑ / 85-90 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بھیڑ / 90-95 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "بھیڑ / 95-100 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "شکارپور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "شنگری مرچ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "شورکوٹ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چھوٹا دانہ (ٹوٹا)",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "شجاع آباد",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سبی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سلکی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سلکی اور سورٹیکس",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سنجھورو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مذبح خانہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مذبح خانہ / 100-200 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مذبح خانہ / 200-300 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مذبح خانہ / 300-400 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مذبح خانہ / 400-500 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مذبح خانہ / 500-600 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مذبح خانہ / 600-700 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مذبح خانہ / 700-800 کلو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مذبح خانہ / 800 کلو سے زیادہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مذبح خانہ / 100 کلو سے کم",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چھوٹی الائچی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ایس او پی جی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "جوار - فیڈ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مصالحے",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "پالک",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چنے کی دال - بڑی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "مونگ دال دھلی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ایس ایس پی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "اسٹاک ریٹ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "اسٹوریج",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سبحانی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "صوفی گھی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چینی (مل)",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چینی (پرچون)",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "چینی (تھوک)",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "گنا / چینی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سجاول",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سکھیکی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سلطان آباد",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سورج مکھی میل",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سورج مکھی تیل",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سورج مکھی بیج",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سپر باسمتی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سپر باسمتی سندھ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سپر کرنل",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سپری نیا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سپری پرانا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سپری سیلا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "صوابی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سوات",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "میٹھا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "شکرقندی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "تلہ گنگ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "تلہار",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "تاندلیانوالہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ٹنڈو آدم خان",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ٹنڈو الہ یار",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ٹنڈو باگو",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ٹنڈو غلام علی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ٹنڈو جام",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ٹنڈو محمد خان",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "تونسہ شریف",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ٹیکسلا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "تھانہ بولا خان",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ٹھری میرواہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "تھرپارکر",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "تھارو شاہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ٹھٹھہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ٹھل",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "تلاپیا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ٹماٹر گریڈ اے",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ٹماٹر گریڈ بی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ٹماٹر گریڈ سی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ٹوٹا باسمتی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ٹی ایس پی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ہلدی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "شلجم",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "عمرکوٹ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "یوریا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "استا محمد",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "اوتھل",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سبزی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "اخروٹ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "وانا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "واربرٹن",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "تربوز",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "جڑی بوٹی مار دوا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سفید لوبیا - بڑا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سفید لوبیا - موٹا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "سفید لوبیا - باریک",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ثابت ماش - چھوٹی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ثابت مونگ - بڑی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ثابت مسور - بڑی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ثابت مسور - چھوٹی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "وندر",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "یزمان منڈی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "پیلے مٹر",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "دہی",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "زبردست یوریا",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "زاہدی کھجور",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "زیدہ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "زرخیز",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "زہری",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ژوب",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "زیارت",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "زنک",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "زنک سلفیٹ",
+   "source": "customer-face/shared/i18n/dataNamesUrdu.ts"
+  },
+  {
+   "text": "ہوم",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "تجزیات",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "خبریں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "آواز",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "آواز آن",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "آواز آف",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "آواز سے تلاش",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "لائیو مارکیٹ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "میری مصنوعات",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سب دیکھیں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "آج کے نرخ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سبسکرائب",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "+ سبسکرائب",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "تلاش",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "اجناس یا ضمنی مصنوع تلاش کریں…",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "منڈیاں یا شہر تلاش کریں…",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ضمنی مصنوعات تلاش کریں…",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "مصنوعات تلاش کریں…",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "پاکپتن منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "پاکپتن",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "کراچی منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "کراچی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "پشاور منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "پشاور",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "کوئٹہ منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "کوئٹہ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "لاہور منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "فیصل آباد منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "فیصل آباد",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ملتان منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ملتان",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سکھر منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سکھر",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "حیدرآباد منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "حیدرآباد",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "گوجرانوالہ منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "گوجرانوالہ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "راولپنڈی منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "راولپنڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سرگودھا منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سرگودھا",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "بہاولپور منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "بہاولپور",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ساہیوال منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ساہیوال",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "اوکاڑہ منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "اوکاڑہ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "جھنگ منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "جھنگ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "قصور منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "قصور",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "وہاڑی منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "وہاڑی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "خانیوال منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "خانیوال",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "چنیوٹ منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "چنیوٹ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "شیخوپورہ منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "شیخوپورہ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "بورے والا منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "بورے والا",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ڈیرہ غازی خان منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ڈیرہ اسماعیل خان منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "منڈی بہاؤالدین",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "بہاولنگر منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "بہاولنگر",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "مظفر گڑھ منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "مظفر گڑھ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "لیہ منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "لیہ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "لودھراں منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "لودھراں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ٹوبہ ٹیک سنگھ منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ٹوبہ ٹیک سنگھ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "حافظ آباد منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "حافظ آباد",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ننکانہ صاحب منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ننکانہ صاحب",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "اٹک منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "اٹک",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "چکوال منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "چکوال",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "جہلم منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "جہلم",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "میانوالی منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "میانوالی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "بھکر منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "بھکر",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "خوشاب منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "خوشاب",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سیالکوٹ منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سیالکوٹ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "نارووال منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "نارووال",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "گجرات منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "بادامی باغ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "بادامی باغ منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "غلہ منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سبزی منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "فروٹ منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "رحیم یار خان منڈی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "رحیم یار خان",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سرانوالی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "نواب شاہ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "خیبر",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "شہید بینظیر آباد",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "آج",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "گزشتہ کل",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سب",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "تمام منڈیاں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "تمام شعبے",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "پاکستان",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سندھ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "خیبر پختونخوا",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "بلوچستان",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "اسلام آباد",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "اجناس و اناج",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "مویشی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "زرعی کھاد و ادویات",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "کھاد",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "خشک میوہ جات",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "کریانہ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "تیل دار اجناس",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "چارہ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "کپاس و ریشہ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "چینی و میٹھا",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "دھان",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "باجرہ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "تل",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "خوردنی تیل",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "کینولا",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سویا بین",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سورج مکھی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "چینی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سرسوں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "رایا",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "جو",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "جوار",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "جئی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "چنا",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "دالیں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "مونگ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ماش",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "مسور",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "کھجور",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "آم",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "کنو",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "امرود",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سیب",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "کیلا",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "آلو",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ٹماٹر",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "پیاز",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "لہسن",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ادرک",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "دودھ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "گوشت",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "انڈے",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "اون",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "گائے بیل",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "بھینس",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "بکرا / بکری",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "دنبہ / بھیڑ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ڈی اے پی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "این پی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "پوٹاش",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "باریک آٹا",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "آٹا",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "چوکر",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "گندم چوکر",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سوجی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "بھوسہ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "گندم کا بھوسہ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "اسپیشل آٹا",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "مکئی دانہ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "مکئی سائیلج",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "کارن گلوٹن",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "مکئی کا تیل",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "پاپ کارن",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "پھٹی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "کپاس (پھٹی)",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "روئی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "بنولہ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "بنولہ کھل",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "بنولہ تیل",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "کپاس ویسٹ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "باسمتی 1121",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "کائنات چاول",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ارری-6",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ارری-9",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ٹوٹا چاول",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "چاول چوکر",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "چاول بھوسی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "چاول پالش",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "بھوسی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "تیل",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "کھل",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "شیرہ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "کھوئی / بگاس",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "گڑ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "شکر",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سفید چینی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "مل ریٹ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "فارم ریٹ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "تھوک ریٹ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "پرچون ریٹ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "مارکیٹ ریٹ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "منڈی ریٹ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "مل",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "فارم",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "تھوک",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "پرچون",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "مارکیٹ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ریٹ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "نرخ / ریٹس",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "قیمت",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "قیمتیں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "کم از کم",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "زیادہ سے زیادہ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "اوسط",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "مستحکم",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "اضافہ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "کمی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "حجم",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "من",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "40 کلو",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "100 کلو",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "50 کلو",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "بوری",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ٹن",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "میٹرک ٹن",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "کلو",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "قیمت کے رجحانات",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "آج کا جائزہ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "پاکستان میں جائزہ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "قومی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "نرخ کی قسم",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "نرخ کی اقسام",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "قسم",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "معیار",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "فصل",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "رنگ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "خصوصیت",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "حالت",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "منڈی / اسٹیشن",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "کم – زیادہ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "بیج کا معیار",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "خراب",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ایکسپورٹ گریڈ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "گیلا",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "خشک",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ملا جلا",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سنہری",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سفید",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "زرد",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "صاف شدہ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "غیر صاف شدہ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سونا موتی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ٹی ڈی-1",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سرسسبز",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "اکبر",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "اناج",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "اجالا",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "گلیکسی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "عروج",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سبھم",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "تمام صوبے",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ہٹائیں (آج)",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "تاریخ ہٹائیں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "انتخاب ہٹائیں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "منڈی میں نہیں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "تفصیل کے لیے منتخب کریں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ڈیٹا دستیاب نہیں۔",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "منڈی ڈیٹا دستیاب نہیں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "کوئی مماثل ریکارڈ نہیں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "پرانا ڈیٹا درکار ہے؟",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "مزید تاریخی ڈیٹا کے لیے ہماری ٹیم سے رابطہ کریں۔",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "درخواست کریں ←",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "تاریخ منتخب کریں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "تاریخ یا مدت کے لحاظ سے فلٹر کریں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "اس ہفتے",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "متعدد دنوں کا موازنہ کریں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "تازہ ترین دستیاب نرخ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "پچھلے دن کے نرخ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "اکائی = روپے · وزن = (40 کلو)",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "دن",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "قیمت (روپے / 40 کلو)",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "جنوری",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "فروری",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "مارچ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "اپریل",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "مئی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "جون",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "جولائی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "اگست",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ستمبر",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "اکتوبر",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "نومبر",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "دسمبر",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "اتوار",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "پیر",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "منگل",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "بدھ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "جمعرات",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "جمعہ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ہفتہ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "مہینہ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سہ ماہی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "مصنوعات منتخب کریں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "مصنوع منتخب کریں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "مصنوعات",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "آپ کی پسند",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "اپنی پسند منتخب کریں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ہوم اسکرین پر دیکھنے کے لیے ضمنی مصنوعات منتخب کریں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "شامل کرنے کے لیے ٹیپ کریں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ٹیپ کریں · مزید شامل کریں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "1 مصنوع دیکھیں ←",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "مصنوعات دیکھیں ←",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "گندم کے تمام منڈی ریٹ دیکھیں ←",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "دوبارہ تلاش کریں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "آج کا ڈیٹا موجود نہیں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ڈیٹا دستیاب نہیں ہے",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "کوئی نتیجہ نہیں ملا",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "لوڈ ہو رہا ہے…",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "منسوخ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "لاگو کریں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "مکمل",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "محفوظ کریں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "اگلا",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ری سیٹ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سب صاف کریں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "فلٹر",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "فلٹرز",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ترتیب دیں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سب سے زیادہ قیمت",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سب سے کم قیمت",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سب سے زیادہ آمد",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "اطلاعات",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "مارکیٹ اپڈیٹس",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "لائیو ٹکر",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "تفصیلی جائزہ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ڈیٹا کی درخواست کریں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "منڈی منتخب کریں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "مقام منتخب کریں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "قیمت کا فلٹر",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "قیمت فلٹر ہٹائیں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "↺ قیمت فلٹر ہٹائیں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سننے کے لیے ٹیپ کریں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ضمنی مصنوعات منتخب ہیں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "منتخب",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "مکمل رسائی حاصل کریں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "تمام اجناس اور تفصیلی مارکیٹ تجزیات تک رسائی کے لیے اکاؤنٹ اپگریڈ کریں۔",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ابھی اپگریڈ کریں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "بعد میں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "مقام کا فلٹر",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "منڈی یا ضلع تلاش کریں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "مثال: بادامی باغ، فیصل آباد، ملتان...",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "پورا پاکستان (قومی)",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "صوبہ اور روایت منتخب کریں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "صوبہ پنجاب",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "صوبہ سندھ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "صوبہ بلوچستان",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "روایت: پھلکاری",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "روایت: اجرک",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "روایت: خیبر",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "روایت: بلوچی کڑھائی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "اضلاع اور منڈیاں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "0 فلٹرز فعال",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "1 فلٹر فعال",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "فلٹرز فعال",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سب منتخب کریں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "✓ سب منتخب",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "پورا پاکستان لاگو کریں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "1 منتخب مقام لاگو کریں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "زیادہ قیمت",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "کم قیمت",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "کل بوریاں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "(40 کلو)",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ریٹ دیکھنے کے لیے پروفائل مکمل کریں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "پچھلے ریکارڈ دیکھنے کے لیے پروفائل مکمل کریں۔",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "انلاک کریں ➔",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "کسٹمر ایپ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "نمائندہ ڈیش بورڈ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سائن ان",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "آن بورڈنگ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "نمائندہ آن بورڈنگ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "دوبارہ آن بورڈنگ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "کسٹمر ایپ پر جائیں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "تمام",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "علاقہ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "نمی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "گریڈ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "بیج",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "پرچون معیار",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "پھٹی گریڈ اے",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "پھٹی گریڈ بی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "پھٹی گریڈ سی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "میدہ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سرسوں بیج",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سرسوں تیل",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سویا بین بیج",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سویا بین تیل",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سویا بین تیل (واشڈ)",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سویا بین میل",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "تارا میرا بیج",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "آم انور رٹول",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "آم کالا چونسا",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "آم سفید چونسا",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "آم دسہری",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "مالٹا",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "موسمی",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "کینو",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "گول بینگن",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "لمبا بینگن",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "دیسی لہسن",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "چائنہ لہسن",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "ہرنائی لہسن",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "دیسی لیموں",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "سلاد پتہ",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "روڈز گھاس",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "آلو (لال)",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "آلو (سفید)",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "آلو (بیج)",
+   "source": "customer-face/shared/i18n/urduDictionary.ts"
+  },
+  {
+   "text": "آواز بند ہے",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "انگریزی",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "اطلاعات اور پیغامات",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "پروفائل میں ترمیم",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "منڈی کا انتخاب کریں",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "پورا پاکستان منتخب کیا گیا۔",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "پورے پاکستان کی قیمتیں",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "پورے ملک کے ریٹس دکھائے جا رہے ہیں۔",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "تمام مصنوعات منتخب ہیں۔ تمام قیمتیں دکھائی جا رہی ہیں۔",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "تمام ضمنی مصنوعات دکھائی جا رہی ہیں۔",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "تمام ضمنی مصنوعات",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "تمام ریٹس دکھائے جا رہے ہیں۔",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "تلاش۔ کسی بھی فصل یا ضمنی پیداوار کا نام بول کر ریٹ معلوم کریں۔",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "اجناس۔ اپنی پسندیدہ فصل منتخب کریں اور تمام منڈیوں کے تازہ ریٹس دیکھیں۔",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "لائیو مارکیٹ۔ پاکستان کی تمام منڈیوں کے تازہ ترین لائیو ریٹس دیکھیں۔",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "منڈیاں۔ پاکستان بھر کی منڈیوں کی فہرست اور آج کے ریٹس دیکھیں۔",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "اطلاعات۔ تمام اہم مارکیٹ اپڈیٹس اور خبریں یہاں ملیں گی۔",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "آپ کی پسند۔ آپ کی پسندیدہ اجناس کے ریٹس یہاں ملیں گے۔",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "یہ مصنوع مقفل ہے۔ مکمل معلومات کے لیے اکاؤنٹ اپگریڈ کریں۔",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "یہ مصنوع مقفل ہے",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "منڈی کا نقشہ",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "نقشہ دیکھیں",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "نقشہ کھولا گیا",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "منڈیاں فلٹر کریں",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "روزانہ ریٹس",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "قیمتوں کا رجحان",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "فصلیں اور منڈیاں",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "کاروباری اوقات",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "فعال لاٹس",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "مارکیٹ کی صورتحال",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "مارکیٹ کھلی ہے",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "مارکیٹ بند ہے",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "ورائٹی",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "نئی پرانی فصل",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "رنگت",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "گریڈ اور معیار",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "ریٹ کی قسم",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "ریٹیل ریٹ",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "ہول سیل ریٹ",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "ڈیلیوری ریٹ",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "ریٹیل",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "ہول سیل",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "ڈیلیوری",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "نمی دار",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "نیا مال",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "پرانا مال",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "محفوظ شدہ",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "راستہ معلوم کریں",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "شیئر کریں",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "تمام فلٹرز صاف کریں",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "آج کی تاریخ",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "چوبیس گھنٹے",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "بہتر گھنٹے",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "ہفتہ وار",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "ماہانہ",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "نوابشاہ",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "کی قیمتیں دکھائی جا رہی ہیں۔",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "کی تمام ضمنی مصنوعات کے ریٹس دکھائے جا رہے ہیں۔",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "کی تمام ضمنی مصنوعات دکھائی جا رہی ہیں۔",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "دکھائے جا رہے ہیں۔",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "مقامات کی قیمتیں دکھائی جا رہی ہیں۔",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "منتخب کیا گیا۔",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "منڈی ہٹا دی گئی۔",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "کی تمام منڈیاں غیر منتخب ہو گئیں۔",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "کی تمام منڈیاں منتخب ہو گئیں۔",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "۔ کم سے کم ریٹ",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "، زیادہ سے زیادہ",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "ریٹ،",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "کا نقشہ کھل گیا۔",
+   "source": "customer-face/shared/voice.ts"
+  },
+  {
+   "text": "کی قیمتیں",
+   "source": "customer-face/sheets/LocationScopeSheet.tsx"
+  },
+  {
+   "text": "منتخب کیا گیا",
+   "source": "customer-face/sheets/MultiLocSheet.tsx"
+  },
+  {
+   "text": "منڈی ہٹا دی گئی",
+   "source": "customer-face/sheets/MultiLocSheet.tsx"
+  },
+  {
+   "text": "کی منڈیاں غیر منتخب",
+   "source": "customer-face/sheets/MultiLocSheet.tsx"
+  },
+  {
+   "text": "کی تمام منڈیاں منتخب",
+   "source": "customer-face/sheets/MultiLocSheet.tsx"
+  },
+  {
+   "text": "مثال: جڑانوالہ، بادامی باغ، فیصل آباد...",
+   "source": "customer-face/sheets/MultiLocSheet.tsx"
+  },
+  {
+   "text": "پورا پاکستان فعال",
+   "source": "customer-face/sheets/MultiLocSheet.tsx"
+  },
+  {
+   "text": "فلٹر فعال",
+   "source": "customer-face/sheets/MultiLocSheet.tsx"
+  },
+  {
+   "text": "کوئی ڈیٹا نہیں",
+   "source": "customer-face/sheets/MultiLocSheet.tsx"
+  },
+  {
+   "text": "🔍 کوئی مقام نہیں ملا \"",
+   "source": "customer-face/sheets/MultiLocSheet.tsx"
+  },
+  {
+   "text": "تلاش صاف کریں",
+   "source": "customer-face/sheets/MultiLocSheet.tsx"
+  },
+  {
+   "text": "مقامات لاگو کریں",
+   "source": "customer-face/sheets/MultiLocSheet.tsx"
+  }
+ ]
+}

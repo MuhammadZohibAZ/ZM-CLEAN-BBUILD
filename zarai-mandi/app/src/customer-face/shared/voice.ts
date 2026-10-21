@@ -1,7 +1,11 @@
-import { speakUrdu } from "../../components/VoiceAssistant";
+import { speakUrdu, stopUrduSpeech } from "../../components/VoiceAssistant";
+import { preloadVoicePack } from "../../lib/voicePack";
 
 import { appLang } from "./i18n/LangProvider";
 import { AUTO_URDU_DICT } from "./i18n/urduDictionary";
+
+// The voice pack's clip list (~100 KB), fetched up front so the first tap speaks at once.
+if (typeof window !== "undefined") preloadVoicePack();
 
 export let globalVoices: SpeechSynthesisVoice[] = [];
 if (typeof window !== "undefined" && "speechSynthesis" in window) {
@@ -313,6 +317,7 @@ export function translateVoiceUrdu(text: string): string {
 export let activeGlobalAudio: HTMLAudioElement | null = null;
 
 export function stopSpeaking() {
+  stopUrduSpeech();
   if (activeGlobalAudio) {
     activeGlobalAudio.pause();
     activeGlobalAudio.currentTime = 0;
