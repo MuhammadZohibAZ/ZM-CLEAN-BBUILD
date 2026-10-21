@@ -1,13 +1,21 @@
 import { useStoredVariant, VariantSwitch, type VariantOption } from "../../../components/VariantSwitch";
 
-// Testing switch on the by-product screen between the original card grid and
-// the tester variants (see customer-face/components/VariantSwitch).
+// Testing switch on the by-product screen between the filter sidebar (the
+// final design, shown to everyone) and the other versions (see customer-face/components/VariantSwitch).
 
 export type ByproductScreenVariant = "original" | "attribute" | "rateType" | "filterBar" | "sidebar";
 
 const STORAGE_KEY = "zm.byproductScreenVariant";
 
+// The first option is what everyone sees: the filter sidebar is the final design.
 const OPTIONS: VariantOption<ByproductScreenVariant>[] = [
+  {
+    id: "sidebar",
+    en: "Filter sidebar",
+    ur: "فلٹر سائیڈ بار",
+    hintEn: "Filters in a side panel, cards beside it",
+    hintUr: "فلٹر ایک طرف، کارڈز ساتھ",
+  },
   { id: "original", en: "Original", ur: "اصل", hintEn: "One card per by-product", hintUr: "ہر ضمنی مصنوع کا ایک کارڈ" },
   {
     id: "attribute",
@@ -29,13 +37,6 @@ const OPTIONS: VariantOption<ByproductScreenVariant>[] = [
     ur: "فلٹر بار",
     hintEn: "Rate + attribute bar, like the rates screen",
     hintUr: "ریٹ اور وصف کی بار، ریٹس اسکرین جیسی",
-  },
-  {
-    id: "sidebar",
-    en: "Filter sidebar",
-    ur: "فلٹر سائیڈ بار",
-    hintEn: "Filters in a side panel, cards beside it",
-    hintUr: "فلٹر ایک طرف، کارڈز ساتھ",
   },
 ];
 const VARIANTS = OPTIONS.map((o) => o.id);

@@ -98,7 +98,8 @@ export function VariantSwitch<T extends string>({
     <div
       ref={rootRef}
       className="absolute z-30"
-      style={{ left: 12, bottom: "calc(env(safe-area-inset-bottom, 0px) + 100px)", fontFamily: font }}
+      // Above the screens' own floating buttons (e.g. Filters at +100px).
+      style={{ left: 12, bottom: "calc(env(safe-area-inset-bottom, 0px) + 156px)", fontFamily: font }}
     >
       {open && (
         <div

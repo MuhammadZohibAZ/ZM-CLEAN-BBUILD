@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react"
-import { inDevicePreview } from "./lib/device-orientation"
 import { TEST_MODE } from "./lib/testMode"
 import { onDevCommand, publishDevControls } from "./lib/device-bridge"
 import OnboardingFlow, { type OnboardingUserData } from "./onboarding/OnboardingFlow"
@@ -7,7 +6,10 @@ import CustomerFaceApp from "./CustomerFaceApp"
 import { LangProvider } from "./customer-face/shared/i18n/LangProvider"
 
 export default function App() {
-  const [stage, setStage] = useState<"onboarding" | "customer_face">("onboarding")
+  // The test link (?test=1) opens straight into the app, skipping sign-up.
+  const [stage, setStage] = useState<"onboarding" | "customer_face">(() =>
+    new URLSearchParams(window.location.search).get("test") === "1" ? "customer_face" : "onboarding",
+  )
   const [authMode, setAuthMode] = useState<"register" | "signin">("register")
   const [initialRole, setInitialRole] = useState<"customer" | "representative">("customer")
   const [activeRole, setActiveRole] = useState<"customer" | "representative">("customer")
@@ -42,8 +44,9 @@ export default function App() {
     setActiveRole(newRole)
   }
 
-  // Testing pill: label + Skip/Reset. In the desktop phone mockup it is drawn
-  // outside the phone (DevicePreview), so here it only reports its state.
+  // Testing pill: label + Skip/Reset, in test mode only and only beside the
+  // desktop phone mockup (DevicePreview). On a phone it covered the app's own
+  // buttons; the test link skips sign-up instead.
   const devLabel =
     stage === "onboarding"
       ? initialRole === "representative"
@@ -67,7 +70,6 @@ export default function App() {
   }
   const devActionRef = useRef(handleDevAction)
   devActionRef.current = handleDevAction
-  const inDevice = inDevicePreview()
 
   useEffect(() => {
     if (TEST_MODE) publishDevControls({ label: devLabel, action: devAction, title: devTitle })
@@ -87,59 +89,6 @@ export default function App() {
           background: "#F1F7F4",
         }}
       >
-        {/* Floating Mode Toggle Pill for Testing & Role Switching */}
-        {TEST_MODE && !inDevice && (
-          <div
-            style={{
-              // Right edge above the bottom nav: at the top it covered the header's
-              // buttons (in Urdu, the voice toggle).
-              position: "fixed",
-              bottom: 104,
-              right: 10,
-              zIndex: 9999,
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              background: "rgba(6, 45, 36, 0.92)",
-              backdropFilter: "blur(12px)",
-              padding: "4px 10px",
-              borderRadius: 24,
-              border: "1px solid rgba(255, 255, 255, 0.2)",
-              boxShadow: "0 4px 16px rgba(0,0,0,0.25)",
-            }}
-          >
-            <span
-              style={{
-                fontSize: 10,
-                fontWeight: 800,
-                color: "#B4E6D2",
-                letterSpacing: "0.03em",
-              }}
-            >
-              {devLabel}
-            </span>
-            <button
-              onClick={handleDevAction}
-              className="tap-target"
-              style={{
-                background: "#2FAE68",
-                color: "#fff",
-                border: "none",
-                borderRadius: 14,
-                padding: "2px 8px",
-                fontSize: 9.5,
-                fontWeight: 800,
-                cursor: "pointer",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 2,
-              }}
-              title={devTitle}
-            >
-              {devAction}
-            </button>
-          </div>
-        )}
 
         {/* Responsive Mobile Container — fits any screen width/height */}
         <div
