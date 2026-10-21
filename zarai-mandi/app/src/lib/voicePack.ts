@@ -10,6 +10,8 @@ import { chunks, cover } from "./urduText";
 const PACK_URL = `${import.meta.env.BASE_URL}voice_pack/`;
 const WORD_GAP = 0.07; // seconds between clips inside a chunk
 const CHUNK_GAP = 0.28; // seconds at punctuation
+// Ahead of images in the download queue: a tap's speech shouldn't wait behind them.
+const URGENT = { priority: "high" } as RequestInit;
 
 let manifest: Promise<Map<string, string>> | null = null;
 let maxLen = 0;
@@ -20,7 +22,7 @@ async function fetchManifest(): Promise<Record<string, string>> {
   // One retry: a dropped request on a weak mobile connection shouldn't cost the voice.
   for (let attempt = 0; ; attempt++) {
     try {
-      const r = await fetch(`${PACK_URL}manifest.json`);
+      const r = await fetch(`${PACK_URL}manifest.json`, URGENT);
       if (!r.ok) throw new Error(`voice pack manifest: ${r.status}`);
       return (await r.json()) as Record<string, string>;
     } catch (err) {
@@ -105,7 +107,7 @@ function wavBlob(samples: Float32Array, rate: number): Blob {
 function loadClip(file: string): Promise<AudioBuffer> {
   let clip = clips.get(file);
   if (!clip) {
-    clip = fetch(`${PACK_URL}clips/${file}`)
+    clip = fetch(`${PACK_URL}clips/${file}`, URGENT)
       .then((r) => {
         if (!r.ok) throw new Error(`voice clip ${file}: ${r.status}`);
         return r.arrayBuffer();
@@ -140,14 +142,27 @@ export interface PackSpeech {
   stop: () => void;
 }
 
+/** `work`, or an AbortError as soon as `signal` aborts (without waiting for `work`). */
+function untilAborted<T>(work: Promise<T>, signal?: AbortSignal): Promise<T> {
+  if (!signal) return work;
+  const abortError = () => new DOMException("Aborted", "AbortError");
+  if (signal.aborted) return Promise.reject(abortError());
+  return Promise.race([
+    work,
+    new Promise<never>((_, reject) => signal.addEventListener("abort", () => reject(abortError()), { once: true })),
+  ]);
+}
+
 /** Plays `text` from the pack, or returns null when the pack can't say all of it. */
 export async function speakFromPack(text: string, signal?: AbortSignal): Promise<PackSpeech | null> {
   unlockAudio();
-  const planned = await planSpeech(text);
+  const planned = await untilAborted(planSpeech(text), signal);
   if (!planned) return null;
   const files = await loadManifest();
-  const buffers = await Promise.all(planned.map((pieces) => Promise.all(pieces.map((p) => loadClip(files.get(p)!)))));
-  if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+  const buffers = await untilAborted(
+    Promise.all(planned.map((pieces) => Promise.all(pieces.map((p) => loadClip(files.get(p)!))))),
+    signal,
+  );
 
   const rate = buffers[0][0].sampleRate;
   let length = 0;

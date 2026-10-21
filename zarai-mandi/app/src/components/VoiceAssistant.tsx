@@ -18,6 +18,8 @@ export interface VoiceAssistantProps {
   color?: string;
 }
 
+const PACK_WAIT_MS = 6000;
+
 let activePack: PackSpeech | null = null;
 let activeRequest: AbortController | null = null;
 
@@ -82,7 +84,11 @@ export async function speakUrdu(text: string, options: SpeakOptions = {}): Promi
     // no audio element: the device voice below still works
   }
   try {
-    const speech = await speakFromPack(cleaned, controller.signal);
+    // On a slow connection the clips may take a while; after PACK_WAIT_MS the
+    // device voice speaks instead (and the late clips are cancelled), so a tap
+    // is never met with silence.
+    const timer = setTimeout(() => controller.abort(), PACK_WAIT_MS);
+    const speech = await speakFromPack(cleaned, controller.signal).finally(() => clearTimeout(timer));
     if (speech) {
       if (activeRequest === controller) activeRequest = null;
       activePack = speech;
@@ -94,8 +100,10 @@ export async function speakUrdu(text: string, options: SpeakOptions = {}): Promi
       return handle;
     }
   } catch (err) {
-    if (err instanceof DOMException && err.name === "AbortError") throw err;
-    console.warn("Voice pack unavailable, using the fallback voice:", err);
+    const aborted = err instanceof DOMException && err.name === "AbortError";
+    // Stopped by the user or by newer speech: stay quiet. Timed out: fall back.
+    if (aborted && (activeRequest !== controller || options.signal?.aborted)) throw err;
+    if (!aborted) console.warn("Voice pack unavailable, using the fallback voice:", err);
   }
   if (activeRequest === controller) activeRequest = null;
   return speakWithBrowser(cleaned, "ur-PK");
