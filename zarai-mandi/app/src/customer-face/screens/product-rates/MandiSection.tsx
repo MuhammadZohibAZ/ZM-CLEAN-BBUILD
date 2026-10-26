@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 
 import { attrValue } from "./Filters";
-import { arrow, shortRate, signed, stripMandi, type Fmt } from "./format";
+import { arrow, bagSize, shortRate, signed, stripMandi, type Fmt } from "./format";
 import { ALL_RATES, ATTR_KEYS, type MandiEntry } from "./selectors";
 import { C } from "./theme";
 import type { AttrFilters, AttrKey, ChangeInterval, SortKey } from "./types";
@@ -195,7 +195,7 @@ export function MandiSection({
     const raw: { key: AttrKey | "unit"; label: string }[] = [
       ...(primary ? [{ key: primary, label: colLabel(f, primary) }] : []),
       ...(["newOld", "moisture", "color", "variety", "origin", "spec", "quality"] as AttrKey[]).filter((k) => k !== primary).map((k) => ({ key: k, label: colLabel(f, k) })),
-      { key: "unit", label: f.tx("Unit", "اکائی") },
+      { key: "unit", label: f.tx("Bag size", "بوری کا وزن") },
     ];
     const hasData = (key: AttrKey | "unit" | "quality") =>
       listForCols.some((e) => {
@@ -283,7 +283,7 @@ export function MandiSection({
             </th>
             <th style={{ ...thBase, minWidth: 72 }}>
               {headBtn(
-                sort === "arrivalHigh" || sort === "arrival" ? f.tx("Arrival (High)", "آمد (زیادہ)") : sort === "arrivalLow" ? f.tx("Arrival (Low)", "آمد (کم)") : f.tx("Arrival", "آمد"),
+                sort === "arrivalHigh" || sort === "arrival" ? f.tx("Arrival (High)", "آمد (زیادہ)") : sort === "arrivalLow" ? f.tx("Arrival (Low)", "آمد (کم)") : f.tx("Arrival (bags)", "آمد (بوریاں)"),
                 isArrivalSorted,
                 () => setPicker("arrivalSort"),
               )}
@@ -323,7 +323,10 @@ export function MandiSection({
                   // No earlier report from this mandi in the window: its first one.
                   <span title={f.tx("First report from this mandi", "اس منڈی کی پہلی رپورٹ")} style={{ fontWeight: 600, color: C.faint, fontSize: 11 }}>{f.tx("1st report", "پہلی رپورٹ")}</span>
                 ) : `${arrow(e.change)} ${f.pct(e.change)}`}</td>
-                <td style={{ ...td, color: r.arrival > 0 ? C.arrival : C.faint, fontWeight: 600, padding: "8px 6px", fontSize: 12.5 }}>{r.arrival > 0 ? f.num(r.arrival) : "—"}</td>
+                <td style={{ ...td, color: r.arrival > 0 ? C.arrival : C.faint, fontWeight: 600, padding: "8px 6px", fontSize: 12.5 }}>
+                  {r.arrival > 0 ? f.num(r.arrival) : "—"}
+                  {r.arrival > 0 && bagSize(f, r.arrivalUnit) && <div style={{ fontSize: 10.5, fontWeight: 500, color: C.muted, marginTop: 1 }}>{bagSize(f, r.arrivalUnit)}</div>}
+                </td>
                 {specCols.map((c) => (
                   <td key={c.key} style={{ ...td, padding: "8px 10px" }}>
                     {c.key === "unit" ? f.unit(r.arrivalUnit || "") || "—" : c.key === "quality" ? t(cleanQuality(r.quality)) || "—" : r[c.key] ? attrValue(f, t, c.key, r[c.key] as string) : "—"}

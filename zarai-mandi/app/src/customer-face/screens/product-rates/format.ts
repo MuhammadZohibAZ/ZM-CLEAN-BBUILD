@@ -70,6 +70,10 @@ export type Fmt = ReturnType<typeof makeFmt>;
 
 export const stripMandi = (s?: string) => (s || "").replace(/\s*(mandi|منڈی)$/i, "").trim();
 export const normLoc = (s?: string) => stripMandi(s).toLowerCase();
+/** Arrivals are counted in bags whose weight varies (40, 50, 100 kg...): "50 kg bags". */
+export const bagSize = (f: { unit: (u: string) => string; tx: (en: string, ur: string) => string }, unit: string) =>
+  unit && unit.trim() ? `${f.unit(unit.trim())} ${f.tx("bags", "بوریاں")}` : "";
+
 export const shortRate = (label: string) => (label || "").replace(/\s*(rates?|ریٹس?)$/i, "").trim();
 
 export const signed = (n: number) => (n > 0.05 ? 1 : n < -0.05 ? -1 : 0);

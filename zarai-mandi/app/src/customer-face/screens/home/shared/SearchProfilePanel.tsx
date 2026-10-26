@@ -97,14 +97,29 @@ export function SearchProfilePanel({
   const [focused, setFocused] = useState(false);
   const searching = focused || query.length > 0;
 
-  // Placeholder cycles through example searches while idle.
-  const examples = isUr ? EXAMPLES.ur : EXAMPLES.en;
+  // Placeholder cycles through example searches while idle: once the profile
+  // is complete, only what the user has bought (their products, then their
+  // by-products); before that, or with nothing bought, general examples.
+  const examples = useMemo(() => {
+    const generic = isUr ? EXAMPLES.ur : EXAMPLES.en;
+    if (showProfile) return generic;
+    const owned = entries.filter((e) => e.kind !== "product" && !e.locked);
+    const ownedProducts = new Set(owned.map((e) => e.product));
+    const labels = [
+      ...entries.filter((e) => e.kind === "product" && ownedProducts.has(e.product)).map((e) => e.label),
+      ...owned.filter((e) => e.hasData).map((e) => e.label),
+    ];
+    const unique = [...new Set(labels.map((l) => (isUr ? l : l.toLowerCase())))].slice(0, 8);
+    return unique.length ? unique : generic;
+  }, [entries, showProfile, isUr]);
   const [exampleIdx, setExampleIdx] = useState(0);
   useEffect(() => {
     if (reduceMotion || searching) return;
     const id = window.setInterval(() => setExampleIdx((i) => (i + 1) % examples.length), 2600);
     return () => window.clearInterval(id);
   }, [reduceMotion, searching, examples.length]);
+  // A new list (e.g. after buying a product) starts from its first example.
+  useEffect(() => setExampleIdx(0), [examples]);
 
   const results = useMemo(() => rank(entries, query), [entries, query]);
   const topMatch = useMemo(() => results.find((r) => !r.locked) || results[0], [results]);
@@ -199,7 +214,7 @@ export function SearchProfilePanel({
                       transition={{ duration: 0.3, ease: "easeOut" }}
                       style={{ fontSize: isUr ? 15 : 14, color: "#183B34", fontWeight: 700, lineHeight: "22px" }}
                     >
-                      {examples[exampleIdx]}…
+                      {examples[exampleIdx % examples.length]}…
                     </motion.span>
                   </AnimatePresence>
                 </span>

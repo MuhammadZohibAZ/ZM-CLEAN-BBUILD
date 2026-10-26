@@ -25,6 +25,7 @@ import asyncio
 import hashlib
 import io
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -37,6 +38,7 @@ sys.path.insert(0, str(HERE))
 from urdu_text import CORE_WORDS, chunks, key  # noqa: E402
 
 SAMPLE_RATE = 24000  # edge-tts sends 24 kHz MP3
+URDU = re.compile("[\u0600-\u06FF]")
 # The Urdu voice returns no audio for text in Latin letters only; say these in Urdu script.
 SPOKEN = {"EasyPaisa": "ایزی پیسہ", "JazzCash": "جاز کیش", "SadaPay": "سادہ پے"}
 
@@ -46,9 +48,16 @@ def clip_name(text: str) -> str:
 
 
 def build_units(phrases_path: Path) -> list[str]:
-    """Core words first (numbers make every price speakable), then short to long."""
+    """Core words first (numbers make every price speakable), then short to long.
+
+    Every Urdu word of every phrase is a unit of its own too: the app builds
+    sentences at run time (a mandi row reads "<mandi> منڈی، اسٹاک، ریٹ ..."),
+    and a word that only exists inside a longer clip ("اسٹاک ریٹ") would make
+    the whole sentence fall back to the device voice.
+    """
     phrases = json.loads(phrases_path.read_text("utf-8"))["phrases"]
     units = {key(c) for p in phrases for c in chunks(p["text"])}
+    units |= {w for u in units for w in u.split() if URDU.search(w)}
     core = list(dict.fromkeys(CORE_WORDS))
     return core + sorted(units - set(core), key=lambda u: (len(u.split()), u))
 

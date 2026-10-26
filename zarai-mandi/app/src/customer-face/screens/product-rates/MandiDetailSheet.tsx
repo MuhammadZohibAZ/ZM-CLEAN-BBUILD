@@ -249,7 +249,7 @@ export function MandiDetailSheet({
     ...specKeys.map((k) => ({ label: attrLabel(f, k), vals: join(cur.map((r) => r[k])).map((v) => attrValue(f, t, k, v)) })),
     { label: f.tx("Attribute", "خصوصیات"), vals: join(cur.map((r) => r.quality)) },
     { label: f.tx("Arrival", "آمد"), vals: s.arrival > 0 ? [`${f.num(s.arrival)} ${f.tx("bags", "بوریاں")}`] : [] },
-    { label: f.tx("Arrival unit", "آمد کی اکائی"), vals: join(cur.map((r) => f.unit(r.arrivalUnit || ""))) },
+    { label: f.tx("Bag size", "بوری کا وزن"), vals: join(cur.map((r) => f.unit(r.arrivalUnit || ""))) },
   ].filter((x) => x.vals.length > 0);
 
   const box = (label: string, value: React.ReactNode, valColor: string = C.ink, bg: string = C.surfaceAlt) => (
@@ -362,7 +362,7 @@ export function MandiDetailSheet({
   // ── Full history table: the same columns as the mandi table ──
   const histCols: { key: AttrKey | "unit"; label: string }[] = [
     ...(["newOld", "moisture", "color", "variety", "origin", "spec", "quality"] as AttrKey[]).map((k) => ({ key: k, label: colLabel(f, k) })),
-    { key: "unit", label: f.tx("Unit", "اکائی") },
+    { key: "unit", label: f.tx("Bag size", "بوری کا وزن") },
   ];
   const cellText = (rows: MarketRow[], key: AttrKey | "unit") =>
     join(
@@ -383,7 +383,7 @@ export function MandiDetailSheet({
             <th style={{ ...fth, minWidth: 85 }}>{f.tx("Min–Max", "کم–زیادہ")}</th>
             <th style={{ ...fth, minWidth: 58 }}>{f.tx("Rate", "ریٹ")}</th>
             <th style={{ ...fth, minWidth: 70 }}>{f.tx("Change", "تبدیلی")}</th>
-            <th style={{ ...fth, minWidth: 72 }}>{f.tx("Arrival", "آمد")}</th>
+            <th style={{ ...fth, minWidth: 72 }}>{f.tx("Arrival (bags)", "آمد (بوریاں)")}</th>
             {histColsSorted.map((c) => (
               <th key={c.key} style={fth}>{c.label}</th>
             ))}
@@ -402,7 +402,10 @@ export function MandiDetailSheet({
                 <td style={{ ...ftd, background: bg, fontWeight: 700, color: h.change === null ? C.faint : h.change > 0 ? C.up : h.change < 0 ? C.down : C.muted }}>
                   {h.change === null ? "—" : `${arrow(h.change)} ${f.pct(h.change)}`}
                 </td>
-                <td style={{ ...ftd, background: bg, fontWeight: 600, color: h.arrival > 0 ? C.arrival : C.faint }}>{h.arrival > 0 ? f.num(h.arrival) : "—"}</td>
+                <td style={{ ...ftd, background: bg, fontWeight: 600, color: h.arrival > 0 ? C.arrival : C.faint }}>
+                  {h.arrival > 0 ? f.num(h.arrival) : "—"}
+                  {h.arrival > 0 && cellText(h.rows, "unit") && <div style={{ fontSize: 10.5, fontWeight: 500, color: C.muted }}>{`${cellText(h.rows, "unit")} ${f.tx("bags", "بوریاں")}`}</div>}
+                </td>
                 {histColsSorted.map((c) => (
                   <td key={c.key} style={{ ...ftd, background: bg }}>{cellText(h.rows, c.key) || "—"}</td>
                 ))}
@@ -646,6 +649,13 @@ export function MandiDetailSheet({
                 <p style={{ margin: 0, padding: "24px 4px", textAlign: "center", fontSize: 13, color: C.muted }}>{f.tx("No earlier reports for this rate.", "اس ریٹ کی کوئی پچھلی رپورٹ نہیں۔")}</p>
               ) : (
                 <>
+                  {/* Same expand button, in the same place, as the chart page. */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
+                    <ExpandButton f={f} label={f.tx("Full-screen table", "پوری اسکرین ٹیبل")} onClick={() => setHistFs(true)} />
+                    <span style={{ fontSize: 12, fontWeight: 600, color: C.muted }}>
+                      {f.tx(`${history.length} reports`, `${f.digits(history.length)} رپورٹس`)}
+                    </span>
+                  </div>
                   <div className="zm-hide-scrollbar" style={{ maxHeight: 214, overflowY: "auto", scrollbarWidth: "none" }}>
                     <table style={{ width: "100%", borderCollapse: "collapse", fontVariantNumeric: "tabular-nums", fontFamily: f.font }}>
                       <thead>
@@ -654,7 +664,7 @@ export function MandiDetailSheet({
                           <th style={TH}>{f.tx("Min", "کم")}</th>
                           <th style={TH}>{f.tx("Max", "زیادہ")}</th>
                           <th style={TH}>{f.tx("Change", "تبدیلی")}</th>
-                          <th style={TH}>{f.tx("Arrival", "آمد")}</th>
+                          <th style={TH}>{f.tx("Arrival (bags)", "آمد (بوریاں)")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -666,21 +676,15 @@ export function MandiDetailSheet({
                             <td style={{ ...TD, color: h.change === null ? C.faint : h.change > 0 ? C.up : h.change < 0 ? C.down : C.muted }}>
                               {h.change === null ? "—" : `${arrow(h.change)} ${f.pct(h.change)}`}
                             </td>
-                            <td style={{ ...TD, color: h.arrival > 0 ? C.arrival : C.faint }}>{h.arrival > 0 ? f.num(h.arrival) : "—"}</td>
+                            <td style={{ ...TD, color: h.arrival > 0 ? C.arrival : C.faint }}>
+                              {h.arrival > 0 ? f.num(h.arrival) : "—"}
+                              {h.arrival > 0 && cellText(h.rows, "unit") && <div style={{ fontSize: 10, fontWeight: 500, color: C.muted }}>{`${cellText(h.rows, "unit")} ${f.tx("bags", "بوریاں")}`}</div>}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
-                  {/* Same button as the mandi table's full-screen view. */}
-                  <button
-                    type="button"
-                    onClick={() => setHistFs(true)}
-                    style={{ marginTop: 8, width: "100%", height: 42, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, borderRadius: 21, border: `1px solid ${C.line}`, background: C.surface, color: C.ink, fontSize: 13.5, fontWeight: 600, fontFamily: f.font }}
-                  >
-                    <Icon name="landscape" size={16} color={C.ink2} width={2.2} />
-                    {f.tx(`Full-screen table · all ${history.length}`, `پوری اسکرین ٹیبل · تمام ${f.digits(history.length)}`)}
-                  </button>
                 </>
               )}
             </section>
