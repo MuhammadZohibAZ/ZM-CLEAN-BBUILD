@@ -249,12 +249,19 @@ export function MandiSection({
 
   const isPriceSorted = sort === "priceHigh" || sort === "priceLow";
   const isArrivalSorted = sort === "arrivalHigh" || sort === "arrivalLow" || sort === "arrival";
+  // Arrivals are counts of bags: "40 kg bags" when every row uses one bag size,
+  // else just "bags" (the Bag size column then gives each row's).
+  const bagUnits = [...new Set(entries.map((e) => (e.row.arrivalUnit || "").trim()).filter(Boolean))];
+  const arrivalUnitLabel = bagUnits.length === 1 ? bagSize(f, bagUnits[0]) : f.tx("bags", "بوریاں");
 
   const table = (
     // The table is laid out left-to-right in both languages (mandi pinned on the
     // left); the scroll box must match or Urdu opens it scrolled to the far end.
-    <div data-zm-hscroll className="zm-hide-scrollbar" style={{ direction: "ltr", overflow: "auto", maxHeight: fullscreen ? "none" : 440, flex: fullscreen ? 1 : undefined, minHeight: 0, paddingBottom: fullscreen ? "env(safe-area-inset-bottom)" : undefined, overscrollBehavior: "contain" }}>
-      <table style={{ borderCollapse: "separate", borderSpacing: 0, minWidth: 640, width: "100%", fontSize: 13, fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate" }}>
+    <div data-zm-hscroll className="zm-hide-scrollbar" style={{ direction: f.dir, overflow: "auto", maxHeight: fullscreen ? "none" : 440, flex: fullscreen ? 1 : undefined, minHeight: 0, paddingBottom: fullscreen ? "env(safe-area-inset-bottom)" : undefined, overscrollBehavior: "contain" }}>
+      {/* Reads in the app's direction: in Urdu the mandi column is pinned on the
+          right and the table scrolls right to left. Compact rows in both
+          languages (Urdu text otherwise inherits a tall line height). */}
+      <table dir={f.dir} style={{ borderCollapse: "separate", borderSpacing: 0, minWidth: 640, width: "100%", fontSize: 13, fontVariantNumeric: "tabular-nums", lineHeight: 1.35 }}>
         <thead>
           <tr>
             <th style={{ ...thBase, insetInlineStart: 0, zIndex: 3, textAlign: "start", borderInlineEnd: `1px solid ${C.line}`, minWidth: 85, maxWidth: 105, padding: "4px 5px" }}>
@@ -283,7 +290,7 @@ export function MandiSection({
             </th>
             <th style={{ ...thBase, minWidth: 72 }}>
               {headBtn(
-                sort === "arrivalHigh" || sort === "arrival" ? f.tx("Arrival (High)", "آمد (زیادہ)") : sort === "arrivalLow" ? f.tx("Arrival (Low)", "آمد (کم)") : f.tx("Arrival (bags)", "آمد (بوریاں)"),
+                sort === "arrivalHigh" || sort === "arrival" ? f.tx("Arrival (High)", "آمد (زیادہ)") : sort === "arrivalLow" ? f.tx("Arrival (Low)", "آمد (کم)") : f.tx(`Arrival (${arrivalUnitLabel})`, `آمد (${arrivalUnitLabel})`),
                 isArrivalSorted,
                 () => setPicker("arrivalSort"),
               )}
@@ -313,7 +320,7 @@ export function MandiSection({
                 <td style={{ ...td, position: "sticky", insetInlineStart: 0, zIndex: 1, textAlign: "start", fontWeight: 700, color: C.ink, borderInlineEnd: `1px solid ${C.line}`, padding: "8px 8px", minWidth: 85, maxWidth: 105, overflow: "hidden", textOverflow: "ellipsis" }}>
                   {tm(stripMandi(r.mandiName))}
                 </td>
-                <td style={{ ...td, fontWeight: 700, color: C.brand, padding: "8px 4px", fontSize: 12.5 }}>{r.min > 0 ? `${f.num(r.min)} – ${f.num(r.max)}` : "—"}</td>
+                <td style={{ ...td, fontWeight: 700, color: C.brand, padding: "8px 4px", fontSize: 12.5 }}><bdi dir="ltr">{r.min > 0 ? `${f.num(r.min)} – ${f.num(r.max)}` : "—"}</bdi></td>
                 <td style={{ ...td, padding: "8px 3px" }}>
                   <span style={{ padding: "2px 6px", borderRadius: 5, fontSize: 11.5, fontWeight: 600, color: C.ink2, background: C.chip }}>
                     {shortRate(tr(r.rateType))}
@@ -322,10 +329,9 @@ export function MandiSection({
                 <td style={{ ...td, fontWeight: 700, color: changeColor(e.change), padding: "8px 4px", fontSize: 12 }}>{e.change === null ? (
                   // No earlier report from this mandi in the window: its first one.
                   <span title={f.tx("First report from this mandi", "اس منڈی کی پہلی رپورٹ")} style={{ fontWeight: 600, color: C.faint, fontSize: 11 }}>{f.tx("1st report", "پہلی رپورٹ")}</span>
-                ) : `${arrow(e.change)} ${f.pct(e.change)}`}</td>
+                ) : <bdi dir="ltr">{`${arrow(e.change)} ${f.pct(e.change)}`}</bdi>}</td>
                 <td style={{ ...td, color: r.arrival > 0 ? C.arrival : C.faint, fontWeight: 600, padding: "8px 6px", fontSize: 12.5 }}>
                   {r.arrival > 0 ? f.num(r.arrival) : "—"}
-                  {r.arrival > 0 && bagSize(f, r.arrivalUnit) && <div style={{ fontSize: 10.5, fontWeight: 500, color: C.muted, marginTop: 1 }}>{bagSize(f, r.arrivalUnit)}</div>}
                 </td>
                 {specCols.map((c) => (
                   <td key={c.key} style={{ ...td, padding: "8px 10px" }}>

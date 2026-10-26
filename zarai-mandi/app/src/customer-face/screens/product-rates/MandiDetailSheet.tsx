@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties }
 import { MANDI_DATA } from "../../shared/data/mandiLocation";
 import { getMandiWikiProfile } from "../../shared/data/mandiProfilesUrdu";
 import { attrLabel, attrValue } from "./Filters";
-import { arrow, normLoc, shortRate, stripMandi, type Fmt } from "./format";
+import { arrow, bagSize, normLoc, shortRate, stripMandi, type Fmt } from "./format";
 import { statsFor } from "./selectors";
 import { C } from "./theme";
 import { ExpandButton, FullscreenLayer, useBoxSize } from "./FullscreenLayer";
@@ -370,20 +370,23 @@ export function MandiDetailSheet({
         key === "unit" ? f.unit(r.arrivalUnit || "") : key === "quality" ? t(cleanQuality(r.quality)) : r[key] ? attrValue(f, t, key, String(r[key])) : "",
       ),
     ).join(", ");
+  // Arrivals are counts of bags: "40 kg bags" when this mandi uses one bag size.
+  const histUnits = [...new Set(history.flatMap((h) => h.rows.map((r) => (r.arrivalUnit || "").trim())).filter(Boolean))];
+  const histUnitLabel = histUnits.length === 1 ? bagSize(f, histUnits[0]) : f.tx("bags", "بوریاں");
   // Columns with values first (as in the mandi table).
   const histColsSorted = [...histCols].sort((a, b) => Number(history.some((h) => cellText(h.rows, b.key))) - Number(history.some((h) => cellText(h.rows, a.key))));
   const fth: CSSProperties = { position: "sticky", top: 0, zIndex: 2, background: C.surfaceAlt, padding: "7px 10px", borderBottom: `1px solid ${C.line}`, whiteSpace: "nowrap", textAlign: "center", fontSize: 11, fontWeight: 700, color: C.ink2 };
   const ftd: CSSProperties = { padding: "8px 10px", borderBottom: `1px solid ${C.lineSoft}`, whiteSpace: "nowrap", textAlign: "center", fontWeight: 500, color: C.ink2, fontSize: 12.5 };
   const fullHistory = (
-    <div data-zm-hscroll className="zm-hide-scrollbar" style={{ direction: "ltr", overflow: "auto", flex: 1, minHeight: 0, paddingBottom: "env(safe-area-inset-bottom)", overscrollBehavior: "contain" }}>
-      <table style={{ borderCollapse: "separate", borderSpacing: 0, minWidth: 640, width: "100%", fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate", fontFamily: f.font }}>
+    <div data-zm-hscroll className="zm-hide-scrollbar" style={{ direction: f.dir, overflow: "auto", flex: 1, minHeight: 0, paddingBottom: "env(safe-area-inset-bottom)", overscrollBehavior: "contain" }}>
+      <table dir={f.dir} style={{ borderCollapse: "separate", borderSpacing: 0, minWidth: 640, width: "100%", fontVariantNumeric: "tabular-nums", fontFamily: f.font, lineHeight: 1.35 }}>
         <thead>
           <tr>
             <th style={{ ...fth, insetInlineStart: 0, zIndex: 3, textAlign: "start", borderInlineEnd: `1px solid ${C.line}`, minWidth: 85 }}>{f.tx("Date", "تاریخ")}</th>
             <th style={{ ...fth, minWidth: 85 }}>{f.tx("Min–Max", "کم–زیادہ")}</th>
             <th style={{ ...fth, minWidth: 58 }}>{f.tx("Rate", "ریٹ")}</th>
             <th style={{ ...fth, minWidth: 70 }}>{f.tx("Change", "تبدیلی")}</th>
-            <th style={{ ...fth, minWidth: 72 }}>{f.tx("Arrival (bags)", "آمد (بوریاں)")}</th>
+            <th style={{ ...fth, minWidth: 72 }}>{f.tx(`Arrival (${histUnitLabel})`, `آمد (${histUnitLabel})`)}</th>
             {histColsSorted.map((c) => (
               <th key={c.key} style={fth}>{c.label}</th>
             ))}
@@ -395,17 +398,14 @@ export function MandiDetailSheet({
             return (
               <tr key={h.d}>
                 <td style={{ ...ftd, background: bg, position: "sticky", insetInlineStart: 0, zIndex: 1, textAlign: "start", fontWeight: 700, color: C.ink, borderInlineEnd: `1px solid ${C.line}` }}>{dayLabel(h.d)}</td>
-                <td style={{ ...ftd, background: bg, fontWeight: 700, color: C.brand }}>{`${f.num(h.min)} – ${f.num(h.max)}`}</td>
+                <td style={{ ...ftd, background: bg, fontWeight: 700, color: C.brand }}><bdi dir="ltr">{`${f.num(h.min)} – ${f.num(h.max)}`}</bdi></td>
                 <td style={{ ...ftd, background: bg, padding: "8px 3px" }}>
                   <span style={{ padding: "2px 6px", borderRadius: 5, fontSize: 11.5, fontWeight: 600, color: C.ink2, background: C.chip }}>{shortRate(tr(rate))}</span>
                 </td>
                 <td style={{ ...ftd, background: bg, fontWeight: 700, color: h.change === null ? C.faint : h.change > 0 ? C.up : h.change < 0 ? C.down : C.muted }}>
-                  {h.change === null ? "—" : `${arrow(h.change)} ${f.pct(h.change)}`}
+                  <bdi dir="ltr">{h.change === null ? "—" : `${arrow(h.change)} ${f.pct(h.change)}`}</bdi>
                 </td>
-                <td style={{ ...ftd, background: bg, fontWeight: 600, color: h.arrival > 0 ? C.arrival : C.faint }}>
-                  {h.arrival > 0 ? f.num(h.arrival) : "—"}
-                  {h.arrival > 0 && cellText(h.rows, "unit") && <div style={{ fontSize: 10.5, fontWeight: 500, color: C.muted }}>{`${cellText(h.rows, "unit")} ${f.tx("bags", "بوریاں")}`}</div>}
-                </td>
+                <td style={{ ...ftd, background: bg, fontWeight: 600, color: h.arrival > 0 ? C.arrival : C.faint }}>{h.arrival > 0 ? f.num(h.arrival) : "—"}</td>
                 {histColsSorted.map((c) => (
                   <td key={c.key} style={{ ...ftd, background: bg }}>{cellText(h.rows, c.key) || "—"}</td>
                 ))}
@@ -664,7 +664,7 @@ export function MandiDetailSheet({
                           <th style={TH}>{f.tx("Min", "کم")}</th>
                           <th style={TH}>{f.tx("Max", "زیادہ")}</th>
                           <th style={TH}>{f.tx("Change", "تبدیلی")}</th>
-                          <th style={TH}>{f.tx("Arrival (bags)", "آمد (بوریاں)")}</th>
+                          <th style={TH}>{f.tx(`Arrival (${histUnitLabel})`, `آمد (${histUnitLabel})`)}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -674,11 +674,10 @@ export function MandiDetailSheet({
                             <td style={TD}>{f.num(h.min)}</td>
                             <td style={TD}>{f.num(h.max)}</td>
                             <td style={{ ...TD, color: h.change === null ? C.faint : h.change > 0 ? C.up : h.change < 0 ? C.down : C.muted }}>
-                              {h.change === null ? "—" : `${arrow(h.change)} ${f.pct(h.change)}`}
+                              <bdi dir="ltr">{h.change === null ? "—" : `${arrow(h.change)} ${f.pct(h.change)}`}</bdi>
                             </td>
                             <td style={{ ...TD, color: h.arrival > 0 ? C.arrival : C.faint }}>
                               {h.arrival > 0 ? f.num(h.arrival) : "—"}
-                              {h.arrival > 0 && cellText(h.rows, "unit") && <div style={{ fontSize: 10, fontWeight: 500, color: C.muted }}>{`${cellText(h.rows, "unit")} ${f.tx("bags", "بوریاں")}`}</div>}
                             </td>
                           </tr>
                         ))}
