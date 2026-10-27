@@ -183,6 +183,69 @@ export function ByProductSidebarFilterScreen(props: TesterBodyProps) {
     </aside>
   );
 
+  // ── filter bar: pinned at the top (start side), says what's filtered ──
+  const summary = [
+    ...(rate !== null ? [shortRate(rate)] : []),
+    ...attrs.map((a) => {
+      const i = a.indexOf("|");
+      return valueLabel(a.slice(0, i), a.slice(i + 1));
+    }),
+  ].join(" · ");
+  const filterBar = (
+    <div
+      style={{
+        position: "sticky",
+        top: 0,
+        zIndex: 4,
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        padding: "10px 10px 6px",
+        background: "linear-gradient(to bottom, #F1F7F4 75%, rgba(241, 247, 244, 0))",
+      }}
+    >
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-label={activeCount ? f.tx(`Filters, ${activeCount} applied`, `فلٹر، ${f.digits(activeCount)} لاگو`) : f.tx("Filters", "فلٹر")}
+        onClick={() => setOpen(true)}
+        style={{
+          flexShrink: 0,
+          height: 38,
+          display: "flex",
+          alignItems: "center",
+          gap: 7,
+          padding: "0 14px",
+          borderRadius: 19,
+          border: activeCount ? "none" : `1.5px solid ${C.brand}`,
+          background: activeCount ? C.brand : C.surface,
+          color: activeCount ? "#FFFFFF" : C.brand,
+          boxShadow: "0 2px 8px rgba(6, 45, 36, 0.10)",
+          fontSize: 13.5,
+          fontWeight: 700,
+          fontFamily: f.font,
+        }}
+      >
+        <Icon name="filter" size={15} width={2.4} color={activeCount ? "#FFFFFF" : C.brand} />
+        {f.tx("Filters", "فلٹر")}
+        {activeCount > 0 && (
+          <span
+            aria-hidden="true"
+            style={{ minWidth: 20, height: 20, padding: "0 6px", borderRadius: 10, background: "#FFFFFF", color: C.brandDeep, fontSize: 11.5, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}
+          >
+            {f.digits(activeCount)}
+          </span>
+        )}
+      </button>
+      <span
+        onClick={() => setOpen(true)}
+        style={{ minWidth: 0, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 12.5, fontWeight: 600, color: active ? C.ink : C.muted, fontFamily: f.font, cursor: "pointer" }}
+      >
+        {active ? summary : f.tx("Filter by rate type and attribute", "ریٹ کی قسم اور خصوصیت سے فلٹر کریں")}
+      </span>
+    </div>
+  );
+
   // ── cards: full width in 2 columns, or one column beside the open drawer ──
   const cardList = (
     <div
@@ -195,7 +258,8 @@ export function ByProductSidebarFilterScreen(props: TesterBodyProps) {
         transition: `padding ${DRAWER_MS}ms ease`,
       }}
     >
-      <div style={{ padding: "10px 10px 0" }}>
+      {filterBar}
+      <div style={{ padding: "2px 10px 0" }}>
         {error ? (
           <p style={{ padding: "60px 8px", textAlign: "center", fontSize: 13, fontWeight: 600, color: C.muted, fontFamily: f.font }}>
             {f.tx("Couldn't load the cards. Is the market API running?", "کارڈز لوڈ نہیں ہو سکے۔ مارکیٹ API چل رہی ہے؟")}
@@ -234,50 +298,10 @@ export function ByProductSidebarFilterScreen(props: TesterBodyProps) {
   );
 
   return (
-    // The cards fill the screen; a small floating Filters button (above the
-    // bottom nav, at the end side) opens the drawer.
+    // The cards fill the screen; the Filters bar pinned at the top opens the drawer.
     <div dir={f.dir} style={{ position: "relative", flex: 1, minHeight: 0, overflow: "hidden", fontFamily: f.font }}>
       {cardList}
       {drawer}
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-label={activeCount ? f.tx(`Filters, ${activeCount} applied`, `فلٹر، ${f.digits(activeCount)} لاگو`) : f.tx("Filters", "فلٹر")}
-        onClick={() => setOpen(true)}
-        style={{
-          position: "absolute",
-          bottom: "calc(env(safe-area-inset-bottom, 0px) + 100px)",
-          [f.ur ? "left" : "right"]: 16,
-          zIndex: 30,
-          height: 40,
-          display: "flex",
-          alignItems: "center",
-          gap: 7,
-          padding: "0 14px",
-          borderRadius: 20,
-          border: "none",
-          background: activeCount ? C.brand : C.surface,
-          color: activeCount ? "#FFFFFF" : C.ink,
-          boxShadow: "0 6px 18px rgba(6, 45, 36, 0.22)",
-          fontSize: 13.5,
-          fontWeight: 700,
-          fontFamily: f.font,
-          opacity: open ? 0 : 1,
-          pointerEvents: open ? "none" : "auto",
-          transition: `opacity ${DRAWER_MS}ms ease`,
-        }}
-      >
-        <Icon name="filter" size={15} width={2.4} color={activeCount ? "#FFFFFF" : C.ink2} />
-        {f.tx("Filters", "فلٹر")}
-        {activeCount > 0 && (
-          <span
-            aria-hidden="true"
-            style={{ minWidth: 20, height: 20, padding: "0 6px", borderRadius: 10, background: "#FFFFFF", color: C.brandDeep, fontSize: 11.5, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}
-          >
-            {f.digits(activeCount)}
-          </span>
-        )}
-      </button>
     </div>
   );
 }

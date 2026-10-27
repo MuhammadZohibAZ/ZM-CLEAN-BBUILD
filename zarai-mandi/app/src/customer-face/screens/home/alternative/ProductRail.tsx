@@ -6,7 +6,7 @@ import { toUrduDigits, URDU_FONT, useLang } from "../../../shared/i18n/LangProvi
 import { type ProdDiv } from "../../../shared/types";
 import { type HomeSelection } from "../homeMemory";
 
-// Product picker above the Home ring. ♥ Favorites stays pinned; the products
+// Product picker above the Home ring. ★ Favorites stays pinned; the products
 // scroll beside it (unlocked first, then locked ones: blurred, tapping starts
 // the subscribe flow). Arrows appear only while there is more to scroll.
 
@@ -129,7 +129,7 @@ export function ProductRail({
 
   return (
     <section className="relative flex-shrink-0 flex items-start px-3" style={{ zIndex: raised ? 45 : 5, gap: 4 }}>
-      {/* ♥ Favorites — pinned */}
+      {/* ★ Favorites — pinned */}
       <button
         ref={(el) => {
           itemRefs.current.__favorites = el;
@@ -146,8 +146,8 @@ export function ProductRail({
             border: selectedKey === "__favorites" ? "3px solid #E11D48" : "1px solid #F9C9D3",
           })}
         >
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="#E11D48" stroke="#E11D48" strokeWidth="1.5" strokeLinejoin="round">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="#E0A100" stroke="#E0A100" strokeWidth="1.5" strokeLinejoin="round">
+            <path d="M12 2.8l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.36l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93z" />
           </svg>
           {favoritesCount > 0 && (
             <span

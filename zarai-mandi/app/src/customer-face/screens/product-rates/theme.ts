@@ -24,8 +24,8 @@ export const C = {
   arrivalSoft: "#D9DEDC",
   arrivalTint: "#F6F7F6",
   chip: "#F0F2F1",
-  fav: "#C81E4A",
-  favTint: "#FDEEF2",
+  fav: "#E0A100", // favourite star (gold)
+  favTint: "#FFF6DB",
 };
 
 export const DISPLAY_FONT = "'Plus Jakarta Sans', system-ui, sans-serif";

@@ -6,6 +6,7 @@ import { ByproductDatePill } from "../../components/ByproductDatePill";
 import { apiCardStatsToUi, apiSpecialAttrToUi, ByProductNationalCard, SPECIAL_ATTR_META, specialAttrValueUr } from "../../components/ByProductNationalCard";
 import { FilterChipBar, useMultiFilter, type FilterOption } from "../../components/FilterChipBar";
 import { ProductIcon } from "../../components/ProductIcon";
+import { Icon, IconButton } from "../product-rates/ui";
 import { ByProductAttributeFilterScreen } from "./testers/ByProductAttributeFilterScreen";
 import { ByProductRateTypeFilterScreen } from "./testers/ByProductRateTypeFilterScreen";
 import { ByProductFilterBarScreen } from "./testers/ByProductFilterBarScreen";
@@ -180,17 +181,10 @@ export function ByProductCombinedScreen({
         {/* Title row */}
         <div className="zm-status-gap px-3 pt-9 pb-2.5 flex items-center justify-between gap-1.5 w-full">
           <div className="flex items-center gap-1.5 flex-1 min-w-0">
-            <button
-              onClick={onBack}
-              className="tap-target zm-beam-border w-8 h-8 rounded-xl flex items-center justify-center text-sm flex-shrink-0 text-[#183B34] transition active:scale-95"
-              style={{
-                background: 'rgba(255, 255, 255, 0.7)',
-                border: '1.2px solid rgba(16, 185, 129, 0.4)',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-              }}
-            >
-              {lang === 'ur' ? '→' : '←'}
-            </button>
+            {/* Same back button as the product rates screen (AppBar). */}
+            <IconButton label={lang === 'ur' ? 'واپس' : 'Back'} onClick={onBack}>
+              <Icon name="back" size={20} width={2.4} flip={lang === 'ur'} />
+            </IconButton>
             <ProductIcon
               name={activeProduct?.product || 'Wheat'}
               vertical={activeProduct?.vertical}

@@ -124,7 +124,8 @@ export function MandiDetailSheet({
   const change = prev && prev.mid > 0 && s.mid > 0 ? ((s.mid - prev.mid) / prev.mid) * 100 : null;
   const diffYesterday = prev && prev.mid > 0 && s.mid > 0 ? s.mid - prev.mid : null;
 
-  // Rank among all mandis for the same rate type that day.
+  // Price position among all mandis for the same rate type that day (1 = highest average price).
+  const ordinal = (n: number) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th"}`;
   const byMandi = new Map<string, MarketRow[]>();
   for (const r of allRows) if (r.date === date && r.rateType === rate) byMandi.set(r.mandiName, [...(byMandi.get(r.mandiName) || []), r]);
   const mids = [...byMandi.entries()].map(([m, rs]) => ({ m, mid: statsFor(rs).mid })).sort((a, b) => b.mid - a.mid);
@@ -602,7 +603,13 @@ export function MandiDetailSheet({
               ),
               diffYesterday !== null ? (diffYesterday > 0 ? C.up : diffYesterday < 0 ? C.down : C.ink) : C.ink,
             )}
-            {box(f.tx("Today's Mandi Rank", "آج کی منڈی رینک"), rank > 0 && mids.length > 1 ? f.tx(`${rank} of ${mids.length}`, `${f.digits(mids.length)} میں ${f.digits(rank)}`) : f.tx("Only one", "واحد"))}
+            {/* Where this mandi's average price stands among all mandis for the rate today (1 = highest). */}
+            {box(
+              f.tx("Price position today", "آج قیمت میں درجہ"),
+              rank > 0 && mids.length > 1
+                ? f.tx(`${ordinal(rank)} highest of ${mids.length}`, `سب سے زیادہ قیمت میں ${f.digits(rank)} نمبر (${f.digits(mids.length)} میں سے)`)
+                : f.tx("Only mandi reporting", "صرف یہی منڈی"),
+            )}
           </div>
           {/* Swipe between the trend charts and a day-by-day table. */}
           <div role="tablist" aria-label={f.tx("Trend or table", "رجحان یا ٹیبل")} style={{ display: "flex", gap: 16, borderBottom: `1px solid ${C.lineSoft}` }}>

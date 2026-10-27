@@ -296,7 +296,7 @@ export function AlternativeHomeScreen({
     (d) => !isAccessible(d.name),
   );
 
-  // Product whose by-products fill the Home carousel (or ♥ Favorites).
+  // Product whose by-products fill the Home carousel (or ★ Favorites).
   // Remembered across visits; falls back to the first unlocked product if the
   // remembered one is locked (e.g. after subscribing to a different product).
   const [homeSelectionState, setHomeSelectionState] = useState<HomeSelection>(

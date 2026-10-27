@@ -30,10 +30,15 @@ export function ProductsStep({ s }: { s: CompleteProfileState }) {
     (p) => p.id === expandedPkgId && p.type === "vertical",
   );
 
-  // Filter the rest for the 2-column grid
-  const gridPackages = availablePackages.filter(
-    (p) => !(expandedPkg && p.id === expandedPkg.id),
-  );
+  // The rest go in the 2-column grid: selected ones first, so a pick moves to
+  // the top; otherwise the month's order (in-season first) is kept.
+  const isPicked = (p: { name: string; id: string }) =>
+    data.selectedProds.includes(p.name) || data.selectedProds.includes(p.id);
+  const gridPackages = availablePackages
+    .filter((p) => !(expandedPkg && p.id === expandedPkg.id))
+    .map((p, i) => ({ p, i }))
+    .sort((a, b) => Number(isPicked(b.p)) - Number(isPicked(a.p)) || a.i - b.i)
+    .map(({ p }) => p);
 
   return (
     <div className="flex flex-col gap-3 pb-2">

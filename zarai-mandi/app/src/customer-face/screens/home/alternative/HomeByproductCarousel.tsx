@@ -28,7 +28,7 @@ import { homeMemory, selectionKey, type HomeSelection } from "../homeMemory";
 // (Fruits, Vegetable, ...) is treated as one product: all its by-products in
 // one carousel, grouped by sub-product; the pill under the ring names the product
 // of the card in front, and the jump list can jump straight to any product.
-// The ♥ Favorites selection shows the user's favourite cards instead.
+// The ★ Favorites selection shows the user's favourite cards instead.
 
 export type FavoriteItem = {
   vertical: string;

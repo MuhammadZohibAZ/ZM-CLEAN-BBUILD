@@ -112,7 +112,7 @@ export function AppBar({
           activeBg={C.favTint}
           activeBorder={C.favTint}
         >
-          <Icon name="heart" size={19} width={2.2} color={picked ? C.fav : C.ink2} fill={picked ? C.fav : "none"} />
+          <Icon name="star" size={20} width={2} color={picked ? C.fav : C.ink2} fill={picked ? C.fav : "none"} />
         </IconButton>
       </div>
       <Tabs<Tab>

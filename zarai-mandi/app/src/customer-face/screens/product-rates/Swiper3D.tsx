@@ -255,7 +255,9 @@ export function Swiper3D({
 
       {/* Navigator controls */}
       {n > 1 && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 8, padding: `2px ${MARGIN}px 0` }}>
+        // On the first / last page there's only one pill: it gets the empty side's
+        // room too, so its "Swipe for ..." label isn't cut off.
+        <div style={{ display: "grid", gridTemplateColumns: index === 0 ? "0 auto 1fr" : index === n - 1 ? "1fr auto 0" : "1fr auto 1fr", alignItems: "center", gap: 8, padding: `2px ${MARGIN}px 0` }}>
           <div style={{ display: "flex", justifyContent: "flex-start", minWidth: 0 }}>
             {index > 0 && (
               <button
@@ -321,22 +323,29 @@ export function Swiper3D({
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 4,
-                  height: 26,
-                  padding: "0 8px 0 10px",
-                  border: "none",
-                  borderRadius: 13,
+                  gap: 5,
+                  height: 30,
+                  padding: "0 10px 0 12px",
+                  border: `1px solid ${C.brandBorder}`,
+                  borderRadius: 15,
                   background: C.brandTint,
                   color: C.brandDeep,
-                  fontSize: 11.5,
-                  fontWeight: 600,
+                  fontSize: 12.5,
+                  fontWeight: 700,
                   fontFamily: f.font,
                   whiteSpace: "nowrap",
                   cursor: "pointer",
+                  minWidth: 0,
                 }}
               >
-                <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{pages[index + 1]?.label}</span>
-                <Icon name="chevRight" size={11} width={2.8} color={C.brand} flip={dirSign === -1} />
+                {/* Says what to do (swipe) and what's there; the arrow nudges in the swipe direction. */}
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {f.tx(`Swipe for ${pages[index + 1]?.label}`, `سوائپ کریں: ${pages[index + 1]?.label}`)}
+                </span>
+                <span style={{ display: "flex", animation: `${dirSign === -1 ? "zmNudgeRtl" : "zmNudge"} 1.4s ease-in-out infinite` }}>
+                  <Icon name="chevRight" size={12} width={2.8} color={C.brand} flip={dirSign === -1} />
+                </span>
+                <style>{`@keyframes zmNudge{0%,100%{transform:translateX(0)}50%{transform:translateX(4px)}}@keyframes zmNudgeRtl{0%,100%{transform:translateX(0)}50%{transform:translateX(-4px)}}@media (prefers-reduced-motion: reduce){[style*="zmNudge"]{animation:none!important}}`}</style>
               </button>
             )}
           </div>

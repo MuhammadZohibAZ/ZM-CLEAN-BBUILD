@@ -519,7 +519,7 @@ export function ProductRatesScreen({
                 },
                 {
                   key: "best-map",
-                  label: f.tx("Best Places & Map", "بہترین منڈیاں اور نقشہ"),
+                  label: f.tx("best mandis & map", "بہترین منڈیاں اور نقشہ"),
                   node: (
                     <div style={{ padding: "16px 6px 0 16px", display: "flex", flexDirection: "column", gap: 6 }}>
                       {!loading && (
