@@ -90,6 +90,18 @@ export function getCardUpdatedMinutes(seed: string | number | undefined): number
   return getCardUpdatedPreset(seed).mins;
 }
 
+/** "3 days ago", "1 week ago", "2 months ago", "1 year ago" (and the Urdu). */
+export function daysAgoLabel(days: number, lang: string): string {
+  const [n, en, ur]: [number, string, [string, string]] =
+    days >= 365 ? [Math.floor(days / 365), 'year', ['سال', 'سال']]
+      : days >= 30 ? [Math.floor(days / 30), 'month', ['مہینہ', 'مہینے']]
+        : days >= 7 ? [Math.floor(days / 7), 'week', ['ہفتہ', 'ہفتے']]
+          : [days, 'day', ['دن', 'دن']];
+  return lang === 'ur'
+    ? `${toUrduDigits(n)} ${ur[n === 1 ? 0 : 1]} پہلے`
+    : `${n} ${en}${n === 1 ? '' : 's'} ago`;
+}
+
 export function getCardUpdatedAgo(
   seed: string | number | undefined,
   lang: string,
@@ -102,12 +114,7 @@ export function getCardUpdatedAgo(
     const diffMs = d1.getTime() - d2.getTime();
     const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffDays > 0) {
-      if (diffDays === 1) {
-        return lang === 'ur' ? '1 دن پہلے' : '1 day ago';
-      }
-      return lang === 'ur' ? `${toUrduDigits(diffDays)} دن پہلے` : `${diffDays} days ago`;
-    }
+    if (diffDays > 0) return daysAgoLabel(diffDays, lang);
   }
   const preset = getCardUpdatedPreset(seed);
   return lang === 'ur' ? preset.ur : preset.en;
@@ -139,7 +146,9 @@ export function CardStatCell({
       </span>
       <span
         className="block font-black tracking-tight leading-tight my-0.5 break-words"
-        style={{ color: valueColor, fontSize: 'clamp(11px, 3.2vw, 13px)' }}
+        // Long names (an origin like "Shaheed Benazirabad (Nawabshah)") a size
+        // smaller, so each word fits its line instead of breaking mid-word.
+        style={{ color: valueColor, fontSize: typeof value === 'string' && value.length > 16 ? 'clamp(10px, 2.8vw, 11.5px)' : 'clamp(11px, 3.2vw, 13px)' }}
         title={typeof value === 'string' ? value : undefined}
       >
         {value}
@@ -165,7 +174,7 @@ export function LocationStatCell({
   lang: string;
 }) {
   const countDisplay = marketCount > 0 ? (
-    <AnimatedCounter target={marketCount} suffix="+" formatUrdu={lang === 'ur'} />
+    <AnimatedCounter target={marketCount} formatUrdu={lang === 'ur'} />
   ) : (
     '0'
   );
@@ -305,7 +314,7 @@ export function ByProductNationalCard({
     ? (
       <span className="whitespace-nowrap">
         {lang === 'ur' ? toUrduDigits(stats.totalArrival.toLocaleString()) : stats.totalArrival.toLocaleString()}
-        {' '}<span className="text-[10px] font-bold">{lang === 'ur' ? 'تھیلے' : 'Bags'}</span>
+        {' '}<span className="text-[10px] font-bold">{lang === 'ur' ? 'بوریاں' : 'bags'}</span>
       </span>
     )
     : '—';
@@ -426,7 +435,7 @@ export function ByProductNationalCard({
             <CardStatCell
               label={lang === 'ur' ? 'کل آمد' : 'Total arrival'}
               value={arrivalValue}
-              caption={perUnit}
+              caption={hasArrival ? (lang === 'ur' ? `${unit.kg} کلو فی بوری` : `${unit.kg} kg each`) : undefined}
             />
             <CardStatCell
               divider

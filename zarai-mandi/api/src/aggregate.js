@@ -710,12 +710,10 @@ async function computeCardStats(row, targetDate, locationKind, locationLabel, sp
   const arrParams = [row.product, row.matched_by_product];
   let arrLocClause = buildLocationFilter(locationKind, locationLabel, arrParams);
   arrLocClause += " " + splitAttrClause(split, arrParams);
-  // Split / filtered cards: arrivals and mandis for the card's own rate type,
-  // as the rates screen counts them for the rate + attribute it opens with.
-  if (split?.rateType || split?.attrCol) {
-    arrParams.push(mostOccurringRateType);
-    arrLocClause += ` and price_type = $${arrParams.length}`;
-  }
+  // Arrivals and mandis for the card's own rate type, as the rates screen
+  // counts them for the rate (+ attribute) the card opens it with.
+  arrParams.push(mostOccurringRateType);
+  arrLocClause += ` and coalesce(price_type, 'Mandi Rate') = $${arrParams.length}`;
   let arrDateSql = "";
   if (statsDate) {
     arrParams.push(statsDate);
@@ -728,10 +726,10 @@ async function computeCardStats(row, targetDate, locationKind, locationLabel, sp
             count(*) as total_rows,
             count(*) filter (where arrival_weight_known and arrivals > 0) as valid_arrival_rows
      from price_records
-     where product = $1 and by_product = $2 ${arrDateSql} ${arrLocClause}`,
+     where product = $1 and by_product = $2 and price_valid ${arrDateSql} ${arrLocClause}`,
     arrParams
   );
-  const totalArrival = Number(arrRows[0].total_arrival);
+  let totalArrival = Number(arrRows[0].total_arrival);
   let markets = Number(arrRows[0].markets);
   if (markets === 0 && avgMin > 0) {
     const mktParams = [row.product, row.matched_by_product, mostOccurringRateType];
@@ -847,6 +845,17 @@ async function computeCardStats(row, targetDate, locationKind, locationLabel, sp
             avgMin = Number(pairRows[0].avg_min);
             avgMax = Number(pairRows[0].avg_max);
             markets = Number(pairRows[0].markets);
+            // ... and its arrivals (the rates screen's "Arrival" for the pair).
+            const pairArrParams = [row.product, row.matched_by_product, mostOccurringRateType, statsDate, specialAttr.value];
+            const pairArrLoc = buildLocationFilter(locationKind, locationLabel, pairArrParams);
+            const { rows: pairArr } = await pool.query(
+              `select coalesce(sum(arrivals) filter (where arrivals > 0), 0) as total_arrival
+               from price_records
+               where product = $1 and by_product = $2 and price_valid and coalesce(price_type, 'Mandi Rate') = $3
+                 and record_date = $4 and trim(${col}) = $5 ${pairArrLoc}`,
+              pairArrParams
+            );
+            totalArrival = Number(pairArr[0]?.total_arrival || 0);
           }
         }
       }

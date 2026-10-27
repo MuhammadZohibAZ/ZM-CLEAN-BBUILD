@@ -41,6 +41,9 @@ const ROTATE_MS = 650;
 const APP_BG = "#F1F7F4";
 const INK = "#0B1F1A";
 
+/** Chromium browsers zoom an iframe's page along with a `zoom`ed parent. */
+const ZOOM_SHARP = typeof navigator !== "undefined" && /Chrome\//.test(navigator.userAgent);
+
 function fitScale(orientation: DeviceOrientation) {
   const margin = 32;
   const [w, h] = orientation === "portrait" ? [OUTER_W, OUTER_H] : [OUTER_H, OUTER_W];
@@ -307,7 +310,14 @@ export default function DevicePreview() {
           height: OUTER_H,
           marginLeft: -OUTER_W / 2,
           marginTop: -OUTER_H / 2,
-          transform: `rotate(${landscape ? -90 : 0}deg) scale(${scale})`,
+          // Chrome / Edge: `zoom`, not a scale() transform, so the phone is laid
+          // out and drawn at its on-screen size and text stays sharp at every
+          // window size and browser zoom (a transform drew it full size, then
+          // shrank the picture). Safari and Firefox don't zoom the app's iframe,
+          // so they keep the transform.
+          ...(ZOOM_SHARP
+            ? { zoom: scale, transform: `rotate(${landscape ? -90 : 0}deg)` }
+            : { transform: `rotate(${landscape ? -90 : 0}deg) scale(${scale})` }),
           transition: `transform ${ROTATE_MS}ms cubic-bezier(0.65, 0, 0.35, 1)`,
         }}
       >

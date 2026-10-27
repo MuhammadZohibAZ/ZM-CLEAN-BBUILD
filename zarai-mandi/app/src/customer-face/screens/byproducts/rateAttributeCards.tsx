@@ -13,6 +13,7 @@ import {
 } from "../../../lib/api";
 import { apiCardStatsToUi, apiSpecialAttrToUi, SPECIAL_ATTR_META, specialAttrValueUr } from "../../components/ByProductNationalCard";
 import { mainByproductRank } from "../../shared/data/byproductCards";
+import { fertilizerCompany, isFertilizer } from "../../shared/data/fertilizer";
 import { useLang } from "../../shared/i18n/LangProvider";
 import { makeFmt } from "../product-rates/format";
 import type { LocationScope, ProductSel, Screen } from "../../shared/types";
@@ -46,11 +47,14 @@ export function useRateAttributeCards(props: ByproductBodyProps, opts: { perCard
   const [attrs, setAttrs] = useState<string[]>([]);
   // null = the day's most reported rate type.
   const [rate, setRate] = useState<string | null>(null);
+  // Fertilizer: the companies picked (each brand product has one; filtered here, not by the API).
+  const [companies, setCompanies] = useState<string[]>([]);
 
   // Reset when the product changes.
   useEffect(() => {
     setAttrs([]);
     setRate(null);
+    setCompanies([]);
   }, [dbDivision, activeProduct?.product]);
 
   // Attribute values reported for this product's by-products.
@@ -153,12 +157,25 @@ export function useRateAttributeCards(props: ByproductBodyProps, opts: { perCard
   };
   const toggleAttr = (key: string) => setAttrs((prev) => (prev.includes(key) ? prev.filter((x) => x !== key) : [...prev, key]));
 
+  // Fertilizer companies on the cards, most products first.
+  const companyOptions = useMemo(() => {
+    if (!isFertilizer(dbDivision)) return [];
+    const count = new Map<string, number>();
+    for (const c of base.filter(inList)) {
+      const co = fertilizerCompany(c.byproduct);
+      if (co) count.set(co, (count.get(co) || 0) + 1);
+    }
+    return [...count].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([co]) => co);
+  }, [base, wanted, dbDivision]); // eslint-disable-line react-hooks/exhaustive-deps
+  const toggleCompany = (co: string) => setCompanies((prev) => (prev.includes(co) ? prev.filter((x) => x !== co) : [...prev, co]));
+
   // Cards: one per by-product (or per by-product and attribute value) that has the rate.
   const cards = useMemo(() => {
     const sel = { vertical: activeProduct?.vertical || "Grains", product: activeProduct?.product || dbDivision };
     return raw
       .filter(inList)
       .filter((c) => !c.rateFallback)
+      .filter((c) => !companies.length || companies.includes(fertilizerCompany(c.byproduct) ?? ""))
       .map((c, i) => ({
         sel,
         bp: c.byproduct,
@@ -168,11 +185,12 @@ export function useRateAttributeCards(props: ByproductBodyProps, opts: { perCard
         rank: mainByproductRank(sel.product, c.byproduct),
       }))
       .sort((a, b) => a.rank - b.rank || Number(b.stats.hasData) - Number(a.stats.hasData) || a.i - b.i);
-  }, [raw, wanted, activeProduct?.vertical, activeProduct?.product, dbDivision]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [raw, wanted, companies, activeProduct?.vertical, activeProduct?.product, dbDivision]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
     f, lang, tr, attrs, setAttrs, rate, setRate, rateOptions, activeRate,
     attrGroups, attrLabel, valueLabel, toggleAttr, cards, loading, error,
+    companies, setCompanies, companyOptions, toggleCompany,
     curDate, curDateStr, push,
   };
 }

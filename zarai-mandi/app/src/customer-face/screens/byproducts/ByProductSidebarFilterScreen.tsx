@@ -7,8 +7,8 @@ import { Icon } from "../product-rates/ui";
 import { useRateAttributeCards, type ByproductBodyProps } from "./rateAttributeCards";
 
 // Tester variant of the by-product screen: a filter drawer. Closed by default;
-// a floating Filters button slides a panel over half the screen (rate type and special
-// attribute only). The cards move to the other half in one column and stay
+// a floating Filters button slides a panel over half the screen (rate type, special
+// attribute and, for fertilizer, company). The cards move to the other half in one column and stay
 // scrollable while the panel is open. With no rate picked, every card shows its
 // own most received rate; picking a rate applies it to all cards (tap it again
 // to clear).
@@ -21,10 +21,11 @@ export function ByProductSidebarFilterScreen(props: ByproductBodyProps) {
   const {
     f, tr, attrs, setAttrs, rate, setRate, rateOptions,
     attrGroups, attrLabel, valueLabel, toggleAttr, cards, loading, error, curDate, curDateStr, push,
+    companies, setCompanies, companyOptions, toggleCompany,
   } = useRateAttributeCards(props, { perCardDefault: true });
   const [open, setOpen] = useState(false);
-  const active = rate !== null || attrs.length > 0;
-  const activeCount = (rate !== null ? 1 : 0) + attrs.length;
+  const active = rate !== null || attrs.length > 0 || companies.length > 0;
+  const activeCount = (rate !== null ? 1 : 0) + attrs.length + companies.length;
   const shortRate = (r: string) => tr(r).replace(/\s*Rate$/i, "");
   const start = f.ur ? "right" : "left";
 
@@ -67,18 +68,21 @@ export function ByProductSidebarFilterScreen(props: ByproductBodyProps) {
     );
   };
 
-  const valueChip = (key: string, label: string) => {
-    const on = attrs.includes(key);
+  const valueChip = (key: string, label: string, on = attrs.includes(key), toggle = () => toggleAttr(key)) => {
     return (
       <button
         key={key}
         type="button"
         role="checkbox"
         aria-checked={on}
-        onClick={() => toggleAttr(key)}
+        onClick={toggle}
         style={{
-          overflowWrap: "break-word", height: 32,
-          padding: "0 12px",
+          // Grows to two lines for long names ("Shaheed Benazirabad (Nawabshah)")
+          // instead of spilling out of the pill.
+          overflowWrap: "break-word", minHeight: 32,
+          padding: "6px 12px",
+          lineHeight: 1.25,
+          textAlign: "start",
           border: `1px solid ${on ? C.brand : C.line}`,
           borderRadius: 16,
           background: on ? C.brand : C.surface,
@@ -127,6 +131,7 @@ export function ByProductSidebarFilterScreen(props: ByproductBodyProps) {
             onClick={() => {
               setRate(null);
               setAttrs([]);
+              setCompanies([]);
             }}
             style={{ border: "none", background: "transparent", padding: "4px 6px", color: C.brandDeep, fontSize: 12.5, fontWeight: 700, fontFamily: f.font }}
           >
@@ -149,6 +154,16 @@ export function ByProductSidebarFilterScreen(props: ByproductBodyProps) {
         <div role="radiogroup" aria-label={f.tx("Rate type", "ریٹ کی قسم")} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {rateOptions.map((r) => rateRow(r.id))}
         </div>
+
+        {companyOptions.length > 0 && (
+          <>
+            <div style={{ height: 1, background: C.lineSoft, margin: "12px 4px 0" }} />
+            {sectionTitle(f.tx("Company", "کمپنی"))}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+              {companyOptions.map((co) => valueChip(`company|${co}`, co, companies.includes(co), () => toggleCompany(co)))}
+            </div>
+          </>
+        )}
 
         {attrGroups.length > 0 && (
           <>
@@ -187,6 +202,7 @@ export function ByProductSidebarFilterScreen(props: ByproductBodyProps) {
       const i = a.indexOf("|");
       return valueLabel(a.slice(0, i), a.slice(i + 1));
     }),
+    ...companies,
   ].join(" · ");
   const filterBar = (
     <div
@@ -243,7 +259,9 @@ export function ByProductSidebarFilterScreen(props: ByproductBodyProps) {
       >
         {active
           ? summary
-          : attrGroups.length > 0
+          : companyOptions.length > 0
+            ? f.tx("Filter by rate type and company", "ریٹ کی قسم اور کمپنی سے فلٹر کریں")
+            : attrGroups.length > 0
             ? f.tx("Filter by rate type and attribute", "ریٹ کی قسم اور خصوصیت سے فلٹر کریں")
             : f.tx("Filter by rate type", "ریٹ کی قسم سے فلٹر کریں")}
       </span>

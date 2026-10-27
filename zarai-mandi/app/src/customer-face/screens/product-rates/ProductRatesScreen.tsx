@@ -109,7 +109,6 @@ export function ProductRatesScreen({
   const sameFilters = (a: AttrFilters, b: AttrFilters) =>
     [...new Set([...Object.keys(a), ...Object.keys(b)])].every((k) => (a[k as keyof AttrFilters] || undefined) === (b[k as keyof AttrFilters] || undefined));
   const [date, setDate] = useState<string>("");
-  const [listProvince, setListProvince] = useState<string | null>(null);
   // Mandi table: nothing selected by default (reports in their own order).
   const [sort, setSort] = useState<SortKey>("none");
   const [interval, setChangeInterval] = useState<ChangeInterval>(1);
@@ -173,10 +172,6 @@ export function ProductRatesScreen({
   const choosingDay = dates.length > 0 && (!date || !dates.includes(date) || (lockHistory && date !== latest));
   const busy = loading || choosingDay;
 
-  // The mandi list covers the chosen location's province (all of Pakistan by default).
-  useEffect(() => {
-    setListProvince(scope.kind === "pakistan" ? null : getProvinceFromLoc(scope) || null);
-  }, [scope.kind, scope.label]);
 
   // ─── Derived data ─────────────────────────────────────────────
   const keep = (r: MarketRow) => passesFilters(r, filters, rate);
@@ -187,11 +182,23 @@ export function ProductRatesScreen({
   );
   const scopeFilter = useCallback((r: MarketRow) => inScope(r, scope), [scope]);
   const scopeRows = useMemo(() => rows.filter((r) => inScope(r, scope)), [rows, scope]);
+  // A picked province or district narrows the whole screen to its mandis: the
+  // headline average, best mandis, map and mandi list. A picked mandi keeps its
+  // province around it, to compare with its neighbours.
+  const areaScope = scope.kind === "province" || scope.kind === "district";
+  const listProvince = scope.kind === "mandi" ? getProvinceFromLoc(scope) || scopeRows[0]?.province || null : null;
+  const inList = useCallback(
+    (r: MarketRow) => (areaScope ? inScope(r, scope) : !listProvince || r.province === listProvince),
+    [areaScope, scope, listProvince],
+  );
   const dayRows = scopeRows.filter((r) => r.date === day && keep(r));
   const stats = statsFor(dayRows);
   const prevDay = dateBefore(dates, day, 1);
   const prevStats = prevDay ? statsFor(scopeRows.filter((r) => r.date === prevDay && keep(r))) : null;
-  const nationalDayRows = useMemo(() => rows.filter((r) => r.date === day && passesFilters(r, filters, ALL_RATES)), [rows, day, filters]);
+  const nationalDayRows = useMemo(
+    () => (areaScope ? scopeRows : rows).filter((r) => r.date === day && passesFilters(r, filters, ALL_RATES)),
+    [areaScope, scopeRows, rows, day, filters],
+  );
   const nationalMid = statsFor(rows.filter((r) => r.date === day && keep(r))).mid;
 
   const scopeDayAnyRate = scopeRows.filter((r) => r.date === day && passesFilters(r, filters, ALL_RATES));
@@ -208,13 +215,12 @@ export function ProductRatesScreen({
   // Not narrowed by rate or attributes: MandiSection applies the rail's filters
   // itself, so its column headers can offer every value.
   const entries = useMemo(() => {
-    const keepRow = (r: MarketRow) => !listProvince || r.province === listProvince;
     return sortEntries(
-      tableRange ? rangeEntries(rows, tableRange, keepRow) : mandiEntries(rows, dates, tableDay, interval, keepRow),
+      tableRange ? rangeEntries(rows, tableRange, inList) : mandiEntries(rows, dates, tableDay, interval, inList),
       sort,
       scope.kind === "mandi" ? scope.label : undefined,
     );
-  }, [rows, dates, tableDay, interval, listProvince, sort, scope, tableRange]);
+  }, [rows, dates, tableDay, interval, inList, sort, scope, tableRange]);
   const periodLabel = tableRange ? `${f.day(tableRange.start)} – ${f.day(tableRange.end)}` : undefined;
 
   // Same maths as the headline number, so tapping a day shows matching values.
@@ -326,7 +332,7 @@ export function ProductRatesScreen({
     variety: r.variety,
     color: r.color,
   });
-  const mapRecords: MapByProductRecord[] = useMemo(() => rows.filter(keep).map(toMapRecord), [rows, filters, rate]);
+  const mapRecords: MapByProductRecord[] = useMemo(() => (areaScope ? scopeRows : rows).filter(keep).map(toMapRecord), [areaScope, scopeRows, rows, filters, rate]); // eslint-disable-line react-hooks/exhaustive-deps
   const mapColorKey = (primaryAttr(getProductSpecialAttrType(byproduct, product)) ?? "newOld") as keyof MapByProductRecord;
 
   const pickItem = {
@@ -576,7 +582,7 @@ export function ProductRatesScreen({
                 onDayRange: (r) => setTableDate({ day: tableDay, range: r }),
                 lockHistory,
               }}
-              regionLabel={listProvince ? tm(listProvince) : undefined}
+              regionLabel={areaScope ? tm(scope.label) : listProvince ? tm(listProvince) : undefined}
               rate={rate}
               railFilters={filters}
               sort={sort}
