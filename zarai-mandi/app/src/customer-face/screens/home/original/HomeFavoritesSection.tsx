@@ -63,8 +63,8 @@ export function HomeFavoritesSection({
           }))}
         />
       ) : (
-        // Nothing favourited yet: a centred empty state (star, short title, one
-        // line on how, and a button that takes the user to the Products row).
+        // Nothing favourited yet: a centred empty state (star, short title and
+        // one line on how to add one).
         <div
           className="w-full flex flex-col items-center text-center"
           style={{
@@ -93,28 +93,6 @@ export function HomeFavoritesSection({
               ? "کسی بھی ریٹ پر ☆ دبائیں، وہ یہاں فوری رسائی کے لیے محفوظ ہو جائے گا"
               : "Tap ☆ on any rate to save it here for quick access"}
           </span>
-          {/* <button
-            type="button"
-            onClick={() =>
-              document.querySelector("[data-home-product]")?.scrollIntoView({ behavior: "smooth", block: "center", inline: "start" })
-            }
-            className="tap-target transition active:scale-[0.98]"
-            style={{
-              marginTop: 14,
-              height: 40,
-              padding: "0 20px",
-              borderRadius: 20,
-              border: "none",
-              background: "#087F63",
-              color: "#FFFFFF",
-              fontSize: 13.5,
-              fontWeight: 700,
-              fontFamily: "inherit",
-              boxShadow: "0 4px 12px rgba(8, 127, 99, 0.25)",
-            }}
-          >
-            {lang === "ur" ? "مصنوعات دیکھیں" : "Browse products"}
-          </button> */}
         </div>
       )}
     </section>
