@@ -4,12 +4,30 @@
     <!-- figma:head-start -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Every web font the app uses, requested up front in one stylesheet (not
+         @import chains or per-screen injection), so no screen first draws in a
+         fallback font and then swaps. src/lib/fonts.ts downloads the weights early. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap"
+    />
     <title><!-- figma:title --></title>
     <!-- figma:head-end -->
   </head>
   <body>
     <!-- figma:body-start -->
-    <div id="root"></div>
+    <!-- Shown at once while the app downloads (React replaces it), instead of a
+         blank white page on a slow first load. -->
+    <div id="root">
+      <div style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#F1F7F4;font-family:system-ui,-apple-system,sans-serif;color:#0E645C">
+        <div style="font-size:24px;font-weight:800;letter-spacing:-0.01em">Zarai Mandi</div>
+        <div style="font-size:18px;font-weight:700" dir="rtl" lang="ur">زرعی منڈی</div>
+        <div style="width:28px;height:28px;margin-top:6px;border-radius:50%;border:3px solid #CFE3DA;border-top-color:#0E645C;animation:zm-boot-spin 0.8s linear infinite"></div>
+        <style>@keyframes zm-boot-spin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){[style*="zm-boot-spin"]{animation:none}}</style>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
     <!-- figma:body-end -->
   </body>

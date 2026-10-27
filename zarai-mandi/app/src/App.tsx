@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { TEST_MODE } from "./lib/testMode"
+import { preloadFonts } from "./lib/fonts"
 import { onDevCommand, publishDevControls } from "./lib/device-bridge"
 import OnboardingFlow, { type OnboardingUserData } from "./onboarding/OnboardingFlow"
 import CustomerFaceApp from "./CustomerFaceApp"
@@ -75,6 +76,13 @@ export default function App() {
     if (TEST_MODE) publishDevControls({ label: devLabel, action: devAction, title: devTitle })
   }, [devLabel, devAction, devTitle])
   useEffect(() => (TEST_MODE ? onDevCommand(() => devActionRef.current()) : undefined), [])
+
+  // Once this first screen is up, fetch the other screens' fonts, so none of them
+  // first draws in a fallback font (and they don't slow this screen's start).
+  useEffect(() => {
+    const t = window.setTimeout(preloadFonts, 0)
+    return () => window.clearTimeout(t)
+  }, [])
 
   return (
     // One language for onboarding and the app (theme CSS comes with CustomerFaceApp).

@@ -105,7 +105,7 @@ export function PriceHero({
           style={{ position: "absolute", top: -120, insetInlineEnd: -90, width: 260, height: 260, borderRadius: "50%", background: "radial-gradient(circle, rgba(47,181,138,0.12), rgba(47,181,138,0) 70%)", pointerEvents: "none" }}
         />
 
-        <div style={{ position: "relative", padding: "8px 12px 2px", display: "flex", flexDirection: "column", gap: 2 }}>
+        <div data-hero="head" style={{ position: "relative", padding: "8px 12px 2px", display: "flex", flexDirection: "column", gap: 2 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
             <span style={{ overflowWrap: "break-word", minWidth: 0, fontSize: 12, fontWeight: 500, color: DK.sub, whiteSpace: "normal", lineHeight: f.lh }}>
               {[bandLabel, rateLabel, has ? coverage : ""].filter(Boolean).join(" · ") || f.tx("Mandi rates", "منڈی ریٹس")}
@@ -125,6 +125,7 @@ export function PriceHero({
             <>
               <div aria-busy="true" className="zm-shimmer" style={{ height: 34, width: "58%", borderRadius: 10 }} />
               <div className="zm-shimmer" style={{ height: 12, width: "38%", borderRadius: 6 }} />
+              <div className="zm-shimmer" style={{ height: 22, width: 64, borderRadius: 8, marginTop: f.ur ? 21 : 7 }} />
             </>
           ) : has ? (
             <>
@@ -210,8 +211,27 @@ export function PriceHero({
           )}
         </div>
 
-        {hasSpark && (
-          <div data-zm-hscroll style={{ position: "relative", padding: "0 6px 0" }}>
+        {/* While loading, the chart and the Min / Max / Arrival row hold their
+            final size, so nothing below jumps down when the prices arrive. */}
+        {loading && (
+          <>
+            <div data-hero="spark" style={{ padding: "0 12px" }}>
+              <div className="zm-shimmer" style={{ height: 54, borderRadius: 10, opacity: 0.6 }} />
+              <div style={{ height: 20 }} />
+            </div>
+            <div data-hero="stats" style={{ display: "flex", gap: 8, padding: f.ur ? "5px 12px 22px" : "5px 12px 7px", borderTop: `1px solid ${DK.line}` }}>
+              {[0, 1, 2].map((i) => (
+                <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+                  <div className="zm-shimmer" style={{ height: 10, width: "50%", borderRadius: 5 }} />
+                  <div className="zm-shimmer" style={{ height: 16, width: "80%", borderRadius: 6 }} />
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {!loading && hasSpark && (
+          <div data-hero="spark" data-zm-hscroll style={{ position: "relative", padding: "0 6px 0" }}>
             <TrendChart
               f={f}
               compact
@@ -232,7 +252,7 @@ export function PriceHero({
         )}
 
         {has && (
-          <div style={{ position: "relative", display: "flex", gap: 8, padding: "5px 12px 6px", borderTop: `1px solid ${DK.line}` }}>
+          <div data-hero="stats" style={{ position: "relative", display: "flex", gap: 8, padding: "5px 12px 6px", borderTop: `1px solid ${DK.line}` }}>
             {stat(
               f.tx("Min", "کم"),
               f.ur ? (

@@ -53,16 +53,4 @@ export const COMPARE_TONES_DARK = ["#7CF0C5", "#FFFFFF", "#9CC9F5", "#E9D8A6"];
 
 export const PROVINCES = ["Punjab", "Sindh", "KPK", "Balochistan"] as const;
 
-export const FONT_LINK_ID = "zm-product-rates-fonts";
-export const FONT_HREF =
-  "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap";
-
-/** Loads the screen's two web fonts once (falls back to system fonts). */
-export function ensureFonts() {
-  if (typeof document === "undefined" || document.getElementById(FONT_LINK_ID)) return;
-  const link = document.createElement("link");
-  link.id = FONT_LINK_ID;
-  link.rel = "stylesheet";
-  link.href = FONT_HREF;
-  document.head.appendChild(link);
-}
+// The web fonts are loaded at start-up (index.html + src/lib/fonts.ts).

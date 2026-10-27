@@ -425,13 +425,16 @@ export function Tabs<T extends string>({
 }
 
 /** Eases a number from its previous value to the new one (~450ms).
- * Jumps straight to the value when the user prefers reduced motion. */
+ * The first real value (from "no data", 0 or less) shows straight away rather
+ * than counting up from zero, and the shown number never leaves the range
+ * between the two values. Jumps straight to the value with reduced motion. */
 export function useCountUp(target: number, ms = 450) {
   const [val, setVal] = useState(target);
   const from = useRef(target);
   useEffect(() => {
     const reduce = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    if (reduce || !Number.isFinite(target) || from.current === target) {
+    const firstValue = !(from.current > 0) || !(target > 0);
+    if (reduce || firstValue || !Number.isFinite(target) || !Number.isFinite(from.current) || from.current === target) {
       from.current = target;
       setVal(target);
       return;
@@ -442,7 +445,7 @@ export function useCountUp(target: number, ms = 450) {
     const tick = (now: number) => {
       const p = Math.min(1, (now - start) / ms);
       const e = 1 - Math.pow(1 - p, 3);
-      setVal(a + (target - a) * e);
+      setVal(Math.min(Math.max(a, target), Math.max(Math.min(a, target), a + (target - a) * e)));
       if (p < 1) raf = requestAnimationFrame(tick);
       else from.current = target;
     };
@@ -452,5 +455,7 @@ export function useCountUp(target: number, ms = 450) {
       from.current = target;
     };
   }, [target, ms]);
-  return val;
+  // The first real value shows in this very frame (the effect above would show
+  // the old value, e.g. "Rs 0", for one more frame first).
+  return !(from.current > 0) || !(target > 0) ? target : val;
 }

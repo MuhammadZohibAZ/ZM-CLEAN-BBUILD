@@ -35,7 +35,7 @@ import {
   sortEntries,
   statsFor,
 } from "./selectors";
-import { C, ensureFonts } from "./theme";
+import { C } from "./theme";
 import { attrLabel, attrValue } from "./Filters";
 import { TrendsTab } from "./TrendsTab";
 import type { AttrFilters, AttrKey, ChangeInterval, MarketRow, ProductRatesProps, SortKey } from "./types";
@@ -87,7 +87,6 @@ export function ProductRatesScreen({
 }: ProductRatesProps) {
   const { lang, t, tc, tm, tr, voiceEnabled } = useLang();
   const f = makeFmt(lang, priceUnitFor(getDivisionForProduct(vertical, product)));
-  useEffect(ensureFonts, []);
 
   const name = byproduct || product;
   const [tab, setTab] = useState<Tab>("overview");
@@ -168,6 +167,11 @@ export function ProductRatesScreen({
     }
   }, [dates, latest, lockHistory]); // eslint-disable-line react-hooks/exhaustive-deps
   const day = date || latest;
+  // Until that starting day is set, keep showing the loading state: otherwise the
+  // first frame with data drew the latest day and flashed "No reports ... Show
+  // 22 Sep" before the effect above moved to the reported day.
+  const choosingDay = dates.length > 0 && (!date || !dates.includes(date) || (lockHistory && date !== latest));
+  const busy = loading || choosingDay;
 
   // The mandi list covers the chosen location's province (all of Pakistan by default).
   useEffect(() => {
@@ -510,7 +514,7 @@ export function ProductRatesScreen({
                       onListen={speakHero}
                       lockHistory={lockHistory}
                       onSubscribe={() => push?.({ id: "billing", product, vertical })}
-                      loading={loading}
+                      loading={busy}
                       emptyMessage={emptyState?.message ?? null}
                       emptyActions={emptyState?.actions}
                       activeAttrs={activeAttrs}
@@ -522,7 +526,7 @@ export function ProductRatesScreen({
                   label: f.tx("best mandis & map", "بہترین منڈیاں اور نقشہ"),
                   node: (
                     <div style={{ padding: "16px 6px 0 16px", display: "flex", flexDirection: "column", gap: 6 }}>
-                      {!loading && (
+                      {!busy && (
                         <BestPlaces
                           f={f}
                           tm={tm}
@@ -581,7 +585,7 @@ export function ProductRatesScreen({
               onInterval={setChangeInterval}
               selectedMandi={scope.kind === "mandi" ? scope.label : undefined}
               primary={primaryAttr(getProductSpecialAttrType(byproduct, product))}
-              loading={loading}
+              loading={busy}
               emptyNote={tableRange || tableDate ? null : emptyState}
               onOpen={(e) => {
                 setDetail({ mandi: e.row.mandiName, rate: e.row.rateType });
