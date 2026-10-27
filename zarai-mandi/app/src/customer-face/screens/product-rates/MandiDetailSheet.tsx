@@ -125,7 +125,6 @@ export function MandiDetailSheet({
   const diffYesterday = prev && prev.mid > 0 && s.mid > 0 ? s.mid - prev.mid : null;
 
   // Price position among all mandis for the same rate type that day (1 = highest average price).
-  const ordinal = (n: number) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th"}`;
   const byMandi = new Map<string, MarketRow[]>();
   for (const r of allRows) if (r.date === date && r.rateType === rate) byMandi.set(r.mandiName, [...(byMandi.get(r.mandiName) || []), r]);
   const mids = [...byMandi.entries()].map(([m, rs]) => ({ m, mid: statsFor(rs).mid })).sort((a, b) => b.mid - a.mid);
@@ -253,10 +252,11 @@ export function MandiDetailSheet({
     { label: f.tx("Bag size", "بوری کا وزن"), vals: join(cur.map((r) => f.unit(r.arrivalUnit || ""))) },
   ].filter((x) => x.vals.length > 0);
 
-  const box = (label: string, value: React.ReactNode, valColor: string = C.ink, bg: string = C.surfaceAlt) => (
+  const box = (label: string, value: React.ReactNode, valColor: string = C.ink, bg: string = C.surfaceAlt, sub?: string) => (
     <div style={{ display: "flex", flexDirection: "column", gap: 2, padding: 10, borderRadius: 14, background: bg, minWidth: 0 }}>
       <span style={{ fontSize: 12.5, fontWeight: 600, color: C.muted }}>{label}</span>
       <span style={{ fontSize: 15, fontWeight: 700, color: valColor, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{value}</span>
+      {sub && <span style={{ fontSize: 11, fontWeight: 500, color: C.faint, lineHeight: f.lh }}>{sub}</span>}
     </div>
   );
 
@@ -603,12 +603,15 @@ export function MandiDetailSheet({
               ),
               diffYesterday !== null ? (diffYesterday > 0 ? C.up : diffYesterday < 0 ? C.down : C.ink) : C.ink,
             )}
-            {/* Where this mandi's average price stands among all mandis for the rate today (1 = highest). */}
+            {/* Each mandi's average of min and max for the rate today, ranked highest first. */}
             {box(
-              f.tx("Price position today", "آج قیمت میں درجہ"),
+              f.tx("Price rank today", "آج قیمت کا درجہ"),
               rank > 0 && mids.length > 1
-                ? f.tx(`${ordinal(rank)} highest of ${mids.length}`, `سب سے زیادہ قیمت میں ${f.digits(rank)} نمبر (${f.digits(mids.length)} میں سے)`)
-                : f.tx("Only mandi reporting", "صرف یہی منڈی"),
+                ? f.tx(`${rank} of ${mids.length}`, `${f.digits(mids.length)} میں سے ${f.digits(rank)}`)
+                : f.tx("Only mandi", "صرف یہی منڈی"),
+              C.ink,
+              C.surfaceAlt,
+              rank > 0 && mids.length > 1 ? f.tx("Avg of min & max, highest first", "کم و زیادہ کی اوسط، زیادہ پہلے") : undefined,
             )}
           </div>
           {/* Swipe between the trend charts and a day-by-day table. */}

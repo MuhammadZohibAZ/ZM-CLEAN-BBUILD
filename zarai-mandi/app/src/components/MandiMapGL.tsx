@@ -13,10 +13,17 @@ import outlineGeo from "../customer-face/shared/data/geo/pakistanOutline.json";
 import { fetchRoadRoute, straightKm, type LngLat } from "../lib/routing";
 import provincesGeo from "../customer-face/shared/data/geo/pakistanProvinces.json";
 import stationCoords from "../customer-face/shared/data/geo/stationCoords.json";
-import { useLang } from "../customer-face/shared/i18n/LangProvider";
+import { URDU_FONT, useLang } from "../customer-face/shared/i18n/LangProvider";
 import { speakText } from "../customer-face/shared/voice";
 import MapLoader from "./MapLoader";
 import type { MapByProductRecord } from "./ZaraiMandiMap";
+
+// Joins Arabic-script letters in the map's own labels (Urdu place names were
+// drawn as separate, unjoined letters without it). public/vendor holds
+// @mapbox/mapbox-gl-rtl-text 0.3.0 (BSD-2); loaded only when a label needs it.
+if (maplibregl.getRTLTextPluginStatus() === "unavailable") {
+  maplibregl.setRTLTextPlugin(`${import.meta.env.BASE_URL}vendor/mapbox-gl-rtl-text-0.3.0.js`, true).catch(() => undefined);
+}
 
 /**
  * Real, zoomable map of Pakistan's mandis (MapLibre GL + OpenFreeMap tiles).
@@ -531,14 +538,39 @@ export default function MandiMapGL({
   }, [selected]);
 
   const fitPakistan = () => mapRef.current?.fitBounds(PK_BOUNDS, { padding: { top: 150, bottom: 175, left: 16, right: 56 } });
+  // "My location": a spinner while asking, a short note if it fails.
+  const [locating, setLocating] = useState(false);
+  const [locNote, setLocNote] = useState<string | null>(null);
+  useEffect(() => {
+    if (!locNote) return;
+    const t = window.setTimeout(() => setLocNote(null), 3500);
+    return () => window.clearTimeout(t);
+  }, [locNote]);
   const locateMe = () => {
-    navigator.geolocation?.getCurrentPosition(
+    if (!navigator.geolocation) {
+      setLocNote(isUr ? "اس فون پر مقام دستیاب نہیں" : "Location isn't available on this device");
+      return;
+    }
+    if (userLoc) {
+      mapRef.current?.flyTo({ center: [userLoc.lon, userLoc.lat], zoom: Math.max(mapRef.current.getZoom(), 8) });
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
       (pos) => {
+        setLocating(false);
         setUserLoc({ lat: pos.coords.latitude, lon: pos.coords.longitude });
         mapRef.current?.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 8 });
       },
-      () => undefined,
-      { enableHighAccuracy: false, timeout: 8000 },
+      (err) => {
+        setLocating(false);
+        setLocNote(
+          err.code === err.PERMISSION_DENIED
+            ? isUr ? "مقام کی اجازت بند ہے — براؤزر کی سیٹنگ میں اجازت دیں" : "Location is blocked — allow it in the browser settings"
+            : isUr ? "آپ کا مقام نہیں مل سکا، دوبارہ کوشش کریں" : "Couldn't find your location — try again",
+        );
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 },
     );
   };
 
@@ -574,7 +606,8 @@ export default function MandiMapGL({
     [records],
   );
   const detailPin = pins.find((p) => p.key === detailFor);
-  const font = isUr ? "'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', sans-serif" : "inherit";
+  // The app's Urdu font (cards, chips, buttons), same as every other screen.
+  const font = isUr ? URDU_FONT : "inherit";
 
   const roundBtn = (label: string, onClick: () => void, icon: ReactNode) => (
     <button
@@ -610,7 +643,8 @@ export default function MandiMapGL({
           transition: "opacity 0.2s ease",
         }}
       >
-        <div className="flex items-center gap-1.5" style={{ pointerEvents: detailPin ? "none" : "auto" }}>
+        {/* Back first in reading order: left in English, right in Urdu. */}
+        <div className="flex items-center gap-1.5" style={{ pointerEvents: detailPin ? "none" : "auto", flexDirection: isUr ? "row-reverse" : "row" }}>
           {onClose && (
             <button
               type="button"
@@ -664,13 +698,22 @@ export default function MandiMapGL({
           </svg>
         ))}
         <div style={{ height: 1, background: "#EEF3F0" }} />
-        {roundBtn(isUr ? "میرا مقام" : "My location", locateMe, (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#183B34" strokeWidth="2.2" strokeLinecap="round">
-            <circle cx="12" cy="12" r="4" />
+        {roundBtn(isUr ? "میرا مقام" : "My location", locateMe, locating ? (
+          <span className="animate-spin" style={{ width: 16, height: 16, borderRadius: 8, border: "2px solid #CFE3DA", borderTopColor: BRAND }} />
+        ) : (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={userLoc ? BRAND : "#183B34"} strokeWidth="2.2" strokeLinecap="round">
+            <circle cx="12" cy="12" r="4" fill={userLoc ? BRAND : "none"} />
             <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
           </svg>
         ))}
       </div>
+      {locNote && (
+        <div className="absolute inset-x-0 flex justify-center px-6" style={{ bottom: 190, zIndex: 6, pointerEvents: "none" }}>
+          <span className="rounded-full px-3 py-1.5 text-center" style={{ background: "#183B34", color: "#FFFFFF", fontSize: 12, fontWeight: 600, boxShadow: SHADOW }}>
+            {locNote}
+          </span>
+        </div>
+      )}
 
       {offline && (
         <div className="absolute inset-x-0 text-center" style={{ top: "50%", zIndex: 4 }}>

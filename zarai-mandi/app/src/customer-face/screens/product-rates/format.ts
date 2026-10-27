@@ -17,7 +17,12 @@ export function makeFmt(lang: Lang, unit: PriceUnit = CROP_PRICE_UNIT) {
   const ur = lang === "ur";
   const digits = (v: string | number) => (ur ? toUrduDigits(v) : String(v));
   const num = (n: number) => digits(Math.round(n).toLocaleString("en-US"));
-  const rs = (n: number) => (ur ? `روپے ${num(n)}` : `Rs ${num(n)}`);
+  // Urdu reads the number first ("4,584 روپے", "22 ستمبر"). Each value is one
+  // right-to-left unit (RLI … PDI) with the number kept intact (LRI … PDI), so it
+  // shows the same inside left-to-right boxes, charts and tooltips.
+  const rtlUnit = (s: string) => (ur ? `\u2067${s}\u2069` : s);
+  const ltrNum = (s: string) => `\u2066${s}\u2069`;
+  const rs = (n: number) => (ur ? rtlUnit(`${ltrNum(num(n))} روپے`) : `Rs ${num(n)}`);
   const pct = (n: number) => `${digits(Math.abs(n).toFixed(1))}%`;
   const parse = (iso: string) => {
     const [y, m, d] = iso.split("-").map(Number);
@@ -26,18 +31,20 @@ export function makeFmt(lang: Lang, unit: PriceUnit = CROP_PRICE_UNIT) {
   const day = (iso: string, withWeekday = false) => {
     const d = parse(iso);
     const wd = withWeekday ? (ur ? `${DAYS_UR[d.getDay()]}، ` : `${DAYS_EN[d.getDay()]}, `) : "";
-    return ur ? `${wd}${digits(d.getDate())} ${MONTHS_UR[d.getMonth()]}` : `${wd}${d.getDate()} ${MONTHS_EN[d.getMonth()]}`;
+    return ur ? rtlUnit(`${wd}${ltrNum(digits(d.getDate()))} ${MONTHS_UR[d.getMonth()]}`) : `${wd}${d.getDate()} ${MONTHS_EN[d.getMonth()]}`;
   };
-  const dayYear = (iso: string) => `${day(iso, true)} ${digits(parse(iso).getFullYear())}`;
+  const dayYear = (iso: string) => rtlUnit(`${day(iso, true)} ${ur ? ltrNum(digits(parse(iso).getFullYear())) : parse(iso).getFullYear()}`);
   const dayFullYear = (iso: string) => {
     const d = parse(iso);
-    return ur ? `${digits(d.getDate())} ${MONTHS_UR[d.getMonth()]} ${digits(d.getFullYear())}` : `${d.getDate()} ${MONTHS_EN_FULL[d.getMonth()]} ${d.getFullYear()}`;
+    return ur
+      ? rtlUnit(`${ltrNum(digits(d.getDate()))} ${MONTHS_UR[d.getMonth()]} ${ltrNum(digits(d.getFullYear()))}`)
+      : `${d.getDate()} ${MONTHS_EN_FULL[d.getMonth()]} ${d.getFullYear()}`;
   };
   const dayFullWeekdayYear = (iso: string) => {
     const d = parse(iso);
     const wd = ur ? `${DAYS_UR[d.getDay()]}، ` : `${DAYS_EN_FULL[d.getDay()]}, `;
     return ur
-      ? `${wd}${digits(d.getDate())} ${MONTHS_UR[d.getMonth()]} ${digits(d.getFullYear())}`
+      ? rtlUnit(`${wd}${ltrNum(digits(d.getDate()))} ${MONTHS_UR[d.getMonth()]} ${ltrNum(digits(d.getFullYear()))}`)
       : `${wd}${d.getDate()} ${MONTHS_EN_FULL[d.getMonth()]} ${d.getFullYear()}`;
   };
   return {

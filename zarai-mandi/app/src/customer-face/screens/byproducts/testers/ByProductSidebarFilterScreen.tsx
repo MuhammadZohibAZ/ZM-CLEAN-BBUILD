@@ -196,12 +196,15 @@ export function ByProductSidebarFilterScreen(props: TesterBodyProps) {
       style={{
         position: "sticky",
         top: 0,
-        zIndex: 4,
+        // Above the cards (their contents sit on z-10) and solid, so scrolled
+        // cards pass underneath instead of showing through.
+        zIndex: 20,
         display: "flex",
         alignItems: "center",
         gap: 8,
-        padding: "10px 10px 6px",
-        background: "linear-gradient(to bottom, #F1F7F4 75%, rgba(241, 247, 244, 0))",
+        padding: "10px 10px 8px",
+        background: "#F1F7F4",
+        boxShadow: "0 6px 10px -8px rgba(6, 45, 36, 0.25)",
       }}
     >
       <button

@@ -255,6 +255,9 @@ export function Swiper3D({
 
       {/* Navigator controls */}
       {n > 1 && (
+        <style>{`@keyframes zmNudge{0%,100%{transform:translateX(0)}50%{transform:translateX(4px)}}@keyframes zmNudgeRtl{0%,100%{transform:translateX(0)}50%{transform:translateX(-4px)}}@keyframes zmNudgeBack{0%,100%{transform:translateX(0)}50%{transform:translateX(-4px)}}@keyframes zmNudgeBackRtl{0%,100%{transform:translateX(0)}50%{transform:translateX(4px)}}@media (prefers-reduced-motion: reduce){[style*="zmNudge"]{animation:none!important}}`}</style>
+      )}
+      {n > 1 && (
         // On the first / last page there's only one pill: it gets the empty side's
         // room too, so its "Swipe for ..." label isn't cut off.
         <div style={{ display: "grid", gridTemplateColumns: index === 0 ? "0 auto 1fr" : index === n - 1 ? "1fr auto 0" : "1fr auto 1fr", alignItems: "center", gap: 8, padding: `2px ${MARGIN}px 0` }}>
@@ -267,22 +270,28 @@ export function Swiper3D({
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 4,
-                  height: 26,
-                  padding: "0 8px",
-                  border: "none",
-                  borderRadius: 13,
-                  background: C.chip,
-                  color: C.ink,
-                  fontSize: 11.5,
-                  fontWeight: 600,
+                  gap: 5,
+                  height: 30,
+                  padding: "0 12px 0 10px",
+                  border: `1px solid ${C.brandBorder}`,
+                  borderRadius: 15,
+                  background: C.brandTint,
+                  color: C.brandDeep,
+                  fontSize: 12.5,
+                  fontWeight: 700,
                   fontFamily: f.font,
                   whiteSpace: "nowrap",
                   cursor: "pointer",
+                  minWidth: 0,
                 }}
               >
-                <Icon name="back" size={11} width={2.6} color={C.ink2} flip={dirSign === -1} />
-                <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{pages[index - 1]?.label}</span>
+                {/* Same as the forward hint: says to swipe back, the arrow nudges that way. */}
+                <span style={{ display: "flex", animation: `${dirSign === -1 ? "zmNudgeBackRtl" : "zmNudgeBack"} 1.4s ease-in-out infinite` }}>
+                  <Icon name="chevRight" size={12} width={2.8} color={C.brand} flip={dirSign !== -1} />
+                </span>
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {f.tx(`Swipe for ${pages[index - 1]?.label}`, `سوائپ کریں: ${pages[index - 1]?.label}`)}
+                </span>
               </button>
             )}
           </div>
@@ -345,7 +354,6 @@ export function Swiper3D({
                 <span style={{ display: "flex", animation: `${dirSign === -1 ? "zmNudgeRtl" : "zmNudge"} 1.4s ease-in-out infinite` }}>
                   <Icon name="chevRight" size={12} width={2.8} color={C.brand} flip={dirSign === -1} />
                 </span>
-                <style>{`@keyframes zmNudge{0%,100%{transform:translateX(0)}50%{transform:translateX(4px)}}@keyframes zmNudgeRtl{0%,100%{transform:translateX(0)}50%{transform:translateX(-4px)}}@media (prefers-reduced-motion: reduce){[style*="zmNudge"]{animation:none!important}}`}</style>
               </button>
             )}
           </div>
