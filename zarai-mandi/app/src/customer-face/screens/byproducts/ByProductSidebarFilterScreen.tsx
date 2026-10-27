@@ -241,7 +241,11 @@ export function ByProductSidebarFilterScreen(props: ByproductBodyProps) {
         onClick={() => setOpen(true)}
         style={{ overflowWrap: "break-word", minWidth: 0, flex: 1, whiteSpace: "normal", fontSize: 12.5, fontWeight: 600, color: active ? C.ink : C.muted, fontFamily: f.font, cursor: "pointer" }}
       >
-        {active ? summary : f.tx("Filter by rate type and attribute", "ریٹ کی قسم اور خصوصیت سے فلٹر کریں")}
+        {active
+          ? summary
+          : attrGroups.length > 0
+            ? f.tx("Filter by rate type and attribute", "ریٹ کی قسم اور خصوصیت سے فلٹر کریں")
+            : f.tx("Filter by rate type", "ریٹ کی قسم سے فلٹر کریں")}
       </span>
     </div>
   );

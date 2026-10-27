@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 import { LockIconSVG } from "../../../components/icons";
-import { toUrduDigits, URDU_FONT, useLang } from "../../../shared/i18n/LangProvider";
+import { toUrduDigits, URDU_FONT, urduName, useLang } from "../../../shared/i18n/LangProvider";
 
 // One line on the bottom edge of the Home hero: an inline search field and,
 // until the profile is complete, a "Complete profile" chip beside it.
@@ -36,14 +36,26 @@ export type SearchEntry = {
   kind?: "product" | "byproduct";
 };
 
-const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9؀-ۿ]+/g, " ").trim();
+// Lower-case, Arabic-keyboard letters as their Urdu forms (ي→ی، ك→ک، ه→ہ),
+// vowel marks dropped, Urdu digits as 0-9, punctuation as spaces.
+const norm = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[ً-ٰٟ]/g, "")
+    .replace(/[يى]/g, "ی")
+    .replace(/ك/g, "ک")
+    .replace(/[هة]/g, "ہ")
+    .replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)))
+    .replace(/[^a-z0-9؀-ۿ]+/g, " ")
+    .trim();
 
 function rank(entries: SearchEntry[], query: string): SearchEntry[] {
   const q = norm(query);
   if (!q) return [];
   const scored: { e: SearchEntry; score: number }[] = [];
   for (const e of entries) {
-    const names = [norm(e.byproduct), norm(e.label)];
+    // English and Urdu names both match, in either language.
+    const names = [...new Set([e.byproduct, e.label, urduName(e.byproduct), urduName(e.label)].map(norm))];
     let score = -1;
     for (const n of names) {
       if (n === q) score = Math.max(score, 5);

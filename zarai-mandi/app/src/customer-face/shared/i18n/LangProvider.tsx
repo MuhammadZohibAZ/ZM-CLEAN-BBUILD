@@ -55,6 +55,13 @@ function personName(name: string, lang: Lang): string {
   return URDU_TO_EN.get(n) || n;
 }
 
+/** A product / by-product name in Urdu whatever the current language (search
+ * matches English and Urdu names together). Unknown names come back as given. */
+export function urduName(name: string): string {
+  if (!name) return "";
+  return TRANS[`c.${name}`]?.ur || AUTO_URDU_DICT[name] || AUTO_URDU_DICT[name.trim()] || name;
+}
+
 export function useLang() {
   return useContext(LangContext);
 }

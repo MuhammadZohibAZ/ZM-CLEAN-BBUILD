@@ -63,40 +63,59 @@ export function HomeFavoritesSection({
           }))}
         />
       ) : (
-        // Nothing favourited yet: a "+" card that says how to add one, and takes
-        // the user up to the Products row to start.
-        <button
-          type="button"
-          onClick={() =>
-            document.querySelector("[data-home-product]")?.scrollIntoView({ behavior: "smooth", block: "center", inline: "start" })
-          }
-          className="tap-target w-full flex items-center gap-3 text-start transition active:scale-[0.99]"
+        // Nothing favourited yet: a centred empty state (star, short title, one
+        // line on how, and a button that takes the user to the Products row).
+        <div
+          className="w-full flex flex-col items-center text-center"
           style={{
-            padding: "16px 16px",
-            borderRadius: 20,
-            border: "2px dashed #9CC9B8",
-            background: "rgba(232, 248, 243, 0.7)",
+            padding: "22px 20px 20px",
+            borderRadius: 22,
+            background: "rgba(255, 255, 255, 0.82)",
+            border: "1px solid #D5E7DF",
+            boxShadow: "0 6px 18px -10px rgba(6, 60, 48, 0.25)",
             fontFamily: lang === "ur" ? URDU_FONT : "inherit",
           }}
         >
           <span
             aria-hidden="true"
-            className="flex-shrink-0 flex items-center justify-center"
-            style={{ width: 44, height: 44, borderRadius: "50%", background: "#087F63", color: "#FFFFFF", fontSize: 26, fontWeight: 600, lineHeight: 1 }}
+            className="flex items-center justify-center"
+            style={{ width: 56, height: 56, borderRadius: "50%", background: "#FFF5E6", border: "1px solid #F6D9A6" }}
           >
-            +
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="#F59E0B" stroke="#D97706" strokeWidth="1.2" strokeLinejoin="round">
+              <path d="M12 2.8l2.8 5.7 6.3.9-4.6 4.4 1.1 6.2L12 17l-5.6 3 1.1-6.2L2.9 9.4l6.3-.9z" />
+            </svg>
           </span>
-          <span className="flex flex-col gap-0.5 min-w-0">
-            <span style={{ fontSize: 15, fontWeight: 800, color: "#183B34", lineHeight: lang === "ur" ? 1.8 : 1.3 }}>
-              {lang === "ur" ? "اپنی پسندیدہ اشیاء یہاں شامل کریں" : "Add your favourites here"}
-            </span>
-            <span style={{ fontSize: 12.5, fontWeight: 500, color: "#52635F", lineHeight: lang === "ur" ? 1.9 : 1.35 }}>
-              {lang === "ur"
-                ? "کسی بھی ضمنی مصنوع کے ریٹ کھولیں اور ☆ دبائیں، وہ یہاں نظر آئیں گے"
-                : "Open any by-product's rates and tap ☆ to keep them here"}
-            </span>
+          <span style={{ marginTop: 10, fontSize: 16, fontWeight: 800, color: "#183B34", lineHeight: lang === "ur" ? 1.8 : 1.3 }}>
+            {lang === "ur" ? "ابھی کوئی پسندیدہ نہیں" : "No favourites yet"}
           </span>
-        </button>
+          <span style={{ marginTop: 4, maxWidth: 280, fontSize: 13, fontWeight: 500, color: "#52635F", lineHeight: lang === "ur" ? 1.9 : 1.45 }}>
+            {lang === "ur"
+              ? "کسی بھی ریٹ پر ☆ دبائیں، وہ یہاں فوری رسائی کے لیے محفوظ ہو جائے گا"
+              : "Tap ☆ on any rate to save it here for quick access"}
+          </span>
+          <button
+            type="button"
+            onClick={() =>
+              document.querySelector("[data-home-product]")?.scrollIntoView({ behavior: "smooth", block: "center", inline: "start" })
+            }
+            className="tap-target transition active:scale-[0.98]"
+            style={{
+              marginTop: 14,
+              height: 40,
+              padding: "0 20px",
+              borderRadius: 20,
+              border: "none",
+              background: "#087F63",
+              color: "#FFFFFF",
+              fontSize: 13.5,
+              fontWeight: 700,
+              fontFamily: "inherit",
+              boxShadow: "0 4px 12px rgba(8, 127, 99, 0.25)",
+            }}
+          >
+            {lang === "ur" ? "مصنوعات دیکھیں" : "Browse products"}
+          </button>
+        </div>
       )}
     </section>
   );
