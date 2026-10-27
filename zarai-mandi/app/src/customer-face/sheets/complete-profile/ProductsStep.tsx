@@ -1,5 +1,7 @@
 // Complete Profile step 1: pick the products / season packages you are interested in.
 
+import { useLayoutEffect, useRef, type CSSProperties } from "react";
+
 import {
   getPackagesForMonth,
   getVarietyIcon,
@@ -8,6 +10,53 @@ import {
 } from "../../../data/seasonProductData";
 import { URDU_FONT } from "../../shared/i18n/LangProvider";
 import { type CompleteProfileState } from "./useCompleteProfile";
+
+/** A product name kept on one line: the font steps down from `max` only as far
+ * as needed to fit the space it has (re-checked when that space changes). */
+function OneLineName({
+  text,
+  className,
+  style,
+  max = 13,
+  min = 8,
+}: {
+  text: string;
+  className?: string;
+  style?: CSSProperties;
+  max?: number;
+  min?: number;
+}) {
+  const ref = useRef<HTMLSpanElement>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const fit = () => {
+      let size = max;
+      el.style.fontSize = `${size}px`;
+      while (size > min && el.scrollWidth > el.clientWidth + 0.5) {
+        size -= 0.5;
+        el.style.fontSize = `${size}px`;
+      }
+    };
+    fit();
+    // Fonts (Urdu especially) can arrive after the first measure.
+    document.fonts?.ready.then(fit).catch(() => {});
+    const parent = el.parentElement;
+    if (!parent || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(fit);
+    ro.observe(parent);
+    return () => ro.disconnect();
+  }, [text, max, min]);
+  return (
+    <span
+      ref={ref}
+      className={`block flex-1 min-w-0 whitespace-nowrap ${className ?? ""}`}
+      style={{ fontSize: max, ...style }}
+    >
+      {text}
+    </span>
+  );
+}
 
 export function ProductsStep({ s }: { s: CompleteProfileState }) {
   const {
@@ -245,31 +294,30 @@ export function ProductsStep({ s }: { s: CompleteProfileState }) {
                   toggleProd(pkg.name);
                 }
               }}
-              className={`rounded-2xl p-2.5 flex items-center justify-between gap-1.5 transition-all cursor-pointer ${
+              className={`rounded-2xl p-2 flex items-center justify-between gap-1 transition-all cursor-pointer ${
                 isSelected
                   ? "border-2 border-[#087F63] bg-[#E8F8F3] shadow-xs"
                   : "border border-[#D5E2DD] bg-white hover:border-[#B5CEC5]"
               }`}
             >
-              {/* Icon + Title */}
-              <div className="flex items-center gap-2 min-w-0 flex-1">
+              {/* Icon + Title (title always on one line) */}
+              <div className="flex items-center gap-1.5 min-w-0 flex-1">
                 <img
                   src={pkg.icon}
                   alt={pkg.name}
-                  className="w-8 h-8 object-contain flex-shrink-0"
+                  className="w-7 h-7 object-contain flex-shrink-0"
                 />
-                <span
-                  className={`text-[13px] font-bold break-words min-w-0 ${
+                <OneLineName
+                  text={lang === "ur" ? pkg.nameUr : pkg.name}
+                  className={`font-bold ${
                     isSelected ? "text-[#087F63]" : "text-[#183B34]"
                   }`}
                   style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-                >
-                  {lang === "ur" ? pkg.nameUr : pkg.name}
-                </span>
+                />
               </div>
 
               {/* Right side: Chevron for Verticals + Radio for all */}
-              <div className="flex items-center gap-1.5 flex-shrink-0">
+              <div className="flex items-center gap-1 flex-shrink-0">
                 {isVertical && (
                   <button
                     type="button"
@@ -277,7 +325,7 @@ export function ProductsStep({ s }: { s: CompleteProfileState }) {
                       e.stopPropagation();
                       setExpandedPkgId(pkg.id);
                     }}
-                    className="tap-target text-[#9CA3AF] hover:text-[#087F63] p-0.5"
+                    className="tap-target text-[#9CA3AF] hover:text-[#087F63] p-0"
                     title="Expand varieties"
                   >
                     <svg

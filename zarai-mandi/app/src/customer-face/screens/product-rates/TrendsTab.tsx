@@ -917,7 +917,7 @@ export function TrendsTab({
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2, minWidth: 96 }}>
                       <span style={{ fontSize: 15, fontWeight: 600, fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate" }}>{t.mins[d] > 0 ? `${f.num(t.mins[d])}–${f.num(t.maxs[d])}` : "—"}</span>
                       <span style={{ fontSize: 12.5, fontWeight: 700, fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate", color: signed(ch) > 0 ? C.up : signed(ch) < 0 ? C.down : C.faint }}>
-                        {p > 0 ? (signed(ch) === 0 ? f.tx("No change", "کوئی تبدیلی نہیں") : `${arrow(ch)} ${f.pct(ch)}`) : ""}
+                        {p > 0 ? (signed(ch) === 0 ? f.tx("No change", `● ${f.pct(0)}`) : `${arrow(ch)} ${f.pct(ch)}`) : ""}
                       </span>
                     </div>
                   </button>

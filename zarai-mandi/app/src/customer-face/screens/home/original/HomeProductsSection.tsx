@@ -6,6 +6,10 @@ import type { Screen } from "../../../shared/types";
 
 type Division = (typeof PRODUCT_DIVISIONS)[number];
 
+/** Icons drawn edge to edge in a square (no empty margin): shown smaller so
+ * the whole square fits inside the round frame (a circle's inner square is ~70%). */
+const FULL_BLEED_ICONS = new Set(["Edible Oil", "Livestock"]);
+
 /**
  * Original Home · "Products": the user's active products (green ring, tap to
  * open the by-product screen) followed by locked ones (tap to subscribe), with
@@ -145,8 +149,8 @@ export function HomeProductsSection({
                   src={getproductIconSrc(div.name, verticalFor)}
                   alt={div.name}
                   style={{
-                    width: "80%",
-                    height: "80%",
+                    width: FULL_BLEED_ICONS.has(div.name) ? "66%" : "80%",
+                    height: FULL_BLEED_ICONS.has(div.name) ? "66%" : "80%",
                     objectFit: "contain",
                   }}
                 />

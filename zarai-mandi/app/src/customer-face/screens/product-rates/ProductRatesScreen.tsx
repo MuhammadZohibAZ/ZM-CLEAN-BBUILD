@@ -256,14 +256,9 @@ export function ProductRatesScreen({
         : scope.kind === "district"
           ? f.tx(`${scope.label} district`, `ضلع ${tm(scope.label)}`)
           : f.tx(`${stripMandi(scope.label)} Mandi`, `${tm(stripMandi(scope.label))} منڈی`);
-  const bandLabel =
-    (scope.kind === "mandi" || scope.kind === "district") && scopeRow
-      ? // District / province add context the pill doesn't show (skip repeats).
-      [scopeRow.district, scopeRow.province]
-        .filter((x, k, a) => x && a.indexOf(x) === k && x.toLowerCase() !== stripMandi(scope.label).toLowerCase())
-        .map((x) => tm(x))
-        .join(", ")
-      : locationLabel;
+  // The price overview card names the picked district or mandi itself
+  // ("Attock district", "Multan Mandi"), not the province it sits in.
+  const bandLabel = locationLabel;
   // The pill only needs the place name ("Multan"), not "Multan Mandi".
   const pillLabel = scope.kind === "mandi" ? tm(stripMandi(scope.label)) : locationLabel;
 
@@ -303,7 +298,7 @@ export function ProductRatesScreen({
     heroChange === null
       ? ""
       : heroDir === 0
-        ? f.tx("No change", "کوئی تبدیلی نہیں")
+        ? f.tx("No change", `● ${f.pct(0)}`)
         : `${heroDir > 0 ? "▲" : "▼"} ${f.pct(heroChange)}`;
 
   const speakHero = () => {

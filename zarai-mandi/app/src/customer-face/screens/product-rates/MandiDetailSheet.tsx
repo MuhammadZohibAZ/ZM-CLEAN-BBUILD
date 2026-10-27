@@ -584,7 +584,7 @@ export function MandiDetailSheet({
                 )}
               </span>
             </div>
-            {change !== null && <ChangePill value={change} text={Math.abs(change) < 0.05 ? f.tx("No change", "کوئی تبدیلی نہیں") : `${arrow(change)} ${f.pct(change)}`} />}
+            {change !== null && <ChangePill value={change} text={Math.abs(change) < 0.05 ? f.tx("No change", `● ${f.pct(0)}`) : `${arrow(change)} ${f.pct(change)}`} />}
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8 }}>
             {box(

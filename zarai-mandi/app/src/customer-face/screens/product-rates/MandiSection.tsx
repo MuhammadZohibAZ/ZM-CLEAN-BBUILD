@@ -570,7 +570,7 @@ export function MandiSection({
         <div style={{ margin: "0 16px", padding: 24, borderRadius: 20, background: C.surface, textAlign: "center", fontSize: 14, fontWeight: 500, color: C.muted, lineHeight: f.lh }}>
           {emptyNote ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center" }}>
-              <span>{emptyNote.message}</span>
+              <span style={{ fontWeight: 600, color: C.ink }}>{emptyNote.message}</span>
               <EmptyActions f={f} actions={emptyNote.actions} center />
             </div>
           ) : (
@@ -780,7 +780,7 @@ function MandiRow({
               {f.pct(e.change)}
             </span>
           ) : (
-            <span style={{ fontSize: 12, fontWeight: 500, color: C.faint }}>{e.change === null ? f.tx("First report", "پہلی رپورٹ") : f.tx("No change", "کوئی تبدیلی نہیں")}</span>
+            <span style={{ fontSize: 12, fontWeight: 500, color: C.faint }}>{e.change === null ? f.tx("First report", "پہلی رپورٹ") : f.tx("No change", `● ${f.pct(0)}`)}</span>
           )}
         </div>
       </div>

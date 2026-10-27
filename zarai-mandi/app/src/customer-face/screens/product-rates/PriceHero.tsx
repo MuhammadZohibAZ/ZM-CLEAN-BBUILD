@@ -143,7 +143,7 @@ export function PriceHero({
                 {change !== null && (
                   <span style={{ fontSize: 13, fontWeight: 700, fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate", color: dir > 0 ? DK.up : dir < 0 ? DK.down : DK.sub }}>
                     {dir === 0 ? (
-                      f.tx("No change", "کوئی تبدیلی نہیں")
+                      f.tx("No change", `● ${f.pct(0)}`)
                     ) : (
                       <>
                         {arrow(change)} {changeAbs >= 0 ? "+" : "−"}

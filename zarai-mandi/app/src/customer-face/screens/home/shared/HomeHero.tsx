@@ -131,7 +131,9 @@ export function HomeHero({
               background: "rgba(255, 255, 255, 0.22)",
               border: "1.2px solid rgba(255, 255, 255, 0.45)",
               color: "#FFFFFF",
-              fontSize: lang === "ur" ? 13.5 : 12,
+              fontSize: lang === "ur" ? 13.5 : 16,
+              // The bigger "اردو" gets a tighter line so the pill keeps its height.
+              lineHeight: lang === "ur" ? undefined : 1.1,
               fontWeight: 800,
               backdropFilter: "blur(12px)",
               WebkitBackdropFilter: "blur(12px)",
