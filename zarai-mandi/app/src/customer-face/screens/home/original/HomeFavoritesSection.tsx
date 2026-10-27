@@ -93,7 +93,7 @@ export function HomeFavoritesSection({
               ? "کسی بھی ریٹ پر ☆ دبائیں، وہ یہاں فوری رسائی کے لیے محفوظ ہو جائے گا"
               : "Tap ☆ on any rate to save it here for quick access"}
           </span>
-          <button
+          {/* <button
             type="button"
             onClick={() =>
               document.querySelector("[data-home-product]")?.scrollIntoView({ behavior: "smooth", block: "center", inline: "start" })
@@ -114,7 +114,7 @@ export function HomeFavoritesSection({
             }}
           >
             {lang === "ur" ? "مصنوعات دیکھیں" : "Browse products"}
-          </button>
+          </button> */}
         </div>
       )}
     </section>
