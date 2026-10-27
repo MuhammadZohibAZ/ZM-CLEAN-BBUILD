@@ -567,11 +567,11 @@ export function MandiSection({
           ))}
         </div>
       ) : entries.length === 0 ? (
-        <div style={{ margin: "0 16px", padding: 24, borderRadius: 20, background: C.surface, textAlign: "center", fontSize: 14, fontWeight: 500, color: C.muted, lineHeight: f.lh }}>
+        <div style={{ margin: "0 16px", padding: "12px 14px", borderRadius: 20, background: C.surface, textAlign: "start", fontSize: 14, fontWeight: 600, color: C.ink, lineHeight: f.lh }}>
           {emptyNote ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "center" }}>
-              <span style={{ fontWeight: 600, color: C.ink }}>{emptyNote.message}</span>
-              <EmptyActions f={f} actions={emptyNote.actions} center />
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-start" }}>
+              <span style={{ fontSize: 14, fontWeight: 600, color: C.ink, lineHeight: f.lh }}>{emptyNote.message}</span>
+              <EmptyActions f={f} actions={emptyNote.actions} />
             </div>
           ) : (
             f.tx("No mandi reported for the day and filters you picked.", "اس دن اور فلٹر کے لیے کسی منڈی کی رپورٹ نہیں۔")
