@@ -19,7 +19,7 @@ export function fertilizerCompany(byproduct?: string | null, short = true): stri
   if (!short) return hit.company;
   return hit.company
     .replace(/\s*\((pvt|private)\)\s*/gi, " ")
-    .replace(/\b(company|pvt\.?|ltd\.?|limited|private)\b/gi, "")
+    .replace(/\b(company|pvt|ltd|limited|private)\b\.?/gi, "")
     .replace(/\s+/g, " ")
     .trim();
 }
