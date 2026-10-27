@@ -331,13 +331,13 @@ function Page({
         </button>
         <div className="min-w-0 flex-1">
           <p
-            className="font-bold truncate"
+            className="font-bold break-words min-w-0"
             style={{ color: C.ink, fontSize: isUr ? 20 : 18, fontFamily: isUr ? URDU_FONT : "inherit", lineHeight: isUr ? 1.7 : 1.25 }}
           >
             {title}
           </p>
           {subtitle && (
-            <p className="text-xs mt-0.5 truncate" style={{ color: C.muted }}>
+            <p className="text-xs mt-0.5 break-words min-w-0" style={{ color: C.muted }}>
               {subtitle}
             </p>
           )}
@@ -497,7 +497,7 @@ function Row({
           {label}
         </p>
         {sub && (
-          <p className="text-xs mt-0.5 truncate" style={{ color: C.muted }}>
+          <p className="text-xs mt-0.5 break-words min-w-0" style={{ color: C.muted }}>
             {sub}
           </p>
         )}
@@ -773,18 +773,18 @@ export function AccountCenter({
           </div>
           <div className="flex-1 min-w-0">
             <p
-              className="font-bold text-white truncate"
+              className="font-bold text-white break-words min-w-0"
               style={{ fontSize: isUr ? 18 : 16, fontFamily: isUr ? URDU_FONT : "inherit" }}
             >
               {tn(profile.name)}
             </p>
-            <p className="text-xs mt-0.5 truncate" style={{ color: "#CDEBDF" }}>
+            <p className="text-xs mt-0.5 break-words min-w-0" style={{ color: "#CDEBDF" }}>
               <Ltr>{profile.phone}</Ltr>
             </p>
             {cityName(profile.city) && (
-              <p className="text-xs mt-0.5 flex items-center gap-1 truncate" style={{ color: "#CDEBDF", fontFamily: isUr ? URDU_FONT : "inherit" }}>
+              <p className="text-xs mt-0.5 flex items-center gap-1 break-words min-w-0" style={{ color: "#CDEBDF", fontFamily: isUr ? URDU_FONT : "inherit" }}>
                 <Icon name="pin" size={12} color="#CDEBDF" />
-                <span className="truncate">{tm(cityName(profile.city))}</span>
+                <span className="break-words min-w-0">{tm(cityName(profile.city))}</span>
               </p>
             )}
             <span
@@ -1224,7 +1224,7 @@ export function AccountCenter({
               >
                 <ProductIcon name={p} vertical={getVerticalForProduct(p)} size={30} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold truncate" style={{ color: C.ink }}>
+                  <p className="text-sm font-semibold break-words min-w-0" style={{ color: C.ink }}>
                     {tc(p)}
                   </p>
                   {profileCompleted && (
@@ -1256,7 +1256,7 @@ export function AccountCenter({
                 >
                   <ProductIcon name={item.name} vertical={getVerticalForProduct(item.name)} size={28} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate" style={{ color: C.ink }}>
+                    <p className="text-sm font-semibold break-words min-w-0" style={{ color: C.ink }}>
                       {tc(item.name)}
                     </p>
                     <p className="text-[11px]" style={{ color: C.muted }}>

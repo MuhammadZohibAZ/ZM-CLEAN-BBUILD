@@ -438,12 +438,10 @@ export function AccountScreen({
                       </span>
                       <span
                         style={{
-                          display: "block",
+                          overflowWrap: "break-word", display: "block",
                           fontSize: 12,
                           color: "#5f6368",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
+                                                                              whiteSpace: "normal",
                         }}
                       >
                         {acc.email}
@@ -664,11 +662,9 @@ export function AccountScreen({
                 </span>
                 <span
                   style={{
-                    fontSize: 13,
+                    overflowWrap: "break-word", fontSize: 13,
                     color: "#3c4043",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
+                                                            whiteSpace: "normal",
                   }}
                 >
                   {pickedAccount.name} · {pickedAccount.email}

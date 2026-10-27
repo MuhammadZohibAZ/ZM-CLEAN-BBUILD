@@ -92,7 +92,7 @@ export function BestPlaces({
         </span>
         <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 1 }}>
           <span style={{ fontSize: compact ? 11 : 12.5, fontWeight: 500, color: C.muted, lineHeight: f.lh }}>{up ? f.tx("Highest rate", "سب سے زیادہ ریٹ") : f.tx("Lowest rate", "سب سے کم ریٹ")}</span>
-          <span style={{ fontSize: compact ? 13.5 : 15, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: f.lh }}>
+          <span style={{ overflowWrap: "break-word", fontSize: compact ? 13.5 : 15, fontWeight: 600, whiteSpace: "normal", lineHeight: f.lh }}>
             {tm(stripMandi(o.mandi))}
             <span style={{ fontWeight: 500, color: C.muted }}> · {tm(o.province || o.district)}</span>
           </span>

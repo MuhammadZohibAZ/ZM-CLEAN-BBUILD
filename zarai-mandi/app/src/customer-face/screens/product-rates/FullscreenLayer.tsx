@@ -124,9 +124,9 @@ export function FullscreenLayer({
           <Icon name="close" size={18} width={2.4} color={C.ink} />
         </button>
         <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
-          <span style={{ fontWeight: 700, fontSize: 15, lineHeight: f.lh, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{title}</span>
+          <span style={{ overflowWrap: "break-word", fontWeight: 700, fontSize: 15, lineHeight: f.lh, whiteSpace: "normal", }}>{title}</span>
           {subtitle && (
-            <span style={{ fontWeight: 500, fontSize: 12, color: C.muted, lineHeight: f.lh, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{subtitle}</span>
+            <span style={{ overflowWrap: "break-word", fontWeight: 500, fontSize: 12, color: C.muted, lineHeight: f.lh, whiteSpace: "normal", }}>{subtitle}</span>
           )}
         </div>
         {actions}

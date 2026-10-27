@@ -669,7 +669,7 @@ export default function ZaraiMandiMap({
                 <div className="flex items-center gap-1.5 min-w-0">
                   <div className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse flex-shrink-0" />
                   <p
-                    className="text-[11px] sm:text-xs font-black text-emerald-950 truncate"
+                    className="text-[11px] sm:text-xs font-black text-emerald-950 break-words min-w-0"
                     style={{ fontFamily: lang === "ur" ? urduFont : "inherit" }}
                   >
                     {lang === "ur" ? "قریبی منڈیاں" : "Nearby Mandis"}
@@ -734,7 +734,7 @@ export default function ZaraiMandiMap({
                           }`}
                       >
                         <div className="flex items-start justify-between gap-1">
-                          <p className={`text-[11px] sm:text-[11.5px] font-black leading-tight truncate ${isSelected ? "text-white" : "text-emerald-950"}`}>
+                          <p className={`text-[11px] sm:text-[11.5px] font-black leading-tight break-words min-w-0 ${isSelected ? "text-white" : "text-emerald-950"}`}>
                             {item.mandi.name}
                           </p>
                           <span className={`text-[8.5px] font-bold px-1 rounded flex-shrink-0 ${isSelected ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-800"}`}>

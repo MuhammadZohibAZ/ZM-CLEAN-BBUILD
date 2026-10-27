@@ -377,7 +377,7 @@ export function TrendsTab({
   const darkStat = (label: string, value: string, sub?: string, color: string = DK.text) => (
     <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0, flex: 1 }}>
       <span style={{ fontSize: 11.5, fontWeight: 500, color: DK.faint }}>{label}</span>
-      <span style={{ fontSize: 14, fontWeight: 700, color, fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{value}</span>
+      <span style={{ overflowWrap: "break-word", fontSize: 14, fontWeight: 700, color, fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate", whiteSpace: "normal", }}>{value}</span>
       {sub && <span style={{ fontSize: 11.5, fontWeight: 500, color: DK.faint }}>{sub}</span>}
     </div>
   );
@@ -512,7 +512,7 @@ export function TrendsTab({
         <>
           <div style={{ position: "relative", padding: "10px 16px 0", display: "flex", flexDirection: "column", gap: 3 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-              <span style={{ fontSize: 12.5, fontWeight: 500, color: DK.sub, lineHeight: f.lh, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <span style={{ overflowWrap: "break-word", fontSize: 12.5, fontWeight: 500, color: DK.sub, lineHeight: f.lh, minWidth: 0, whiteSpace: "normal" }}>
                 {isPrice
                   ? compare
                     ? f.tx(`${shortRate(tr(set[0]))} · average ${f.per}`, `${shortRate(tr(set[0]))} · اوسط ${f.per}`)
@@ -979,8 +979,8 @@ export function TrendsTab({
                   >
                     <span style={{ width: 22, fontSize: 13, fontWeight: 700, color: C.faint, flexShrink: 0 }}>{f.digits(k + 1)}</span>
                     <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 1 }}>
-                      <span style={{ fontSize: 15, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: f.lh }}>{tm(stripMandi(m.mandi))}</span>
-                      <span style={{ fontSize: 12.5, fontWeight: 500, color: C.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: f.lh }}>
+                      <span style={{ overflowWrap: "break-word", fontSize: 15, fontWeight: 600, whiteSpace: "normal", lineHeight: f.lh }}>{tm(stripMandi(m.mandi))}</span>
+                      <span style={{ overflowWrap: "break-word", fontSize: 12.5, fontWeight: 500, color: C.muted, whiteSpace: "normal", lineHeight: f.lh }}>
                         {shortRate(tr(m.rate))} · {tm(m.district)}
                       </span>
                     </div>
@@ -1085,7 +1085,7 @@ export function TrendsTab({
                               return (
                                 <div key={st.name} style={{ display: "flex", flexDirection: "column", gap: 5, paddingTop: 9 }}>
                                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8 }}>
-                                    <span style={{ fontSize: 13.5, fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{tm(st.name)}</span>
+                                    <span style={{ overflowWrap: "break-word", fontSize: 13.5, fontWeight: 600, minWidth: 0, whiteSpace: "normal" }}>{tm(st.name)}</span>
                                     <span style={{ flexShrink: 0, fontSize: 12, fontWeight: 500, color: C.muted, fontVariantNumeric: "tabular-nums", direction: "ltr", unicodeBidi: "isolate" }}>
                                       <span style={{ fontWeight: 700, color: C.ink }}>{f.digits(sShare >= 1 ? Math.round(sShare) : Number(sShare.toFixed(1)))}%</span> · {f.num(st.v)}
                                     </span>

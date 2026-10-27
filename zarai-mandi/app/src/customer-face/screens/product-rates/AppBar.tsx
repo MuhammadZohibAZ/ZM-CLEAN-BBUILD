@@ -51,15 +51,13 @@ export function AppBar({
               const text = (
                 <span
                   style={{
-                    fontSize: 18,
+                    overflowWrap: "break-word", fontSize: 18,
                     fontWeight: 700,
                     lineHeight: f.ur ? 1.5 : 1.2,
                     letterSpacing: "-0.01em",
                     color: C.ink,
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    minWidth: 0,
+                    whiteSpace: "normal",
+                                                            minWidth: 0,
                   }}
                 >
                   {title}
@@ -84,11 +82,12 @@ export function AppBar({
             })()}
           </h1>
           {(subtitle || compact) && (
-            <div style={{ position: "relative", height: f.ur ? 20 : 16 }}>
+            // Both lines share one grid cell (cross-fade) and can wrap, so nothing is cut off.
+            <div style={{ display: "grid" }}>
               {subtitle && (
                 <p
                   aria-hidden={!!compact}
-                  style={{ position: "absolute", inset: 0, margin: 0, fontSize: 12, fontWeight: 500, color: C.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: f.lh, transition: "opacity 200ms ease, transform 200ms ease", opacity: compact ? 0 : 1, transform: compact ? "translateY(-6px)" : "none" }}
+                  style={{ overflowWrap: "break-word", gridArea: "1 / 1", margin: 0, fontSize: 12, fontWeight: 500, color: C.muted, whiteSpace: "normal", lineHeight: f.lh, transition: "opacity 200ms ease, transform 200ms ease", opacity: compact ? 0 : 1, transform: compact ? "translateY(-6px)" : "none" }}
                 >
                   {subtitle}
                 </p>
@@ -96,7 +95,7 @@ export function AppBar({
               {compact && (
                 <p
                   aria-hidden={!compact}
-                  style={{ position: "absolute", inset: 0, margin: 0, fontSize: 12.5, fontWeight: 600, color: C.ink, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: f.lh, transition: "opacity 200ms ease, transform 200ms ease", opacity: compact ? 1 : 0, transform: compact ? "none" : "translateY(6px)", fontVariantNumeric: "tabular-nums" }}
+                  style={{ overflowWrap: "break-word", gridArea: "1 / 1", margin: 0, fontSize: 12.5, fontWeight: 600, color: C.ink, whiteSpace: "normal", lineHeight: f.lh, transition: "opacity 200ms ease, transform 200ms ease", opacity: compact ? 1 : 0, transform: compact ? "none" : "translateY(6px)", fontVariantNumeric: "tabular-nums" }}
                 >
                   {compact?.price}{" "}
                   <span style={{ color: compact && compact.dir > 0 ? C.up : compact && compact.dir < 0 ? C.down : C.muted, direction: "ltr", unicodeBidi: "isolate" }}>{compact?.change}</span>

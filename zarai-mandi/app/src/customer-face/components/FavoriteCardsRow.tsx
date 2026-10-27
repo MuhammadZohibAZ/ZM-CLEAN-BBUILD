@@ -94,7 +94,7 @@ export function FavoriteCardsRow({ items, push }: { items: FavoriteCardItem[]; p
                 <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
                 <circle cx="12" cy="9" r="2.5" fill="#EAF5F0" />
               </svg>
-              <span className="truncate text-[10.5px] font-bold text-[#075E4F]">{place}</span>
+              <span className="break-words min-w-0 text-[10.5px] font-bold text-[#075E4F]">{place}</span>
             </span>
             {/* Row flex: the card stretches so every card in the row is the same height */}
             <div className="flex-1 flex">

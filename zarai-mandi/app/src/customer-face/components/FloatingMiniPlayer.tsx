@@ -81,11 +81,11 @@ export function FloatingMiniPlayer({
 
       {/* Bottom title & author ticker */}
       <div className="absolute bottom-1 left-2 right-2 flex items-center justify-between text-left pointer-events-none">
-        <div className="truncate pr-1">
-          <p className="text-[10px] font-black text-white truncate drop-shadow">
+        <div className="break-words min-w-0 pr-1">
+          <p className="text-[10px] font-black text-white break-words min-w-0 drop-shadow">
             {lang === "ur" ? video.reel.titleUrdu : video.reel.title}
           </p>
-          <p className="text-[8.5px] text-[#32BA46] font-extrabold truncate">
+          <p className="text-[8.5px] text-[#32BA46] font-extrabold break-words min-w-0">
             {lang === "ur" ? video.reel.authorUrdu : video.reel.author}
           </p>
         </div>

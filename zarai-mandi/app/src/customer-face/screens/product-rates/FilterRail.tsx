@@ -165,44 +165,40 @@ export function FilterRail({
                   alignItems: "flex-start",
                   justifyContent: "center",
                   gap: 1,
-                  height: variant === "map" ? 46 : 54,
+                  // At least the rail's height; a long value wraps instead of being cut off.
+                  minHeight: variant === "map" ? 46 : 54,
                   paddingInlineStart: variant === "map" ? 6 : 8,
                   paddingInlineEnd: clearable ? (variant === "map" ? 22 : 26) : variant === "map" ? 4 : 8,
-                  paddingTop: 0,
-                  paddingBottom: 0,
+                  paddingTop: 4,
+                  paddingBottom: 4,
                   border: "none",
                   background: "transparent",
                   fontFamily: f.font,
                   textAlign: "start",
-                  whiteSpace: "nowrap",
                 }}
               >
                 <span
                   style={{
-                    fontSize: variant === "map" ? 10.5 : 11,
+                    overflowWrap: "break-word", fontSize: variant === "map" ? 10.5 : 11,
                     fontWeight: 500,
                     color: on ? C.brandDeep : C.muted,
                     lineHeight: 1.2,
-                    whiteSpace: "nowrap",
+                    whiteSpace: "normal",
                     maxWidth: "100%",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
+                                                          }}
                 >
                   {p.caption}
                 </span>
-                <span style={{ display: "flex", alignItems: "center", gap: 3, whiteSpace: "nowrap", maxWidth: "100%" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: 3, maxWidth: "100%" }}>
                   <span
                     style={{
-                      fontSize: variant === "map" ? 12.5 : 13,
+                      overflowWrap: "break-word", fontSize: variant === "map" ? 12.5 : 13,
                       fontWeight: 600,
                       color: on ? C.brandDeep : C.ink,
                       lineHeight: 1.2,
-                      whiteSpace: "nowrap",
+                      whiteSpace: "normal",
                       minWidth: 0,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
+                                                                }}
                   >
                     {p.value}
                   </span>

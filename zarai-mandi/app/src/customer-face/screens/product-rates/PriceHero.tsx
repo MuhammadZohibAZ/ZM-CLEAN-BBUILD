@@ -90,7 +90,7 @@ export function PriceHero({
   const stat = (label: string, value: React.ReactNode) => (
     <div style={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0, flex: 1 }}>
       <span style={{ fontSize: 11, fontWeight: 500, color: DK.faint, lineHeight: f.lh }}>{label}</span>
-      <span style={{ fontSize: 13.5, fontWeight: 700, color: DK.text, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: f.lh }}>
+      <span style={{ overflowWrap: "break-word", fontSize: 13.5, fontWeight: 700, color: DK.text, fontVariantNumeric: "tabular-nums", whiteSpace: "normal", lineHeight: f.lh }}>
         {value}
       </span>
     </div>
@@ -107,7 +107,7 @@ export function PriceHero({
 
         <div style={{ position: "relative", padding: "8px 12px 2px", display: "flex", flexDirection: "column", gap: 2 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-            <span style={{ minWidth: 0, fontSize: 12, fontWeight: 500, color: DK.sub, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: f.lh }}>
+            <span style={{ overflowWrap: "break-word", minWidth: 0, fontSize: 12, fontWeight: 500, color: DK.sub, whiteSpace: "normal", lineHeight: f.lh }}>
               {[bandLabel, rateLabel, has ? coverage : ""].filter(Boolean).join(" · ") || f.tx("Mandi rates", "منڈی ریٹس")}
             </span>
             <button

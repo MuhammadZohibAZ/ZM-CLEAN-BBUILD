@@ -5,7 +5,7 @@ import { BottomNav } from "./customer-face/navigation/BottomNav";
 import { VoiceQueryOverlay } from "./customer-face/navigation/VoiceQueryOverlay";
 import { BillingScreen } from "./customer-face/screens/billing/BillingScreen";
 import { ByProductCombinedScreen } from "./customer-face/screens/byproducts/ByProductCombinedScreen";
-import { HomeScreenSwitch } from "./customer-face/screens/home/HomeScreenSwitch";
+import { HomeScreen } from "./customer-face/screens/home/original/HomeScreen";
 import { ProductRatesScreen } from "./customer-face/screens/product-rates/ProductRatesScreen";
 import { RepDashboardScreen } from "./customer-face/screens/RepDashboardScreen";
 import { NewsVideosScreen } from "./customer-face/screens/ZaraiReelsScreen";
@@ -314,11 +314,10 @@ function AppInner({
               hasRepAccount={hasRepAccount}
             />
           ) : (
-            <HomeScreenSwitch
+            <HomeScreen
               push={push}
               openAccountRequest={accountRequest}
               onAccountRequestHandled={() => setAccountRequest(0)}
-              locationScope={locationScope}
               setFeedOpen={(v) => {
                 if (v) openFeed({});
                 else setFeedOpen(false);

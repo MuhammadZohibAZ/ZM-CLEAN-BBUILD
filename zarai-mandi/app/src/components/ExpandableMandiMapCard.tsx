@@ -150,12 +150,12 @@ export const ExpandableMandiMapCard: React.FC<ExpandableMandiMapCardProps> = ({
           <div className="flex-1 min-w-0 flex flex-col justify-center px-2 z-10">
             <div className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
-              <span className={`${compact ? "text-[9.5px]" : "text-[10.5px]"} font-bold uppercase tracking-wider text-emerald-800/90 truncate`}>
+              <span className={`${compact ? "text-[9.5px]" : "text-[10.5px]"} font-bold uppercase tracking-wider text-emerald-800/90 break-words min-w-0`}>
                 {commodityName.replace(/\s+market$/i, "").trim()}
               </span>
             </div>
             <span
-              className={`font-black ${compact ? "text-[12.5px]" : "text-[14px]"} leading-tight truncate text-emerald-950 mt-0.5`}
+              className={`font-black ${compact ? "text-[12.5px]" : "text-[14px]"} leading-tight break-words min-w-0 text-emerald-950 mt-0.5`}
               style={{
                 fontFamily: lang === "ur" ? urduFont : "inherit",
               }}

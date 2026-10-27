@@ -269,17 +269,15 @@ export function BottomSheet({
         <div style={{ width: 44, height: 5, borderRadius: 3, background: "#C3CFC9", margin: "10px auto 0", flexShrink: 0 }} />
         <div style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "12px 16px 10px" }}>
           <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
-            <span style={{ fontFamily: display, fontSize: 20, fontWeight: 700, lineHeight: 1.25, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{title}</span>
+            <span style={{ overflowWrap: "break-word", fontFamily: display, fontSize: 20, fontWeight: 700, lineHeight: 1.25, whiteSpace: "normal", }}>{title}</span>
             {subtitle && (
               <span
                 style={{
-                  fontSize: "clamp(11px, 2.8vw, 12.5px)",
+                  overflowWrap: "break-word", fontSize: "clamp(11px, 2.8vw, 12.5px)",
                   fontWeight: 500,
                   color: C.muted,
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  lineHeight: 1.3,
+                  whiteSpace: "normal",
+                                                      lineHeight: 1.3,
                 }}
                 title={typeof subtitle === "string" ? subtitle : undefined}
               >

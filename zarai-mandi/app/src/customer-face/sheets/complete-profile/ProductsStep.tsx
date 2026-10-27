@@ -135,7 +135,7 @@ export function ProductsStep({ s }: { s: CompleteProfileState }) {
                     className="w-9 h-9 object-contain flex-shrink-0"
                   />
                   <span
-                    className="font-black text-[15px] text-[#143B33] truncate"
+                    className="font-black text-[15px] text-[#143B33] break-words min-w-0"
                     style={{
                       fontFamily: lang === "ur" ? URDU_FONT : "inherit",
                     }}
@@ -203,7 +203,7 @@ export function ProductsStep({ s }: { s: CompleteProfileState }) {
                         />
                       </div>
                       <span
-                        className="text-[10px] font-bold text-[#183B34] truncate w-full"
+                        className="text-[10px] font-bold text-[#183B34] break-words min-w-0 w-full"
                         style={{
                           fontFamily: lang === "ur" ? URDU_FONT : "inherit",
                         }}
@@ -259,7 +259,7 @@ export function ProductsStep({ s }: { s: CompleteProfileState }) {
                   className="w-8 h-8 object-contain flex-shrink-0"
                 />
                 <span
-                  className={`text-[13px] font-bold truncate ${
+                  className={`text-[13px] font-bold break-words min-w-0 ${
                     isSelected ? "text-[#087F63]" : "text-[#183B34]"
                   }`}
                   style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}

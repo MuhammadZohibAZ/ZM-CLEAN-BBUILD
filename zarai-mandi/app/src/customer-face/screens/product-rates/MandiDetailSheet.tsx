@@ -124,6 +124,7 @@ export function MandiDetailSheet({
   const change = prev && prev.mid > 0 && s.mid > 0 ? ((s.mid - prev.mid) / prev.mid) * 100 : null;
   const diffYesterday = prev && prev.mid > 0 && s.mid > 0 ? s.mid - prev.mid : null;
 
+  const ordinal = (n: number) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th"}`;
   // Price position among all mandis for the same rate type that day (1 = highest average price).
   const byMandi = new Map<string, MarketRow[]>();
   for (const r of allRows) if (r.date === date && r.rateType === rate) byMandi.set(r.mandiName, [...(byMandi.get(r.mandiName) || []), r]);
@@ -252,11 +253,10 @@ export function MandiDetailSheet({
     { label: f.tx("Bag size", "بوری کا وزن"), vals: join(cur.map((r) => f.unit(r.arrivalUnit || ""))) },
   ].filter((x) => x.vals.length > 0);
 
-  const box = (label: string, value: React.ReactNode, valColor: string = C.ink, bg: string = C.surfaceAlt, sub?: string) => (
+  const box = (label: string, value: React.ReactNode, valColor: string = C.ink, bg: string = C.surfaceAlt) => (
     <div style={{ display: "flex", flexDirection: "column", gap: 2, padding: 10, borderRadius: 14, background: bg, minWidth: 0 }}>
       <span style={{ fontSize: 12.5, fontWeight: 600, color: C.muted }}>{label}</span>
-      <span style={{ fontSize: 15, fontWeight: 700, color: valColor, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{value}</span>
-      {sub && <span style={{ fontSize: 11, fontWeight: 500, color: C.faint, lineHeight: f.lh }}>{sub}</span>}
+      <span style={{ overflowWrap: "break-word", fontSize: 15, fontWeight: 700, color: valColor, whiteSpace: "normal", }}>{value}</span>
     </div>
   );
 
@@ -533,7 +533,7 @@ export function MandiDetailSheet({
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8 }}>
               <div style={{ padding: "8px 10px", borderRadius: 12, background: "rgba(255, 255, 255, 0.75)", display: "flex", flexDirection: "column", gap: 2 }}>
                 <span style={{ fontSize: 11, fontWeight: 600, color: "#6B7280", fontFamily: f.font }}>{f.tx("Major Crops", "اہم فصلیں")}</span>
-                <span style={{ fontSize: 12.5, fontWeight: 700, color: "#1F2937", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontFamily: f.font }}>
+                <span style={{ overflowWrap: "break-word", fontSize: 12.5, fontWeight: 700, color: "#1F2937", whiteSpace: "normal", fontFamily: f.font }}>
                   {f.ur
                     ? mandiMeta?.commodities?.map((c) => {
                         const tr = tm(c) || t(c);
@@ -554,7 +554,7 @@ export function MandiDetailSheet({
               </div>
               <div style={{ padding: "8px 10px", borderRadius: 12, background: "rgba(255, 255, 255, 0.75)", display: "flex", flexDirection: "column", gap: 2 }}>
                 <span style={{ fontSize: 11, fontWeight: 600, color: "#6B7280", fontFamily: f.font }}>{f.tx("Region", "ڈسٹرکٹ / صوبہ")}</span>
-                <span style={{ fontSize: 12.5, fontWeight: 700, color: "#1F2937", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontFamily: f.font }}>
+                <span style={{ overflowWrap: "break-word", fontSize: 12.5, fontWeight: 700, color: "#1F2937", whiteSpace: "normal", fontFamily: f.font }}>
                   {f.ur
                     ? `${tm(place?.district || mandiMeta?.district || "—").replace(/ضلع/g, "").trim()}، ${tm(place?.province || mandiMeta?.province || "پنجاب")}`
                     : `${place?.district || mandiMeta?.district || "—"}, ${place?.province || mandiMeta?.province || "Punjab"}`}
@@ -603,15 +603,12 @@ export function MandiDetailSheet({
               ),
               diffYesterday !== null ? (diffYesterday > 0 ? C.up : diffYesterday < 0 ? C.down : C.ink) : C.ink,
             )}
-            {/* Each mandi's average of min and max for the rate today, ranked highest first. */}
+            {/* Mandis ranked by their average of min and max for the rate today, highest first. */}
             {box(
-              f.tx("Price rank today", "آج قیمت کا درجہ"),
+              f.tx("Price rank", "قیمت کا درجہ"),
               rank > 0 && mids.length > 1
-                ? f.tx(`${rank} of ${mids.length}`, `${f.digits(mids.length)} میں سے ${f.digits(rank)}`)
+                ? f.tx(`${ordinal(rank)} of ${mids.length}`, `${f.digits(mids.length)} میں سے ${f.digits(rank)}`)
                 : f.tx("Only mandi", "صرف یہی منڈی"),
-              C.ink,
-              C.surfaceAlt,
-              rank > 0 && mids.length > 1 ? f.tx("Avg of min & max, highest first", "کم و زیادہ کی اوسط، زیادہ پہلے") : undefined,
             )}
           </div>
           {/* Swipe between the trend charts and a day-by-day table. */}

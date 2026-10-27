@@ -242,7 +242,7 @@ export function MandiSection({
         maxWidth: 150,
       }}
     >
-      <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{label}</span>
+      <span style={{ overflowWrap: "break-word", }}>{label}</span>
       <Icon name="chevDown" size={10} width={2.4} color={active ? C.brand : C.muted} />
     </button>
   );
@@ -264,7 +264,7 @@ export function MandiSection({
       <table dir={f.dir} style={{ borderCollapse: "separate", borderSpacing: 0, minWidth: 640, width: "100%", fontSize: 13, fontVariantNumeric: "tabular-nums", lineHeight: 1.35 }}>
         <thead>
           <tr>
-            <th style={{ ...thBase, insetInlineStart: 0, zIndex: 3, textAlign: "start", borderInlineEnd: `1px solid ${C.line}`, minWidth: 85, maxWidth: 105, padding: "4px 5px" }}>
+            <th style={{ ...thBase, insetInlineStart: 0, zIndex: 3, textAlign: "start", borderInlineEnd: `1px solid ${C.line}`, minWidth: 96, maxWidth: 128, padding: "4px 5px" }}>
               {headBtn(
                 sort === "nameAZ" ? f.tx("Mandi A→Z", "منڈی ا→ی") : sort === "nameZA" ? f.tx("Mandi Z→A", "منڈی ی→ا") : f.tx("Mandi", "منڈی"),
                 sort === "nameAZ" || sort === "nameZA",
@@ -317,7 +317,7 @@ export function MandiSection({
             const td: CSSProperties = { padding: "8px 4px", borderBottom: `1px solid ${C.lineSoft}`, whiteSpace: "nowrap", textAlign: "center", fontWeight: 500, color: C.ink2, background: bg };
             return (
               <tr key={e.key} onClick={() => onOpen(e)} style={{ cursor: "pointer" }}>
-                <td style={{ ...td, position: "sticky", insetInlineStart: 0, zIndex: 1, textAlign: "start", fontWeight: 700, color: C.ink, borderInlineEnd: `1px solid ${C.line}`, padding: "8px 8px", minWidth: 85, maxWidth: 105, overflow: "hidden", textOverflow: "ellipsis" }}>
+                <td style={{ ...td, position: "sticky", insetInlineStart: 0, zIndex: 1, textAlign: "start", fontWeight: 700, color: C.ink, borderInlineEnd: `1px solid ${C.line}`, padding: "8px 8px", minWidth: 96, maxWidth: 128, whiteSpace: "normal", overflowWrap: "break-word", lineHeight: 1.25 }}>
                   {tm(stripMandi(r.mandiName))}
                 </td>
                 <td style={{ ...td, fontWeight: 700, color: C.brand, padding: "8px 4px", fontSize: 12.5 }}><bdi dir="ltr">{r.min > 0 ? `${f.num(r.min)} – ${f.num(r.max)}` : "—"}</bdi></td>
@@ -745,7 +745,7 @@ function MandiRow({
     >
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
         <span style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
-          <span style={{ fontSize: 15, fontWeight: 600, lineHeight: f.lh, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          <span style={{ overflowWrap: "break-word", fontSize: 15, fontWeight: 600, lineHeight: f.lh, whiteSpace: "normal", }}>
             {[tm(stripMandi(r.mandiName)), shortRate(tr(r.rateType))].filter(Boolean).join(" · ")}
           </span>
           {selected && (
@@ -753,7 +753,7 @@ function MandiRow({
           )}
         </span>
         {sub ? (
-          <span style={{ fontSize: 12.5, fontWeight: 500, color: C.muted, lineHeight: f.lh, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          <span style={{ overflowWrap: "break-word", fontSize: 12.5, fontWeight: 500, color: C.muted, lineHeight: f.lh, whiteSpace: "normal", }}>
             {sub}
           </span>
         ) : null}

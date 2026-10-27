@@ -74,7 +74,7 @@ export function AllVarietiesSheet({ s }: { s: CompleteProfileState }) {
                 className="w-8 h-8 object-contain rounded-xl flex-shrink-0"
               />
               <span
-                className="font-bold text-[14px] text-[#183B34] truncate"
+                className="font-bold text-[14px] text-[#183B34] break-words min-w-0"
                 style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
               >
                 {lang === "ur" ? v.nameUr || v.name : v.name}

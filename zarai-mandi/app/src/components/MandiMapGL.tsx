@@ -765,8 +765,8 @@ export default function MandiMapGL({
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <div className="truncate" style={{ fontSize: 15, fontWeight: 800, color: "#143B33" }}>{tm(p.name)}</div>
-                    <div className="truncate" style={{ fontSize: 11.5, fontWeight: 600, color: "#6B7C76" }}>
+                    <div className="break-words min-w-0" style={{ fontSize: 15, fontWeight: 800, color: "#143B33" }}>{tm(p.name)}</div>
+                    <div className="break-words min-w-0" style={{ fontSize: 11.5, fontWeight: 600, color: "#6B7C76" }}>
                       {tm(p.district)} · {tm(p.province)}
                     </div>
                   </div>

@@ -236,7 +236,7 @@ export function RepDashboardScreen({
             <span className="text-[10.5px] font-bold text-[#52635F]">
               {lang === "ur" ? "بنیادی منڈی" : "Assigned Mandi"}
             </span>
-            <h3 className="text-sm font-black text-[#183B34] truncate">{repCity}</h3>
+            <h3 className="text-sm font-black text-[#183B34] break-words min-w-0">{repCity}</h3>
             <span className="text-[10px] text-[#52635F] font-semibold">{repProvince}</span>
           </div>
 

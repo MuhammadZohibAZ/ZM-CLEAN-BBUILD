@@ -207,7 +207,7 @@ export function SearchProfilePanel({
                   <AnimatePresence mode="wait" initial={false}>
                     <motion.span
                       key={`${lang}-${exampleIdx}`}
-                      className="absolute inset-0 truncate"
+                      className="absolute inset-0 break-words min-w-0"
                       initial={{ y: 12, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
                       exit={{ y: -12, opacity: 0 }}
@@ -257,7 +257,7 @@ export function SearchProfilePanel({
                 ) : (
                   <span className="w-1.5 h-1.5 rounded-full bg-[#087F63] animate-pulse" />
                 )}
-                <span className="max-w-[110px] sm:max-w-[140px] truncate">{topMatch.label}</span>
+                <span className="max-w-[110px] sm:max-w-[140px] break-words min-w-0">{topMatch.label}</span>
               </div>
             ) : (
               <div
@@ -391,8 +391,8 @@ export function SearchProfilePanel({
                   <img src={r.iconSrc} alt="" style={{ width: "82%", height: "82%", objectFit: "contain" }} />
                 </span>
                 <span className="flex-1 min-w-0 flex flex-col">
-                  <span className="truncate" style={{ fontSize: isUr ? 15 : 14, fontWeight: 700, color: "#183B34" }}>{r.label}</span>
-                  <span className="truncate" style={{ fontSize: isUr ? 12.5 : 11.5, fontWeight: 600, color: "#6B7C77" }}>
+                  <span className="break-words min-w-0" style={{ fontSize: isUr ? 15 : 14, fontWeight: 700, color: "#183B34" }}>{r.label}</span>
+                  <span className="break-words min-w-0" style={{ fontSize: isUr ? 12.5 : 11.5, fontWeight: 600, color: "#6B7C77" }}>
                     {r.kind === "product" ? (isUr ? "پروڈکٹ" : "Product") : r.productLabel}
                   </span>
                 </span>

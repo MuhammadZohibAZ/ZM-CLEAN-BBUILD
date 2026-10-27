@@ -1,11 +1,10 @@
 import { useState } from "react";
 
-import { ByProductNationalCard } from "../../../components/ByProductNationalCard";
-import { productRatesScreenFor } from "../../../shared/data/byproductCards";
-import { C } from "../../product-rates/theme";
-import { Icon } from "../../product-rates/ui";
-import { useRateAttributeCards } from "./rateAttributeCards";
-import type { TesterBodyProps } from "./splitCards";
+import { ByProductNationalCard } from "../../components/ByProductNationalCard";
+import { productRatesScreenFor } from "../../shared/data/byproductCards";
+import { C } from "../product-rates/theme";
+import { Icon } from "../product-rates/ui";
+import { useRateAttributeCards, type ByproductBodyProps } from "./rateAttributeCards";
 
 // Tester variant of the by-product screen: a filter drawer. Closed by default;
 // a floating Filters button slides a panel over half the screen (rate type and special
@@ -18,7 +17,7 @@ import type { TesterBodyProps } from "./splitCards";
 const NAV_SPACE = "calc(env(safe-area-inset-bottom, 0px) + 120px)";
 const DRAWER_MS = 220;
 
-export function ByProductSidebarFilterScreen(props: TesterBodyProps) {
+export function ByProductSidebarFilterScreen(props: ByproductBodyProps) {
   const {
     f, tr, attrs, setAttrs, rate, setRate, rateOptions,
     attrGroups, attrLabel, valueLabel, toggleAttr, cards, loading, error, curDate, curDateStr, push,
@@ -63,7 +62,7 @@ export function ByProductSidebarFilterScreen(props: TesterBodyProps) {
           aria-hidden="true"
           style={{ width: 16, height: 16, borderRadius: 8, flexShrink: 0, border: on ? `5px solid ${C.brand}` : `1.5px solid ${C.line}`, background: C.surface }}
         />
-        <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{shortRate(id)}</span>
+        <span style={{ overflowWrap: "break-word", flex: 1, minWidth: 0, whiteSpace: "normal" }}>{shortRate(id)}</span>
       </button>
     );
   };
@@ -78,7 +77,7 @@ export function ByProductSidebarFilterScreen(props: TesterBodyProps) {
         aria-checked={on}
         onClick={() => toggleAttr(key)}
         style={{
-          height: 32,
+          overflowWrap: "break-word", height: 32,
           padding: "0 12px",
           border: `1px solid ${on ? C.brand : C.line}`,
           borderRadius: 16,
@@ -88,9 +87,7 @@ export function ByProductSidebarFilterScreen(props: TesterBodyProps) {
           fontWeight: 600,
           fontFamily: f.font,
           maxWidth: "100%",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
+                              whiteSpace: "normal",
         }}
       >
         {label}
@@ -242,7 +239,7 @@ export function ByProductSidebarFilterScreen(props: TesterBodyProps) {
       </button>
       <span
         onClick={() => setOpen(true)}
-        style={{ minWidth: 0, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 12.5, fontWeight: 600, color: active ? C.ink : C.muted, fontFamily: f.font, cursor: "pointer" }}
+        style={{ overflowWrap: "break-word", minWidth: 0, flex: 1, whiteSpace: "normal", fontSize: 12.5, fontWeight: 600, color: active ? C.ink : C.muted, fontFamily: f.font, cursor: "pointer" }}
       >
         {active ? summary : f.tx("Filter by rate type and attribute", "ریٹ کی قسم اور خصوصیت سے فلٹر کریں")}
       </span>

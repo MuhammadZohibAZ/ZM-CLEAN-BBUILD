@@ -1,6 +1,6 @@
-// Shared by the filter-bar and sidebar tester screens: one rate type for every
-// card (the day's most reported by default; cards without it are hidden) and
-// special-attribute values (several give each by-product one card per value).
+// Cards for the by-product screen (ByProductSidebarFilterScreen): a rate type
+// for every card (each card's own most reported by default) and special-attribute
+// values (several give each by-product one card per value).
 
 import { useEffect, useMemo, useState } from "react";
 
@@ -10,19 +10,31 @@ import {
   fetchVerticalCardStats,
   type AttributeValue,
   type CardStats,
-} from "../../../../lib/api";
-import { apiCardStatsToUi, apiSpecialAttrToUi, SPECIAL_ATTR_META, specialAttrValueUr } from "../../../components/ByProductNationalCard";
-import { mainByproductRank } from "../../../shared/data/byproductCards";
-import { useLang } from "../../../shared/i18n/LangProvider";
-import { makeFmt } from "../../product-rates/format";
-import type { TesterBodyProps } from "./splitCards";
+} from "../../../lib/api";
+import { apiCardStatsToUi, apiSpecialAttrToUi, SPECIAL_ATTR_META, specialAttrValueUr } from "../../components/ByProductNationalCard";
+import { mainByproductRank } from "../../shared/data/byproductCards";
+import { useLang } from "../../shared/i18n/LangProvider";
+import { makeFmt } from "../product-rates/format";
+import type { LocationScope, ProductSel, Screen } from "../../shared/types";
+
+/** What ByProductCombinedScreen hands the card area below its header. */
+export type ByproductBodyProps = {
+  dbDivision: string;
+  activeProduct: ProductSel | undefined;
+  /** Catalog by-products for the current selection. */
+  byproducts: string[];
+  curDate: Date;
+  curDateStr: string;
+  locationScope: LocationScope;
+  push: (s: Screen) => void;
+};
 
 /**
  * `perCardDefault`: with no rate picked, every card shows its own most received
- * rate type (sidebar tester). Without it, the day's most reported rate applies
- * to all cards (filter-bar tester).
+ * rate type (the by-product screen). Without it, the day's most reported rate
+ * applies to all cards.
  */
-export function useRateAttributeCards(props: TesterBodyProps, opts: { perCardDefault?: boolean } = {}) {
+export function useRateAttributeCards(props: ByproductBodyProps, opts: { perCardDefault?: boolean } = {}) {
   const perCard = !!opts.perCardDefault;
   const { dbDivision, activeProduct, byproducts, curDate, curDateStr, locationScope, push } = props;
   const { lang, tc, tr } = useLang();

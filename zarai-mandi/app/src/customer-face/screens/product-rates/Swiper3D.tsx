@@ -271,8 +271,8 @@ export function Swiper3D({
                   display: "flex",
                   alignItems: "center",
                   gap: 5,
-                  height: 30,
-                  padding: "0 12px 0 10px",
+                  minHeight: 30,
+                  padding: "3px 12px 3px 10px",
                   border: `1px solid ${C.brandBorder}`,
                   borderRadius: 15,
                   background: C.brandTint,
@@ -280,7 +280,8 @@ export function Swiper3D({
                   fontSize: 12.5,
                   fontWeight: 700,
                   fontFamily: f.font,
-                  whiteSpace: "nowrap",
+                  textAlign: "start",
+                  lineHeight: f.lh,
                   cursor: "pointer",
                   minWidth: 0,
                 }}
@@ -289,7 +290,7 @@ export function Swiper3D({
                 <span style={{ display: "flex", animation: `${dirSign === -1 ? "zmNudgeBackRtl" : "zmNudgeBack"} 1.4s ease-in-out infinite` }}>
                   <Icon name="chevRight" size={12} width={2.8} color={C.brand} flip={dirSign !== -1} />
                 </span>
-                <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+                <span style={{ overflowWrap: "break-word", }}>
                   {f.tx(`Swipe for ${pages[index - 1]?.label}`, `سوائپ کریں: ${pages[index - 1]?.label}`)}
                 </span>
               </button>
@@ -333,8 +334,8 @@ export function Swiper3D({
                   display: "flex",
                   alignItems: "center",
                   gap: 5,
-                  height: 30,
-                  padding: "0 10px 0 12px",
+                  minHeight: 30,
+                  padding: "3px 10px 3px 12px",
                   border: `1px solid ${C.brandBorder}`,
                   borderRadius: 15,
                   background: C.brandTint,
@@ -342,13 +343,14 @@ export function Swiper3D({
                   fontSize: 12.5,
                   fontWeight: 700,
                   fontFamily: f.font,
-                  whiteSpace: "nowrap",
+                  textAlign: "start",
+                  lineHeight: f.lh,
                   cursor: "pointer",
                   minWidth: 0,
                 }}
               >
                 {/* Says what to do (swipe) and what's there; the arrow nudges in the swipe direction. */}
-                <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+                <span style={{ overflowWrap: "break-word", }}>
                   {f.tx(`Swipe for ${pages[index + 1]?.label}`, `سوائپ کریں: ${pages[index + 1]?.label}`)}
                 </span>
                 <span style={{ display: "flex", animation: `${dirSign === -1 ? "zmNudgeRtl" : "zmNudge"} 1.4s ease-in-out infinite` }}>
