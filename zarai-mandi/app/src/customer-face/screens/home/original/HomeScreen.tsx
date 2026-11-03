@@ -23,6 +23,7 @@ import {
 } from "../../../shared/types";
 import { speakText, stopSpeaking } from "../../../shared/voice";
 import { CompleteProfileModal } from "../../../sheets/complete-profile/CompleteProfileModal";
+import { walletNumberFrom } from "../../../shared/data/billing";
 import { AccountCenter, type AccountView } from "../../../account/AccountCenter";
 import { fetchByProducts, type ByProductCatalogRow } from "../../../../lib/api";
 import type { SearchEntry } from "../shared/SearchProfilePanel";
@@ -129,7 +130,7 @@ export function HomeScreen({
       customMonths: 3,
       paymentType: "wallet",
       walletProvider: "jazzcash",
-      walletNumber: initialUserData?.phone || "0300 1234567",
+      walletNumber: walletNumberFrom(initialUserData?.phone),
       walletCnic: "",
       walletPromptSent: false,
       directMethod: "jazzcash",

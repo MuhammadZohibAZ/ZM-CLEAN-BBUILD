@@ -3,6 +3,7 @@
 import { useState } from "react";
 import {
   DURATION_MONTHS_BILLING,
+  isWalletNumberComplete,
   getMonthlyDiscount,
 } from "../../shared/data/billing";
 import { VERTICALS } from "../../shared/data/catalog";
@@ -229,8 +230,13 @@ export function useCompleteProfile(props: CompleteProfileProps) {
     });
   };
 
+  const [walletError, setWalletError] = useState(false);
   const handlePaymentConfirmClick = () => {
     if (data.paymentType === "wallet") {
+      if (!isWalletNumberComplete(data.walletNumber)) {
+        setWalletError(true);
+        return;
+      }
       setMpin(["", "", "", ""]);
       setMpinError("");
       setMpinSuccess(false);
@@ -300,6 +306,8 @@ export function useCompleteProfile(props: CompleteProfileProps) {
     discountAmt,
     finalTotal,
     walletProviders,
+    walletError,
+    setWalletError,
     directMethods,
     directDetails,
     formatCardNumber,

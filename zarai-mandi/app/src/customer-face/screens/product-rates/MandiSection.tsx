@@ -317,7 +317,7 @@ export function MandiSection({
             const td: CSSProperties = { padding: "8px 4px", borderBottom: `1px solid ${C.lineSoft}`, whiteSpace: "nowrap", textAlign: "center", fontWeight: 500, color: C.ink2, background: bg };
             return (
               <tr key={e.key} onClick={() => onOpen(e)} style={{ cursor: "pointer" }}>
-                <td style={{ ...td, position: "sticky", insetInlineStart: 0, zIndex: 1, textAlign: "start", fontWeight: 700, color: C.ink, borderInlineEnd: `1px solid ${C.line}`, padding: "8px 8px", minWidth: 96, maxWidth: 128, whiteSpace: "normal", overflowWrap: "break-word", lineHeight: 1.25 }}>
+                <td style={{ ...td, position: "sticky", insetInlineStart: 0, zIndex: 1, textAlign: "start", fontWeight: 700, color: C.ink, borderInlineEnd: `1px solid ${C.line}`, padding: "8px 8px", minWidth: 96, maxWidth: 128, whiteSpace: "normal", lineHeight: 1.25 }}>
                   {tm(stripMandi(r.mandiName))}
                 </td>
                 <td style={{ ...td, fontWeight: 700, color: C.brand, padding: "8px 4px", fontSize: 12.5 }}><bdi dir="ltr">{r.min > 0 ? `${f.num(r.min)} – ${f.num(r.max)}` : "—"}</bdi></td>
@@ -353,7 +353,7 @@ export function MandiSection({
         onClick={() => setShowAll((v) => !v)}
         style={{ width: "100%", height: 44, border: "none", borderTop: `1px solid ${C.lineSoft}`, background: "transparent", color: C.brand, fontSize: 13.5, fontWeight: 600, fontFamily: f.font }}
       >
-        {showAll ? f.tx("Show fewer", "کم دکھائیں") : f.tx(`Show all ${entries.length}`, `تمام ${f.digits(entries.length)} دکھائیں`)}
+        {showAll ? f.tx("Show fewer", "کم دکھائیں") : f.tx(`Show all ${entries.length} reports`, `تمام ${f.digits(entries.length)} رپورٹس دکھائیں`)}
       </button>
     ) : null;
 
@@ -589,7 +589,7 @@ export function MandiSection({
             style={{ marginTop: 10, width: "100%", height: 48, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, borderRadius: 24, border: "none", background: C.surface, color: C.ink, fontSize: 14, fontWeight: 600, fontFamily: f.font }}
           >
             <Icon name="landscape" size={16} color={C.ink2} width={2.2} />
-            {f.tx(`Full-screen table · all ${entries.length}`, `پوری اسکرین ٹیبل · تمام ${f.digits(entries.length)}`)}
+            {f.tx(`Full-screen table · all ${entries.length} reports`, `پوری اسکرین ٹیبل · تمام ${f.digits(entries.length)} رپورٹس`)}
           </button>
         </div>
       ) : (

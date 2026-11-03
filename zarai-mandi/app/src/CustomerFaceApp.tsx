@@ -5,6 +5,7 @@ import { BottomNav } from "./customer-face/navigation/BottomNav";
 import { VoiceQueryOverlay } from "./customer-face/navigation/VoiceQueryOverlay";
 import { BillingScreen } from "./customer-face/screens/billing/BillingScreen";
 import { ByProductCombinedScreen } from "./customer-face/screens/byproducts/ByProductCombinedScreen";
+import { walletNumberFrom } from "./customer-face/shared/data/billing";
 import { HomeScreen } from "./customer-face/screens/home/original/HomeScreen";
 import { ProductRatesScreen } from "./customer-face/screens/product-rates/ProductRatesScreen";
 import { RepDashboardScreen } from "./customer-face/screens/RepDashboardScreen";
@@ -91,7 +92,7 @@ function AppInner({
       customMonths: 3,
       paymentType: "wallet",
       walletProvider: "jazzcash",
-      walletNumber: initialUserData?.phone || "0300 1234567",
+      walletNumber: walletNumberFrom(initialUserData?.phone),
       walletCnic: "",
       walletPromptSent: false,
       directMethod: "jazzcash",

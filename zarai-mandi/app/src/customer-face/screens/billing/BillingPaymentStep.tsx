@@ -215,9 +215,10 @@ export function BillingPaymentStep({ s }: { s: BillingState }) {
               inputMode="numeric"
               placeholder="03XX XXXXXXX"
               value={walletNumber}
-              onChange={(e) =>
-                setWalletNumber(formatPhoneInput(e.target.value))
-              }
+              onChange={(e) => {
+                s.setWalletError(false);
+                setWalletNumber(formatPhoneInput(e.target.value));
+              }}
               style={{
                 width: "100%",
                 height: 42,
@@ -230,6 +231,11 @@ export function BillingPaymentStep({ s }: { s: BillingState }) {
                 outline: "none",
               }}
             />
+            {s.walletError && (
+              <p style={{ marginTop: 5, fontSize: 12, fontWeight: 600, color: "#DC2626" }}>
+                {lang === "ur" ? "براہ کرم اپنا موبائل والٹ نمبر درج کریں" : "Please enter your mobile wallet number"}
+              </p>
+            )}
           </div>
 
           <div

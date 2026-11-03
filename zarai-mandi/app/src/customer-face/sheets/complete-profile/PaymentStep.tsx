@@ -201,12 +201,13 @@ export function PaymentStep({ s }: { s: CompleteProfileState }) {
               type="tel"
               inputMode="numeric"
               placeholder="0300 1234567"
-              value={data.walletNumber || "0300 1234567"}
-              onChange={(e) =>
+              value={data.walletNumber || ""}
+              onChange={(e) => {
+                s.setWalletError(false);
                 onUpdateData({
                   walletNumber: formatPhoneInput(e.target.value),
-                })
-              }
+                });
+              }}
               style={{
                 width: "100%",
                 height: 42,
@@ -219,6 +220,11 @@ export function PaymentStep({ s }: { s: CompleteProfileState }) {
                 outline: "none",
               }}
             />
+            {s.walletError && (
+              <p style={{ marginTop: 5, fontSize: 12, fontWeight: 600, color: "#DC2626" }}>
+                {lang === "ur" ? "براہ کرم اپنا موبائل والٹ نمبر درج کریں" : "Please enter your mobile wallet number"}
+              </p>
+            )}
           </div>
 
           <div>

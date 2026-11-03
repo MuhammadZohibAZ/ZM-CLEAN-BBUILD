@@ -14,5 +14,12 @@ export function getMonthlyDiscount(months: number): number {
 
 // ─── BILLING / SUBSCRIPTION SCREEN (MATCHING ONBOARDING) ─────────────────────
 export const DURATION_MONTHS_BILLING = [1, 3, 6, 12];
+
+/** Fill the wallet number only from a phone number (the sign-up contact can be an email). */
+export function walletNumberFrom(contact?: string | null): string {
+  const c = (contact || "").trim();
+  return !c.includes("@") && c.replace(/\D/g, "").length >= 10 ? c : "";
+}
+export const isWalletNumberComplete = (v?: string | null) => (v || "").replace(/\D/g, "").length >= 10;
 export const DURATION_LABELS_BILLING = ["1 Month", "3 Months", "6 Months", "1 Year"];
 export const DISCOUNTS_BILLING = [0, 0.1, 0.15, 0.25];

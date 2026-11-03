@@ -63,6 +63,9 @@ export function ByProductCombinedScreen({
 
   // The by-products this screen lists (header count + the cards below).
   const [byproducts, setByproducts] = useState<string[]>([]);
+  // With filters on, the header counts only what they leave.
+  const [shownCount, setShownCount] = useState<number | null>(null);
+  const headerCount = shownCount ?? byproducts.length;
   useEffect(() => {
     let cancelled = false;
     fetchByProducts(dbDivision)
@@ -95,12 +98,15 @@ export function ByProductCombinedScreen({
             <IconButton label={lang === 'ur' ? 'واپس' : 'Back'} onClick={onBack}>
               <Icon name="back" size={20} width={2.4} flip={lang === 'ur'} />
             </IconButton>
-            <ProductIcon
-              name={activeProduct?.product || 'Wheat'}
-              vertical={activeProduct?.vertical}
-              size={28}
-              style={{ flexShrink: 0 }}
-            />
+            {/* Narrow phones: no icon, so the title and count fit beside the date. */}
+            <span className="hidden min-[380px]:block flex-shrink-0">
+              <ProductIcon
+                name={activeProduct?.product || 'Wheat'}
+                vertical={activeProduct?.vertical}
+                size={28}
+                style={{ flexShrink: 0 }}
+              />
+            </span>
             <div className="min-w-0 flex-1">
               <h2
                 className="font-black text-[#183B34] text-base leading-tight break-words min-w-0"
@@ -110,8 +116,8 @@ export function ByProductCombinedScreen({
               </h2>
               <p className="text-[11px] font-semibold text-[#52635F] leading-tight break-words">
                 {lang === 'ur'
-                  ? `${toUrduDigits(byproducts.length)} ضمنی مصنوعات`
-                  : `${byproducts.length} By-products`}
+                  ? `${toUrduDigits(headerCount)} ضمنی مصنوعات`
+                  : `${headerCount} By‑product${headerCount === 1 ? '' : 's'}`}
               </p>
             </div>
           </div>
@@ -174,6 +180,7 @@ export function ByProductCombinedScreen({
         curDateStr={curDateStr}
         locationScope={currentLocScope}
         push={push}
+        onShownCount={setShownCount}
       />
     </div>
   );

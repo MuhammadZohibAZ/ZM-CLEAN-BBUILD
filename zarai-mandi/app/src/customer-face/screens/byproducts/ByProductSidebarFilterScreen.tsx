@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { ByProductNationalCard } from "../../components/ByProductNationalCard";
 import { productRatesScreenFor } from "../../shared/data/byproductCards";
@@ -25,6 +25,9 @@ export function ByProductSidebarFilterScreen(props: ByproductBodyProps) {
   } = useRateAttributeCards(props, { perCardDefault: true });
   const [open, setOpen] = useState(false);
   const active = rate !== null || attrs.length > 0 || companies.length > 0;
+  // Tell the header how many by-products the filters leave (null = no filter on).
+  const shownCount = active && !loading ? new Set(cards.map((c) => c.bp.toLowerCase())).size : null;
+  useEffect(() => props.onShownCount?.(shownCount), [shownCount]); // eslint-disable-line react-hooks/exhaustive-deps
   const activeCount = (rate !== null ? 1 : 0) + attrs.length + companies.length;
   const shortRate = (r: string) => tr(r).replace(/\s*Rate$/i, "");
   const start = f.ur ? "right" : "left";

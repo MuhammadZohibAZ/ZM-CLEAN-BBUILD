@@ -681,6 +681,7 @@ export function AccountCenter({
 
   // Edit-profile form + contact OTP step
   const [editName, setEditName] = useState(profile.name);
+  const [nameError, setNameError] = useState(false);
   const [editPhone, setEditPhone] = useState(profile.phone);
   const [editProvince, setEditProvince] = useState(profile.province);
   const [editCity, setEditCity] = useState(cityName(profile.city));
@@ -700,6 +701,7 @@ export function AccountCenter({
   useEffect(() => {
     if (view !== "edit") return;
     setEditName(profile.name);
+    setNameError(false);
     setEditPhone(profile.phone);
     setEditProvince(profile.province);
     setEditCity(cityName(profile.city));
@@ -720,7 +722,7 @@ export function AccountCenter({
 
   const saveProfile = (phone: string) => {
     onProfileSave({
-      name: editName,
+      name: editName.trim(),
       phone,
       province: editProvince,
       city: editCity,
@@ -971,10 +973,18 @@ export function AccountCenter({
                 <input
                   type="text"
                   value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
+                  onChange={(e) => {
+                    setEditName(e.target.value);
+                    if (e.target.value.trim()) setNameError(false);
+                  }}
                   className={inputClass}
-                  placeholder="e.g. Muhammad Arif"
+                  placeholder={L("Your name", "آپ کا نام")}
                 />
+                {nameError && (
+                  <p className="text-xs font-semibold mt-1.5 px-1" style={{ color: C.danger }}>
+                    {L("Please enter your name", "براہ کرم اپنا نام درج کریں")}
+                  </p>
+                )}
               </div>
               <div>
                 <SectionLabel>{L("Phone number / Email", "فون نمبر / ای میل")}</SectionLabel>
@@ -1083,6 +1093,10 @@ export function AccountCenter({
             </div>
             <PrimaryButton
               onClick={() => {
+                if (!editName.trim()) {
+                  setNameError(true);
+                  return;
+                }
                 if (editPhone.trim() !== profile.phone.trim()) {
                   setVerifyStep(true);
                   setOtp(["", "", "", ""]);

@@ -1,6 +1,6 @@
 // Complete Profile step 2: plan duration (or custom months) and the price breakdown.
 
-import { getMonthlyDiscount } from "../../shared/data/billing";
+import { DURATION_MONTHS_BILLING, getMonthlyDiscount } from "../../shared/data/billing";
 import { getSeasonPackageBasePrice, getSeasonPackageIconSrc } from "./packages";
 import { type CompleteProfileState } from "./useCompleteProfile";
 
@@ -89,7 +89,8 @@ export function PlanStep({ s }: { s: CompleteProfileState }) {
         onClick={() => {
           onUpdateData({
             customMode: !data.customMode,
-            customMonths: data.customMonths || 3,
+            // Opening the picker keeps the plan already chosen (12 months stays 12).
+            customMonths: data.customMode ? data.customMonths : DURATION_MONTHS_BILLING[data.dur] || 1,
           });
         }}
         style={{

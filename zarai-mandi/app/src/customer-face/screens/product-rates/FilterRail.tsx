@@ -148,7 +148,8 @@ export function FilterRail({
               style={{
                 position: "relative",
                 flex: variant === "map" ? "1 1 auto" : `${p.grow} 1 0`,
-                minWidth: variant === "map" ? 0 : "max-content",
+                // Map: wraps between words ("All / Pakistan") but never splits a word ("Stoc k").
+                minWidth: variant === "map" ? "min-content" : "max-content",
                 borderInlineStart: i ? `1px solid ${C.line}` : "none",
                 background: on ? C.brandTint : "transparent",
                 transition: "background 200ms",
@@ -179,7 +180,7 @@ export function FilterRail({
               >
                 <span
                   style={{
-                    overflowWrap: "break-word", fontSize: variant === "map" ? 10.5 : 11,
+                    fontSize: variant === "map" ? 10.5 : 11,
                     fontWeight: 500,
                     color: on ? C.brandDeep : C.muted,
                     lineHeight: 1.2,
@@ -192,7 +193,7 @@ export function FilterRail({
                 <span style={{ display: "flex", alignItems: "center", gap: 3, maxWidth: "100%" }}>
                   <span
                     style={{
-                      overflowWrap: "break-word", fontSize: variant === "map" ? 12.5 : 13,
+                      fontSize: variant === "map" ? 12.5 : 13,
                       fontWeight: 600,
                       color: on ? C.brandDeep : C.ink,
                       lineHeight: 1.2,

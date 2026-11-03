@@ -3,6 +3,7 @@
 import { useState } from "react";
 import {
   DURATION_MONTHS_BILLING,
+  isWalletNumberComplete,
   getMonthlyDiscount,
 } from "../../shared/data/billing";
 import { getVerticalForProduct } from "../../shared/data/catalog";
@@ -34,7 +35,8 @@ export function useBilling(props: BillingProps) {
   const [walletProvider, setWalletProvider] = useState<
     "jazzcash" | "easypaisa" | "sadapay" | "nayapay" | "upaisa"
   >("jazzcash");
-  const [walletNumber, setWalletNumber] = useState("0300 1234567");
+  const [walletNumber, setWalletNumber] = useState("");
+  const [walletError, setWalletError] = useState(false);
 
   // Card fields
   const [cardNumber, setCardNumber] = useState("");
@@ -202,6 +204,10 @@ export function useBilling(props: BillingProps) {
 
   const handlePaymentConfirmClick = () => {
     if (paymentType === "wallet") {
+      if (!isWalletNumberComplete(walletNumber)) {
+        setWalletError(true);
+        return;
+      }
       setMpin(["", "", "", ""]);
       setMpinError("");
       setMpinSuccess(false);
@@ -255,6 +261,8 @@ export function useBilling(props: BillingProps) {
     walletProvider,
     setWalletProvider,
     walletNumber,
+    walletError,
+    setWalletError,
     setWalletNumber,
     cardNumber,
     setCardNumber,

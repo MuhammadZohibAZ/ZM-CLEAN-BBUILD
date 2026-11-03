@@ -28,6 +28,8 @@ export type ByproductBodyProps = {
   curDateStr: string;
   locationScope: LocationScope;
   push: (s: Screen) => void;
+  /** How many by-products the filters leave; null when no filter is on. */
+  onShownCount?: (n: number | null) => void;
 };
 
 /**

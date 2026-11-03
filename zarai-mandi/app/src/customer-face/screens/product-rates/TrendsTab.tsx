@@ -574,6 +574,12 @@ export function TrendsTab({
                   {arrow(isPrice ? pct : arrPct)} {isPrice ? `${absChange >= 0 ? "+" : "−"}${f.num(Math.abs(absChange))} ` : ""}({f.pct(isPrice ? pct : arrPct)})
                 </span>
               )}
+              {/* Compared with the start of the period (Overview compares with the previous day). */}
+              {isPrice && prices[i] > 0 && firstIdx >= 0 && firstIdx !== i && (
+                <span style={{ fontSize: 12, fontWeight: 500, color: DK.sub, lineHeight: f.lh }}>
+                  {f.tx(`since ${f.day(dates[firstIdx])}`, `${f.day(dates[firstIdx])} سے`)}
+                </span>
+              )}
             </div>
             <span style={{ fontSize: 12.5, fontWeight: 500, color: DK.faint, lineHeight: f.lh }}>
               {f.dayFullWeekdayYear(dates[i])}
@@ -881,7 +887,7 @@ export function TrendsTab({
           <div style={{ padding: "0 16px" }}>
             <Card style={{ overflow: "hidden" }}>
               {withData.map((rt, k) => {
-                const t = timelines[rt];
+                const t = tl(rt);
                 const d = start + i;
                 const p = t.prices[d];
                 const prev = d > 0 ? t.prices[d - 1] : 0;

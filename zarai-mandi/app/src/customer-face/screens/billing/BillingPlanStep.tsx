@@ -95,7 +95,8 @@ export function BillingPlanStep({ s }: { s: BillingState }) {
         type="button"
         onClick={() => {
           setCustomMode(!customMode);
-          if (!customMode) setCustomMonths(3);
+          // Opening the picker keeps the plan already chosen (12 months stays 12).
+          if (!customMode) setCustomMonths(s.months);
         }}
         style={{
           width: "100%",
