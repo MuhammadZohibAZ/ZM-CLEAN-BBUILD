@@ -343,7 +343,7 @@ export async function getRecords(byProductId, filters = {}, page = 1, pageSize =
             color, minimum, maximum, arrivals, arrivals_unit, arrival_weight_kg,
             moisture_raw, new_old, specification, quality
      from price_records
-     where product = $1 and by_product = $2 and price_valid
+     where product = $1 and by_product = $2 and price_valid and station is not null
        ${attrSql}
      order by record_date desc, id desc
      limit $${params.length - 1} offset $${params.length}`,
@@ -352,7 +352,7 @@ export async function getRecords(byProductId, filters = {}, page = 1, pageSize =
 
   const { rows: countRows } = await pool.query(
     `select count(*) as n from price_records
-     where product = $1 and by_product = $2 and price_valid ${attrSql}`,
+     where product = $1 and by_product = $2 and price_valid and station is not null ${attrSql}`,
     params.slice(0, params.length - 2)
   );
 
@@ -364,6 +364,8 @@ export async function getRecords(byProductId, filters = {}, page = 1, pageSize =
  * their own client-side grouping/filtering (mandi/district/province
  * tables, attribute sheets). The dataset is a single-month snapshot
  * capped at a few thousand rows per by-product, so this is cheap.
+ * Rows with no station are left out, as in the summaries, until the data
+ * team supplies the names.
  */
 export async function getAllRecords(byProductId, filters = {}) {
   const byProduct = await resolveByProduct(byProductId);
@@ -384,7 +386,7 @@ export async function getAllRecords(byProductId, filters = {}) {
             color, minimum, maximum, arrivals, arrivals_unit, arrival_weight_kg,
             moisture_raw, new_old, specification, quality
      from price_records
-     where product = $1 and by_product = $2 and price_valid
+     where product = $1 and by_product = $2 and price_valid and station is not null
        ${attrSql}
      order by record_date desc, id desc`,
     params
