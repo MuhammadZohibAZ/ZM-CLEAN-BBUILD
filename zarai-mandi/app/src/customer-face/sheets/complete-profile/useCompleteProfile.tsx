@@ -43,11 +43,6 @@ export function useCompleteProfile(props: CompleteProfileProps) {
   // Demonstration month index (0=Jan ... 8=Sep ... 11=Dec) - default to September (8)
   const [demoMonthIdx, setDemoMonthIdx] = useState(8);
   const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
-  // Nothing opens on its own: a package expands only when the user taps it.
-  const [expandedPkgId, setExpandedPkgId] = useState<string | null>(null);
-  const [allVarietiesModalPkg, setAllVarietiesModalPkg] = useState<any | null>(
-    null,
-  );
 
   const monthlyTotal = data.selectedProds.reduce(
     (sum, p) => sum + getSeasonPackageBasePrice(p),
@@ -295,10 +290,6 @@ export function useCompleteProfile(props: CompleteProfileProps) {
     setDemoMonthIdx,
     isMonthPickerOpen,
     setIsMonthPickerOpen,
-    expandedPkgId,
-    setExpandedPkgId,
-    allVarietiesModalPkg,
-    setAllVarietiesModalPkg,
     monthlyTotal,
     months,
     discount,

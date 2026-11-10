@@ -4,8 +4,10 @@ import homeBgMint from "../../../../assets/home_bg_mint.jpg";
 
 import { LockIconSVG } from "../../../components/icons";
 import {
-  
+  findProduct,
+  getProductSelectionsForDivision,
   PRODUCT_DIVISIONS,
+  productForByproduct,
   PRODUCT_ID_TO_NAME,
   SUBSCRIBED_PRODUCTS,
   TODAY_ONLY_PRODUCTS,
@@ -268,18 +270,21 @@ export function HomeScreen({
         locked: false,
         hasData: true,
       })),
-      ...catalogAll
-        .filter((r) => PRODUCT_DIVISIONS.some((d) => d.name === r.division))
-        .map((r) => ({
+      ...catalogAll.flatMap((r) => {
+        // The product it is sold under (Potato for "Potato (Laal)"); skip what no product sells.
+        const owner = productForByproduct(r.division, r.by_product);
+        if (!owner) return [];
+        return [{
           kind: "byproduct" as const,
-          product: r.division,
+          product: owner.name,
           byproduct: r.by_product,
           label: tc(r.display_name || r.by_product),
-          productLabel: tc(r.division),
-          iconSrc: getproductIconSrc(r.by_product, getVerticalForProduct(r.division)),
-          locked: !isAccessible(r.division),
+          productLabel: tc(owner.name),
+          iconSrc: getproductIconSrc(r.by_product, getVerticalForProduct(owner.name)),
+          locked: !isAccessible(owner.name),
           hasData: Boolean(r.has_data),
-        })),
+        }];
+      }),
     ],
     [catalogAll, lang, profileCompleted, userSubscribedList], // eslint-disable-line react-hooks/exhaustive-deps
   );
@@ -382,7 +387,11 @@ export function HomeScreen({
             showProduct(e.product);
             return;
           }
-          push({ id: "product-rates", vertical: getVerticalForProduct(e.product), product: e.product, byproduct: e.byproduct });
+          // Crops and Edible Oil open by name; a product sold out of a bigger division (Potato) by its division.
+          const sel = findProduct(e.product)?.group === "crops"
+            ? { vertical: getVerticalForProduct(e.product), product: e.product }
+            : getProductSelectionsForDivision(e.product)[0];
+          push({ id: "product-rates", vertical: sel.vertical, product: sel.product, byproduct: e.byproduct });
         }}
         onLockedPick={(e) => handleLockedProductClick(e.product, getVerticalForProduct(e.product))}
       />

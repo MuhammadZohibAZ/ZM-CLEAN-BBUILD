@@ -8,7 +8,7 @@ type Division = (typeof PRODUCT_DIVISIONS)[number];
 
 /** Icons drawn edge to edge in a square (no empty margin): shown smaller so
  * the whole square fits inside the round frame (a circle's inner square is ~70%). */
-const FULL_BLEED_ICONS = new Set(["Edible Oil", "Livestock"]);
+const FULL_BLEED_ICONS = new Set(["Edible Oil"]);
 
 /**
  * Original Home · "Products": the user's active products (green ring, tap to

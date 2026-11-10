@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 
 import { ProductIcon } from "../components/ProductIcon";
-import { PRODUCT_DIVISIONS, SUBSCRIBED_PRODUCTS } from "../shared/data/catalog";
+import { PRODUCT_DIVISIONS, PRODUCT_PRICE_PER_MONTH, SUBSCRIBED_PRODUCTS } from "../shared/data/catalog";
 import { MANDI_DATA } from "../shared/data/mandiLocation";
 import { URDU_FONT, useLang } from "../shared/i18n/LangProvider";
 import { speakText } from "../shared/voice";
@@ -1274,7 +1274,7 @@ export function AccountCenter({
                       {tc(item.name)}
                     </p>
                     <p className="text-[11px]" style={{ color: C.muted }}>
-                      PKR 3,000 / {L("month", "ماہ")}
+                      PKR {PRODUCT_PRICE_PER_MONTH.toLocaleString()} / {L("month", "ماہ")}
                     </p>
                   </div>
                   <button

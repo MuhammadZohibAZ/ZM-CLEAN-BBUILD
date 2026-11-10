@@ -7,12 +7,11 @@ import { ProductsStep } from "./ProductsStep";
 import { PlanStep } from "./PlanStep";
 import { PaymentStep } from "./PaymentStep";
 import { CompleteProfileFooter } from "./CompleteProfileFooter";
-import { AllVarietiesSheet } from "./AllVarietiesSheet";
 import { MpinDialog } from "./MpinDialog";
 
 export function CompleteProfileModal(props: CompleteProfileProps) {
   const s = useCompleteProfile(props);
-  const { onClose, activeStepKey, mpinModalOpen, allVarietiesModalPkg } = s;
+  const { onClose, activeStepKey, mpinModalOpen } = s;
 
   // One centred modal for every step: same size throughout (no jump when the
   // step changes) over a solid, softly tinted backdrop.
@@ -67,7 +66,6 @@ export function CompleteProfileModal(props: CompleteProfileProps) {
       </div>
 
       {/* All Varieties Modal Sheet */}
-      {allVarietiesModalPkg && <AllVarietiesSheet s={s} />}
 
       {/* MPIN Entry Modal for Mobile Wallet */}
       {mpinModalOpen && <MpinDialog s={s} />}

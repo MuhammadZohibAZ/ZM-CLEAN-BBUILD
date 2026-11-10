@@ -6,7 +6,7 @@ import {
   getCardUpdatedMinutes,
 } from "../../components/ByProductNationalCard";
 import { getDeclaredMoistureBand } from "./byproductStats";
-import { PRODUCT_DIVISIONS, VERTICALS } from "./catalog";
+import { OPENED_DIVISIONS, PRODUCT_DIVISIONS, VERTICALS } from "./catalog";
 import { FLAT_ALL_MANDI_ROWS } from "./mandis";
 import {
   type ByproductNationalStats,
@@ -103,6 +103,12 @@ function filterCatalogForSubProduct(rawCatalog: ByProductCatalogRow[], sel: Prod
   const subBps = productByproducts(sel?.vertical || '', subProd);
   const normSub = norm(subProd);
 
+  // A product sold on its own (Potato, Urea, Ghee): exactly its listed by-products.
+  if (OPENED_DIVISIONS.has(sel?.vertical || '')) {
+    const listed = new Set(subBps.map(norm));
+    return rawCatalog.filter((c) => listed.has(norm(c.by_product))).map((c) => c.by_product);
+  }
+
   return rawCatalog.filter((c) => {
     const normBp = norm(c.by_product);
     if (subBps.some((b) => norm(b) === normBp || norm(b).includes(normBp) || normBp.includes(norm(b)))) return true;
@@ -121,17 +127,22 @@ function filterCatalogForSubProduct(rawCatalog: ByProductCatalogRow[], sel: Prod
   }).map((c) => c.by_product);
 }
 
+/** Whether a selection is one product inside a bigger data division (Potato in Vegetable, Urea in Fertilizer). */
+export function isSubProductSel(sel: ProductSel | undefined): boolean {
+  return OPENED_DIVISIONS.has(sel?.vertical || '');
+}
+
 /**
  * By-product names for one product selection.
- * Product level (Wheat, Maize, ...): every catalog item of the division.
- * Vertical level (Edible Oil -> Canola, Fruits -> Apple): the matching subset.
+ * A crop (Wheat, Maize, ...): every catalog item of the division.
+ * A tab of Edible Oil (Canola), or a product sold on its own (Potato): its subset.
  */
 export function byproductsForSelection(
   rawCatalog: ByProductCatalogRow[],
   sel: ProductSel | undefined,
   isVerticalLevel: boolean,
 ): string[] {
-  if (!isVerticalLevel) {
+  if (!isVerticalLevel && !isSubProductSel(sel)) {
     return rawCatalog.map((c) => c.by_product);
   }
   const filtered = filterCatalogForSubProduct(rawCatalog, sel);

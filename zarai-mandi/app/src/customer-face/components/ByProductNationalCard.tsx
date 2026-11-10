@@ -300,8 +300,8 @@ export function ByProductNationalCard({
     : '—';
   const specialAttrColor = hasAttrValue ? SPECIAL_ATTR_VALUE_COLOR : undefined;
 
-  // Fertilizer: the attribute cell shows the company (each brand product has
-  // one), and prices are per 50 kg bag.
+  // Fertilizer: the card is the company's (its title), the attribute cell names
+  // the brand product ("Engro Zabardast Urea"), and prices are per 50 kg bag.
   const division = stats.product || vertical || product;
   const company = isFertilizer(division) ? fertilizerCompany(stats.byproduct) : null;
   const unit = priceUnitFor(division);
@@ -360,9 +360,9 @@ export function ByProductNationalCard({
           style={{
             fontFamily: lang === 'ur' ? URDU_FONT : "'Inter', sans-serif",
           }}
-          title={tc(stats.byproduct)}
+          title={company ?? tc(stats.byproduct)}
         >
-          {tc(stats.byproduct)}
+          {company ?? tc(stats.byproduct)}
         </h3>
         <p
           className={`text-[10.5px] sm:text-[11px] font-bold mt-0.5 leading-tight break-words ${!stats.hasData ? 'text-[#087F63]/75' : 'text-[#087F63]'
@@ -439,8 +439,8 @@ export function ByProductNationalCard({
             />
             <CardStatCell
               divider
-              label={company ? (lang === 'ur' ? 'کمپنی' : 'Company') : specialAttrLabel}
-              value={company ?? specialAttrValue}
+              label={company ? (lang === 'ur' ? 'برانڈ' : 'Brand') : specialAttrLabel}
+              value={company ? tc(stats.byproduct) : specialAttrValue}
               valueColor={company ? SPECIAL_ATTR_VALUE_COLOR : specialAttrColor}
             />
           </div>

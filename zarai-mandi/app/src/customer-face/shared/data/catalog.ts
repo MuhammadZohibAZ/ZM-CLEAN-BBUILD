@@ -1,5 +1,5 @@
-import { type ProdDiv, type ProductSel } from "../types";
-import { FERTILIZER_BYPRODUCTS } from "./fertilizer";
+import { type ProdDiv, type ProductGroupId, type ProductSel } from "../types";
+import { FERTILIZER_TYPES } from "./fertilizer";
 
 //  COMPLETE VERTICALS DATA
 
@@ -142,6 +142,9 @@ export const VERTICALS: Record<
       Soybean: ["Soyabean Seed", "Soyabean Oil", "Soyabean Meal"],
     },
   },
+  // Fruits, Vegetables, Dry Fruits, Herbals and Kiryana: every product below is
+  // sold on its own (see PRODUCT_DIVISIONS). The by-product names are the data's
+  // own (api by_products), matched exactly, so "Apple" never picks up "Pineapple".
   Fruits: {
     icon: "fruits",
     urdu: "پھل",
@@ -155,18 +158,13 @@ export const VERTICALS: Record<
         "Mango Daseri",
         "Mango Almas",
         "Mango Saroli",
+        "Mango Langra",
+        "Mango Surmai",
       ],
       Banana: ["Banana"],
-      Citrus: [
-        "Orange",
-        "Mausambi",
-        "Grapefruit",
-        "Mandrin Orange",
-        "Sweet Lime",
-        "Fruiter",
-      ],
+      Citrus: ["Orange", "Mausambi", "Grapefruit", "Mandrin Orange", "Sweet Lime", "Fruiter"],
       Melon: ["Watermelon", "Kharbooza"],
-      Apple: ["Apple Kala Kullu", "Apple", "Apple Golden"],
+      Apple: ["Apple", "Kala Kullu Apple"],
       Pomegranate: ["Pomegranate"],
       Grapes: ["Grapes"],
       Peach: ["Peach"],
@@ -189,64 +187,50 @@ export const VERTICALS: Record<
         "Potato (Goli)",
         "Potato (Raveera)",
         "Potato (Beej)",
+        "Potato (Lr)",
+        "Potato (Stone)",
       ],
-      Tomato: ["Tomato (Grade A)", "Tomato (Grade B)", "Tomato (Grade C)"],
-      Onion: ["Onion (Grade A)", "Onion (Grade B)", "Onion (Grade C)"],
+      Tomato: ["Tomato (Grade A)", "Tomato (Grade B)", "Tomato Grade C"],
+      Onion: ["Onion - Grade A", "Onion - Grade B", "Onion - Grade C"],
       Garlic: ["Desi Garlic", "Garlic China", "Garlic G1", "Galic Harni"],
       Chilli: [
         "Desi Chilli",
+        "Red Desi Chilli",
         "Green Chilli - Small",
         "Green Chilli - Medium",
         "Green Chilli - Large",
-        "Capsicum",
+        "Hybird Chilli",
+        "Longi Chilli",
+        "Rich Star Chilli",
+        "Shingri Chilli",
       ],
+      Capsicum: ["Capsicum"],
       Cauliflower: ["Cauliflower"],
       Cabbage: ["Cabbage"],
       Brinjal: ["Gol Brinjal", "Long Brinjal"],
-      Carrot: ["Carrot"],
+      Carrot: ["Carrot", "Chinese Carrot"],
       Spinach: ["Spinach"],
       Peas: ["Pea"],
       Guar: ["Guar"],
       Okra: ["Okra"],
       Cucumber: ["Cucumber"],
-      Bitter_Gourd: ["Bitter Gourd"],
-      Bottle_Gourd: ["Bottle Gourd", "Round Gourd"],
-      Ridge_Gourd: ["Ridge Gourd"],
+      "Bitter Gourd": ["Bitter Gourd"],
+      "Bottle Gourd": ["Bottle Gourd", "Round Gourd"],
+      "Ridge Gourd": ["Ridge Gourd"],
       Ginger: ["Ginger"],
       Lemon: ["Desi Lemon", "Lemon China"],
       Turnip: ["Turnip"],
       "Sweet Potato": ["Sweet Potato"],
       Broccoli: ["Broccoli"],
-    },
-  },
-  Livestock: {
-    icon: "livestock",
-    urdu: "مویشی",
-    products: {
-      "Cattle Market": ["Cow", "Buffalo", "Goat", "Camel"],
-      "Slaughter House": ["Cow", "Buffalo", "Goat"],
-      Poultry: ["Broiler", "Layer"],
-      Dairy: ["Milk", "Yogurt", "Butter"],
-      Fisheries: ["Rohu", "Catla", "Tilapia"],
-      Feed: [
-        "Alfalfa",
-        "Rhodes Grass",
-        "Corn Silage",
-        "Wheat Bran",
-        "Canola Meal",
-        "Soyabean Meal",
-        "Mustard Seed Cake",
-        "Cotton Seed Cake",
-        "Wheat Straw",
-      ],
+      "Salad Leaf": ["Salad Leaf"],
     },
   },
   "Agri Inputs": {
     icon: "agri-inputs",
     urdu: "زرعی ان پٹس",
     products: {
-      // Brand products from data/Fast uni.xlsx (see fertilizer.ts).
-      Fertilizer: FERTILIZER_BYPRODUCTS,
+      // Fertilizer types (Urea, DAP, ...), each with its brand products (see fertilizer.ts).
+      ...FERTILIZER_TYPES,
       Pesticide: [
         "Chlorphenapyr 36% SC",
         "Clothianidin 20% EC",
@@ -269,70 +253,35 @@ export const VERTICALS: Record<
       Walnut: ["Walnut"],
       Fig: ["Fig"],
       Pistachio: ["Pistachio"],
-      Raisins: ["Dried Raisins"],
+      Raisins: ["Large Raisins"],
     },
   },
   Herbals: {
     icon: "herbals",
     urdu: "جڑی بوٹیاں",
     products: {
-      "Black Seed": ["Kalonji", "Kalonji Oil", "Black Seed", "Black Seed Oil"],
-      Psyllium: ["Ispaghol Husk", "Ispaghol", "Psyllium Seed", "Psyllium Husk"],
-      Asafoetida: ["Hing", "Asafoetida"],
-      Honey: ["Honey"],
-      "Carom Seed": ["Ajwain", "Carom Seed"],
-      "Basil Seed": ["Tukh Malanga", "Basil Seed"],
+      "Black Seed": ["Kalonji", "Kalonji Oil"],
+      Psyllium: ["Ispaghol", "Ispaghol Husk"],
+      Asafoetida: ["Hing"],
+      "Basil Seed": ["Tukh Malanga"],
       "Chia Seed": ["Chia Seed"],
-      Saffron: ["Zafran", "Saffron"],
-      Fennel: ["Saunf", "Fennel"],
+      Saffron: ["Zafran"],
       "Dry Lemon": ["Dry Lemon"],
+      Salep: ["Salab Misri", "Saleb Panja"],
     },
   },
   Kiryana: {
     icon: "kiryana",
     urdu: "کریانہ",
     products: {
-      Wheat: ["Wheat", "Maida", "Flour", "Semolina", "Special Flour"],
-      Rice: [
-        "1121 Basmati-1",
-        "1121 Basmati-2",
-        "Irri 6",
-        "Irri 9",
-        "C-9 Basmati",
-        "C-9 Steam",
-        "Rice Polish",
-        "Supri New",
-        "1509 Steam",
-        "1121 Steam",
-      ],
-      Maize: ["Maize Grade A"],
-      Millet: ["Millet Grade A"],
-      Sugar: ["Sugar", "Jaggery"],
-      Mustard: ["Sarson Oil"],
-      Pulses: [
-        "Red Lentil",
-        "Black Chickpea Large",
-        "Kabuli Chickpea 7mm",
-        "Split Green Gram Washed",
-      ],
-      Spices: [
-        "Red Chilli",
-        "White Cumin",
-        "Turmeric",
-        "Black Pepper",
-        "Coriander Seed",
-        "Cinnamon",
-        "Clove",
-      ],
-      Eggs: ["Eggs"],
+      Ghee: ["Asia ghee", "Dalda ghee", "Kashmir ghee", "Khyber ghee", "Sufi Ghee"],
     },
   },
 };
 
 export const SUBSCRIBED_PRODUCTS = new Set<string>([
   "Wheat", "Rice", "Cotton", "Maize", "Sugar", "Pulses", "Mustard", "Sesame",
-  "Millet", "Paddy", "Dates", "Spices", "Dry Fruit", "Live Market", "Fruits",
-  "Vegetable", "Livestock", "Fertilizer", "Edible Oil", "Kiryana", "Herbs"
+  "Millet", "Paddy", "Dates", "Spices", "Edible Oil",
 ]);
 
 export const TODAY_ONLY_PRODUCTS = new Set<string>([]);
@@ -371,7 +320,6 @@ export const PRODUCT_ID_TO_NAME: Record<string, string> = {
   fruit: "Fruits",
   vegetables: "Vegetable",
   vegetable: "Vegetable",
-  livestock: "Livestock",
   fertilizer: "Fertilizer",
   fertilizers: "Fertilizer",
   edibleoil: "Edible Oil",
@@ -381,44 +329,47 @@ export const PRODUCT_ID_TO_NAME: Record<string, string> = {
   herbals: "Herbs",
 };
 
+/** Every product costs the same per month (one price, no vertical bundles). */
+export const PRODUCT_PRICE_PER_MONTH = 2000;
+
+/** How products are grouped in "View All" and the Complete Profile list. */
+export const PRODUCT_GROUPS: { id: ProductGroupId; en: string; ur: string }[] = [
+  { id: "crops", en: "Crops", ur: "فصلیں" },
+  { id: "fertilizer", en: "Fertilizer", ur: "کھاد" },
+  { id: "fruits", en: "Fruits", ur: "پھل" },
+  { id: "vegetables", en: "Vegetables", ur: "سبزیاں" },
+  { id: "dry-fruits", en: "Dry Fruits", ur: "خشک میوہ" },
+  { id: "herbs", en: "Herbs", ur: "جڑی بوٹیاں" },
+  { id: "kiryana", en: "Kiryana", ur: "کریانہ" },
+];
+
+const crop = (name: string, byproducts: string[]): ProdDiv => ({ name, group: "crops", division: name, type: "product", byproducts });
+/** The products of a data division that is sold product by product (Fruits → Mango, Banana, ...). */
+const opened = (group: ProductGroupId, division: string, products: Record<string, string[]>): ProdDiv[] =>
+  Object.entries(products).map(([name, byproducts]) => ({ name, group, division, type: "product", byproducts }));
+
+/**
+ * Every product the app sells, each on its own at PRODUCT_PRICE_PER_MONTH, in
+ * Home / View All order. `division` is where its rates are in the data. Edible
+ * Oil is one product that opens with its oils as tabs.
+ */
 export const PRODUCT_DIVISIONS: ProdDiv[] = [
-  {
-    name: "Wheat",
-    type: "product",
-    byproducts: VERTICALS.Grains.products.Wheat,
-  },
-  {
-    name: "Maize",
-    type: "product",
-    byproducts: VERTICALS.Grains.products.Maize,
-  },
-  {
-    name: "Sesame",
-    type: "product",
-    byproducts: VERTICALS.Grains.products.Sesame,
-  },
-  {
-    name: "Millet",
-    type: "product",
-    byproducts: VERTICALS.Grains.products.Millet,
-  },
-  {
-    name: "Cotton",
-    type: "product",
-    byproducts: VERTICALS.Grains.products.Cotton,
-  },
-  {
-    name: "Paddy",
-    type: "product",
-    byproducts: VERTICALS.Grains.products.Paddy,
-  },
-  {
-    name: "Rice",
-    type: "product",
-    byproducts: VERTICALS.Grains.products.Rice,
-  },
+  crop("Wheat", VERTICALS.Grains.products.Wheat),
+  crop("Rice", VERTICALS.Grains.products.Rice),
+  crop("Paddy", VERTICALS.Grains.products.Paddy),
+  crop("Maize", VERTICALS.Grains.products.Maize),
+  crop("Cotton", VERTICALS.Grains.products.Cotton),
+  crop("Sugar", VERTICALS.Grains.products.Sugar),
+  crop("Pulses", VERTICALS.Grains.products.Pulses),
+  crop("Mustard", VERTICALS.Grains.products.Mustard),
+  crop("Sesame", VERTICALS.Grains.products.Sesame),
+  crop("Millet", VERTICALS.Grains.products.Millet),
+  crop("Spices", VERTICALS.Grains.products.Spices),
+  crop("Dates", VERTICALS.Grains.products.Dates),
   {
     name: "Edible Oil",
+    group: "crops",
+    division: "Edible Oil",
     type: "vertical",
     products: {
       Canola: VERTICALS.Grains.products.Canola,
@@ -428,59 +379,31 @@ export const PRODUCT_DIVISIONS: ProdDiv[] = [
       Castor: ["Castor Bean", "Castor Oil"],
     },
   },
-  {
-    name: "Fertilizer",
-    type: "product",
-    byproducts: VERTICALS["Agri Inputs"].products.Fertilizer,
-  },
-  {
-    name: "Livestock",
-    type: "vertical",
-    products: VERTICALS.Livestock.products,
-  },
-  {
-    name: "Dates",
-    type: "product",
-    byproducts: VERTICALS.Grains.products.Dates,
-  },
-  {
-    name: "Mustard",
-    type: "product",
-    byproducts: VERTICALS.Grains.products.Mustard,
-  },
-  {
-    name: "Spices",
-    type: "product",
-    byproducts: VERTICALS.Grains.products.Spices,
-  },
-  {
-    name: "Pulses",
-    type: "product",
-    byproducts: VERTICALS.Grains.products.Pulses,
-  },
-  {
-    name: "Kiryana",
-    type: "vertical",
-    products: VERTICALS.Kiryana.products,
-  },
-  {
-    name: "Sugar",
-    type: "product",
-    byproducts: VERTICALS.Grains.products.Sugar,
-  },
-  { name: "Fruits", type: "vertical", products: VERTICALS.Fruits.products },
-  {
-    name: "Vegetable",
-    type: "vertical",
-    products: VERTICALS.Vegetables.products,
-  },
-  {
-    name: "Dry Fruit",
-    type: "vertical",
-    products: VERTICALS["Dry Fruits"].products,
-  },
-  { name: "Herbs", type: "vertical", products: VERTICALS.Herbals.products },
+  ...opened("fertilizer", "Fertilizer", FERTILIZER_TYPES),
+  ...opened("fruits", "Fruits", VERTICALS.Fruits.products),
+  ...opened("vegetables", "Vegetable", VERTICALS.Vegetables.products),
+  ...opened("dry-fruits", "Dry Fruit", VERTICALS["Dry Fruits"].products),
+  ...opened("herbs", "Herbs", VERTICALS.Herbals.products),
+  ...opened("kiryana", "Kiryana", VERTICALS.Kiryana.products),
 ];
+
+/** A product by its name (case-insensitive). */
+export function findProduct(name?: string | null): ProdDiv | undefined {
+  const k = (name || "").toLowerCase().trim();
+  return PRODUCT_DIVISIONS.find((d) => d.name.toLowerCase() === k);
+}
+
+/** Divisions whose by-products belong to separately sold products: matched by exact name. */
+export const OPENED_DIVISIONS = new Set(PRODUCT_DIVISIONS.filter((d) => d.group !== "crops").map((d) => d.division));
+
+/** The product a data by-product belongs to ("Vegetable" + "Potato (Laal)" → Potato), if any. */
+export function productForByproduct(division: string, byproduct: string): ProdDiv | undefined {
+  const norm = (x: string) => x.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const b = norm(byproduct);
+  return PRODUCT_DIVISIONS.find(
+    (d) => d.division === division && (d.group === "crops" || (d.byproducts || []).some((x) => norm(x) === b)),
+  );
+}
 
 export function getVerticalForProduct(productName: string): string {
   if (VERTICALS[productName]) return productName;
@@ -495,20 +418,14 @@ export function getVerticalForProduct(productName: string): string {
   );
 }
 
+/** What the by-product screen opens with for a product (Edible Oil: one tab per oil). */
 export function getProductSelectionsForDivision(divName: string): ProductSel[] {
-  const div = PRODUCT_DIVISIONS.find(
-    (d) => d.name === divName || d.name.toLowerCase() === divName.toLowerCase()
-  );
-  if (div) {
-    if (div.type === "vertical" && div.products) {
-      return Object.keys(div.products).map((pName) => ({
-        vertical: div.name,
-        product: pName,
-      }));
-    }
-    const vName = getVerticalForProduct(div.name);
-    return [{ vertical: vName, product: div.name }];
+  const div = findProduct(divName);
+  if (div?.type === "vertical" && div.products) {
+    return Object.keys(div.products).map((pName) => ({ vertical: div.name, product: pName }));
   }
+  if (div && div.group !== "crops") return [{ vertical: div.division, product: div.name }];
+  if (div) return [{ vertical: getVerticalForProduct(div.name), product: div.name }];
   const vert = VERTICALS[divName];
   if (vert && vert.products) {
     return Object.keys(vert.products).map((pName) => ({
@@ -524,7 +441,7 @@ export function getDivisionForProduct(vertical?: string, product?: string): stri
   const DB_DIVISIONS = [
     "Wheat", "Maize", "Sesame", "Millet", "Cotton", "Paddy", "Rice",
     "Dates", "Mustard", "Spices", "Pulses", "Sugar", "Fertilizer",
-    "Edible Oil", "Fruits", "Vegetable", "Dry Fruit", "Herbs", "Livestock", "Kiryana"
+    "Edible Oil", "Fruits", "Vegetable", "Dry Fruit", "Herbs", "Kiryana"
   ];
   if (product && DB_DIVISIONS.includes(product)) return product;
   if (vertical && DB_DIVISIONS.includes(vertical)) return vertical;

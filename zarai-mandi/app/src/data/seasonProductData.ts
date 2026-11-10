@@ -1,6 +1,14 @@
 // Season Product and By-Product Data Availability
 // Source: Crops Seasons (1)(4).xlsx
 
+import {
+  getVerticalForProduct,
+  PRODUCT_DIVISIONS,
+  PRODUCT_PRICE_PER_MONTH,
+} from "../customer-face/shared/data/catalog";
+import { getproductIconSrc } from "../customer-face/shared/data/icons";
+import type { ProdDiv, ProductGroupId } from "../customer-face/shared/types";
+
 import fruitsImg from "../icons/products/fruits200.png";
 import vegetablesImg from "../icons/products/vegetables200.png";
 import wheatImg from "../icons/products/wheat200.png";
@@ -16,12 +24,7 @@ import sugarImg from "../icons/products/sugar200.png";
 import edibleImg from "../icons/products/edible200.png";
 import herbalsImg from "../icons/products/herbals200.png";
 import milletImg from "../icons/products/millet200.png";
-import livestockImg from "../onboarding/icons/livestock200.png";
 import kiryanaImg from "../icons/products/kiryana200.png";
-import appleImg from "../icons/apple.jpg";
-import bananaImg from "../icons/banana.jpg";
-import grapesImg from "../icons/grapes.jpg";
-import mangoImg from "../icons/mango.jpg";
 
 export interface SeasonVariety {
   name: string;
@@ -56,7 +59,8 @@ export const MONTH_NAMES_UR = [
 
 const ALL_MONTHS = [...MONTH_KEYS];
 
-export const SEASON_PACKAGES: SeasonPackage[] = [
+// Which months each crop / fruit / vegetable is in season (the source sheet).
+const SEASON_SOURCE: SeasonPackage[] = [
   // ─── 5 VERTICALS (WITH EXPANDABLE BY-PRODUCTS PREVIEW) ───────────────────
   {
     id: "fruits",
@@ -140,22 +144,6 @@ export const SEASON_PACKAGES: SeasonPackage[] = [
       { name: "Canola Seed", nameUr: "کینولا بیج", months: ALL_MONTHS },
       { name: "Mustard Cake (Khal)", nameUr: "سرسوں کھل", months: ALL_MONTHS },
       { name: "Taara Meera Oil", nameUr: "تارا میرا تیل", months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Nov", "Dec"] },
-    ],
-  },
-  {
-    id: "livestock",
-    name: "Livestock",
-    nameUr: "لائیو اسٹاک",
-    type: "vertical",
-    icon: livestockImg,
-    pricePerMonth: 5000,
-    varieties: [
-      { name: "Cow (Desi/Sahiwal)", nameUr: "گائے (دیسی/ساہیوال)", months: ALL_MONTHS },
-      { name: "Buffalo (Nili Ravi)", nameUr: "بھینس (نیلی راوی)", months: ALL_MONTHS },
-      { name: "Goat (Teddy/Beetal)", nameUr: "بکرا (ٹیڈی/بیتل)", months: ALL_MONTHS },
-      { name: "Sheep (Dumba/Kajli)", nameUr: "دنبہ / کجلی", months: ALL_MONTHS },
-      { name: "Bull (Qurbani)", nameUr: "قربانی بیل", months: ["May", "Jun", "Jul", "Aug"] },
-      { name: "Calf (Wachha)", nameUr: "بچھڑا", months: ALL_MONTHS },
     ],
   },
   {
@@ -347,65 +335,45 @@ export const SEASON_PACKAGES: SeasonPackage[] = [
   },
 ];
 
-/**
- * Returns list of packages that have at least 1 variety active in the given month.
- * Also attaches the list of active varieties for that month.
- */
-export function getPackagesForMonth(monthKey: string) {
-  return SEASON_PACKAGES.map((pkg) => {
-    const activeVarieties = pkg.varieties.filter((v) => v.months.includes(monthKey));
-    return {
-      ...pkg,
-      activeVarieties,
-      varietyCount: activeVarieties.length,
-      isAvailable: activeVarieties.length > 0,
-    };
-  })
-    .filter((pkg) => pkg.isAvailable)
-    .sort((a, b) => b.varietyCount - a.varietyCount);
+/** A product in the Complete Profile list: every product sold on its own, one price. */
+export interface SeasonProduct {
+  id: string;
+  name: string;
+  group: ProductGroupId;
+  icon: string;
+  pricePerMonth: number;
+  /** Months it is in season (all year unless the season sheet says otherwise). */
+  months: string[];
 }
 
-export function getVarietyIcon(pkgId: string, varietyName: string): string {
-  const v = (varietyName || "").toLowerCase().trim();
-  if (pkgId === "fruits") {
-    if (v.includes("apple")) return appleImg;
-    if (v.includes("banana")) return bananaImg;
-    if (v.includes("grape")) return grapesImg;
-    if (v.includes("mango")) return mangoImg;
-    return fruitsImg;
-  }
-  if (pkgId === "vegetables") {
-    if (v.includes("tomato")) return "/src/icons/by-products/vegetables/Tomato.png";
-    if (v.includes("onion")) return "/src/icons/by-products/vegetables/Onion.png";
-    if (v.includes("potato")) return "/src/icons/by-products/vegetables/Potato-Red.png";
-    if (v.includes("garlic")) return "/src/icons/by-products/vegetables/Garlic-Desi.png";
-    if (v.includes("ginger")) return "/src/icons/by-products/vegetables/Ginger.png";
-    if (v.includes("cucumber")) return "/src/icons/by-products/vegetables/Cucumber.png";
-    if (v.includes("carrot")) return "/src/icons/by-products/vegetables/Carrot.png";
-    if (v.includes("pea")) return "/src/icons/by-products/vegetables/Peas.png";
-    if (v.includes("cauliflower")) return "/src/icons/by-products/vegetables/Cauliflower.png";
-    if (v.includes("cabbage")) return "/src/icons/by-products/vegetables/Cabbage.png";
-    if (v.includes("capsicum")) return "/src/icons/by-products/vegetables/Capsicum.png";
-    if (v.includes("spinach")) return "/src/icons/by-products/vegetables/Spinach.png";
-    if (v.includes("turnip")) return "/src/icons/by-products/vegetables/Turnip.png";
-    if (v.includes("okra")) return "/src/icons/by-products/vegetables/Okra.png";
-    if (v.includes("gourd")) return "/src/icons/by-products/vegetables/Bottle-Gourd.png";
-    if (v.includes("brinjal")) return "/src/icons/by-products/vegetables/Brinjal-Round.png";
-    if (v.includes("broccoli")) return "/src/icons/by-products/vegetables/Broccoli.png";
-    return vegetablesImg;
-  }
-  if (pkgId === "edible_oils" || pkgId === "edible") {
-    if (v.includes("mustard oil")) return "/src/icons/by-products/mustard/Mustard-Oil.png";
-    if (v.includes("canola oil")) return "/src/icons/by-products/edibleoils/Canola-Oil.png";
-    if (v.includes("sunflower oil")) return "/src/icons/by-products/edibleoils/Sunflower-Oil.png";
-    if (v.includes("soybean")) return "/src/icons/by-products/edibleoils/Soybean.png";
-    if (v.includes("mustard seed")) return "/src/icons/by-products/mustard/Mustard-Seed.png";
-    if (v.includes("canola seed")) return "/src/icons/by-products/edibleoils/Canola-Seed.png";
-    if (v.includes("cake") || v.includes("khal")) return "/src/icons/by-products/mustard/Mustard-Cake.png";
-    return edibleImg;
-  }
-  if (pkgId === "livestock") return livestockImg;
-  if (pkgId === "kiryana") return kiryanaImg;
-  return fruitsImg;
+const normName = (x: string) => x.toLowerCase().replace(/[^a-z0-9]/g, "");
+const SOURCE_FOR_GROUP: Partial<Record<ProductGroupId, string>> = { fruits: "fruits", vegetables: "vegetables" };
+
+/** A product's months: its fruit / vegetable varieties' months, or its crop package's. */
+function monthsFor(d: ProdDiv): string[] {
+  const names = [d.name, ...(d.byproducts || [])].map(normName);
+  const source = SOURCE_FOR_GROUP[d.group];
+  const varieties = source
+    ? (SEASON_SOURCE.find((p) => p.id === source)?.varieties || []).filter((v) =>
+        names.some((n) => n.includes(normName(v.name)) || normName(v.name).includes(n)),
+      )
+    : d.group === "crops"
+      ? SEASON_SOURCE.find((p) => p.type === "product" && normName(p.name) === normName(d.name))?.varieties || []
+      : [];
+  const months = new Set(varieties.flatMap((v) => v.months));
+  return months.size ? MONTH_KEYS.filter((m) => months.has(m)) : [...ALL_MONTHS];
 }
 
+export const SEASON_PACKAGES: SeasonProduct[] = PRODUCT_DIVISIONS.map((d) => ({
+  id: d.name.toLowerCase(),
+  name: d.name,
+  group: d.group,
+  icon: getproductIconSrc(d.name, getVerticalForProduct(d.name)),
+  pricePerMonth: PRODUCT_PRICE_PER_MONTH,
+  months: monthsFor(d),
+}));
+
+/** The products in season in a month, in catalog order. */
+export function getPackagesForMonth(monthKey: string): SeasonProduct[] {
+  return SEASON_PACKAGES.filter((p) => p.months.includes(monthKey));
+}

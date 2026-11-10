@@ -32,3 +32,29 @@ export function priceUnitFor(division?: string | null): PriceUnit {
 export type PriceUnit = { kg: number; en: string; ur: string; spokenEn: string; spokenUr: string };
 export const CROP_PRICE_UNIT: PriceUnit = { kg: 40, en: "per 40 kg", ur: "فی 40 کلو", spokenEn: "per 40 kilo", spokenUr: "فی چالیس کلو" };
 const FERTILIZER_UNIT: PriceUnit = { kg: 50, en: "per 50 kg bag", ur: "فی 50 کلو بوری", spokenEn: "per 50 kilo bag", spokenUr: "فی پچاس کلو بوری" };
+
+// Each fertilizer type is a product of its own (Urea, DAP, ...); its by-products
+// are the companies' brand products ("Engro Urea", "Sona Urea", ...).
+const FERTILIZER_TYPE_RULES: [string, RegExp][] = [
+  ["Urea", /\burea\b/i],
+  ["DAP", /\bdap\b/i],
+  ["MOP", /\bmop\b/i],
+  ["SOP", /\bsop\b/i],
+  ["Ammonium Sulphate", /ammonium sulphate/i],
+  ["NP", /\bnp\b/i],
+  ["CAN", /\bcan\b/i],
+  ["SSP", /\bssp\b/i],
+];
+export const OTHER_FERTILIZERS = "Other Fertilizers";
+
+/** The type a fertilizer brand product is ("Engro Zabardast Urea" → "Urea"). */
+export function fertilizerType(byproduct: string): string {
+  return FERTILIZER_TYPE_RULES.find(([, re]) => re.test(byproduct))?.[0] ?? OTHER_FERTILIZERS;
+}
+
+/** Fertilizer types in a fixed order, each with its brand products. */
+export const FERTILIZER_TYPES: Record<string, string[]> = Object.fromEntries(
+  [...FERTILIZER_TYPE_RULES.map(([t]) => t), OTHER_FERTILIZERS]
+    .map((t) => [t, FERTILIZER_BYPRODUCTS.filter((b) => fertilizerType(b) === t)] as const)
+    .filter(([, list]) => list.length > 0),
+);

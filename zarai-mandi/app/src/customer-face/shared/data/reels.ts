@@ -5,7 +5,6 @@ import video4 from "../../../videos/video4.mp4";
 import video5 from "../../../videos/video5.mp4";
 import video6 from "../../../videos/video6.mp4";
 import video7 from "../../../videos/video7.mp4";
-import video8 from "../../../videos/video8.mp4";
 import video9 from "../../../videos/video9.mp4";
 import video10 from "../../../videos/video10.mp4";
 import video11 from "../../../videos/video11.mp4";
@@ -70,7 +69,6 @@ export const VIDEO_PRODUCT_OPTIONS = [
   { id: "rice", label: "Rice", labelUrdu: "چاول" },
   { id: "edible oil", label: "Edible Oil", labelUrdu: "خوردنی تیل" },
   { id: "fertilizer", label: "Fertilizer", labelUrdu: "کھاد" },
-  { id: "livestock", label: "Livestock", labelUrdu: "مویشی" },
   { id: "dates", label: "Dates", labelUrdu: "کھجور" },
   { id: "mustard", label: "Mustard", labelUrdu: "سرسوں" },
   { id: "spices", label: "Spices", labelUrdu: "مصالحہ جات" },
@@ -347,44 +345,6 @@ export const ZARAI_REELS: ZaraiReel[] = [
         text: "Wheat trading updates",
         textUrdu: "گندم بیوپار معلومات",
         likes: 16,
-      },
-    ],
-  },
-  {
-    id: "reel-8",
-    videoPath: video8,
-    imagePath: "",
-    product: "Livestock",
-    productUrdu: "مویشی",
-    author: "Chaudhry Babar (Livestock)",
-    authorUrdu: "چوہدری بابر (مویشی منڈی)",
-    handle: "@babar_livestock",
-    avatar: "CB",
-    isVerified: true,
-    category: "Livestock Market",
-    categoryUrdu: "مویشی منڈی",
-    location: "ملتان مویشی منڈی",
-    title: "Livestock & Cattle Market Live Boli",
-    titleUrdu: "مویشی منڈی میں جانوروں کی تازہ بولی",
-    tags: ["#مویشی"],
-    audioTitle: "Original Audio",
-    likesCount: 64500,
-    commentsCount: 2800,
-    sharesCount: 22100,
-    badge: "Livestock",
-    gradient: "linear-gradient(180deg, #102B3B 0%, #081924 50%, #030B12 100%)",
-    liveRateBadge: "بچھڑا: 1,80,000 | گائے: 2,40,000",
-    comments: [
-      {
-        id: "c8",
-        author: "Chaudhry Atif",
-        authorUrdu: "چوہدری عاطف",
-        avatar: "CA",
-        time: "15m ago",
-        timeUrdu: "15 منٹ پہلے",
-        text: "Livestock mandi update",
-        textUrdu: "مویشی منڈی اپڈیٹ",
-        likes: 35,
       },
     ],
   },

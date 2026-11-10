@@ -85,8 +85,16 @@ export type FeedMsg = {
 
 //  PRODUCT DIVISIONS
 
+export type ProductGroupId = "crops" | "fertilizer" | "fruits" | "vegetables" | "dry-fruits" | "herbs" | "kiryana";
+
+/** A product the app sells (catalog.ts PRODUCT_DIVISIONS). */
 export type ProdDiv = {
+  /** What Home shows and what a subscription is for ("Wheat", "Potato", "Urea"). */
   name: string;
+  group: ProductGroupId;
+  /** Where its rates are in the data (the API division: "Vegetable" for Potato). */
+  division: string;
+  /** "vertical": opens with a tab per sub-product (Edible Oil). */
   type: "product" | "vertical";
   img?: string;
   byproducts?: string[];

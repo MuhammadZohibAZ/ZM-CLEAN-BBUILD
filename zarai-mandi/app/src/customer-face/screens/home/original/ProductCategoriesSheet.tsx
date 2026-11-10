@@ -1,14 +1,24 @@
-import { getProductSelectionsForDivision, PRODUCT_DIVISIONS } from "../../../shared/data/catalog";
+import { useState } from "react";
+
+import {
+  getProductSelectionsForDivision,
+  PRODUCT_DIVISIONS,
+  PRODUCT_GROUPS,
+  PRODUCT_PRICE_PER_MONTH,
+} from "../../../shared/data/catalog";
 import { getproductIconSrc } from "../../../shared/data/icons";
-import { URDU_FONT, useLang } from "../../../shared/i18n/LangProvider";
+import { toUrduDigits, URDU_FONT, useLang } from "../../../shared/i18n/LangProvider";
 import type { Screen } from "../../../shared/types";
 
 type Division = (typeof PRODUCT_DIVISIONS)[number];
 
+/** Products a group card shows before "See more" (two rows). */
+const PREVIEW = 6;
+
 /**
- * "View All" product-category grid (full screen): every division, active and
- * locked. Tap an unlocked one to open its by-products, a locked one to start
- * the subscribe flow, same as the Home row's tiles.
+ * "View All" (full screen): every product, one card per group (Crops, Fertilizer,
+ * Fruits, ...) showing two rows and "See more". Tap an unlocked product to open
+ * its by-products, a locked one to start the subscribe flow, as on Home.
  */
 export function ProductCategoriesSheet({
   activeProducts,
@@ -28,6 +38,91 @@ export function ProductCategoriesSheet({
   push: (s: Screen) => void;
 }) {
   const { lang, tc } = useLang();
+  const all = [...activeProducts, ...lockedProducts];
+  const [open, setOpen] = useState<Set<string>>(new Set());
+  const toggle = (id: string) =>
+    setOpen((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const tile = (div: Division) => {
+    const verticalFor = getVerticalForProduct(div.name);
+    const unlocked = isAccessible(div.name);
+    return (
+      <button
+        key={div.name}
+        onClick={() => {
+          onClose();
+          if (unlocked) {
+            const selProducts = getProductSelectionsForDivision(div.name);
+            push({ id: "byproduct-combined", products: selProducts, active: 0 });
+          } else {
+            handleLockedProductClick(div.name, verticalFor);
+          }
+        }}
+        className="flex flex-col items-center tap-target min-w-0"
+      >
+        <div
+          style={{
+            width: "clamp(62px, 17vw, 74px)",
+            height: "clamp(62px, 17vw, 74px)",
+            borderRadius: "50%",
+            border: unlocked ? "2.5px solid #087F63" : "1.5px solid #BDD9CD",
+            background: unlocked ? "#F4FAF7" : "#E4EFE9",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            position: "relative",
+            boxShadow: unlocked ? "0 4px 12px rgba(8,127,99,0.16)" : "0 2px 6px rgba(18,65,48,0.06)",
+          }}
+        >
+          <img
+            src={getproductIconSrc(div.name, verticalFor)}
+            alt=""
+            style={{ width: "70%", height: "70%", objectFit: "contain", opacity: unlocked ? 1 : 0.55 }}
+          />
+          {!unlocked && (
+            <span
+              style={{
+                position: "absolute",
+                bottom: -2,
+                insetInlineEnd: -2,
+                width: 20,
+                height: 20,
+                borderRadius: "50%",
+                background: "#7A8D85",
+                color: "#fff",
+                border: "2px solid #FFFFFF",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 10,
+              }}
+            >
+              🔒
+            </span>
+          )}
+        </div>
+        <span
+          className="text-center break-words w-full"
+          style={{
+            marginTop: 5,
+            fontSize: 12,
+            fontWeight: 800,
+            color: unlocked ? "#183B34" : "#6B7C76",
+            fontFamily: lang === "ur" ? URDU_FONT : "inherit",
+            lineHeight: lang === "ur" ? 1.7 : 1.15,
+          }}
+        >
+          {tc(div.name)}
+        </span>
+      </button>
+    );
+  };
+
   return (
     <div
       className="fixed inset-0 flex flex-col screen-enter"
@@ -62,92 +157,63 @@ export function ProductCategoriesSheet({
         </h2>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-8">
-        <div
-          className="grid gap-x-2 gap-y-5"
-          style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}
+      <div className="flex-1 overflow-y-auto px-4 pt-3 pb-8 flex flex-col gap-3">
+        <p
+          className="text-[12.5px] font-semibold text-[#52635F] px-1"
+          style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
         >
-          {[...activeProducts, ...lockedProducts].map((div) => {
-            const verticalFor = getVerticalForProduct(div.name);
-            const unlocked = isAccessible(div.name);
-            return (
-              <button
-                key={div.name}
-                onClick={() => {
-                  onClose();
-                  if (unlocked) {
-                    const selProducts = getProductSelectionsForDivision(div.name);
-                    push({ id: "byproduct-combined", products: selProducts, active: 0 });
-                  } else {
-                    handleLockedProductClick(div.name, verticalFor);
-                  }
-                }}
-                className="flex flex-col items-center tap-target"
-              >
-                <div
-                  className={unlocked ? "zm-beam-border zm-beam-border-white" : "zm-beam-border zm-beam-border-green"}
-                  style={{
-                    width: "clamp(78px, 22vw, 92px)",
-                    height: "clamp(78px, 22vw, 92px)",
-                    borderRadius: "50%",
-                    border: unlocked ? "3px solid #087F63" : "1.5px solid #BDD9CD",
-                    background: unlocked ? "#F4FAF7" : "#E4EFE9",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    position: "relative",
-                    boxShadow: unlocked ? "0 6px 18px rgba(8,127,99,0.22)" : "0 2px 6px rgba(18,65,48,0.06)",
-                  }}
+          {lang === "ur"
+            ? `ہر پروڈکٹ ${toUrduDigits(PRODUCT_PRICE_PER_MONTH.toLocaleString())} روپے ماہانہ`
+            : `Every product PKR ${PRODUCT_PRICE_PER_MONTH.toLocaleString()} / month`}
+        </p>
+        {PRODUCT_GROUPS.map((g) => {
+          const items = all.filter((d) => d.group === g.id);
+          if (items.length === 0) return null;
+          const isOpen = open.has(g.id) || items.length <= PREVIEW;
+          return (
+            <section
+              key={g.id}
+              className="rounded-[18px] bg-white px-3 pt-3 pb-2"
+              style={{ border: "1.5px solid #D1E5DC", boxShadow: "0 3px 12px rgba(6,77,64,0.06)" }}
+            >
+              <div className="flex items-baseline justify-between gap-2 px-1 mb-2.5">
+                <h3
+                  className="text-[15px] font-black text-[#143B33]"
+                  style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                 >
-                  <img
-                    src={getproductIconSrc(div.name, verticalFor)}
-                    alt={div.name}
-                    style={{
-                      width: "72%",
-                      height: "72%",
-                      objectFit: "contain",
-                      opacity: unlocked ? 1 : 0.55,
-                    }}
-                  />
-                  {!unlocked && (
-                    <span
-                      style={{
-                        position: "absolute",
-                        bottom: 0,
-                        right: 0,
-                        width: 22,
-                        height: 22,
-                        borderRadius: "50%",
-                        background: "#7A8D85",
-                        color: "#fff",
-                        border: "2px solid #F1F7F4",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: 11,
-                      }}
-                    >
-                      🔒
-                    </span>
-                  )}
-                </div>
+                  {lang === "ur" ? g.ur : g.en}
+                </h3>
                 <span
-                  className="text-center"
-                  style={{
-                    marginTop: 6,
-                    fontSize: 12.5,
-                    fontWeight: 800,
-                    color: unlocked ? "#183B34" : "#6B7C76",
-                    fontFamily: lang === "ur" ? URDU_FONT : "inherit",
-                    lineHeight: 1.15,
-                  }}
+                  className="text-[11px] font-bold text-[#52635F]"
+                  style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                 >
-                  {tc(div.name)}
+                  {lang === "ur" ? `${toUrduDigits(items.length)} مصنوعات` : `${items.length} product${items.length === 1 ? "" : "s"}`}
                 </span>
-              </button>
-            );
-          })}
-        </div>
+              </div>
+              <div className="grid gap-x-2 gap-y-3" style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>
+                {(isOpen ? items : items.slice(0, PREVIEW)).map(tile)}
+              </div>
+              {items.length > PREVIEW && (
+                <button
+                  type="button"
+                  onClick={() => toggle(g.id)}
+                  aria-expanded={isOpen}
+                  className="tap-target w-full mt-1.5 py-2 rounded-xl flex items-center justify-center gap-1 text-[12.5px] font-bold text-[#087F63] active:bg-[#E8F8F3]"
+                  style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+                >
+                  {isOpen
+                    ? lang === "ur" ? "کم دکھائیں" : "See less"
+                    : lang === "ur"
+                      ? `مزید دیکھیں (${toUrduDigits(items.length - PREVIEW)})`
+                      : `See more (${items.length - PREVIEW})`}
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ transform: isOpen ? "rotate(180deg)" : undefined }}>
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+              )}
+            </section>
+          );
+        })}
       </div>
     </div>
   );
