@@ -1,6 +1,7 @@
 import { LockIconSVG } from "../../../components/icons";
 import { getProductSelectionsForDivision, PRODUCT_DIVISIONS } from "../../../shared/data/catalog";
 import { getproductIconSrc } from "../../../shared/data/icons";
+import { getProductPngIcon } from "../../../shared/data/productPngIcons";
 import { URDU_FONT, useLang } from "../../../shared/i18n/LangProvider";
 import type { Screen } from "../../../shared/types";
 
@@ -146,7 +147,7 @@ export function HomeProductsSection({
                 }}
               >
                 <img
-                  src={getproductIconSrc(div.name, verticalFor)}
+                  src={getProductPngIcon(div.name) ?? getproductIconSrc(div.name, verticalFor)}
                   alt={div.name}
                   style={{
                     width: FULL_BLEED_ICONS.has(div.name) ? "66%" : "80%",
@@ -205,7 +206,7 @@ export function HomeProductsSection({
         {/* Locked Products */}
         {lockedProducts.map((div) => {
           const verticalFor = getVerticalForProduct(div.name);
-          const iconSrc = getproductIconSrc(div.name, verticalFor);
+          const iconSrc = getProductPngIcon(div.name) ?? getproductIconSrc(div.name, verticalFor);
 
           return (
             <button

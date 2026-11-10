@@ -8,6 +8,7 @@ import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 
 import { getPackagesForMonth, MONTH_KEYS, MONTH_NAMES_EN } from "../../../data/seasonProductData";
 import { PRODUCT_GROUPS, PRODUCT_PRICE_PER_MONTH } from "../../shared/data/catalog";
+import { getProductPngIcon } from "../../shared/data/productPngIcons";
 import { toUrduDigits, URDU_FONT, useLang } from "../../shared/i18n/LangProvider";
 import { type CompleteProfileState } from "./useCompleteProfile";
 
@@ -209,7 +210,7 @@ export function ProductsStep({ s }: { s: CompleteProfileState }) {
                   >
                     {/* Icon + Title (title always on one line) */}
                     <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                      <img src={pkg.icon} alt="" className="w-7 h-7 object-contain flex-shrink-0" />
+                      <img src={getProductPngIcon(pkg.name) ?? pkg.icon} alt="" className="w-7 h-7 object-contain flex-shrink-0" />
                       <OneLineName
                         text={tc(pkg.name)}
                         className={`font-bold ${isSelected ? "text-[#087F63]" : "text-[#183B34]"}`}

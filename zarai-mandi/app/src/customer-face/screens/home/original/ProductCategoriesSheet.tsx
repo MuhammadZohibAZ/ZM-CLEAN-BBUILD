@@ -7,6 +7,7 @@ import {
   PRODUCT_PRICE_PER_MONTH,
 } from "../../../shared/data/catalog";
 import { getproductIconSrc } from "../../../shared/data/icons";
+import { getProductPngIcon } from "../../../shared/data/productPngIcons";
 import { toUrduDigits, URDU_FONT, useLang } from "../../../shared/i18n/LangProvider";
 import type { Screen } from "../../../shared/types";
 
@@ -80,7 +81,7 @@ export function ProductCategoriesSheet({
           }}
         >
           <img
-            src={getproductIconSrc(div.name, verticalFor)}
+            src={getProductPngIcon(div.name) ?? getproductIconSrc(div.name, verticalFor)}
             alt=""
             style={{ width: "70%", height: "70%", objectFit: "contain", opacity: unlocked ? 1 : 0.55 }}
           />
