@@ -4,7 +4,6 @@ import {
   getProductSelectionsForDivision,
   PRODUCT_DIVISIONS,
   PRODUCT_GROUPS,
-  PRODUCT_PRICE_PER_MONTH,
 } from "../../../shared/data/catalog";
 import { getproductIconSrc } from "../../../shared/data/icons";
 import { getProductPngIcon } from "../../../shared/data/productPngIcons";
@@ -159,14 +158,6 @@ export function ProductCategoriesSheet({
       </header>
 
       <div className="flex-1 overflow-y-auto px-4 pt-3 pb-8 flex flex-col gap-3">
-        <p
-          className="text-[12.5px] font-semibold text-[#52635F] px-1"
-          style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-        >
-          {lang === "ur"
-            ? `ہر پروڈکٹ ${toUrduDigits(PRODUCT_PRICE_PER_MONTH.toLocaleString())} روپے ماہانہ`
-            : `Every product PKR ${PRODUCT_PRICE_PER_MONTH.toLocaleString()} / month`}
-        </p>
         {PRODUCT_GROUPS.map((g) => {
           const items = all.filter((d) => d.group === g.id);
           if (items.length === 0) return null;

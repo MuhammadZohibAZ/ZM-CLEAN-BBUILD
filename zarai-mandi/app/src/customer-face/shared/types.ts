@@ -85,7 +85,7 @@ export type FeedMsg = {
 
 //  PRODUCT DIVISIONS
 
-export type ProductGroupId = "crops" | "fertilizer" | "fruits" | "vegetables" | "dry-fruits" | "herbs" | "kiryana";
+export type ProductGroupId = "crops" | "edible-oils" | "fruits" | "vegetables" | "fertilizer" | "dry-fruits" | "herbs" | "kiryana";
 
 /** A product the app sells (catalog.ts PRODUCT_DIVISIONS). */
 export type ProdDiv = {
@@ -94,7 +94,7 @@ export type ProdDiv = {
   group: ProductGroupId;
   /** Where its rates are in the data (the API division: "Vegetable" for Potato). */
   division: string;
-  /** "vertical": opens with a tab per sub-product (Edible Oil). */
+  /** "vertical": opens with a tab per sub-product. */
   type: "product" | "vertical";
   img?: string;
   byproducts?: string[];

@@ -357,7 +357,7 @@ function monthsFor(d: ProdDiv): string[] {
     ? (SEASON_SOURCE.find((p) => p.id === source)?.varieties || []).filter((v) =>
         names.some((n) => n.includes(normName(v.name)) || normName(v.name).includes(n)),
       )
-    : d.group === "crops"
+    : d.division === d.name
       ? SEASON_SOURCE.find((p) => p.type === "product" && normName(p.name) === normName(d.name))?.varieties || []
       : [];
   const months = new Set(varieties.flatMap((v) => v.months));

@@ -6,6 +6,7 @@ import { LockIconSVG } from "../../../components/icons";
 import {
   findProduct,
   getProductSelectionsForDivision,
+  isOpenedProduct,
   PRODUCT_DIVISIONS,
   productForByproduct,
   PRODUCT_ID_TO_NAME,
@@ -387,8 +388,9 @@ export function HomeScreen({
             showProduct(e.product);
             return;
           }
-          // Crops and Edible Oil open by name; a product sold out of a bigger division (Potato) by its division.
-          const sel = findProduct(e.product)?.group === "crops"
+          // A crop opens by name; a product sold out of a bigger division (Potato) by its division.
+          const owner = findProduct(e.product);
+          const sel = !owner || !isOpenedProduct(owner)
             ? { vertical: getVerticalForProduct(e.product), product: e.product }
             : getProductSelectionsForDivision(e.product)[0];
           push({ id: "product-rates", vertical: sel.vertical, product: sel.product, byproduct: e.byproduct });
@@ -502,7 +504,8 @@ export function HomeScreen({
         }
       />
 
-      {completeProfileOpen && (
+      {/* The app shell draws this sheet when it controls it; drawing it here too stacked two copies. */}
+      {completeProfileOpen && !parentSetCompleteProfileOpen && (
         <CompleteProfileModal
           data={profileSetupData}
           onUpdateData={updateProfileSetupData}

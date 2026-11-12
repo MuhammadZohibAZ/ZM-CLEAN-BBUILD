@@ -335,25 +335,37 @@ export const PRODUCT_PRICE_PER_MONTH = 2000;
 /** How products are grouped in "View All" and the Complete Profile list. */
 export const PRODUCT_GROUPS: { id: ProductGroupId; en: string; ur: string }[] = [
   { id: "crops", en: "Crops", ur: "فصلیں" },
-  { id: "fertilizer", en: "Fertilizer", ur: "کھاد" },
+  { id: "edible-oils", en: "Edible Oils", ur: "خوردنی تیل" },
   { id: "fruits", en: "Fruits", ur: "پھل" },
   { id: "vegetables", en: "Vegetables", ur: "سبزیاں" },
+  { id: "fertilizer", en: "Fertilizer", ur: "کھاد" },
   { id: "dry-fruits", en: "Dry Fruits", ur: "خشک میوہ" },
   { id: "herbs", en: "Herbs", ur: "جڑی بوٹیاں" },
   { id: "kiryana", en: "Kiryana", ur: "کریانہ" },
 ];
 
-const crop = (name: string, byproducts: string[]): ProdDiv => ({ name, group: "crops", division: name, type: "product", byproducts });
+const crop = (name: string, byproducts: string[], group: ProductGroupId = "crops"): ProdDiv => ({ name, group, division: name, type: "product", byproducts });
 /** The products of a data division that is sold product by product (Fruits → Mango, Banana, ...). */
 const opened = (group: ProductGroupId, division: string, products: Record<string, string[]>): ProdDiv[] =>
   Object.entries(products).map(([name, byproducts]) => ({ name, group, division, type: "product", byproducts }));
 
+/** The Edible Oil division's products: each oil seed with its oil and meal (the data's names). */
+const EDIBLE_OILS: Record<string, string[]> = {
+  Canola: ["Canola Seed", "Canola Oil", "Canola Meal"],
+  Sunflower: ["Sunflower Seed", "Sunflower Oil", "Sunflower Meal"],
+  Soybean: ["Soyabean Seed", "Soyabean Oil", "Soyabean Oil - Washed", "Soyabean Meal"],
+  Taramira: ["Taara Meera Seed", "Taara Meera-Oil"],
+  Castor: ["Castor Bean"],
+  Camelina: ["Camelina"],
+};
+
+const GROUP_ORDER = (g: ProductGroupId) => PRODUCT_GROUPS.findIndex((x) => x.id === g);
+
 /**
  * Every product the app sells, each on its own at PRODUCT_PRICE_PER_MONTH, in
- * Home / View All order. `division` is where its rates are in the data. Edible
- * Oil is one product that opens with its oils as tabs.
+ * Home / View All order (by group). `division` is where its rates are in the data.
  */
-export const PRODUCT_DIVISIONS: ProdDiv[] = [
+export const PRODUCT_DIVISIONS: ProdDiv[] = ([
   crop("Wheat", VERTICALS.Grains.products.Wheat),
   crop("Rice", VERTICALS.Grains.products.Rice),
   crop("Paddy", VERTICALS.Grains.products.Paddy),
@@ -361,31 +373,25 @@ export const PRODUCT_DIVISIONS: ProdDiv[] = [
   crop("Cotton", VERTICALS.Grains.products.Cotton),
   crop("Sugar", VERTICALS.Grains.products.Sugar),
   crop("Pulses", VERTICALS.Grains.products.Pulses),
-  crop("Mustard", VERTICALS.Grains.products.Mustard),
   crop("Sesame", VERTICALS.Grains.products.Sesame),
   crop("Millet", VERTICALS.Grains.products.Millet),
   crop("Spices", VERTICALS.Grains.products.Spices),
   crop("Dates", VERTICALS.Grains.products.Dates),
-  {
-    name: "Edible Oil",
-    group: "crops",
-    division: "Edible Oil",
-    type: "vertical",
-    products: {
-      Canola: VERTICALS.Grains.products.Canola,
-      Soybean: VERTICALS.Grains.products.Soybean,
-      Sunflower: VERTICALS.Grains.products.Sunflower,
-      Arugula: ["Arugula Seed", "Arugula Oil"],
-      Castor: ["Castor Bean", "Castor Oil"],
-    },
-  },
+  crop("Mustard", VERTICALS.Grains.products.Mustard, "edible-oils"),
+  ...opened("edible-oils", "Edible Oil", EDIBLE_OILS),
   ...opened("fertilizer", "Fertilizer", FERTILIZER_TYPES),
   ...opened("fruits", "Fruits", VERTICALS.Fruits.products),
   ...opened("vegetables", "Vegetable", VERTICALS.Vegetables.products),
   ...opened("dry-fruits", "Dry Fruit", VERTICALS["Dry Fruits"].products),
   ...opened("herbs", "Herbs", VERTICALS.Herbals.products),
   ...opened("kiryana", "Kiryana", VERTICALS.Kiryana.products),
-];
+] as ProdDiv[])
+  .map((d, i) => ({ d, i }))
+  .sort((a, b) => GROUP_ORDER(a.d.group) - GROUP_ORDER(b.d.group) || a.i - b.i)
+  .map(({ d }) => d);
+
+/** A product sold out of a bigger data division (Potato in Vegetable, Canola in Edible Oil). */
+export const isOpenedProduct = (d: ProdDiv) => d.division !== d.name;
 
 /** A product by its name (case-insensitive). */
 export function findProduct(name?: string | null): ProdDiv | undefined {
@@ -394,14 +400,14 @@ export function findProduct(name?: string | null): ProdDiv | undefined {
 }
 
 /** Divisions whose by-products belong to separately sold products: matched by exact name. */
-export const OPENED_DIVISIONS = new Set(PRODUCT_DIVISIONS.filter((d) => d.group !== "crops").map((d) => d.division));
+export const OPENED_DIVISIONS = new Set(PRODUCT_DIVISIONS.filter(isOpenedProduct).map((d) => d.division));
 
 /** The product a data by-product belongs to ("Vegetable" + "Potato (Laal)" → Potato), if any. */
 export function productForByproduct(division: string, byproduct: string): ProdDiv | undefined {
   const norm = (x: string) => x.toLowerCase().replace(/[^a-z0-9]/g, "");
   const b = norm(byproduct);
   return PRODUCT_DIVISIONS.find(
-    (d) => d.division === division && (d.group === "crops" || (d.byproducts || []).some((x) => norm(x) === b)),
+    (d) => d.division === division && (!isOpenedProduct(d) || (d.byproducts || []).some((x) => norm(x) === b)),
   );
 }
 
@@ -418,13 +424,13 @@ export function getVerticalForProduct(productName: string): string {
   );
 }
 
-/** What the by-product screen opens with for a product (Edible Oil: one tab per oil). */
+/** What the by-product screen opens with for a product. */
 export function getProductSelectionsForDivision(divName: string): ProductSel[] {
   const div = findProduct(divName);
   if (div?.type === "vertical" && div.products) {
     return Object.keys(div.products).map((pName) => ({ vertical: div.name, product: pName }));
   }
-  if (div && div.group !== "crops") return [{ vertical: div.division, product: div.name }];
+  if (div && isOpenedProduct(div)) return [{ vertical: div.division, product: div.name }];
   if (div) return [{ vertical: getVerticalForProduct(div.name), product: div.name }];
   const vert = VERTICALS[divName];
   if (vert && vert.products) {
