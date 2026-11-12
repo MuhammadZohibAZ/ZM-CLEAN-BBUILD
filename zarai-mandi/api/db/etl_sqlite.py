@@ -33,6 +33,7 @@ import openpyxl
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import fertilizer  # noqa: E402
+from moisture import clean_moisture  # noqa: E402
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # The year of prices the app serves (prepared by data/prepare_year_prices.py:
@@ -300,7 +301,8 @@ def main():
         else:
             record_date = str(date_val).split(" ")[0].strip()
 
-        moisture_str = norm(row[col_idx.get("Moisture%", 15)]) if "Moisture%" in col_idx else None
+        # Cleaned at import: low-high ranges, "10-10" as "10", "30-Oct" back to "10-30".
+        moisture_str = clean_moisture(norm(row[col_idx.get("Moisture%", 15)])) if "Moisture%" in col_idx else None
         moisture_min, moisture_max = parse_moisture(moisture_str)
 
         min_val = to_decimal(row[col_idx.get("Minimum", 11)])

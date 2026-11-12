@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 
 import { ByProductNationalCard } from "../../components/ByProductNationalCard";
 import { productRatesScreenFor } from "../../shared/data/byproductCards";
@@ -17,6 +17,13 @@ import { useRateAttributeCards, type ByproductBodyProps } from "./rateAttributeC
 const NAV_SPACE = "calc(env(safe-area-inset-bottom, 0px) + 120px)";
 const DRAWER_MS = 220;
 
+/** Paddy only: how the crop was processed, listed under Moisture (pick one, like Rate type). */
+const PADDY_PROCESS_OPTIONS: [en: string, ur: string][] = [
+  ["Hand Cut", "ہاتھ سے کٹائی"],
+  ["Machine Cleaned", "مشین سے صاف شدہ"],
+  ["Thresher", "تھریشر"],
+];
+
 export function ByProductSidebarFilterScreen(props: ByproductBodyProps) {
   const {
     f, tr, attrs, setAttrs, rate, setRate, rateOptions,
@@ -24,11 +31,17 @@ export function ByProductSidebarFilterScreen(props: ByproductBodyProps) {
     companies, setCompanies, companyOptions, toggleCompany,
   } = useRateAttributeCards(props, { perCardDefault: true });
   const [open, setOpen] = useState(false);
-  const active = rate !== null || attrs.length > 0 || companies.length > 0;
+  const isPaddy = props.activeProduct?.product?.toLowerCase() === "paddy";
+  // Paddy process (Hand Cut, Machine Cleaned, Thresher); null = none picked.
+  const [process, setProcess] = useState<string | null>(null);
+  useEffect(() => setProcess(null), [props.dbDivision, props.activeProduct?.product]);
+  const filtering = rate !== null || attrs.length > 0 || companies.length > 0;
+  const active = filtering || process !== null;
   // Tell the header how many by-products the filters leave (null = no filter on).
-  const shownCount = active && !loading ? new Set(cards.map((c) => c.bp.toLowerCase())).size : null;
+  const shownCount = filtering && !loading ? new Set(cards.map((c) => c.bp.toLowerCase())).size : null;
   useEffect(() => props.onShownCount?.(shownCount), [shownCount]); // eslint-disable-line react-hooks/exhaustive-deps
-  const activeCount = (rate !== null ? 1 : 0) + attrs.length + companies.length;
+  const activeCount = (rate !== null ? 1 : 0) + attrs.length + companies.length + (process !== null ? 1 : 0);
+  const processLabel = (en: string) => f.tx(en, PADDY_PROCESS_OPTIONS.find(([e]) => e === en)?.[1] ?? en);
   const shortRate = (r: string) => tr(r).replace(/\s*Rate$/i, "");
   const start = f.ur ? "right" : "left";
 
@@ -37,15 +50,19 @@ export function ByProductSidebarFilterScreen(props: ByproductBodyProps) {
     <div style={{ fontSize: 13, fontWeight: 800, color: C.ink, padding: "14px 4px 8px" }}>{title}</div>
   );
 
-  const rateRow = (id: string) => {
-    const on = rate === id;
+  const rateRow = (
+    id: string,
+    on = rate === id,
+    pick = () => setRate(on ? null : id),
+    label = shortRate(id),
+  ) => {
     return (
       <button
         key={id}
         type="button"
         role="radio"
         aria-checked={on}
-        onClick={() => setRate(on ? null : id)}
+        onClick={pick}
         style={{
           width: "100%",
           display: "flex",
@@ -66,7 +83,7 @@ export function ByProductSidebarFilterScreen(props: ByproductBodyProps) {
           aria-hidden="true"
           style={{ width: 16, height: 16, borderRadius: 8, flexShrink: 0, border: on ? `5px solid ${C.brand}` : `1.5px solid ${C.line}`, background: C.surface }}
         />
-        <span style={{ overflowWrap: "break-word", flex: 1, minWidth: 0, whiteSpace: "normal" }}>{shortRate(id)}</span>
+        <span style={{ overflowWrap: "break-word", flex: 1, minWidth: 0, whiteSpace: "normal" }}>{label}</span>
       </button>
     );
   };
@@ -102,6 +119,19 @@ export function ByProductSidebarFilterScreen(props: ByproductBodyProps) {
     );
   };
 
+  // Paddy only: Process, one pick at a time in the Rate type rows' style (tap again to clear).
+  const processSection = (
+    <>
+      {sectionTitle(f.tx("Process", "طریقہ کار"))}
+      <div role="radiogroup" aria-label={f.tx("Process", "طریقہ کار")} style={{ display: "flex", flexDirection: "column", gap: 2, marginBottom: 12 }}>
+        {PADDY_PROCESS_OPTIONS.map(([en]) => {
+          const on = process === en;
+          return rateRow(`process|${en}`, on, () => setProcess(on ? null : en), processLabel(en));
+        })}
+      </div>
+    </>
+  );
+
   const drawer = (
     <aside
       aria-label={f.tx("Filters", "فلٹر")}
@@ -135,6 +165,7 @@ export function ByProductSidebarFilterScreen(props: ByproductBodyProps) {
               setRate(null);
               setAttrs([]);
               setCompanies([]);
+              setProcess(null);
             }}
             style={{ border: "none", background: "transparent", padding: "4px 6px", color: C.brandDeep, fontSize: 12.5, fontWeight: 700, fontFamily: f.font }}
           >
@@ -168,18 +199,22 @@ export function ByProductSidebarFilterScreen(props: ByproductBodyProps) {
           </>
         )}
 
-        {attrGroups.length > 0 && (
+        {(attrGroups.length > 0 || isPaddy) && (
           <>
             <div style={{ height: 1, background: C.lineSoft, margin: "12px 4px 0" }} />
             {sectionTitle(f.tx("Special attribute", "خصوصی وصف"))}
             {attrGroups.map((g) => (
-              <div key={g.type} style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 11.5, fontWeight: 700, color: C.muted, padding: "0 4px 6px" }}>{attrLabel(g.type)}</div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                  {g.values.map(([value]) => valueChip(`${g.type}|${value}`, valueLabel(g.type, value)))}
+              <Fragment key={g.type}>
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ fontSize: 11.5, fontWeight: 700, color: C.muted, padding: "0 4px 6px" }}>{attrLabel(g.type)}</div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {g.values.map(([value]) => valueChip(`${g.type}|${value}`, valueLabel(g.type, value)))}
+                  </div>
                 </div>
-              </div>
+                {isPaddy && g.type === "moisture" && processSection}
+              </Fragment>
             ))}
+            {isPaddy && !attrGroups.some((g) => g.type === "moisture") && processSection}
           </>
         )}
         <div aria-hidden="true" style={{ height: 16 }} />
@@ -198,15 +233,7 @@ export function ByProductSidebarFilterScreen(props: ByproductBodyProps) {
     </aside>
   );
 
-  // ── filter bar: pinned at the top (start side), says what's filtered ──
-  const summary = [
-    ...(rate !== null ? [shortRate(rate)] : []),
-    ...attrs.map((a) => {
-      const i = a.indexOf("|");
-      return valueLabel(a.slice(0, i), a.slice(i + 1));
-    }),
-    ...companies,
-  ].join(" · ");
+  // ── filter bar: pinned at the top (start side); with filters on, only their count shows ──
   const filterBar = (
     <div
       style={{
@@ -260,8 +287,9 @@ export function ByProductSidebarFilterScreen(props: ByproductBodyProps) {
         onClick={() => setOpen(true)}
         style={{ overflowWrap: "break-word", minWidth: 0, flex: 1, whiteSpace: "normal", fontSize: 12.5, fontWeight: 600, color: active ? C.ink : C.muted, fontFamily: f.font, cursor: "pointer" }}
       >
+        {/* With filters on, the button's count says it all: no filter names here. */}
         {active
-          ? summary
+          ? null
           : companyOptions.length > 0
             ? f.tx("Filter by rate type and company", "ریٹ کی قسم اور کمپنی سے فلٹر کریں")
             : attrGroups.length > 0

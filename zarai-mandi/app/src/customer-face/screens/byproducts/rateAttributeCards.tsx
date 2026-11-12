@@ -177,6 +177,8 @@ export function useRateAttributeCards(props: ByproductBodyProps, opts: { perCard
     return raw
       .filter(inList)
       .filter((c) => !c.rateFallback)
+      // Arrivals reported without a price or a mandi (e.g. no station given): nothing to show.
+      .filter((c) => !(c.hasData && !(c.avgMin > 0) && !(c.avgMax > 0) && !(c.markets > 0)))
       .filter((c) => !companies.length || companies.includes(fertilizerCompany(c.byproduct) ?? ""))
       .map((c, i) => ({
         sel,
