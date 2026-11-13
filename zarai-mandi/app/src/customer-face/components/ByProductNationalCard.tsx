@@ -353,7 +353,7 @@ export function ByProductNationalCard({
       }}
     >
       {/* Top Header: Full Width Title & Rate Type (Always visible so by-product name is identifiable) */}
-      <div className="relative z-10 w-full mb-1.5">
+      <div className="relative z-10 w-full mb-1.5" data-tour="card-name">
         <h3
           className={`text-[14px] sm:text-[15px] font-black leading-tight tracking-tight break-words ${!stats.hasData ? 'text-[#143B33]/90' : 'text-[#143B33]'
             }`}
@@ -406,7 +406,7 @@ export function ByProductNationalCard({
         {/* Column flex so the locations row sits at the bottom of every card */}
         <div className={`flex-1 flex flex-col ${!stats.hasData ? 'opacity-35 select-none filter blur-[0.5px]' : ''}`}>
           {/* Row 1: Avg min | Avg max */}
-          <div className="flex w-full">
+          <div className="flex w-full" data-tour="card-minmax">
             <CardStatCell
               label={lang === 'ur' ? 'اوسط کم' : 'Avg min'}
               value={
@@ -431,7 +431,7 @@ export function ByProductNationalCard({
           <div className="h-px w-full my-1.5" style={{ background: '#E7F0EB' }} />
 
           {/* Row 2: Total arrival | Special Attribute */}
-          <div className="flex w-full">
+          <div className="flex w-full" data-tour="card-arrival">
             <CardStatCell
               label={lang === 'ur' ? 'کل آمد' : 'Total arrival'}
               value={arrivalValue}
@@ -451,7 +451,7 @@ export function ByProductNationalCard({
               <div className="h-px w-full my-1.5" style={{ background: '#E7F0EB' }} />
 
               {/* Row 3: Locations on Left + Time Pill on Bottom-Right */}
-              <div className="flex items-end justify-between w-full">
+              <div className="flex items-end justify-between w-full" data-tour="card-loc">
                 <LocationStatCell
                   marketCount={stats.markets}
                   lang={lang}

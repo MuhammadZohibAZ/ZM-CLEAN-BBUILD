@@ -136,6 +136,7 @@ export function ByProductSidebarFilterScreen(props: ByproductBodyProps) {
     <aside
       aria-label={f.tx("Filters", "فلٹر")}
       aria-hidden={!open}
+      data-tour="bp-drawer"
       style={{
         position: "absolute",
         top: 0,
@@ -161,6 +162,7 @@ export function ByProductSidebarFilterScreen(props: ByproductBodyProps) {
         {active && (
           <button
             type="button"
+            data-tour="bp-reset"
             onClick={() => {
               setRate(null);
               setAttrs([]);
@@ -176,6 +178,7 @@ export function ByProductSidebarFilterScreen(props: ByproductBodyProps) {
           type="button"
           onClick={() => setOpen(false)}
           aria-label={f.tx("Close filters", "فلٹر بند کریں")}
+          data-tour="bp-close"
           style={{ width: 30, height: 30, borderRadius: 15, border: "none", background: C.chip, display: "flex", alignItems: "center", justifyContent: "center" }}
         >
           <Icon name="close" size={13} width={2.6} color={C.ink} />
@@ -185,7 +188,7 @@ export function ByProductSidebarFilterScreen(props: ByproductBodyProps) {
       {/* Rate type + special attribute */}
       <div className="zm-hide-scrollbar" style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "0 8px", scrollbarWidth: "none" }}>
         {sectionTitle(f.tx("Rate type", "ریٹ کی قسم"))}
-        <div role="radiogroup" aria-label={f.tx("Rate type", "ریٹ کی قسم")} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        <div role="radiogroup" aria-label={f.tx("Rate type", "ریٹ کی قسم")} data-tour="bp-rate-types" style={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {rateOptions.map((r) => rateRow(r.id))}
         </div>
 
@@ -193,7 +196,7 @@ export function ByProductSidebarFilterScreen(props: ByproductBodyProps) {
           <>
             <div style={{ height: 1, background: C.lineSoft, margin: "12px 4px 0" }} />
             {sectionTitle(f.tx("Company", "کمپنی"))}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+            <div data-tour="bp-company" style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
               {companyOptions.map((co) => valueChip(`company|${co}`, co, companies.includes(co), () => toggleCompany(co)))}
             </div>
           </>
@@ -203,9 +206,9 @@ export function ByProductSidebarFilterScreen(props: ByproductBodyProps) {
           <>
             <div style={{ height: 1, background: C.lineSoft, margin: "12px 4px 0" }} />
             {sectionTitle(f.tx("Special attribute", "خصوصی وصف"))}
-            {attrGroups.map((g) => (
+            {attrGroups.map((g, gi) => (
               <Fragment key={g.type}>
-                <div style={{ marginBottom: 12 }}>
+                <div data-tour={gi === 0 ? "bp-attrs" : undefined} style={{ marginBottom: 12 }}>
                   <div style={{ fontSize: 11.5, fontWeight: 700, color: C.muted, padding: "0 4px 6px" }}>{attrLabel(g.type)}</div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                     {g.values.map(([value]) => valueChip(`${g.type}|${value}`, valueLabel(g.type, value)))}
@@ -224,6 +227,7 @@ export function ByProductSidebarFilterScreen(props: ByproductBodyProps) {
       <div style={{ padding: 10, borderTop: `1px solid ${C.lineSoft}`, flexShrink: 0 }}>
         <button
           type="button"
+          data-tour="bp-show"
           onClick={() => setOpen(false)}
           style={{ width: "100%", height: 42, borderRadius: 13, border: "none", background: C.brand, color: "#FFFFFF", fontSize: 13.5, fontWeight: 700, fontFamily: f.font }}
         >

@@ -262,7 +262,7 @@ export function MandiSection({
           right and the table scrolls right to left. Compact rows in both
           languages (Urdu text otherwise inherits a tall line height). */}
       <table dir={f.dir} style={{ borderCollapse: "separate", borderSpacing: 0, minWidth: 640, width: "100%", fontSize: 13, fontVariantNumeric: "tabular-nums", lineHeight: 1.35 }}>
-        <thead>
+        <thead data-tour="mandi-head">
           <tr>
             <th style={{ ...thBase, insetInlineStart: 0, zIndex: 3, textAlign: "start", borderInlineEnd: `1px solid ${C.line}`, minWidth: 96, maxWidth: 128, padding: "4px 5px" }}>
               {headBtn(
@@ -351,6 +351,7 @@ export function MandiSection({
       <button
         type="button"
         onClick={() => setShowAll((v) => !v)}
+        data-tour="mandi-more"
         style={{ width: "100%", height: 44, border: "none", borderTop: `1px solid ${C.lineSoft}`, background: "transparent", color: C.brand, fontSize: 13.5, fontWeight: 600, fontFamily: f.font }}
       >
         {showAll ? f.tx("Show fewer", "کم دکھائیں") : f.tx(`Show all ${entries.length} reports`, `تمام ${f.digits(entries.length)} رپورٹس دکھائیں`)}
@@ -379,6 +380,7 @@ export function MandiSection({
         <div
           role="group"
           aria-label={f.tx("View mode", "انداز")}
+          data-tour="mandi-view"
           style={{
             display: "inline-flex",
             padding: 3,
@@ -579,13 +581,14 @@ export function MandiSection({
         </div>
       ) : viewMode === "table" ? (
         <div style={{ padding: "0 16px" }}>
-          <div style={{ borderRadius: 20, background: C.surface, overflow: "hidden" }}>
+          <div data-tour="mandi-table" style={{ borderRadius: 20, background: C.surface, overflow: "hidden" }}>
             {table}
             {showMoreBtn}
           </div>
           <button
             type="button"
             onClick={() => setFullscreen(true)}
+            data-tour="mandi-full"
             style={{ marginTop: 10, width: "100%", height: 48, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, borderRadius: 24, border: "none", background: C.surface, color: C.ink, fontSize: 14, fontWeight: 600, fontFamily: f.font }}
           >
             <Icon name="landscape" size={16} color={C.ink2} width={2.2} />

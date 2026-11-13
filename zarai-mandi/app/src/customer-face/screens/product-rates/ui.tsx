@@ -73,7 +73,10 @@ export function IconButton({
   activeBg = C.brandTint,
   activeBorder = C.brandBorder,
   size = 40,
+  tour,
 }: {
+  /** data-tour marker for the app tutorial */
+  tour?: string;
   label: string;
   onClick?: () => void;
   children: React.ReactNode;
@@ -87,6 +90,7 @@ export function IconButton({
       type="button"
       aria-label={label}
       title={label}
+      data-tour={tour}
       onClick={onClick}
       className="transition active:scale-95"
       style={{
@@ -262,6 +266,7 @@ export function BottomSheet({
         aria-modal="true"
         aria-label={title}
         dir={dir}
+        data-tour="sheet"
         className="zm-sheet-high"
         style={{ position: "relative", background: C.ground, maxHeight: revealBottom > 0 ? `min(92vh, calc(100dvh - ${revealBottom + 8}px))` : "92vh", fontFamily: font, color: C.ink }}
         onClick={(e) => e.stopPropagation()}

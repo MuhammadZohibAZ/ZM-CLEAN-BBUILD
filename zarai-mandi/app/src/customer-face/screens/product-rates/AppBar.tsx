@@ -42,7 +42,7 @@ export function AppBar({
           paddingTop: "max(10px, env(safe-area-inset-top, 10px))",
         }}
       >
-        <IconButton label={f.tx("Back", "واپس")} onClick={onBack}>
+        <IconButton tour="rates-back" label={f.tx("Back", "واپس")} onClick={onBack}>
           <Icon name="back" size={20} width={2.4} flip={f.ur} />
         </IconButton>
         <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", justifyContent: "center" }}>
@@ -67,6 +67,7 @@ export function AppBar({
                 <button
                   type="button"
                   onClick={onTitleClick}
+                  data-tour="rates-title"
                   aria-haspopup="listbox"
                   aria-label={f.tx(`${title}: change by-product`, `${title}: ضمنی مصنوع تبدیل کریں`)}
                   style={{ display: "inline-flex", alignItems: "center", gap: 6, minWidth: 0, maxWidth: "100%", padding: 0, border: "none", background: "transparent", fontFamily: f.font, textAlign: "start" }}

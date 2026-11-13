@@ -1,53 +1,97 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { URDU_FONT, useLang } from "../shared/i18n/LangProvider";
 import { speakText, stopSpeaking } from "../shared/voice";
 
-// ─── SCREEN TIPS (APP TOUR) ───────────────────────────────────────────────────
-// Each screen has its own tips: all its main parts lit up at once with a short
-// label each, and one card with "Got it" (one tap per screen). Shown the first
-// time the user lands on that screen (remembered per screen on this device).
-// Settings → App Tour clears the memory, so every screen shows its tips again.
-// The test link takes ?tour=0 (no tips) or ?tour=1 (start fresh).
+// ─── APP TUTORIAL ─────────────────────────────────────────────────────────────
+// The first time Home opens, the app asks whether the user wants a tutorial.
+// Yes: every screen, the first time it opens, walks through each of its
+// buttons and filters one at a time (Next / Back). On "Try it" steps the user
+// taps the real button (a filter, a rate type, a period) and the next step
+// shows what changed. No: nothing is shown. Account → App Tour turns the
+// tutorial on again from the start.
+// The test link takes ?tour=0 (no tutorial) or ?tour=1 (ask again, fresh).
 
-const SEEN_KEY = "zm_screen_tips_v1";
+const STORE_KEY = "zm_tutorial_v2";
 
 export type TourScreen = "home" | "profile" | "viewall" | "account" | "product" | "rates" | "trends" | "news";
+type Mode = "ask" | "on" | "off";
+type Store = { mode: Mode; seen: TourScreen[] };
 
-function readSeen(): Set<string> {
+function readStore(): Store {
   try {
-    return new Set(JSON.parse(window.localStorage.getItem(SEEN_KEY) || "[]"));
+    const s = JSON.parse(window.localStorage.getItem(STORE_KEY) || "null");
+    if (s && (s.mode === "on" || s.mode === "off" || s.mode === "ask")) return { mode: s.mode, seen: Array.isArray(s.seen) ? s.seen : [] };
   } catch {
-    return new Set();
+    /* blocked storage: ask */
+  }
+  return { mode: "ask", seen: [] };
+}
+// Kept in memory too, so nothing repeats in a session where storage is blocked.
+let store: Store | null = null;
+const getStore = () => (store ??= readStore());
+function saveStore(next: Partial<Store>) {
+  store = { ...getStore(), ...next };
+  try {
+    window.localStorage.setItem(STORE_KEY, JSON.stringify(store));
+  } catch {
+    /* private mode */
   }
 }
-function writeSeen(s: Set<string>) {
-  try {
-    window.localStorage.setItem(SEEN_KEY, JSON.stringify([...s]));
-  } catch {
-    /* private mode: tips may show again next visit */
-  }
-}
-// Kept in memory too, so tips don't repeat in a session where storage is blocked.
-let seenCache: Set<string> | null = null;
-const seen = () => (seenCache ??= readSeen());
 function markSeen(screen: TourScreen) {
-  seen().add(screen);
-  writeSeen(seen());
+  const s = getStore();
+  if (!s.seen.includes(screen)) saveStore({ seen: [...s.seen, screen] });
 }
-/** Settings → App Tour: every screen shows its tips again. */
+/** Account → App Tour: the tutorial is on again, every screen from the start. */
 export function resetScreenTips() {
-  seenCache = new Set();
-  writeSeen(seenCache);
+  saveStore({ mode: "on", seen: [] });
 }
 
 type Txt = { en: string; ur: string };
-type Side = "below" | "above" | "left" | "right";
-/** One lit part of the screen, with an optional short label beside it. */
-type Mark = { target: string; label?: Txt; side?: Side };
-/** Everything a screen explains, shown at once: lit parts + one card. */
-type Tip = { marks: Mark[]; title: Txt; body: Txt };
+type Step = {
+  /** data-tour name or a CSS selector; none = a card in the middle */
+  target?: string;
+  title: Txt;
+  body: Txt;
+  /** "Try it": the user taps the lit part themselves (no Next button) */
+  act?: Txt;
+  /** the "Try it" step is done when this is true … */
+  until?: () => boolean;
+  /** … or when this value changes from what it was when the step began */
+  watch?: () => string;
+  /** the part closed without the change (e.g. a picker shut): go one step back */
+  backIfGone?: boolean;
+  /** this step leaves the screen: the walkthrough ends here */
+  leaves?: boolean;
+};
+
+const t = (en: string, ur: string): Txt => ({ en, ur });
+const sel = (s: string) => (/^[a-z][\w-]*$/.test(s) ? `[data-tour="${s}"]` : s);
+
+/** On screen and not hidden (closed drawers keep their size but are hidden or moved off). */
+function visibleEl(s: string): HTMLElement | null {
+  const el = document.querySelector<HTMLElement>(sel(s));
+  if (!el) return null;
+  const r = el.getBoundingClientRect();
+  if (r.width < 2 || r.height < 2) return null;
+  if (r.right <= 1 || r.left >= window.innerWidth - 1) return null;
+  if (getComputedStyle(el).visibility === "hidden") return null;
+  return el;
+}
+/** Something else (a sticky header, the bottom bar) sits over the middle of its top or bottom edge. */
+function covered(el: HTMLElement, r: DOMRect): boolean {
+  const x = Math.min(Math.max(r.left + r.width / 2, 1), window.innerWidth - 1);
+  for (const y of [r.top + Math.min(8, r.height / 2), r.bottom - Math.min(8, r.height / 2)]) {
+    if (y < 0 || y > window.innerHeight) return true;
+    const hit = document.elementsFromPoint(x, y).find((n) => !n.closest(".zm-tour"));
+    if (hit && hit !== el && !el.contains(hit) && !hit.contains(el)) return true;
+  }
+  return false;
+}
+const text = (s: string) =>document.querySelector(sel(s))?.textContent?.trim() || "";
 
 const FIRST_CARD = '[data-tour="bp-cards"] > :first-child';
+const inCard = (part: string) => `${FIRST_CARD} [data-tour="${part}"]`;
 
 // Which screen is on top, checked in this order (sheets and pages sit over Home).
 const DETECT: [TourScreen, string][] = [
@@ -60,92 +104,176 @@ const DETECT: [TourScreen, string][] = [
   ["news", "reels-tabs"],
   ["home", "products"],
 ];
+function topScreen(): TourScreen | null {
+  for (const [s, q] of DETECT) if (visibleEl(q)) return s;
+  return null;
+}
 
-const TIPS: Record<TourScreen, Tip> = {
-  home: {
-    marks: [
-      { target: "account", side: "below", label: { en: "Account & profile", ur: "اکاؤنٹ اور پروفائل" } },
-      { target: "bell", side: "left", label: { en: "Alerts", ur: "الرٹس" } },
-      { target: "search", side: "above", label: { en: "Search any product", ur: "کوئی بھی چیز تلاش کریں" } },
-      { target: "profile", side: "above", label: { en: "Subscribe here", ur: "یہاں سبسکرائب کریں" } },
-      { target: "products", side: "below", label: { en: "Tap a product for its rates", ur: "ریٹس کے لیے پروڈکٹ پر ٹیپ کریں" } },
-      { target: "nav-news", side: "above", label: { en: "Videos", ur: "ویڈیوز" } },
-      { target: "nav-settings", side: "above", label: { en: "Settings", ur: "ترتیبات" } },
-    ],
-    title: { en: "Welcome to Zarai Mandi", ur: "زرعی منڈی میں خوش آمدید" },
-    body: {
-      en: "Today's mandi rates from all over Pakistan. 'View All' shows every product, and rates you star appear under Favourites. Each screen shows its own tips the first time.",
-      ur: "پورے پاکستان کی منڈیوں کے آج کے ریٹس۔ 'سب دیکھیں' میں تمام مصنوعات ہیں، اور جن ریٹس پر آپ ستارہ لگائیں وہ پسندیدہ میں آتے ہیں۔ ہر اسکرین پہلی بار اپنی رہنمائی خود دکھائے گی۔",
+// ─── THE STEPS, SCREEN BY SCREEN ─────────────────────────────────────────────
+
+const STEPS: Record<TourScreen, Step[]> = {
+  home: [
+    { target: "lang", title: t("Language", "زبان"), body: t("Tap to switch the whole app between English and Urdu.", "پوری ایپ کو اردو اور انگریزی میں بدلنے کے لیے دبائیں۔") },
+    { target: "voice", title: t("Voice", "آواز"), body: t("Turn voice on and the app reads out the rates and buttons you tap.", "آواز آن کریں تو ایپ ریٹس اور بٹن پڑھ کر سناتی ہے۔") },
+    { target: "bell", title: t("Alerts", "الرٹس"), body: t("Market alerts and notices about your products come here.", "آپ کی مصنوعات کے منڈی الرٹس اور اطلاعات یہاں آتی ہیں۔") },
+    { target: "account", title: t("Account & profile", "اکاؤنٹ اور پروفائل"), body: t("Your profile, subscriptions, language and help. 'App Tour' in here starts this tutorial again.", "آپ کی پروفائل، سبسکرپشن، زبان اور مدد۔ یہاں 'ایپ کا تعارف' سے یہ رہنمائی دوبارہ شروع ہوتی ہے۔") },
+    { target: "edit-name", title: t("Your name and city", "آپ کا نام اور شہر"), body: t("Tap Edit to change your name and location.", "نام اور مقام بدلنے کے لیے ترمیم دبائیں۔") },
+    { target: "search", title: t("Search", "تلاش"), body: t("Type any product, like cotton seed or flour, to jump straight to its rates.", "کوئی بھی چیز لکھیں، جیسے بنولہ یا آٹا، اور سیدھا اس کے ریٹس پر جائیں۔") },
+    { target: "profile", title: t("Complete your profile", "پروفائل مکمل کریں"), body: t("3 short steps: pick products, choose months, pay. This unlocks every rate.", "3 آسان مراحل: مصنوعات چنیں، مہینے چنیں، ادائیگی کریں۔ اس سے تمام ریٹس کھل جاتے ہیں۔") },
+    { target: "products", title: t("Your products", "آپ کی مصنوعات"), body: t("Swipe sideways for more. 'Active' means today's rates are in.", "مزید کے لیے دائیں بائیں سوائپ کریں۔ 'فعال' کا مطلب آج کے ریٹ آ گئے ہیں۔") },
+    { target: "viewall", title: t("View All", "سب دیکھیں"), body: t("Every product in groups: Grains, Oils, Fruits, Vegetables and more.", "تمام مصنوعات گروپس میں: اناج، تیل، پھل، سبزیاں اور مزید۔") },
+    { target: "favorites", title: t("Favourites", "پسندیدہ"), body: t("Rates you save with the ☆ star show up here, so you can see them first.", "جن ریٹس پر آپ ☆ ستارہ لگائیں وہ یہاں سب سے پہلے نظر آتے ہیں۔") },
+    { target: "nav-home", title: t("Home", "ہوم"), body: t("Brings you back to this screen from anywhere.", "کہیں سے بھی اس اسکرین پر واپس لاتا ہے۔") },
+    { target: "nav-news", title: t("Entertainment", "تفریح"), body: t("Short videos: mandi news, farming tips and harvest updates.", "مختصر ویڈیوز: منڈی کی خبریں، کاشتکاری کے مشورے اور فصل کی خبریں۔") },
+    { target: "nav-settings", title: t("Settings", "ترتیبات"), body: t("Your account, language, help, and the App Tour.", "آپ کا اکاؤنٹ، زبان، مدد، اور ایپ کا تعارف۔") },
+    {
+      target: '[data-tour="products"] [data-home-product]',
+      title: t("Let's open a product", "آئیں ایک پروڈکٹ کھولیں"),
+      body: t("We'll keep going on the next screen.", "اگلی اسکرین پر رہنمائی جاری رہے گی۔"),
+      act: t("Tap this product", "اس پروڈکٹ پر ٹیپ کریں"),
+      until: () => !!visibleEl(FIRST_CARD) || !!visibleEl("bp-filters"),
+      leaves: true,
     },
-  },
-  product: {
-    marks: [
-      { target: "bp-date", side: "left", label: { en: "Change the date", ur: "تاریخ بدلیں" } },
-      { target: "bp-filters", side: "right", label: { en: "Filter by rate type", ur: "ریٹ کی قسم سے فلٹر" } },
-      { target: FIRST_CARD, side: "below", label: { en: "Tap a card for every mandi", ur: "ہر منڈی کے لیے کارڈ پر ٹیپ کریں" } },
-    ],
-    title: { en: "One card per item", ur: "ہر چیز کا ایک کارڈ" },
-    body: {
-      en: "Each card shows today's average min and max rate, total arrival, and how many mandis reported.",
-      ur: "ہر کارڈ میں آج کا اوسط کم اور زیادہ ریٹ، کل آمد، اور کتنی منڈیوں نے ریٹ دیا۔",
+  ],
+
+  product: [
+    { target: "bp-back", title: t("Back", "واپس"), body: t("Takes you back to the screen before.", "پچھلی اسکرین پر لے جاتا ہے۔") },
+    { target: "bp-title", title: t("Product", "پروڈکٹ"), body: t("The product and how many by-products it has, e.g. Wheat → Flour, Bran, Maida.", "پروڈکٹ اور اس کی کتنی ضمنی مصنوعات ہیں، جیسے گندم ← آٹا، چوکر، میدہ۔") },
+    { target: "bp-date", title: t("Date", "تاریخ"), body: t("Rates are for this day (Islamic date beside it). Tap to pick an earlier day.", "ریٹ اس دن کے ہیں (ساتھ اسلامی تاریخ)۔ پچھلا دن چننے کے لیے دبائیں۔") },
+    { target: inCard("card-name"), title: t("One card per by-product", "ہر ضمنی مصنوع کا ایک کارڈ"), body: t("Its name, and the rate type the numbers are for (Stock, Mandi, Wholesale…).", "اس کا نام، اور کس ریٹ کی قسم کے یہ نمبر ہیں (اسٹاک، منڈی، ہول سیل…)۔") },
+    { target: inCard("card-minmax"), title: t("Average min and max", "اوسط کم اور زیادہ"), body: t("The average lowest and highest rate today, per 40 kg.", "آج کا اوسط کم سے کم اور زیادہ سے زیادہ ریٹ، فی 40 کلو۔") },
+    { target: inCard("card-arrival"), title: t("Arrival and quality", "آمد اور معیار"), body: t("Total bags that came into the mandis, and the crop or quality.", "منڈیوں میں آنے والی کل بوریاں، اور فصل یا معیار۔") },
+    { target: inCard("card-loc"), title: t("Locations and time", "مقامات اور وقت"), body: t("How many mandis sent a rate, and how long ago it was updated.", "کتنی منڈیوں نے ریٹ بھیجا، اور کتنی دیر پہلے اپڈیٹ ہوا۔") },
+    {
+      target: "bp-filters",
+      title: t("Filters", "فلٹر"),
+      body: t("Let's try them. Filters change what every card shows.", "آئیں آزما کر دیکھیں۔ فلٹر سے ہر کارڈ کی معلومات بدلتی ہے۔"),
+      act: t("Tap Filters", "فلٹر پر ٹیپ کریں"),
+      until: () => !!visibleEl("bp-rate-types"),
     },
-  },
-  rates: {
-    marks: [
-      { target: "rates-star", side: "left", label: { en: "Save to favourites", ur: "پسندیدہ میں رکھیں" } },
-      { target: '[data-tour="rates-tabs"] [data-tab="trends"]', side: "left", label: { en: "Rate over time", ur: "وقت کے ساتھ ریٹ" } },
-      { target: "rates-filters", side: "below", label: { en: "Location, day and rate type", ur: "مقام، دن اور ریٹ کی قسم" } },
-      { target: "rates-next" }, // its own text already says "Swipe for best mandis & map"
-    ],
-    title: { en: "Today's rate", ur: "آج کا ریٹ" },
-    body: {
-      en: "The average rate and its change since the last day. Scroll down for every mandi's rate; tap a mandi for its detail.",
-      ur: "اوسط ریٹ اور پچھلے دن سے فرق۔ ہر منڈی کا ریٹ دیکھنے کے لیے نیچے جائیں؛ تفصیل کے لیے منڈی پر ٹیپ کریں۔",
+    {
+      target: "bp-rate-types",
+      title: t("Rate type", "ریٹ کی قسم"),
+      body: t("Stock, Mandi, Wholesale, Ex-Mill… each is a different price. Pick one and watch the cards.", "اسٹاک، منڈی، ہول سیل، ایکس مل… ہر ایک الگ قیمت ہے۔ ایک چنیں اور کارڈ دیکھیں۔"),
+      act: t("Pick a rate type", "ریٹ کی قسم چنیں"),
+      watch: () => text('[data-tour="bp-rate-types"] [aria-checked="true"]'),
+      backIfGone: true,
     },
-  },
-  trends: {
-    marks: [{ target: "rates-trends" }],
-    title: { en: "Trends", ur: "رجحانات" },
-    body: {
-      en: "Pick a period (1 day to 1 year) to see the rate or arrivals over time, and compare every rate type below.",
-      ur: "مدت چنیں (1 دن سے 1 سال) اور وقت کے ساتھ ریٹ یا آمد دیکھیں، اور نیچے ہر قسم کے ریٹ کا موازنہ کریں۔",
+    { target: FIRST_CARD, title: t("The cards changed", "کارڈ بدل گئے"), body: t("Every card now shows that rate type only. Cards without it are hidden.", "اب ہر کارڈ صرف وہی ریٹ دکھا رہا ہے۔ جن کے پاس یہ ریٹ نہیں وہ چھپ گئے۔") },
+    { target: "bp-attrs", title: t("Special attribute", "خصوصی وصف"), body: t("Narrow down further: quality, crop year, moisture and more. Tap again to remove.", "مزید چھانٹیں: معیار، فصل کا سال، نمی وغیرہ۔ ہٹانے کے لیے دوبارہ دبائیں۔") },
+    { target: "bp-company", title: t("Company", "کمپنی"), body: t("Show only the brands you want.", "صرف اپنی پسند کی کمپنیاں دکھائیں۔") },
+    { target: "bp-reset", title: t("Reset", "ری سیٹ"), body: t("Clears every filter at once.", "تمام فلٹر ایک ساتھ صاف کرتا ہے۔") },
+    {
+      target: "bp-show",
+      title: t("Show results", "نتائج دکھائیں"),
+      body: t("Closes the filters so the cards use the whole screen.", "فلٹر بند کرتا ہے تاکہ کارڈ پوری اسکرین پر آئیں۔"),
+      act: t("Tap Show results", "نتائج دکھائیں پر ٹیپ کریں"),
+      until: () => !visibleEl("bp-drawer"),
     },
-  },
-  viewall: {
-    marks: [{ target: "viewall-group" }],
-    title: { en: "All products, in groups", ur: "تمام مصنوعات، گروپس میں" },
-    body: {
-      en: "Grains, Edible Oils, Fruits, Vegetables, Fertilizer, Dry Fruits, Herbs and Kiryana. 'See more' opens a group.",
-      ur: "اناج، خوردنی تیل، پھل، سبزیاں، کھاد، خشک میوہ، جڑی بوٹیاں اور کریانہ۔ 'مزید دیکھیں' سے گروپ کھولیں۔",
+    { target: "bp-filters", title: t("Filters on", "فلٹر لگے ہوئے"), body: t("The number shows how many filters are on. Open Filters and tap Reset to see everything again.", "نمبر بتاتا ہے کتنے فلٹر لگے ہیں۔ سب دوبارہ دیکھنے کے لیے فلٹر کھول کر ری سیٹ دبائیں۔") },
+    {
+      target: FIRST_CARD,
+      title: t("Every mandi's rate", "ہر منڈی کا ریٹ"),
+      body: t("A card opens its rate in every mandi, with charts. We'll continue there.", "کارڈ کھولنے پر ہر منڈی کا ریٹ اور چارٹ آتے ہیں۔ رہنمائی وہیں جاری رہے گی۔"),
+      act: t("Tap the card", "کارڈ پر ٹیپ کریں"),
+      until: () => !!visibleEl("rates-hero"),
+      leaves: true,
     },
-  },
-  profile: {
-    marks: [{ target: "profile-sheet" }],
-    title: { en: "3 easy steps", ur: "3 آسان مراحل" },
-    body: {
-      en: "Pick your products, choose the months, then pay by JazzCash, Easypaisa, card or bank. Every product is PKR 2,000 a month.",
-      ur: "مصنوعات چنیں، مہینے چنیں، پھر جاز کیش، ایزی پیسہ، کارڈ یا بینک سے ادائیگی کریں۔ ہر پروڈکٹ 2,000 روپے ماہانہ۔",
+  ],
+
+  rates: [
+    { target: "rates-back", title: t("Back", "واپس"), body: t("Back to the cards.", "کارڈز پر واپس۔") },
+    { target: "rates-title", title: t("Switch by-product", "ضمنی مصنوع بدلیں"), body: t("Tap the name to jump to another by-product of the same product.", "اسی پروڈکٹ کی دوسری ضمنی مصنوع پر جانے کے لیے نام دبائیں۔") },
+    { target: "rates-star", title: t("Save to favourites", "پسندیدہ میں رکھیں"), body: t("Tap the star and this rate shows on Home under Favourites.", "ستارہ دبائیں تو یہ ریٹ ہوم پر پسندیدہ میں آ جائے گا۔") },
+    { target: "rates-tabs", title: t("Overview and Trends", "جائزہ اور رجحانات"), body: t("Overview is today's rate. Trends shows how it moved over days and months.", "جائزہ میں آج کا ریٹ ہے۔ رجحانات میں دنوں اور مہینوں کا اتار چڑھاؤ۔") },
+    { target: "rail-loc", title: t("Location", "مقام"), body: t("All of Pakistan, or pick a province, district or a single mandi.", "پورا پاکستان، یا کوئی صوبہ، ضلع یا ایک منڈی چنیں۔") },
+    { target: "rail-day", title: t("Day", "دن"), body: t("The latest report day. Tap for a calendar of earlier days.", "تازہ رپورٹ کا دن۔ پچھلے دنوں کے کیلنڈر کے لیے دبائیں۔") },
+    {
+      target: "rail-rate",
+      title: t("Rate type", "ریٹ کی قسم"),
+      body: t("Let's change it and see the price change.", "آئیں اسے بدل کر قیمت میں فرق دیکھیں۔"),
+      act: t("Tap Rate", "ریٹ پر ٹیپ کریں"),
+      until: () => !!visibleEl("sheet"),
     },
-  },
-  news: {
-    marks: [{ target: "reels-tabs" }],
-    title: { en: "Videos", ur: "ویڈیوز" },
-    body: {
-      en: "Farming tips, market news and harvest videos. Pick a category up here and swipe up for the next video.",
-      ur: "کاشتکاری کے مشورے، منڈی کی خبریں اور کٹائی کی ویڈیوز۔ اوپر سے قسم چنیں اور اگلی ویڈیو کے لیے اوپر سوائپ کریں۔",
+    {
+      target: "sheet",
+      title: t("Pick a rate type", "ریٹ کی قسم چنیں"),
+      body: t("Each line says how many places reported that rate.", "ہر لائن بتاتی ہے کتنی جگہوں سے یہ ریٹ آیا۔"),
+      act: t("Pick a different one", "کوئی اور چنیں"),
+      watch: () => text("rail-rate"),
+      backIfGone: true,
     },
-  },
-  account: {
-    marks: [
-      { target: "acc-profile", side: "below", label: { en: "Edit your profile", ur: "پروفائل میں تبدیلی" } },
-      { target: "acc-account", side: "above", label: { en: "Your subscriptions", ur: "آپ کی سبسکرپشنز" } },
-    ],
-    title: { en: "Your account", ur: "آپ کا اکاؤنٹ" },
-    body: {
-      en: "Further down: English / Urdu and voice, help, and 'App Tour', which shows every screen's tips again.",
-      ur: "نیچے: انگریزی / اردو اور آواز، مدد، اور 'ایپ کا تعارف' جو ہر اسکرین کی رہنمائی دوبارہ دکھاتا ہے۔",
+    { target: "rates-hero", title: t("The price changed", "قیمت بدل گئی"), body: t("The big rate, the chart and the mandi list below now use the rate type you picked.", "بڑا ریٹ، چارٹ اور نیچے منڈیوں کی فہرست اب آپ کی چنی ہوئی قسم کے ہیں۔") },
+    { target: "rail-rate", title: t("Clear a filter", "فلٹر ہٹائیں"), body: t("A green filter is one you set. Its ✕ clears it and brings back all rates.", "سبز فلٹر آپ کا لگایا ہوا ہے۔ اس کا ✕ اسے ہٹا کر تمام ریٹس واپس لاتا ہے۔") },
+    { target: "rail-quality", title: t("Attribute", "خصوصیات"), body: t("Quality, crop year, moisture and the like. Pick one or more.", "معیار، فصل کا سال، نمی وغیرہ۔ ایک یا زیادہ چنیں۔") },
+    { target: "hero-listen", title: t("Listen", "سنیں"), body: t("Hear this rate read out loud.", "یہ ریٹ بول کر سنیں۔") },
+    { target: "rates-hero", title: t("Today's rate", "آج کا ریٹ"), body: t("Average rate per 40 kg, the change since the last report, a 30-day line, and min, max and arrival.", "فی 40 کلو اوسط ریٹ، پچھلی رپورٹ سے فرق، 30 دن کی لکیر، اور کم، زیادہ اور آمد۔") },
+    { target: "rates-dots", title: t("More pages", "مزید صفحات"), body: t("Swipe the rate card sideways for Best mandis and the Map.", "بہترین منڈیوں اور نقشے کے لیے ریٹ کارڈ کو سوائپ کریں۔") },
+    { target: "mandi-view", title: t("Table or cards", "ٹیبل یا کارڈز"), body: t("See every mandi as a table or as a list of cards.", "ہر منڈی کو ٹیبل یا کارڈز کی شکل میں دیکھیں۔") },
+    { target: "mandi-head", title: t("Sort and filter", "ترتیب اور فلٹر"), body: t("Tap a column heading to sort by price, arrival or name, or filter by it.", "قیمت، آمد یا نام سے ترتیب یا فلٹر کے لیے کالم کا عنوان دبائیں۔") },
+    { target: '[data-tour="mandi-table"] tbody tr', title: t("One mandi", "ایک منڈی"), body: t("Each row is one mandi. Tap it for its own chart and history.", "ہر قطار ایک منڈی ہے۔ اس کا چارٹ اور تاریخ دیکھنے کے لیے دبائیں۔") },
+    { target: "mandi-more", title: t("Show all", "سب دکھائیں"), body: t("Opens the rest of the list.", "باقی فہرست کھولتا ہے۔") },
+    { target: "mandi-full", title: t("Full-screen table", "پوری اسکرین ٹیبل"), body: t("Turns the table sideways with every column.", "ٹیبل کو ہر کالم کے ساتھ پوری اسکرین پر کھولتا ہے۔") },
+    {
+      target: '[data-tour="rates-tabs"] [data-tab="trends"]',
+      title: t("Trends", "رجحانات"),
+      body: t("See how this rate moved. We'll continue there.", "دیکھیں یہ ریٹ کیسے بدلا۔ رہنمائی وہیں جاری رہے گی۔"),
+      act: t("Tap Trends", "رجحانات پر ٹیپ کریں"),
+      until: () => !!visibleEl("rates-trends"),
+      leaves: true,
     },
-  },
+  ],
+
+  trends: [
+    { target: "tr-mode", title: t("Price or arrivals", "قیمت یا آمد"), body: t("Chart the price, or how many bags arrived.", "قیمت کا چارٹ، یا کتنی بوریاں آئیں۔") },
+    {
+      target: "tr-period",
+      title: t("Period", "مدت"),
+      body: t("1 day up to 1 year. Pick another one and watch the chart.", "1 دن سے 1 سال تک۔ کوئی اور مدت چنیں اور چارٹ دیکھیں۔"),
+      act: t("Tap another period, e.g. 1M", "کوئی اور مدت دبائیں"),
+      watch: () => text('[data-tour="tr-period"] [aria-pressed="true"]'),
+    },
+    { target: "tr-chart", title: t("The chart changed", "چارٹ بدل گیا"), body: t("Drag for earlier days, hold to read a day's value.", "پچھلے دنوں کے لیے کھسکائیں، کسی دن کی قیمت کے لیے دبائے رکھیں۔") },
+    { target: "tr-custom", title: t("Your own dates", "اپنی تاریخیں"), body: t("Pick any start and end date.", "کوئی بھی شروع اور آخری تاریخ چنیں۔") },
+    { target: "tr-type", title: t("Line or candles", "لائن یا کینڈل"), body: t("A simple line, or candles that show each day's low and high.", "سادہ لکیر، یا کینڈل جو ہر دن کا کم اور زیادہ دکھائیں۔") },
+    { target: '[data-tour="tr-chart"] [data-tour="expand"]', title: t("Full screen", "پوری اسکرین"), body: t("Open the chart on the whole screen.", "چارٹ پوری اسکرین پر کھولیں۔") },
+    { target: "tr-types", title: t("Every rate type", "ہر ریٹ کی قسم"), body: t("All rate types side by side. Tap one to chart it.", "تمام ریٹس ساتھ ساتھ۔ چارٹ کے لیے کسی پر دبائیں۔") },
+    { target: "rates-tabs", title: t("Back to today", "آج پر واپس"), body: t("Overview brings back today's rate.", "جائزہ سے آج کا ریٹ واپس آتا ہے۔") },
+  ],
+
+  viewall: [
+    { target: "viewall-back", title: t("Back", "واپس"), body: t("Back to Home.", "ہوم پر واپس۔") },
+    { target: "viewall-group", title: t("Groups", "گروپس"), body: t("Products come in groups: Grains, Edible Oils, Fruits, Vegetables, Fertilizer, Dry Fruits, Herbs, Kiryana.", "مصنوعات گروپس میں ہیں: اناج، خوردنی تیل، پھل، سبزیاں، کھاد، خشک میوہ، جڑی بوٹیاں، کریانہ۔") },
+    { target: "viewall-open", title: t("Open product", "کھلی پروڈکٹ"), body: t("A green ring means its rates are open. Tap to see them.", "سبز دائرہ مطلب ریٹ کھلے ہیں۔ دیکھنے کے لیے دبائیں۔") },
+    { target: "viewall-locked", title: t("Locked product", "بند پروڈکٹ"), body: t("Grey with a lock needs a subscription. Tapping it starts subscribing.", "تالے والی سرمئی پروڈکٹ کے لیے سبسکرپشن چاہیے۔ دبانے سے سبسکرپشن شروع ہوتی ہے۔") },
+    { target: "viewall-more", title: t("See more", "مزید دیکھیں"), body: t("Shows the rest of the group.", "گروپ کی باقی مصنوعات دکھاتا ہے۔") },
+  ],
+
+  profile: [
+    { target: "profile-head", title: t("3 easy steps", "3 آسان مراحل"), body: t("Products, plan, payment. The bar shows which step you're on.", "مصنوعات، پلان، ادائیگی۔ پٹی بتاتی ہے آپ کس مرحلے پر ہیں۔") },
+    { target: "profile-body", title: t("Choose", "چنیں"), body: t("Pick your products here. Every product is PKR 2,000 a month.", "یہاں اپنی مصنوعات چنیں۔ ہر پروڈکٹ 2,000 روپے ماہانہ۔") },
+    { target: "profile-foot", title: t("Next", "اگلا"), body: t("Moves to the next step. Pay by JazzCash, Easypaisa, card or bank at the end.", "اگلے مرحلے پر لے جاتا ہے۔ آخر میں جاز کیش، ایزی پیسہ، کارڈ یا بینک سے ادائیگی۔") },
+  ],
+
+  news: [
+    { target: "reels-tabs", title: t("Video types", "ویڈیوز کی اقسام"), body: t("Products, General Info and Baithak. Tap one to switch.", "مصنوعات، عام معلومات اور بیٹھک۔ بدلنے کے لیے دبائیں۔") },
+    { target: "reels-filters", title: t("For you, saved, by product", "آپ کے لیے، محفوظ، پروڈکٹ"), body: t("Your feed, the videos you saved, or only one product's videos.", "آپ کی فیڈ، محفوظ کی ہوئی ویڈیوز، یا صرف ایک پروڈکٹ کی ویڈیوز۔") },
+    { target: "reels-mute", title: t("Sound", "آواز"), body: t("Turn the sound on or off.", "آواز آن یا بند کریں۔") },
+    { target: "reels-min", title: t("Mini player", "چھوٹا پلیئر"), body: t("Shrinks the video so you can keep watching while you check rates.", "ویڈیو چھوٹی ہو جاتی ہے تاکہ ریٹ دیکھتے ہوئے بھی چلتی رہے۔") },
+    { target: "reel-actions", title: t("Like, save, share", "پسند، محفوظ، شیئر"), body: t("Like a video, save it for later, or send it to others.", "ویڈیو پسند کریں، بعد کے لیے محفوظ کریں، یا دوسروں کو بھیجیں۔") },
+    { title: t("Next video", "اگلی ویڈیو"), body: t("Swipe up for the next video. Double-tap a video to like it.", "اگلی ویڈیو کے لیے اوپر سوائپ کریں۔ پسند کرنے کے لیے دو بار دبائیں۔") },
+  ],
+
+  account: [
+    { target: "acc-profile", title: t("Your profile", "آپ کی پروفائل"), body: t("Name, email, city and your plan. Tap to edit.", "نام، ای میل، شہر اور آپ کا پلان۔ ترمیم کے لیے دبائیں۔") },
+    { target: "acc-setup", title: t("Finish setup", "سیٹ اپ مکمل کریں"), body: t("How far your profile is, and a button to continue.", "پروفائل کتنی مکمل ہے، اور جاری رکھنے کا بٹن۔") },
+    { target: "acc-account", title: t("Subscriptions", "سبسکرپشنز"), body: t("Your plans, and how to become a mandi representative.", "آپ کے پلان، اور منڈی نمائندہ بننے کا طریقہ۔") },
+    { target: "acc-prefs", title: t("Voice & language", "آواز اور زبان"), body: t("English or Urdu, and voice on or off.", "انگریزی یا اردو، اور آواز آن یا بند۔") },
+    { target: "acc-support", title: t("Help and App Tour", "مدد اور ایپ کا تعارف"), body: t("Contact us, and 'App Tour' to run this tutorial again.", "ہم سے رابطہ، اور یہ رہنمائی دوبارہ دیکھنے کے لیے 'ایپ کا تعارف'۔") },
+    { target: "acc-legal", title: t("Legal", "قانونی"), body: t("Terms, privacy, and refunds.", "شرائط، رازداری، اور رقم کی واپسی۔") },
+    { target: "acc-manage", title: t("Manage account", "اکاؤنٹ کا انتظام"), body: t("Pause or delete your account.", "اکاؤنٹ روکیں یا حذف کریں۔") },
+    { target: "acc-logout", title: t("Log out", "لاگ آؤٹ"), body: t("Signs you out of this phone.", "اس فون سے سائن آؤٹ کرتا ہے۔") },
+  ],
 };
 
 const C = {
@@ -158,27 +286,16 @@ const C = {
   glow: "#9BE7C0",
 };
 
-const sel = (t: string) => (t.startsWith("[") ? t : `[data-tour="${t}"]`);
-function visibleEl(t: string): HTMLElement | null {
-  const el = document.querySelector<HTMLElement>(sel(t));
-  if (!el) return null;
-  const r = el.getBoundingClientRect();
-  return r.width > 0 && r.height > 0 ? el : null;
-}
-function topScreen(): TourScreen | null {
-  for (const [s, t] of DETECT) if (visibleEl(t)) return s;
-  return null;
-}
-
-// ─── HOST: watches which screen is up and shows its tips once ────────────────
+// ─── HOST: asks once, then runs each screen's walkthrough on its first visit ──
 
 export function ScreenTips({ enabled }: { enabled: boolean }) {
   const [screen, setScreen] = useState<TourScreen | null>(null);
-  const openRef = useRef(false);
-  openRef.current = !!screen;
+  const [asking, setAsking] = useState(false);
+  const busy = useRef(false);
+  busy.current = !!screen || asking;
 
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("tour") === "1") resetScreenTips();
+    if (new URLSearchParams(window.location.search).get("tour") === "1") saveStore({ mode: "ask", seen: [] });
   }, []);
 
   useEffect(() => {
@@ -186,7 +303,7 @@ export function ScreenTips({ enabled }: { enabled: boolean }) {
     let last: TourScreen | null = null;
     let since = 0;
     const id = window.setInterval(() => {
-      if (openRef.current) return;
+      if (busy.current) return;
       const s = topScreen();
       if (s !== last) {
         last = s;
@@ -194,278 +311,473 @@ export function ScreenTips({ enabled }: { enabled: boolean }) {
         return;
       }
       // Let the screen settle (data loaded, animations done) before starting.
-      if (s && !seen().has(s) && Date.now() - since > 900) setScreen(s);
+      if (!s || Date.now() - since < 900) return;
+      const { mode, seen } = getStore();
+      if (mode === "ask" && s === "home") setAsking(true);
+      else if (mode === "on" && !seen.includes(s)) setScreen(s);
     }, 250);
     return () => window.clearInterval(id);
   }, [enabled]);
 
+  if (asking)
+    return (
+      <AskTutorial
+        onAnswer={(yes) => {
+          saveStore({ mode: yes ? "on" : "off" });
+          setAsking(false);
+          if (yes) setScreen("home");
+        }}
+      />
+    );
   if (!screen) return null;
   return (
-    <TipsOverlay
+    <Walkthrough
       key={screen}
-      tip={TIPS[screen]}
-      onClose={() => {
+      screen={screen}
+      steps={STEPS[screen]}
+      onDone={(stopAll) => {
         markSeen(screen);
+        if (stopAll) saveStore({ mode: "off" });
         setScreen(null);
       }}
     />
   );
 }
 
-type Box = { x: number; y: number; w: number; h: number };
-type Lit = { box: Box; mark: Mark };
+// ─── "Would you like a tutorial?" ────────────────────────────────────────────
 
-const PAD = 5; // light around each part
-const LABEL_H = 30;
-
-function TipsOverlay({ tip, onClose }: { tip: Tip; onClose: () => void }) {
+function useTourLang() {
   const { lang, setLang } = useLang();
   const isUr = lang === "ur";
-  const L = (t: Txt) => (isUr ? t.ur : t.en);
-  const font = isUr ? URDU_FONT : "'Inter', 'Poppins', sans-serif";
+  return { lang, setLang, isUr, L: (x: Txt) => (isUr ? x.ur : x.en), font: isUr ? URDU_FONT : "'Inter', 'Poppins', sans-serif" };
+}
 
+function LangSwitch({ small }: { small?: boolean }) {
+  const { lang, setLang } = useLang();
+  return (
+    <div style={{ display: "flex", background: C.mint, borderRadius: 999, padding: 2, direction: "ltr", flexShrink: 0 }}>
+      {(["en", "ur"] as const).map((l) => (
+        <button
+          key={l}
+          onClick={() => {
+            stopSpeaking();
+            setLang(l);
+          }}
+          aria-pressed={lang === l}
+          style={{
+            height: small ? 26 : 30,
+            padding: small ? "0 9px" : "0 12px",
+            borderRadius: 999,
+            fontSize: l === "ur" ? 13 : 11.5,
+            fontWeight: 700,
+            fontFamily: l === "ur" ? URDU_FONT : "'Inter', sans-serif",
+            background: lang === l ? C.primary : "transparent",
+            color: lang === l ? "#fff" : C.primary,
+          }}
+        >
+          {l === "en" ? "EN" : "اردو"}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function SpeakerButton({ say, label }: { say: string; label: string }) {
+  return (
+    <button
+      onClick={() => speakText(say)}
+      aria-label={label}
+      title={label}
+      style={{ width: 30, height: 30, borderRadius: 999, background: C.mint, display: "grid", placeItems: "center", flexShrink: 0 }}
+    >
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M11 5 6 9H2v6h4l5 4V5z" />
+        <path d="M15.5 8.5a5 5 0 0 1 0 7" />
+        <path d="M19 5a10 10 0 0 1 0 14" />
+      </svg>
+    </button>
+  );
+}
+
+function Layer({ children, label }: { children: React.ReactNode; label: string }) {
+  if (typeof document === "undefined") return null;
+  // On <body>, above the app's bottom sheets (z 12000), so pickers can be part of a step.
+  return createPortal(
+    <div className="zm-tour" role="dialog" aria-modal="true" aria-label={label} style={{ position: "fixed", inset: 0, zIndex: 13000, pointerEvents: "none" }}>
+      <style>{TOUR_CSS}</style>
+      {children}
+    </div>,
+    document.body,
+  );
+}
+
+function AskTutorial({ onAnswer }: { onAnswer: (yes: boolean) => void }) {
+  const { isUr, L, font } = useTourLang();
+  const title = t("Welcome to Zarai Mandi", "زرعی منڈی میں خوش آمدید");
+  const body = t(
+    "Would you like a step-by-step tutorial? We'll show you every button and filter on each screen, and you can try them yourself.",
+    "کیا آپ قدم بہ قدم رہنمائی چاہتے ہیں؟ ہم ہر اسکرین کا ہر بٹن اور فلٹر دکھائیں گے، اور آپ خود آزما کر دیکھ سکیں گے۔",
+  );
+  useEffect(() => () => stopSpeaking(), []);
+  return (
+    <Layer label={L(title)}>
+      <div className="zm-tour-ask" style={{ position: "absolute", inset: 0, background: "rgba(3, 30, 24, 0.82)" }} />
+      <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", padding: 18, fontFamily: font }}>
+        <div className="zm-tour-card" dir={isUr ? "rtl" : "ltr"} style={{ width: "100%", maxWidth: 380, background: "#fff", borderRadius: 24, padding: "18px 18px 16px", boxShadow: "0 24px 60px rgba(0,0,0,0.4)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 14, background: `linear-gradient(135deg, ${C.bright}, ${C.primary})`, display: "grid", placeItems: "center", flexShrink: 0 }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="m16.2 7.8-2.1 6.3-6.3 2.1 2.1-6.3z" />
+              </svg>
+            </div>
+            <div style={{ flex: 1 }} />
+            <LangSwitch />
+            <SpeakerButton say={`${L(title)}. ${L(body)}`} label={isUr ? "سنیں" : "Listen"} />
+          </div>
+          <h2 style={{ margin: 0, fontSize: isUr ? 21 : 19.5, lineHeight: isUr ? 1.7 : 1.3, fontWeight: 800, color: C.ink }}>{L(title)}</h2>
+          <p style={{ margin: "6px 0 16px", fontSize: isUr ? 15 : 14, lineHeight: isUr ? 1.9 : 1.55, color: C.muted }}>{L(body)}</p>
+          <button
+            onClick={() => {
+              stopSpeaking();
+              onAnswer(true);
+            }}
+            style={{ width: "100%", height: 48, borderRadius: 999, fontWeight: 800, fontSize: isUr ? 16.5 : 15.5, fontFamily: font, background: `linear-gradient(135deg, ${C.bright}, ${C.primary})`, color: "#fff", boxShadow: "0 6px 16px rgba(8,127,99,0.35)" }}
+          >
+            {isUr ? "جی ہاں، دکھائیں" : "Yes, show me"}
+          </button>
+          <button
+            onClick={() => {
+              stopSpeaking();
+              onAnswer(false);
+            }}
+            style={{ width: "100%", height: 44, marginTop: 6, borderRadius: 999, fontWeight: 700, fontSize: isUr ? 15 : 14, fontFamily: font, background: "transparent", color: C.primary }}
+          >
+            {isUr ? "ابھی نہیں" : "No, thanks"}
+          </button>
+          <p style={{ margin: "6px 0 0", textAlign: "center", fontSize: isUr ? 12.5 : 11.5, lineHeight: isUr ? 1.8 : 1.4, color: C.muted }}>
+            {isUr ? "بعد میں: اکاؤنٹ ← ایپ کا تعارف" : "Any time later: Account → App Tour"}
+          </p>
+        </div>
+      </div>
+    </Layer>
+  );
+}
+
+// ─── ONE SCREEN'S WALKTHROUGH ────────────────────────────────────────────────
+
+type Box = { x: number; y: number; w: number; h: number };
+const PAD = 6; // light around the part
+const EDGE = 4; // keep the ring inside the screen
+const NAV_H = 96; // bottom nav: scroll parts clear of it
+
+function Walkthrough({ screen, steps, onDone }: { screen: TourScreen; steps: Step[]; onDone: (stopAll: boolean) => void }) {
+  const { isUr, L, font, lang } = useTourLang();
+  const [idx, setIdx] = useState(0);
+  const dirRef = useRef<1 | -1>(1);
+  const [box, setBox] = useState<Box | null>(null);
+  const [size, setSize] = useState({ w: window.innerWidth, h: window.innerHeight });
+  const [ready, setReady] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
-  const [lit, setLit] = useState<Lit[] | null>(null);
-  const [size, setSize] = useState({ w: 0, h: 0 });
-  const [cardTop, setCardTop] = useState<number | null>(null);
+  const [cardPos, setCardPos] = useState<{ left: number; top: number; arrow: number | null; below: boolean } | null>(null);
+  const step = steps[idx];
 
-  // Measure every part on screen now (correct under CSS zoom too).
-  const measure = useCallback(() => {
-    const root = rootRef.current;
-    if (!root) return;
-    const rr = root.getBoundingClientRect();
-    const scale = root.offsetWidth ? rr.width / root.offsetWidth : 1;
-    const w = root.offsetWidth;
-    const h = root.offsetHeight;
-    setSize({ w, h });
-    const out: Lit[] = [];
-    for (const mark of tip.marks) {
-      const el = visibleEl(mark.target);
-      if (!el) continue;
-      const r = el.getBoundingClientRect();
-      let y = (r.top - rr.top) / scale;
-      let bh = r.height / scale;
-      if (y < 6) {
-        bh -= 6 - y;
-        y = 6;
-      }
-      if (y > h - 20 || bh < 8) continue; // off screen
-      // A tall single part: light its top part so the card fits under it.
-      bh = Math.min(bh, tip.marks.length === 1 ? Math.max(60, h * 0.45) : h - y - 6);
-      out.push({ mark, box: { x: (r.left - rr.left) / scale, y, w: r.width / scale, h: bh } });
-    }
-    setLit(out);
-  }, [tip]);
+  const finish = useCallback(
+    (stopAll = false) => {
+      stopSpeaking();
+      onDone(stopAll);
+    },
+    [onDone],
+  );
 
-  useLayoutEffect(() => {
-    measure();
-    window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
-  }, [measure]);
+  const idxRef = useRef(0);
+  idxRef.current = idx;
+  const go = useCallback(
+    (d: 1 | -1) => {
+      stopSpeaking();
+      dirRef.current = d;
+      const n = idxRef.current + d;
+      if (n >= steps.length) finish();
+      else setIdx(Math.max(0, n));
+    },
+    [steps.length, finish],
+  );
 
-  // Label positions.
-  const labels = (lit || [])
-    .filter((l) => l.mark.label)
-    .map((l) => {
-      const b = l.box;
-      let side = l.mark.side || "below";
-      // Left/right mean before/after in reading order, so they mirror in Urdu.
-      if (isUr && side === "left") side = "right";
-      else if (isUr && side === "right") side = "left";
-      // No room beside it: put the label underneath instead.
-      if ((side === "left" && b.x < 130) || (side === "right" && size.w - (b.x + b.w) < 130)) side = "below";
-      const style: React.CSSProperties = { position: "absolute" };
-      let top = 0;
-      if (side === "below" || side === "above") {
-        top = side === "below" ? b.y + b.h + PAD + 8 : b.y - PAD - 8 - LABEL_H;
-        const cx = b.x + b.w / 2;
-        if (cx < size.w * 0.3) style.left = Math.max(10, b.x);
-        else if (cx > size.w * 0.7) style.right = Math.max(10, size.w - (b.x + b.w));
-        else {
-          style.left = cx;
-          style.transform = "translateX(-50%)";
+  // Find the part, bring it into view, follow it while it moves; finish "Try it" steps.
+  useEffect(() => {
+    setReady(false);
+    setBox(null);
+    const started = Date.now();
+    const startValue = step.watch?.();
+    let found = false;
+    let scrolled = false;
+    let done = false;
+    let away = 0;
+
+    const tick = () => {
+      if (done) return;
+      // Left this screen some other way: stop here.
+      const top = topScreen();
+      if (top && top !== screen && !step.leaves) {
+        away ||= Date.now();
+        if (Date.now() - away > 1200) {
+          done = true;
+          finish();
+          return;
         }
-      } else {
-        top = b.y + b.h / 2 - LABEL_H / 2;
-        if (side === "left") style.right = size.w - b.x + PAD + 8;
-        else style.left = b.x + b.w + PAD + 8;
-      }
-      style.top = top;
-      return { l, style, top };
-    });
+      } else away = 0;
 
-  // Card: in the biggest free band between lit parts and labels.
+      // "Try it" finished?
+      if ((step.until && step.until()) || (step.watch && step.watch() !== startValue)) {
+        done = true;
+        if (step.leaves) finish();
+        else window.setTimeout(() => go(1), 450);
+        return;
+      }
+
+      if (!step.target) {
+        setBox(null);
+        setReady(true);
+        return;
+      }
+      const el = visibleEl(step.target);
+      if (!el) {
+        if (found && step.backIfGone) {
+          done = true;
+          go(-1);
+        } else if (!found && Date.now() - started > 1400) {
+          // Not on this screen right now (e.g. no attributes for this product): skip it.
+          done = true;
+          if (dirRef.current === -1 && idx === 0) go(1);
+          else go(dirRef.current);
+        }
+        return;
+      }
+      found = true;
+      const root = rootRef.current;
+      if (!root) return;
+      const rr = root.getBoundingClientRect();
+      const scale = root.offsetWidth ? rr.width / root.offsetWidth : 1;
+      const W = root.offsetWidth;
+      const H = root.offsetHeight;
+      let r = el.getBoundingClientRect();
+      if (!scrolled) {
+        scrolled = true;
+        const fixedNav = !!el.closest("nav") || step.target.startsWith("nav-");
+        if (!fixedNav && (r.top < 0 || r.bottom > window.innerHeight - NAV_H || covered(el, r)) && r.height < window.innerHeight * 0.6) {
+          el.scrollIntoView({ block: "center", behavior: "smooth" });
+          return; // measure once it has moved
+        }
+      }
+      r = el.getBoundingClientRect();
+      let x = (r.left - rr.left) / scale;
+      let y = (r.top - rr.top) / scale;
+      let w = r.width / scale;
+      let h = r.height / scale;
+      // Keep the light inside the screen (full-width parts were cut at the edges).
+      const x2 = Math.min(W - EDGE - PAD, x + w);
+      const y2 = Math.min(H - EDGE - PAD, y + h);
+      x = Math.max(EDGE + PAD, x);
+      y = Math.max(EDGE + PAD, y);
+      w = Math.max(8, x2 - x);
+      h = Math.max(8, y2 - y);
+      setSize({ w: W, h: H });
+      setBox((b) => (b && Math.abs(b.x - x) < 0.5 && Math.abs(b.y - y) < 0.5 && Math.abs(b.w - w) < 0.5 && Math.abs(b.h - h) < 0.5 ? b : { x, y, w, h }));
+      setReady(true);
+    };
+    tick();
+    const id = window.setInterval(tick, 140);
+    return () => {
+      done = true;
+      window.clearInterval(id);
+    };
+  }, [idx, step, screen, go, finish]);
+
+  // Card: next to the lit part, on the side with room; never over it when it fits.
   useLayoutEffect(() => {
-    if (!lit || !size.h || !cardRef.current) return;
-    const ch = cardRef.current.offsetHeight;
-    const busy: [number, number][] = [
-      ...lit.map((l) => [l.box.y - PAD - 6, l.box.y + l.box.h + PAD + 6] as [number, number]),
-      ...labels.map((x) => [x.top - 4, x.top + LABEL_H + 4] as [number, number]),
-    ].sort((a, b) => a[0] - b[0]);
-    let best: [number, number] = [0, 0];
-    let cur = 8;
-    for (const [a, b] of busy) {
-      if (a - cur > best[1] - best[0]) best = [cur, a];
-      cur = Math.max(cur, b);
+    const card = cardRef.current;
+    if (!card || !ready) return;
+    const cw = card.offsetWidth;
+    const ch = card.offsetHeight;
+    const { w: W, h: H } = size;
+    if (!box) {
+      setCardPos({ left: (W - cw) / 2, top: Math.max(12, (H - ch) / 2), arrow: null, below: true });
+      return;
     }
-    if (size.h - 8 - cur > best[1] - best[0]) best = [cur, size.h - 8];
-    const room = best[1] - best[0];
-    setCardTop(room >= ch ? best[0] + (room - ch) / 2 : Math.max(8, size.h - ch - 96));
-  }, [lit, size, lang]); // eslint-disable-line react-hooks/exhaustive-deps
+    const gap = 14;
+    const top0 = box.y - PAD;
+    const bot0 = box.y + box.h + PAD;
+    const roomBelow = H - bot0 - gap - 8;
+    const roomAbove = top0 - gap - 8;
+    let below: boolean;
+    let top: number;
+    if (roomBelow >= ch) {
+      below = true;
+      top = bot0 + gap;
+    } else if (roomAbove >= ch) {
+      below = false;
+      top = top0 - gap - ch;
+    } else {
+      // A tall part: the card sits over its bottom edge, still inside the screen.
+      below = roomBelow >= roomAbove;
+      top = below ? H - ch - 10 : 10;
+    }
+    const cx = box.x + box.w / 2;
+    const left = Math.min(Math.max(10, cx - cw / 2), W - cw - 10);
+    const fits = below ? top >= bot0 : top + ch <= top0;
+    setCardPos({ left, top, arrow: fits ? Math.min(Math.max(22, cx - left), cw - 22) : null, below });
+  }, [box, size, ready, idx, lang]);
 
   useEffect(() => () => stopSpeaking(), []);
 
-  const done = () => {
-    stopSpeaking();
-    onClose();
-  };
-
-  const spoken = `${L(tip.title)}. ${L(tip.body)} ${labels.map((x) => L(x.l.mark.label!)).join(". ")}`;
+  const isAct = !!step.act;
+  const last = idx === steps.length - 1;
+  const spoken = `${L(step.title)}. ${L(step.body)} ${step.act ? L(step.act) : ""}`;
+  const hole = box ? { x: box.x - PAD, y: box.y - PAD, w: box.w + PAD * 2, h: box.h + PAD * 2 } : null;
+  const radius = hole ? Math.min(18, hole.h / 2) : 0;
 
   return (
-    <div
-      ref={rootRef}
-      className="zm-tour"
-      role="dialog"
-      aria-modal="true"
-      aria-label={L(tip.title)}
-      style={{ position: "absolute", inset: 0, zIndex: 500, fontFamily: font }}
-    >
-      <style>{TOUR_CSS}</style>
+    <Layer label={L(step.title)}>
+      <div ref={rootRef} style={{ position: "absolute", inset: 0, fontFamily: font, pointerEvents: "none" }}>
+        {/* Dim everything except the lit part */}
+        <svg width="100%" height="100%" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} aria-hidden="true">
+          <defs>
+            <mask id="zm-tour-hole">
+              <rect width="100%" height="100%" fill="#fff" />
+              {hole && <rect x={hole.x} y={hole.y} width={hole.w} height={hole.h} rx={radius} fill="#000" />}
+            </mask>
+          </defs>
+          <rect width="100%" height="100%" fill="rgba(3, 30, 24, 0.78)" mask="url(#zm-tour-hole)" />
+        </svg>
 
-      {/* Dim everything except the lit parts */}
-      <svg width="100%" height="100%" style={{ position: "absolute", inset: 0 }} aria-hidden="true">
-        <defs>
-          <mask id="zm-tour-holes">
-            <rect width="100%" height="100%" fill="#fff" />
-            {(lit || []).map((l, k) => (
-              <rect
-                key={k}
-                x={l.box.x - PAD}
-                y={l.box.y - PAD}
-                width={l.box.w + PAD * 2}
-                height={l.box.h + PAD * 2}
-                rx={Math.min(22, (l.box.h + PAD * 2) / 2)}
-                fill="#000"
+        {/* Taps: blocked everywhere, except on the lit part during "Try it" */}
+        {isAct && hole ? (
+          <>
+            <div className="zm-tour-block" style={{ position: "absolute", left: 0, top: 0, right: 0, height: Math.max(0, hole.y) }} />
+            <div className="zm-tour-block" style={{ position: "absolute", left: 0, top: hole.y + hole.h, right: 0, bottom: 0 }} />
+            <div className="zm-tour-block" style={{ position: "absolute", left: 0, top: hole.y, width: Math.max(0, hole.x), height: hole.h }} />
+            <div className="zm-tour-block" style={{ position: "absolute", left: hole.x + hole.w, top: hole.y, right: 0, height: hole.h }} />
+          </>
+        ) : (
+          <div className="zm-tour-block" style={{ position: "absolute", inset: 0 }} />
+        )}
+
+        {hole && (
+          <div
+            key={`ring-${idx}`}
+            className={`zm-tour-ring${isAct ? " zm-tour-ring-act" : ""}`}
+            style={{ left: hole.x, top: hole.y, width: hole.w, height: hole.h, borderRadius: radius }}
+          />
+        )}
+
+        {ready && (
+          <div
+            key={`card-${idx}`}
+            ref={cardRef}
+            className="zm-tour-card"
+            dir={isUr ? "rtl" : "ltr"}
+            style={{
+              position: "absolute",
+              width: Math.min(360, size.w - 20),
+              left: cardPos?.left ?? 10,
+              top: cardPos?.top ?? 0,
+              visibility: cardPos ? "visible" : "hidden",
+            }}
+          >
+            {cardPos?.arrow != null && (
+              <div
+                aria-hidden="true"
+                style={{
+                  position: "absolute",
+                  left: cardPos.arrow - 9,
+                  [cardPos.below ? "top" : "bottom"]: -8,
+                  width: 18,
+                  height: 18,
+                  background: "#fff",
+                  transform: "rotate(45deg)",
+                  borderRadius: 3,
+                }}
               />
-            ))}
-          </mask>
-        </defs>
-        <rect width="100%" height="100%" fill="rgba(3, 30, 24, 0.8)" mask="url(#zm-tour-holes)" />
-      </svg>
-
-      {(lit || []).map((l, k) => (
-        <div
-          key={k}
-          className="zm-tour-ring"
-          style={{
-            left: l.box.x - PAD,
-            top: l.box.y - PAD,
-            width: l.box.w + PAD * 2,
-            height: l.box.h + PAD * 2,
-            borderRadius: Math.min(22, (l.box.h + PAD * 2) / 2),
-            animationDelay: `${k * 0.12}s`,
-          }}
-        />
-      ))}
-
-      {labels.map((x, k) => (
-        <div
-          key={k}
-          className="zm-tour-label"
-          dir={isUr ? "rtl" : "ltr"}
-          style={{
-            ...x.style,
-            height: LABEL_H,
-            fontSize: isUr ? 13.5 : 12.5,
-            animationDelay: `${0.1 + k * 0.08}s`,
-          }}
-        >
-          {L(x.l.mark.label!)}
-        </div>
-      ))}
-
-      {/* The one card for this screen */}
-      {lit && (
-        <div
-          ref={cardRef}
-          className="zm-tour-card"
-          dir={isUr ? "rtl" : "ltr"}
-          style={{ position: "absolute", left: 16, right: 16, top: cardTop ?? 0, visibility: cardTop == null ? "hidden" : "visible" }}
-        >
-          <div style={{ background: "#fff", borderRadius: 22, padding: "14px 16px 12px", boxShadow: "0 18px 50px rgba(0,0,0,0.35)" }}>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-              <h2 style={{ flex: 1, fontSize: isUr ? 19 : 17.5, lineHeight: isUr ? 1.7 : 1.3, fontWeight: 800, color: C.ink, margin: 0 }}>{L(tip.title)}</h2>
-              <div style={{ display: "flex", background: C.mint, borderRadius: 999, padding: 2, direction: "ltr", flexShrink: 0 }}>
-                {(["en", "ur"] as const).map((l) => (
-                  <button
-                    key={l}
-                    onClick={() => {
-                      stopSpeaking();
-                      setLang(l);
-                      window.setTimeout(measure, 150);
-                    }}
-                    aria-pressed={lang === l}
-                    style={{
-                      height: 28,
-                      padding: "0 10px",
-                      borderRadius: 999,
-                      fontSize: l === "ur" ? 13.5 : 12,
-                      fontWeight: 700,
-                      fontFamily: l === "ur" ? URDU_FONT : "'Inter', sans-serif",
-                      background: lang === l ? C.primary : "transparent",
-                      color: lang === l ? "#fff" : C.primary,
-                    }}
-                  >
-                    {l === "en" ? "EN" : "اردو"}
-                  </button>
-                ))}
+            )}
+            <div style={{ position: "relative", background: "#fff", borderRadius: 20, padding: "12px 14px 12px", boxShadow: "0 18px 50px rgba(0,0,0,0.38)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: isUr ? 12.5 : 11.5, fontWeight: 700, color: C.primary, whiteSpace: "nowrap" }}>
+                  {isUr ? `${idx + 1} / ${steps.length}` : `Step ${idx + 1} of ${steps.length}`}
+                </span>
+                <div style={{ flex: 1, height: 4, borderRadius: 2, background: C.mint, overflow: "hidden", direction: "ltr", transform: isUr ? "scaleX(-1)" : undefined }}>
+                  <div style={{ width: `${((idx + 1) / steps.length) * 100}%`, height: "100%", background: C.bright, transition: "width .3s" }} />
+                </div>
+                <LangSwitch small />
+                <SpeakerButton say={spoken} label={isUr ? "سنیں" : "Listen"} />
+                <button
+                  onClick={() => finish(true)}
+                  aria-label={isUr ? "رہنمائی بند کریں" : "End tutorial"}
+                  title={isUr ? "رہنمائی بند کریں" : "End tutorial"}
+                  style={{ width: 30, height: 30, borderRadius: 999, background: "#F1F4F3", display: "grid", placeItems: "center", flexShrink: 0 }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth="2.8" strokeLinecap="round">
+                    <path d="M18 6 6 18M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
-              <button
-                onClick={() => speakText(spoken)}
-                aria-label={isUr ? "سنیں" : "Listen"}
-                title={isUr ? "سنیں" : "Listen"}
-                style={{ width: 32, height: 32, borderRadius: 999, background: C.mint, display: "grid", placeItems: "center", flexShrink: 0 }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M11 5 6 9H2v6h4l5 4V5z" />
-                  <path d="M15.5 8.5a5 5 0 0 1 0 7" />
-                  <path d="M19 5a10 10 0 0 1 0 14" />
-                </svg>
-              </button>
+              <h2 style={{ margin: "8px 0 0", fontSize: isUr ? 18 : 16.5, lineHeight: isUr ? 1.7 : 1.3, fontWeight: 800, color: C.ink }}>{L(step.title)}</h2>
+              <p style={{ margin: "2px 0 0", fontSize: isUr ? 14.5 : 13.5, lineHeight: isUr ? 1.9 : 1.5, color: C.muted }}>{L(step.body)}</p>
+
+              {isAct && (
+                <div className="zm-tour-act" style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 14, background: C.mint, color: C.deep, fontWeight: 800, fontSize: isUr ? 15 : 14 }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                    <path d="M9 11V5a2 2 0 0 1 4 0v6" />
+                    <path d="M13 10a2 2 0 0 1 4 0v2" />
+                    <path d="M17 11a2 2 0 0 1 4 0v4a7 7 0 0 1-7 7h-1a7 7 0 0 1-5.6-2.8L4.2 15.6a2 2 0 0 1 3.1-2.5L9 15" />
+                  </svg>
+                  <span>{isUr ? `آزمائیں: ${L(step.act!)}` : `Try it: ${L(step.act!)}`}</span>
+                </div>
+              )}
+
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12 }}>
+                {idx > 0 && (
+                  <button
+                    onClick={() => go(-1)}
+                    style={{ height: 40, padding: "0 16px", borderRadius: 999, fontWeight: 700, fontSize: isUr ? 14.5 : 13.5, fontFamily: font, background: "#F1F4F3", color: C.ink }}
+                  >
+                    {isUr ? "پیچھے" : "Back"}
+                  </button>
+                )}
+                <div style={{ flex: 1 }} />
+                {isAct ? (
+                  <button
+                    onClick={() => (step.leaves ? finish() : go(1))}
+                    style={{ height: 40, padding: "0 14px", borderRadius: 999, fontWeight: 700, fontSize: isUr ? 14 : 13, fontFamily: font, background: "transparent", color: C.primary }}
+                  >
+                    {step.leaves ? (isUr ? "یہیں ختم کریں" : "Finish here") : isUr ? "یہ چھوڑیں" : "Skip this"}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => go(1)}
+                    style={{ height: 40, padding: "0 22px", borderRadius: 999, fontWeight: 800, fontSize: isUr ? 15 : 14, fontFamily: font, background: `linear-gradient(135deg, ${C.bright}, ${C.primary})`, color: "#fff", boxShadow: "0 6px 16px rgba(8,127,99,0.3)" }}
+                  >
+                    {last ? (isUr ? "ختم" : "Done") : isUr ? "اگلا" : "Next"}
+                  </button>
+                )}
+              </div>
             </div>
-            <p style={{ fontSize: isUr ? 14.5 : 13.5, lineHeight: isUr ? 1.9 : 1.5, color: C.muted, margin: "4px 0 12px" }}>{L(tip.body)}</p>
-            <button
-              onClick={done}
-              style={{
-                width: "100%",
-                height: 42,
-                borderRadius: 999,
-                fontWeight: 700,
-                fontSize: isUr ? 15.5 : 14.5,
-                fontFamily: font,
-                background: `linear-gradient(135deg, ${C.bright}, ${C.primary})`,
-                color: "#fff",
-                boxShadow: "0 6px 16px rgba(8,127,99,0.35)",
-              }}
-            >
-              {isUr ? "سمجھ گیا" : "Got it"}
-            </button>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </Layer>
   );
 }
 
 const TOUR_CSS = `
 .zm-tour button { cursor: pointer; border: none; }
+.zm-tour-block, .zm-tour-card, .zm-tour-ask { pointer-events: auto; }
 .zm-tour-ring {
   position: absolute;
   border: 2.5px solid ${C.glow};
   pointer-events: none;
-  animation: zmTourRingIn .4s ease-out both;
+  transition: left .25s ease, top .25s ease, width .25s ease, height .25s ease;
+  animation: zmTourRingIn .35s ease-out both;
 }
 .zm-tour-ring::after {
   content: "";
@@ -475,23 +787,15 @@ const TOUR_CSS = `
   border: 2.5px solid ${C.glow};
   animation: zmTourPulse 1.8s ease-out infinite;
 }
+.zm-tour-ring-act { border-color: #FFD66B; }
+.zm-tour-ring-act::after { border-color: #FFD66B; animation-duration: 1.2s; }
 @keyframes zmTourRingIn { from { opacity: 0; transform: scale(1.08); } }
-@keyframes zmTourPulse { 0% { opacity: .85; transform: scale(1); } 100% { opacity: 0; transform: scale(1.1); } }
-.zm-tour-label {
-  display: flex; align-items: center; white-space: nowrap;
-  padding: 0 11px; border-radius: 999px;
-  background: #fff; color: ${C.deep}; font-weight: 700;
-  border: 1.5px solid ${C.glow};
-  box-shadow: 0 6px 16px rgba(0,0,0,.25);
-  pointer-events: none;
-  animation: zmTourPop .35s cubic-bezier(.2,.9,.3,1.3) both;
-}
-.zm-tour-card { animation: zmTourIn .35s cubic-bezier(.2,.9,.3,1.2) both; }
-@keyframes zmTourIn { from { opacity: 0; transform: translateY(12px) scale(.97); } }
-@keyframes zmTourPop { from { opacity: 0; transform: scale(.85); } }
-.zm-tour-label[style*="translateX(-50%)"] { animation-name: zmTourPopC; }
-@keyframes zmTourPopC { from { opacity: 0; transform: translateX(-50%) scale(.85); } }
+@keyframes zmTourPulse { 0% { opacity: .9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.12); } }
+.zm-tour-card { animation: zmTourIn .3s cubic-bezier(.2,.9,.3,1.2) both; }
+@keyframes zmTourIn { from { opacity: 0; transform: translateY(10px) scale(.97); } }
+.zm-tour-act { animation: zmTourNudge 1.6s ease-in-out infinite; }
+@keyframes zmTourNudge { 0%, 100% { transform: none; } 50% { transform: translateY(-2px); } }
 @media (prefers-reduced-motion: reduce) {
-  .zm-tour *, .zm-tour-ring::after { animation: none !important; }
+  .zm-tour *, .zm-tour-ring::after { animation: none !important; transition: none !important; }
 }
 `;

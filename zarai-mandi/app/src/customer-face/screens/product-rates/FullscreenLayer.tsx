@@ -176,6 +176,7 @@ export function ExpandButton({ f, label, onClick, dark = false }: { f: Fmt; labe
       type="button"
       aria-label={label}
       title={label}
+      data-tour="expand"
       onClick={onClick}
       style={{
         width: 30,

@@ -297,7 +297,7 @@ export function Swiper3D({
             )}
           </div>
 
-          <div role="tablist" aria-label={label} style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 4 }}>
+          <div role="tablist" aria-label={label} data-tour="rates-dots" style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 4 }}>
             {pages.map((p, i) => (
               <button
                 key={p.key}

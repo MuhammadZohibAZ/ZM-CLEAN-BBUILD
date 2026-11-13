@@ -119,6 +119,7 @@ export function HomeHero({
           {/* Language Switch */}
           <button
             type="button"
+            data-tour="lang"
             onClick={() => {
               const nextLang = lang === "ur" ? "en" : "ur";
               setLang(nextLang);
@@ -145,6 +146,7 @@ export function HomeHero({
 
           {/* Voice Toggle */}
           <button
+            data-tour="voice"
             onClick={() => {
               const nextVoice = !homeVoiceEnabled;
               homeSetVoiceEnabled(nextVoice);
@@ -406,6 +408,7 @@ export function HomeHero({
                 boxShadow: "0 2px 6px rgba(0,0,0,0.18)",
               }}
               title={lang === "ur" ? "نام اور مقام تبدیل کریں" : "Edit Name & Location"}
+              data-tour="edit-name"
             >
               <svg
                 width="10"

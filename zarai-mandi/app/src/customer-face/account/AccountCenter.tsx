@@ -815,6 +815,7 @@ export function AccountCenter({
 
         {/* Setup progress (only while incomplete) */}
         {!profileCompleted && (
+          <div data-tour="acc-setup">
           <Card className="p-4">
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-semibold" style={{ color: C.ink }}>
@@ -849,6 +850,7 @@ export function AccountCenter({
               )}
             </PrimaryButton>
           </Card>
+          </div>
         )}
 
         <div data-tour="acc-account">
@@ -919,7 +921,7 @@ export function AccountCenter({
               isUr={isUr}
               icon="compass"
               label={L("App Tour", "ایپ کا تعارف")}
-              sub={L("A quick guide to every part of the app", "ایپ کے ہر حصے کی مختصر رہنمائی")}
+              sub={L("Step-by-step guide to every screen and button", "ہر اسکرین اور بٹن کی قدم بہ قدم رہنمائی")}
               onClick={() => {
                 close();
                 onStartTour?.();
@@ -929,7 +931,7 @@ export function AccountCenter({
           </Card>
         </div>
 
-        <div>
+        <div data-tour="acc-legal">
           <SectionLabel>{L("Legal", "قانونی")}</SectionLabel>
           <Card>
             <Row isUr={isUr} icon="file" label={L("Terms & Conditions", "شرائط و ضوابط")} onClick={() => onViewChange("terms")} />
@@ -938,7 +940,7 @@ export function AccountCenter({
           </Card>
         </div>
 
-        <div>
+        <div data-tour="acc-manage">
           <SectionLabel>{L("Manage account", "اکاؤنٹ کا انتظام")}</SectionLabel>
           <Card>
             <Row
@@ -960,6 +962,7 @@ export function AccountCenter({
           </Card>
         </div>
 
+        <div data-tour="acc-logout">
         <Card>
           <Row
             isUr={isUr}
@@ -971,6 +974,7 @@ export function AccountCenter({
             last
           />
         </Card>
+        </div>
         <div className="h-2" />
       </Page>
     );

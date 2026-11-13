@@ -113,6 +113,7 @@ export function PriceHero({
             <button
               type="button"
               aria-label={f.tx("Hear this rate", "یہ ریٹ سنیں")}
+              data-tour="hero-listen"
               title={f.tx("Hear this rate", "یہ ریٹ سنیں")}
               onClick={onListen}
               style={{ width: 28, height: 28, borderRadius: 14, border: "none", background: DK.chip, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}

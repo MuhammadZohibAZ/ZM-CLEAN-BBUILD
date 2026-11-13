@@ -48,10 +48,12 @@ export function CompleteProfileModal(props: CompleteProfileProps) {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <CompleteProfileHeader s={s} />
+        <div data-tour="profile-head" style={{ flexShrink: 0 }}>
+          <CompleteProfileHeader s={s} />
+        </div>
 
         {/* Modal Scrollable Body */}
-        <div className="flex-1 overflow-y-auto px-5 py-4">
+        <div className="flex-1 overflow-y-auto px-5 py-4" data-tour="profile-body">
           {/* STEP 1: INTERESTED PRODUCTS / PACKAGES */}
           {activeStepKey === "products" && <ProductsStep s={s} />}
 
@@ -63,7 +65,9 @@ export function CompleteProfileModal(props: CompleteProfileProps) {
         </div>
 
         {/* Footer Actions */}
-        <CompleteProfileFooter s={s} />
+        <div data-tour="profile-foot" style={{ flexShrink: 0 }}>
+          <CompleteProfileFooter s={s} />
+        </div>
       </div>
 
       {/* All Varieties Modal Sheet */}

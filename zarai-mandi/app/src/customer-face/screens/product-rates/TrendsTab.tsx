@@ -415,7 +415,7 @@ export function TrendsTab({
 
       {/* Card top bar: what (price / arrivals) on the left, when (period) on the right */}
       <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6, padding: "12px 10px 0" }}>
-        <div role="group" aria-label={f.tx("Chart", "چارٹ")} style={{ display: "flex", padding: 2.5, borderRadius: 10, background: DK.chip, flexShrink: 0 }}>
+        <div role="group" aria-label={f.tx("Chart", "چارٹ")} data-tour="tr-mode" style={{ display: "flex", padding: 2.5, borderRadius: 10, background: DK.chip, flexShrink: 0 }}>
           {(["price", "arrival"] as const).map((m) => (
             <button
               key={m}
@@ -443,6 +443,7 @@ export function TrendsTab({
         <div
           role="group"
           aria-label={f.tx("Period", "مدت")}
+          data-tour="tr-period"
           style={{
             display: "flex",
             alignItems: "center",
@@ -485,6 +486,7 @@ export function TrendsTab({
             type="button"
             aria-pressed={range === "CUSTOM"}
             aria-label={f.tx("Custom period", "مخصوص مدت")}
+            data-tour="tr-custom"
             title={f.tx("Custom period", "مخصوص مدت")}
             onClick={() => setPickerOpen(true)}
             style={{
@@ -520,7 +522,7 @@ export function TrendsTab({
                   : f.tx("Arrivals · all rate types", "آمد · تمام ریٹ")}
               </span>
               {isPrice && !compare && (
-                <div role="group" aria-label={f.tx("Chart type", "چارٹ کی قسم")} style={{ display: "flex", gap: 2, padding: 2, borderRadius: 10, background: DK.chip, flexShrink: 0, marginInlineStart: "auto" }}>
+                <div role="group" aria-label={f.tx("Chart type", "چارٹ کی قسم")} data-tour="tr-type" style={{ display: "flex", gap: 2, padding: 2, borderRadius: 10, background: DK.chip, flexShrink: 0, marginInlineStart: "auto" }}>
                   {(["line", "candles"] as const).map((t) => {
                     const on = chartType === t;
                     return (
@@ -863,7 +865,7 @@ export function TrendsTab({
       )}
 
       {/* Chart card */}
-      <div ref={chartRef} style={{ padding: "12px 16px 0", scrollMarginTop: 8 }}>
+      <div ref={chartRef} data-tour="tr-chart" style={{ padding: "12px 16px 0", scrollMarginTop: 8 }}>
         {expanded ? null : chartCard}
         <p style={{ margin: "8px 4px 0", fontSize: 11.5, fontWeight: 500, color: C.faint, textAlign: "center" }}>
           {range === "1D"
@@ -884,7 +886,7 @@ export function TrendsTab({
       {isPrice && withData.length > 1 && (
         <>
           {sectionTitle(f.tx("Rate types", "ریٹ کی اقسام"), f.tx(`${f.day(dates[i], true)} · tap to chart and filter movers`, `${f.day(dates[i], true)} · چارٹ اور تبدیلی کے لیے دبائیں`))}
-          <div style={{ padding: "0 16px" }}>
+          <div data-tour="tr-types" style={{ padding: "0 16px" }}>
             <Card style={{ overflow: "hidden" }}>
               {withData.map((rt, k) => {
                 const t = tl(rt);

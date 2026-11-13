@@ -54,6 +54,7 @@ export function ProductCategoriesSheet({
     return (
       <button
         key={div.name}
+        data-tour={unlocked ? "viewall-open" : "viewall-locked"}
         onClick={() => {
           onClose();
           if (unlocked) {
@@ -139,6 +140,7 @@ export function ProductCategoriesSheet({
         }}
       >
         <button
+          data-tour="viewall-back"
           onClick={() => onClose()}
           className="tap-target zm-beam-border w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0 text-[#183B34] transition active:scale-95"
           style={{
@@ -191,6 +193,7 @@ export function ProductCategoriesSheet({
                   type="button"
                   onClick={() => toggle(g.id)}
                   aria-expanded={isOpen}
+                  data-tour={g.id === "crops" ? "viewall-more" : undefined}
                   className="tap-target w-full mt-1.5 py-2 rounded-xl flex items-center justify-center gap-1 text-[12.5px] font-bold text-[#087F63] active:bg-[#E8F8F3]"
                   style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                 >

@@ -146,6 +146,7 @@ export function FilterRail({
           return (
             <div
               key={p.key}
+              data-tour={variant === "map" ? undefined : `rail-${p.key}`}
               style={{
                 position: "relative",
                 flex: variant === "map" ? "1 1 auto" : `${p.grow} 1 0`,

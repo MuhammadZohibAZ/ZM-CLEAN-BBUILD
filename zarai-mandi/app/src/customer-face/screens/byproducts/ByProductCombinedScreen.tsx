@@ -95,7 +95,7 @@ export function ByProductCombinedScreen({
         <div className="zm-status-gap px-3 pt-9 pb-2.5 flex items-center justify-between gap-1.5 w-full">
           <div className="flex items-center gap-1.5 flex-1 min-w-0">
             {/* Same back button as the product rates screen (AppBar). */}
-            <IconButton label={lang === 'ur' ? 'واپس' : 'Back'} onClick={onBack}>
+            <IconButton tour="bp-back" label={lang === 'ur' ? 'واپس' : 'Back'} onClick={onBack}>
               <Icon name="back" size={20} width={2.4} flip={lang === 'ur'} />
             </IconButton>
             {/* Narrow phones: no icon, so the title and count fit beside the date. */}
@@ -107,7 +107,7 @@ export function ByProductCombinedScreen({
                 style={{ flexShrink: 0 }}
               />
             </span>
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1" data-tour="bp-title">
               <h2
                 className="font-black text-[#183B34] text-base leading-tight break-words min-w-0"
                 style={{ fontFamily: lang === 'ur' ? URDU_FONT : 'inherit' }}
