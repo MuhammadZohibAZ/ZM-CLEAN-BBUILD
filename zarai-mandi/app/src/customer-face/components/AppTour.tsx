@@ -2,305 +2,289 @@ import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from
 import { URDU_FONT, useLang } from "../shared/i18n/LangProvider";
 import { speakText, stopSpeaking } from "../shared/voice";
 
-// ─── APP TOUR ─────────────────────────────────────────────────────────────────
-// A guided walk through the whole app for a new user, like a game tutorial.
-// The tour moves the app itself: it opens Complete Profile, View All, a
-// product, its rates, Trends, Entertainment and Settings by tapping the app's
-// own buttons, lights up one part at a time (elements marked data-tour="…"),
-// explains it, and brings the user back Home. English and Urdu.
-// Shown once on a device's first visit; replayed from Settings → App Tour.
+// ─── SCREEN TIPS (APP TOUR) ───────────────────────────────────────────────────
+// Each screen has its own short tour of just its features. It plays the first
+// time the user lands on that screen (remembered per screen on this device),
+// lighting up one part at a time (elements marked data-tour="…").
+// Settings → App Tour clears the memory, so every screen shows its tips again.
+// The test link takes ?tour=0 (no tips) or ?tour=1 (start fresh).
 
-const TOUR_SEEN_KEY = "zm_tour_seen_v1";
+const SEEN_KEY = "zm_screen_tips_v1";
 
-export function tourSeen(): boolean {
+export type TourScreen = "home" | "profile" | "viewall" | "account" | "product" | "rates" | "trends" | "news";
+
+function readSeen(): Set<string> {
   try {
-    return window.localStorage.getItem(TOUR_SEEN_KEY) === "1";
+    return new Set(JSON.parse(window.localStorage.getItem(SEEN_KEY) || "[]"));
   } catch {
-    return false;
+    return new Set();
   }
 }
-function markTourSeen() {
+function writeSeen(s: Set<string>) {
   try {
-    window.localStorage.setItem(TOUR_SEEN_KEY, "1");
+    window.localStorage.setItem(SEEN_KEY, JSON.stringify([...s]));
   } catch {
-    /* private mode: the tour may show again next visit */
+    /* private mode: tips may show again next visit */
   }
 }
-
-/** What the tour may ask the app to do (CustomerFaceApp supplies these). */
-export type TourControls = {
-  /** Back to a clean Home: closes sheets, pages and other tabs. */
-  home: () => void;
-  openProfile: () => void;
-  openNews: () => void;
-  openAccount: () => void;
-};
-
-// Screens the tour can stand on, each reached from its parent.
-type ScreenKey = "home" | "profile" | "viewall" | "product" | "rates" | "rates-best" | "trends" | "news" | "account";
-const PARENT: Record<ScreenKey, ScreenKey | null> = {
-  home: null,
-  profile: "home",
-  viewall: "home",
-  product: "home",
-  rates: "product",
-  "rates-best": "rates",
-  trends: "rates",
-  news: "home",
-  account: "home",
-};
-const pathTo = (s: ScreenKey): ScreenKey[] => {
-  const out: ScreenKey[] = [];
-  for (let k: ScreenKey | null = s; k; k = PARENT[k]) out.unshift(k);
-  return out;
-};
+// Kept in memory too, so tips don't repeat in a session where storage is blocked.
+let seenCache: Set<string> | null = null;
+const seen = () => (seenCache ??= readSeen());
+function markSeen(screen: TourScreen) {
+  seen().add(screen);
+  writeSeen(seen());
+}
+/** Settings → App Tour: every screen shows its tips again. */
+export function resetScreenTips() {
+  seenCache = new Set();
+  writeSeen(seenCache);
+}
 
 type Txt = { en: string; ur: string };
 type Step = {
-  screen: ScreenKey;
   /** data-tour value (or a CSS selector starting with "[") to light up; none = a centred card. */
   target?: string;
-  art?: "welcome" | "done";
+  art?: boolean;
   title: Txt;
   body: Txt;
 };
 
 const FIRST_CARD = '[data-tour="bp-cards"] > :first-child';
 
-const STEPS: Step[] = [
-  {
-    screen: "home",
-    art: "welcome",
-    title: { en: "Welcome to Zarai Mandi", ur: "زرعی منڈی میں خوش آمدید" },
-    body: {
-      en: "Today's mandi rates from all over Pakistan, in one app. We'll walk you through every screen and bring you back here.",
-      ur: "پورے پاکستان کی منڈیوں کے آج کے ریٹس، ایک ہی ایپ میں۔ ہم آپ کو ہر اسکرین دکھائیں گے اور پھر یہیں واپس لے آئیں گے۔",
-    },
-  },
-  // ── Home ──
-  {
-    screen: "home",
-    target: "account",
-    title: { en: "Your account", ur: "آپ کا اکاؤنٹ" },
-    body: {
-      en: "Your photo opens your account: profile, subscriptions, language, voice and help.",
-      ur: "آپ کی تصویر اکاؤنٹ کھولتی ہے: پروفائل، سبسکرپشنز، زبان، آواز اور مدد۔",
-    },
-  },
-  {
-    screen: "home",
-    target: "bell",
-    title: { en: "Notifications", ur: "نوٹیفکیشنز" },
-    body: { en: "Rate alerts and mandi news arrive here.", ur: "ریٹ الرٹس اور منڈی کی خبریں یہاں آتی ہیں۔" },
-  },
-  {
-    screen: "home",
-    target: "search",
-    title: { en: "Search anything", ur: "کچھ بھی تلاش کریں" },
-    body: {
-      en: "Type a product or item in English or Urdu, like Wheat, Kinnow or Urea, and go straight to its rates.",
-      ur: "انگریزی یا اردو میں کسی چیز کا نام لکھیں، جیسے گندم، کینو یا یوریا، اور سیدھا اس کے ریٹس پر جائیں۔",
-    },
-  },
-  {
-    screen: "home",
-    target: "profile",
-    title: { en: "Complete your profile", ur: "اپنی پروفائل مکمل کریں" },
-    body: {
-      en: "This button sets up your subscription. Let's open it.",
-      ur: "اس بٹن سے آپ اپنی سبسکرپشن بناتے ہیں۔ آئیے اسے کھولیں۔",
-    },
-  },
-  {
-    screen: "profile",
-    target: "profile-sheet",
-    title: { en: "3 easy steps", ur: "3 آسان مراحل" },
-    body: {
-      en: "1. Pick the products you trade.  2. Choose how many months.  3. Pay by JazzCash, Easypaisa, card or bank. Every product is PKR 2,000 a month.",
-      ur: "1۔ اپنی مصنوعات چنیں۔  2۔ مہینے چنیں۔  3۔ جاز کیش، ایزی پیسہ، کارڈ یا بینک سے ادائیگی کریں۔ ہر پروڈکٹ 2,000 روپے ماہانہ۔",
-    },
-  },
-  {
-    screen: "home",
-    target: "products",
-    title: { en: "Your products", ur: "آپ کی مصنوعات" },
-    body: {
-      en: "Each circle is a product. Open ones show their rates; ones with a lock need a subscription.",
-      ur: "ہر دائرہ ایک پروڈکٹ ہے۔ کھلی مصنوعات کے ریٹس نظر آتے ہیں، تالے والی کے لیے سبسکرپشن چاہیے۔",
-    },
-  },
-  {
-    screen: "home",
-    target: "viewall",
-    title: { en: "View All", ur: "سب دیکھیں" },
-    body: { en: "This opens every product. Let's look.", ur: "یہاں تمام مصنوعات ہیں۔ آئیے دیکھیں۔" },
-  },
-  {
-    screen: "viewall",
-    target: "viewall-group",
-    title: { en: "All products, in groups", ur: "تمام مصنوعات، گروپس میں" },
-    body: {
-      en: "Grains, Edible Oils, Fruits, Vegetables, Fertilizer, Dry Fruits, Herbs and Kiryana. Tap 'See more' to open a group, and any product to see it.",
-      ur: "اناج، خوردنی تیل، پھل، سبزیاں، کھاد، خشک میوہ، جڑی بوٹیاں اور کریانہ۔ گروپ کھولنے کے لیے 'مزید دیکھیں' اور کسی بھی پروڈکٹ پر ٹیپ کریں۔",
-    },
-  },
-  // ── A product ──
-  {
-    screen: "product",
-    target: FIRST_CARD,
-    title: { en: "Inside a product", ur: "پروڈکٹ کے اندر" },
-    body: {
-      en: "Here is Wheat. Each card is one item: today's average min and max rate, total arrival, and how many mandis reported.",
-      ur: "یہ گندم ہے۔ ہر کارڈ ایک چیز ہے: آج کا اوسط کم اور زیادہ ریٹ، کل آمد، اور کتنی منڈیوں نے ریٹ دیا۔",
-    },
-  },
-  {
-    screen: "product",
-    target: "bp-filters",
-    title: { en: "Filters", ur: "فلٹر" },
-    body: {
-      en: "Show only one rate type (mandi, wholesale, retail…) or one quality, crop or company.",
-      ur: "صرف ایک قسم کا ریٹ (منڈی، ہول سیل، ریٹیل…) یا ایک کوالٹی، فصل یا کمپنی دیکھیں۔",
-    },
-  },
-  {
-    screen: "product",
-    target: "bp-date",
-    title: { en: "Pick a date", ur: "تاریخ چنیں" },
-    body: {
-      en: "Rates are for today. Tap the date to see an earlier day.",
-      ur: "ریٹس آج کے ہیں۔ پچھلے دن کے ریٹ دیکھنے کے لیے تاریخ پر ٹیپ کریں۔",
-    },
-  },
-  // ── Rates ──
-  {
-    screen: "rates",
-    target: "rates-hero",
-    title: { en: "The rate screen", ur: "ریٹ کی اسکرین" },
-    body: {
-      en: "Tapping a card opens this: the average rate, how much it moved since the last day, the last month's line, and min, max and arrival.",
-      ur: "کارڈ پر ٹیپ کرنے سے یہ کھلتی ہے: اوسط ریٹ، پچھلے دن سے فرق، پچھلے مہینے کی لکیر، اور کم، زیادہ اور آمد۔",
-    },
-  },
-  {
-    screen: "rates",
-    target: "rates-filters",
-    title: { en: "Location, day and rate", ur: "مقام، دن اور ریٹ" },
-    body: {
-      en: "Choose a province, district or one mandi, a day, and the rate type. Every number on the screen follows your choice.",
-      ur: "صوبہ، ضلع یا کوئی ایک منڈی، دن اور ریٹ کی قسم چنیں۔ اسکرین کا ہر نمبر آپ کے انتخاب کے مطابق بدلتا ہے۔",
-    },
-  },
-  {
-    screen: "rates-best",
-    target: "rates-hero",
-    title: { en: "Best mandis and map", ur: "بہترین منڈیاں اور نقشہ" },
-    body: {
-      en: "Swipe the card to see where the rate is highest today, and every mandi on the map of Pakistan.",
-      ur: "کارڈ کو سوائپ کریں: آج کہاں ریٹ سب سے زیادہ ہے، اور پاکستان کے نقشے پر ہر منڈی۔",
-    },
-  },
-  {
-    screen: "rates",
-    target: "rates-mandis",
-    title: { en: "Every mandi's rate", ur: "ہر منڈی کا ریٹ" },
-    body: {
-      en: "A row for each mandi with its rate and change. Sort the columns, switch to cards, or tap a mandi for its full detail.",
-      ur: "ہر منڈی کی قطار، ریٹ اور فرق کے ساتھ۔ کالم ترتیب دیں، کارڈز پر جائیں، یا مکمل تفصیل کے لیے منڈی پر ٹیپ کریں۔",
-    },
-  },
-  {
-    screen: "rates",
-    target: "rates-star",
-    title: { en: "Save to favourites", ur: "پسندیدہ میں محفوظ کریں" },
-    body: {
-      en: "Tap the star and this item is kept on your Home screen.",
-      ur: "ستارے پر ٹیپ کریں اور یہ چیز آپ کی ہوم اسکرین پر رہے گی۔",
-    },
-  },
-  {
-    screen: "trends",
-    target: "rates-trends",
-    title: { en: "Trends", ur: "رجحانات" },
-    body: {
-      en: "The Trends tab shows how the rate moved day by day, and compares every rate type.",
-      ur: "رجحانات میں دیکھیں کہ ریٹ دن بہ دن کیسے بدلا، اور ہر قسم کے ریٹ کا موازنہ۔",
-    },
-  },
-  // ── Back Home ──
-  {
-    screen: "home",
-    target: "favorites",
-    title: { en: "Favourites", ur: "پسندیدہ" },
-    body: {
-      en: "Back on Home: items you star appear here, one tap from today's rate.",
-      ur: "واپس ہوم پر: جن چیزوں پر آپ ستارہ لگائیں وہ یہاں آتی ہیں، آج کا ریٹ ایک ٹیپ پر۔",
-    },
-  },
-  {
-    screen: "home",
-    target: "nav-news",
-    title: { en: "Entertainment", ur: "تفریح" },
-    body: { en: "This tab has short videos. Let's open it.", ur: "اس حصے میں مختصر ویڈیوز ہیں۔ آئیے کھولیں۔" },
-  },
-  {
-    screen: "news",
-    target: "reels-tabs",
-    title: { en: "Videos", ur: "ویڈیوز" },
-    body: {
-      en: "Farming tips, market news and harvest videos. Pick a category up here and swipe up for the next video.",
-      ur: "کاشتکاری کے مشورے، منڈی کی خبریں اور کٹائی کی ویڈیوز۔ اوپر سے قسم چنیں اور اگلی ویڈیو کے لیے اوپر سوائپ کریں۔",
-    },
-  },
-  {
-    screen: "home",
-    target: "nav-settings",
-    title: { en: "Settings", ur: "ترتیبات" },
-    body: { en: "Your account lives here. Let's open it.", ur: "آپ کا اکاؤنٹ یہاں ہے۔ آئیے کھولیں۔" },
-  },
-  {
-    screen: "account",
-    target: "acc-profile",
-    title: { en: "Your profile", ur: "آپ کی پروفائل" },
-    body: { en: "Tap to change your name, number or area.", ur: "نام، نمبر یا علاقہ بدلنے کے لیے ٹیپ کریں۔" },
-  },
-  {
-    screen: "account",
-    target: "acc-account",
-    title: { en: "Subscriptions", ur: "سبسکرپشنز" },
-    body: {
-      en: "See and renew your products, or register as a representative for your mandi.",
-      ur: "اپنی مصنوعات دیکھیں اور تجدید کریں، یا اپنی منڈی کے نمائندہ بنیں۔",
-    },
-  },
-  {
-    screen: "account",
-    target: "acc-prefs",
-    title: { en: "Language and voice", ur: "زبان اور آواز" },
-    body: {
-      en: "Switch between English and Urdu, and turn on voice so the app reads rates aloud.",
-      ur: "انگریزی اور اردو میں بدلیں، اور آواز آن کریں تاکہ ایپ ریٹس پڑھ کر سنائے۔",
-    },
-  },
-  {
-    screen: "account",
-    target: "acc-support",
-    title: { en: "Help, and this tour", ur: "مدد، اور یہ تعارف" },
-    body: {
-      en: "Contact us on WhatsApp or the helpline, and replay this tour from App Tour.",
-      ur: "واٹس ایپ یا ہیلپ لائن پر رابطہ کریں، اور 'ایپ کا تعارف' سے یہ تعارف دوبارہ دیکھیں۔",
-    },
-  },
-  {
-    screen: "home",
-    art: "done",
-    title: { en: "You're all set!", ur: "آپ تیار ہیں!" },
-    body: {
-      en: "That's the whole app. To see this tour again, go to Settings → App Tour.",
-      ur: "یہ تھی پوری ایپ۔ یہ تعارف دوبارہ دیکھنے کے لیے ترتیبات ← ایپ کا تعارف پر جائیں۔",
-    },
-  },
+// Which screen is on top, checked in this order (sheets and pages sit over Home).
+const DETECT: [TourScreen, string][] = [
+  ["profile", "profile-sheet"],
+  ["account", "acc-profile"],
+  ["viewall", "viewall-group"],
+  ["trends", "rates-trends"],
+  ["rates", "rates-hero"],
+  ["product", FIRST_CARD],
+  ["news", "reels-tabs"],
+  ["home", "products"],
 ];
+
+const TIPS: Record<TourScreen, Step[]> = {
+  home: [
+    {
+      art: true,
+      title: { en: "Welcome to Zarai Mandi", ur: "زرعی منڈی میں خوش آمدید" },
+      body: {
+        en: "Today's mandi rates from all over Pakistan, in one app. Here's a quick look at this screen.",
+        ur: "پورے پاکستان کی منڈیوں کے آج کے ریٹس، ایک ہی ایپ میں۔ آئیے اس اسکرین پر ایک نظر ڈالیں۔",
+      },
+    },
+    {
+      target: "account",
+      title: { en: "Account and profile", ur: "اکاؤنٹ اور پروفائل" },
+      body: {
+        en: "Tap your photo for your profile, subscriptions, language, voice and help.",
+        ur: "اپنی تصویر پر ٹیپ کریں: پروفائل، سبسکرپشنز، زبان، آواز اور مدد۔",
+      },
+    },
+    {
+      target: "bell",
+      title: { en: "Notifications", ur: "نوٹیفکیشنز" },
+      body: { en: "Rate alerts and mandi news arrive here.", ur: "ریٹ الرٹس اور منڈی کی خبریں یہاں آتی ہیں۔" },
+    },
+    {
+      target: "search",
+      title: { en: "Search", ur: "تلاش" },
+      body: {
+        en: "Type a product or item in English or Urdu, like Wheat, Kinnow or Urea, and go straight to its rates.",
+        ur: "انگریزی یا اردو میں کسی چیز کا نام لکھیں، جیسے گندم، کینو یا یوریا، اور سیدھا اس کے ریٹس پر جائیں۔",
+      },
+    },
+    {
+      target: "profile",
+      title: { en: "Complete your profile", ur: "اپنی پروفائل مکمل کریں" },
+      body: {
+        en: "Choose your products and plan here. Every product is PKR 2,000 a month.",
+        ur: "یہاں اپنی مصنوعات اور پلان چنیں۔ ہر پروڈکٹ 2,000 روپے ماہانہ ہے۔",
+      },
+    },
+    {
+      target: "products",
+      title: { en: "Your products", ur: "آپ کی مصنوعات" },
+      body: {
+        en: "Each circle is a product. Tap one to see its rates; ones with a lock need a subscription.",
+        ur: "ہر دائرہ ایک پروڈکٹ ہے۔ ریٹس دیکھنے کے لیے ٹیپ کریں؛ تالے والی کے لیے سبسکرپشن چاہیے۔",
+      },
+    },
+    {
+      target: "viewall",
+      title: { en: "View All", ur: "سب دیکھیں" },
+      body: { en: "Every product, in groups.", ur: "تمام مصنوعات، گروپس میں۔" },
+    },
+    {
+      target: "favorites",
+      title: { en: "Favourites", ur: "پسندیدہ" },
+      body: {
+        en: "Items you star on a rate screen appear here, one tap from today's rate.",
+        ur: "ریٹ اسکرین پر جن چیزوں پر آپ ستارہ لگائیں وہ یہاں آتی ہیں، آج کا ریٹ ایک ٹیپ پر۔",
+      },
+    },
+    {
+      target: "nav-news",
+      title: { en: "Entertainment", ur: "تفریح" },
+      body: { en: "Short videos: farming tips and market news.", ur: "مختصر ویڈیوز: کاشتکاری کے مشورے اور منڈی کی خبریں۔" },
+    },
+    {
+      target: "nav-settings",
+      title: { en: "Settings", ur: "ترتیبات" },
+      body: {
+        en: "Your account. Each screen shows you its own tips the first time; replay them from here with App Tour.",
+        ur: "آپ کا اکاؤنٹ۔ ہر اسکرین پہلی بار اپنی رہنمائی خود دکھائے گی؛ 'ایپ کا تعارف' سے یہ دوبارہ دیکھیں۔",
+      },
+    },
+  ],
+  profile: [
+    {
+      target: "profile-sheet",
+      title: { en: "3 easy steps", ur: "3 آسان مراحل" },
+      body: {
+        en: "1. Pick the products you trade.  2. Choose how many months.  3. Pay by JazzCash, Easypaisa, card or bank. Every product is PKR 2,000 a month.",
+        ur: "1۔ اپنی مصنوعات چنیں۔  2۔ مہینے چنیں۔  3۔ جاز کیش، ایزی پیسہ، کارڈ یا بینک سے ادائیگی کریں۔ ہر پروڈکٹ 2,000 روپے ماہانہ۔",
+      },
+    },
+  ],
+  viewall: [
+    {
+      target: "viewall-group",
+      title: { en: "All products, in groups", ur: "تمام مصنوعات، گروپس میں" },
+      body: {
+        en: "Grains, Edible Oils, Fruits, Vegetables, Fertilizer, Dry Fruits, Herbs and Kiryana. Tap 'See more' to open a group, and any product to see it.",
+        ur: "اناج، خوردنی تیل، پھل، سبزیاں، کھاد، خشک میوہ، جڑی بوٹیاں اور کریانہ۔ گروپ کھولنے کے لیے 'مزید دیکھیں' اور کسی بھی پروڈکٹ پر ٹیپ کریں۔",
+      },
+    },
+  ],
+  account: [
+    {
+      target: "acc-profile",
+      title: { en: "Your profile", ur: "آپ کی پروفائل" },
+      body: { en: "Tap to change your name, number or area.", ur: "نام، نمبر یا علاقہ بدلنے کے لیے ٹیپ کریں۔" },
+    },
+    {
+      target: "acc-account",
+      title: { en: "Subscriptions", ur: "سبسکرپشنز" },
+      body: {
+        en: "See and renew your products, or register as a representative for your mandi.",
+        ur: "اپنی مصنوعات دیکھیں اور تجدید کریں، یا اپنی منڈی کے نمائندہ بنیں۔",
+      },
+    },
+    {
+      target: "acc-prefs",
+      title: { en: "Language and voice", ur: "زبان اور آواز" },
+      body: {
+        en: "Switch between English and Urdu, and turn on voice so the app reads rates aloud.",
+        ur: "انگریزی اور اردو میں بدلیں، اور آواز آن کریں تاکہ ایپ ریٹس پڑھ کر سنائے۔",
+      },
+    },
+    {
+      target: "acc-support",
+      title: { en: "Help, and the App Tour", ur: "مدد، اور ایپ کا تعارف" },
+      body: {
+        en: "Contact us on WhatsApp or the helpline. App Tour shows every screen's tips again.",
+        ur: "واٹس ایپ یا ہیلپ لائن پر رابطہ کریں۔ 'ایپ کا تعارف' ہر اسکرین کی رہنمائی دوبارہ دکھاتا ہے۔",
+      },
+    },
+  ],
+  product: [
+    {
+      target: FIRST_CARD,
+      title: { en: "One card per item", ur: "ہر چیز کا ایک کارڈ" },
+      body: {
+        en: "Each card shows today's average min and max rate, total arrival, and how many mandis reported. Tap a card for every mandi's rate.",
+        ur: "ہر کارڈ میں آج کا اوسط کم اور زیادہ ریٹ، کل آمد، اور کتنی منڈیوں نے ریٹ دیا۔ ہر منڈی کا ریٹ دیکھنے کے لیے کارڈ پر ٹیپ کریں۔",
+      },
+    },
+    {
+      target: "bp-filters",
+      title: { en: "Filters", ur: "فلٹر" },
+      body: {
+        en: "Show only one rate type (mandi, wholesale, retail…) or one quality, crop or company.",
+        ur: "صرف ایک قسم کا ریٹ (منڈی، ہول سیل، ریٹیل…) یا ایک کوالٹی، فصل یا کمپنی دیکھیں۔",
+      },
+    },
+    {
+      target: "bp-date",
+      title: { en: "Pick a date", ur: "تاریخ چنیں" },
+      body: {
+        en: "Rates are for today. Tap the date to see an earlier day.",
+        ur: "ریٹس آج کے ہیں۔ پچھلے دن کے ریٹ دیکھنے کے لیے تاریخ پر ٹیپ کریں۔",
+      },
+    },
+  ],
+  rates: [
+    {
+      target: "rates-hero",
+      title: { en: "Today's rate", ur: "آج کا ریٹ" },
+      body: {
+        en: "The average rate, how much it moved since the last day, the last month's line, and min, max and arrival.",
+        ur: "اوسط ریٹ، پچھلے دن سے فرق، پچھلے مہینے کی لکیر، اور کم، زیادہ اور آمد۔",
+      },
+    },
+    {
+      target: "rates-next",
+      title: { en: "Best mandis and map", ur: "بہترین منڈیاں اور نقشہ" },
+      body: {
+        en: "Swipe the card to see where the rate is highest today, and every mandi on the map.",
+        ur: "کارڈ کو سوائپ کریں: آج کہاں ریٹ سب سے زیادہ ہے، اور نقشے پر ہر منڈی۔",
+      },
+    },
+    {
+      target: "rates-filters",
+      title: { en: "Location, day and rate", ur: "مقام، دن اور ریٹ" },
+      body: {
+        en: "Choose a province, district or one mandi, a day, and the rate type. Every number on the screen follows your choice.",
+        ur: "صوبہ، ضلع یا کوئی ایک منڈی، دن اور ریٹ کی قسم چنیں۔ اسکرین کا ہر نمبر آپ کے انتخاب کے مطابق بدلتا ہے۔",
+      },
+    },
+    {
+      target: "rates-mandis",
+      title: { en: "Every mandi's rate", ur: "ہر منڈی کا ریٹ" },
+      body: {
+        en: "A row for each mandi with its rate and change. Sort the columns, switch to cards, or tap a mandi for its detail.",
+        ur: "ہر منڈی کی قطار، ریٹ اور فرق کے ساتھ۔ کالم ترتیب دیں، کارڈز پر جائیں، یا تفصیل کے لیے منڈی پر ٹیپ کریں۔",
+      },
+    },
+    {
+      target: "rates-star",
+      title: { en: "Save to favourites", ur: "پسندیدہ میں محفوظ کریں" },
+      body: {
+        en: "Tap the star and this item is kept on your Home screen.",
+        ur: "ستارے پر ٹیپ کریں اور یہ چیز آپ کی ہوم اسکرین پر رہے گی۔",
+      },
+    },
+    {
+      target: "rates-tabs",
+      title: { en: "Trends", ur: "رجحانات" },
+      body: {
+        en: "Open Trends to see how the rate moved over time.",
+        ur: "وقت کے ساتھ ریٹ کیسے بدلا، یہ دیکھنے کے لیے رجحانات کھولیں۔",
+      },
+    },
+  ],
+  trends: [
+    {
+      target: "rates-trends",
+      title: { en: "Trends", ur: "رجحانات" },
+      body: {
+        en: "Pick a period (1 day to 1 year) to see the rate or arrivals over time, and compare every rate type below.",
+        ur: "مدت چنیں (1 دن سے 1 سال) اور وقت کے ساتھ ریٹ یا آمد دیکھیں، اور نیچے ہر قسم کے ریٹ کا موازنہ کریں۔",
+      },
+    },
+  ],
+  news: [
+    {
+      target: "reels-tabs",
+      title: { en: "Videos", ur: "ویڈیوز" },
+      body: {
+        en: "Farming tips, market news and harvest videos. Pick a category up here and swipe up for the next video.",
+        ur: "کاشتکاری کے مشورے، منڈی کی خبریں اور کٹائی کی ویڈیوز۔ اوپر سے قسم چنیں اور اگلی ویڈیو کے لیے اوپر سوائپ کریں۔",
+      },
+    },
+  ],
+};
 
 const C = {
   deep: "#064D40",
@@ -309,7 +293,6 @@ const C = {
   mint: "#E8F5EF",
   ink: "#183B34",
   muted: "#52635F",
-  gold: "#F5B82E",
 };
 
 const sel = (t: string) => (t.startsWith("[") ? t : `[data-tour="${t}"]`);
@@ -320,92 +303,72 @@ function visibleEl(t: string): HTMLElement | null {
   return r.width > 0 && r.height > 0 ? el : null;
 }
 const sleep = (ms: number) => new Promise((r) => window.setTimeout(r, ms));
-async function waitFor(t: string, ms = 6000): Promise<HTMLElement | null> {
-  const end = Date.now() + ms;
-  for (;;) {
-    const el = visibleEl(t);
-    if (el || Date.now() > end) return el;
-    await sleep(100);
-  }
+function topScreen(): TourScreen | null {
+  for (const [s, t] of DETECT) if (visibleEl(t)) return s;
+  return null;
 }
-async function tap(t: string, ms?: number): Promise<boolean> {
-  const el = await waitFor(t, ms);
-  el?.click();
-  return !!el;
+
+// ─── HOST: watches which screen is up and starts its tips once ───────────────
+
+export function ScreenTips({ enabled }: { enabled: boolean }) {
+  const [screen, setScreen] = useState<TourScreen | null>(null);
+  const openRef = useRef(false);
+  openRef.current = !!screen;
+
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("tour");
+    if (q === "1") resetScreenTips();
+  }, []);
+
+  useEffect(() => {
+    if (!enabled || new URLSearchParams(window.location.search).get("tour") === "0") return;
+    let last: TourScreen | null = null;
+    let since = 0;
+    const id = window.setInterval(() => {
+      if (openRef.current) return;
+      const s = topScreen();
+      if (s !== last) {
+        last = s;
+        since = Date.now();
+        return;
+      }
+      // Let the screen settle (data loaded, animations done) before starting.
+      if (s && !seen().has(s) && Date.now() - since > 900) setScreen(s);
+    }, 250);
+    return () => window.clearInterval(id);
+  }, [enabled]);
+
+  if (!screen) return null;
+  return (
+    <TipsOverlay
+      key={screen}
+      steps={TIPS[screen]}
+      onClose={() => {
+        markSeen(screen);
+        setScreen(null);
+      }}
+    />
+  );
 }
 
 type Box = { x: number; y: number; w: number; h: number };
 
-export function AppTour({ controls, onClose }: { controls: TourControls; onClose: () => void }) {
+function TipsOverlay({ steps: all, onClose }: { steps: Step[]; onClose: () => void }) {
   const { lang, setLang } = useLang();
   const isUr = lang === "ur";
   const L = (t: Txt) => (isUr ? t.ur : t.en);
   const font = isUr ? URDU_FONT : "'Inter', 'Poppins', sans-serif";
 
+  // Only the parts this screen has right now (e.g. no profile chip once it's done).
+  const [steps] = useState(() => all.filter((s) => !s.target || visibleEl(s.target)));
   const rootRef = useRef<HTMLDivElement>(null);
   const [i, setI] = useState(0);
-  const [shown, setShown] = useState(-1); // the step whose card is up (-1 while moving)
+  const [shown, setShown] = useState(-1);
   const [box, setBox] = useState<Box | null>(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
-  const dirRef = useRef(1);
-  const screenRef = useRef<ScreenKey>("home");
   const runRef = useRef(0);
-  const ctl = useRef(controls);
-  ctl.current = controls;
 
-  // Move the app to a screen by tapping its own buttons.
-  const goScreen = useCallback(async (to: ScreenKey, run: number): Promise<boolean> => {
-    const from = screenRef.current;
-    if (from === to) return true;
-    const want = pathTo(to);
-    const have = pathTo(from);
-    let start = 1;
-    if (have.every((k, n) => want[n] === k)) {
-      start = have.length; // carry on down from here
-    } else {
-      ctl.current.home();
-      screenRef.current = "home";
-      await sleep(250);
-      if (!(await waitFor("products"))) return false;
-    }
-    for (const k of want.slice(start)) {
-      if (run !== runRef.current) return false;
-      let ok = false;
-      if (k === "profile") {
-        ctl.current.openProfile();
-        ok = !!(await waitFor("profile-sheet"));
-      } else if (k === "viewall") {
-        ok = (await tap("viewall")) && !!(await waitFor("viewall-group"));
-      } else if (k === "product") {
-        const el =
-          visibleEl('[data-tour="products"] [data-home-product="Wheat"]') ||
-          visibleEl('[data-tour="products"] [data-home-product]');
-        el?.click();
-        ok = !!el && !!(await waitFor(FIRST_CARD, 10000));
-      } else if (k === "rates") {
-        ok = (await tap(FIRST_CARD)) && !!(await waitFor("rates-hero", 10000));
-        if (ok) await sleep(600);
-      } else if (k === "rates-best") {
-        ok = await tap("rates-next");
-        await sleep(700);
-      } else if (k === "trends") {
-        const tabs = document.querySelectorAll<HTMLElement>('[data-tour="rates-tabs"] [role="tab"]');
-        tabs[1]?.click();
-        ok = !!tabs[1] && !!(await waitFor("rates-trends", 8000));
-      } else if (k === "news") {
-        ctl.current.openNews();
-        ok = !!(await waitFor("reels-tabs"));
-      } else if (k === "account") {
-        ctl.current.openAccount();
-        ok = !!(await waitFor("acc-profile"));
-      }
-      if (!ok) return false;
-      screenRef.current = k;
-    }
-    return true;
-  }, []);
-
-  // Measure the lit element relative to the tour (correct under CSS zoom too).
+  // Measure the lit element relative to the overlay (correct under CSS zoom too).
   const measure = useCallback(() => {
     const root = rootRef.current;
     if (!root) return;
@@ -413,8 +376,8 @@ export function AppTour({ controls, onClose }: { controls: TourControls; onClose
     const scale = root.offsetWidth ? rr.width / root.offsetWidth : 1;
     const h = root.offsetHeight;
     setSize({ w: root.offsetWidth, h });
-    const s = STEPS[i];
-    const el = s.target ? visibleEl(s.target) : null;
+    const s = steps[i];
+    const el = s?.target ? visibleEl(s.target) : null;
     if (!el) {
       setBox(null);
       return;
@@ -429,73 +392,57 @@ export function AppTour({ controls, onClose }: { controls: TourControls; onClose
     }
     bh = Math.min(bh, Math.max(60, h * 0.42));
     setBox({ x: (r.left - rr.left) / scale, y, w: r.width / scale, h: bh });
-  }, [i]);
+  }, [i, steps]);
 
-  // Each step: move the app, wait for the part, scroll it into view, light it up.
   useLayoutEffect(() => {
     const run = ++runRef.current;
-    const s = STEPS[i];
+    const s = steps[i];
+    if (!s) return;
     setShown(-1);
     (async () => {
-      const ok = await goScreen(s.screen, run);
-      if (run !== runRef.current) return;
-      const el = ok && s.target ? await waitFor(s.target, 3000) : null;
-      if (run !== runRef.current) return;
-      if (!ok || (s.target && !el)) {
-        // Not available (e.g. the profile chip once the profile is done): skip it.
-        const next = i + dirRef.current;
-        if (next >= 0 && next < STEPS.length) setI(next);
-        else setShown(i);
-        return;
-      }
+      const el = s.target ? visibleEl(s.target) : null;
       if (el) {
         el.scrollIntoView({ block: el.getBoundingClientRect().height > 300 ? "start" : "center", inline: "nearest" });
-        await sleep(350);
+        await sleep(300);
       }
       if (run !== runRef.current) return;
       measure();
       setShown(i);
     })();
-  }, [i, goScreen, measure]);
+  }, [i, steps, measure]);
 
   useEffect(() => {
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
   }, [measure]);
 
-  useEffect(
-    () => () => {
-      runRef.current++;
-      stopSpeaking();
-    },
-    [],
-  );
+  useEffect(() => {
+    if (steps.length === 0) onClose();
+    return () => stopSpeaking();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const finish = () => {
     runRef.current++;
-    markTourSeen();
     stopSpeaking();
-    ctl.current.home();
     onClose();
   };
   const go = (d: number) => {
     stopSpeaking();
-    dirRef.current = d;
     const next = i + d;
-    if (next >= STEPS.length) return finish();
+    if (next >= steps.length) return finish();
     if (next >= 0) setI(next);
   };
 
-  const step = STEPS[i];
+  const step = steps[i];
+  if (!step) return null;
   const ready = shown === i;
-  const isFirst = i === 0;
-  const isLast = i === STEPS.length - 1;
+  const isLast = i === steps.length - 1;
   const litBox = ready ? box : null;
 
   // Card placement: under the lit element if it fits, else above, else at the bottom.
   const PAD = 6;
   const GAP = 14;
-  const NEED = 230;
+  const NEED = 210;
   let cardStyle: React.CSSProperties = { left: 16, right: 16, top: "50%", transform: "translateY(-50%)" };
   let arrow: { side: "top" | "bottom"; x: number } | null = null;
   if (litBox && size.h) {
@@ -514,7 +461,7 @@ export function AppTour({ controls, onClose }: { controls: TourControls; onClose
   }
 
   const btn = (primary: boolean): React.CSSProperties => ({
-    height: 42,
+    height: 40,
     padding: "0 18px",
     borderRadius: 999,
     fontWeight: 700,
@@ -532,12 +479,11 @@ export function AppTour({ controls, onClose }: { controls: TourControls; onClose
       className="zm-tour"
       role="dialog"
       aria-modal="true"
-      aria-label={isUr ? "ایپ کا تعارف" : "App tour"}
+      aria-label={isUr ? "رہنمائی" : "Tips"}
       style={{ position: "absolute", inset: 0, zIndex: 500, fontFamily: font }}
     >
       <style>{TOUR_CSS}</style>
 
-      {/* Dim layer with a hole over the lit element */}
       {litBox ? (
         <div
           className="zm-tour-spot"
@@ -550,24 +496,9 @@ export function AppTour({ controls, onClose }: { controls: TourControls; onClose
           }}
         />
       ) : (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: ready ? "rgba(3, 30, 24, 0.78)" : "rgba(3, 30, 24, 0.3)",
-            transition: "background .3s",
-          }}
-        />
+        <div style={{ position: "absolute", inset: 0, background: "rgba(3, 30, 24, 0.78)" }} />
       )}
 
-      {/* Moving between screens */}
-      {!ready && (
-        <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}>
-          <span className="zm-tour-spinner" />
-        </div>
-      )}
-
-      {/* The card */}
       {ready && (
         <div key={i} className="zm-tour-card" dir={isUr ? "rtl" : "ltr"} style={{ position: "absolute", zIndex: 2, ...cardStyle }}>
           {arrow && (
@@ -585,23 +516,43 @@ export function AppTour({ controls, onClose }: { controls: TourControls; onClose
             />
           )}
           <div style={{ position: "relative", background: "#fff", borderRadius: 22, padding: "14px 16px 12px", boxShadow: "0 18px 50px rgba(0,0,0,0.35)" }}>
-            {step.art && <Art kind={step.art} isUr={isUr} />}
-
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-              <span
+            {step.art && (
+              <div
+                className="zm-tour-pop"
                 style={{
-                  fontSize: 11.5,
-                  fontWeight: 800,
-                  color: C.primary,
-                  background: C.mint,
-                  borderRadius: 999,
-                  padding: "3px 9px",
-                  fontFamily: "'Inter', sans-serif",
-                  direction: "ltr",
+                  height: 104,
+                  borderRadius: 16,
+                  marginBottom: 12,
+                  background: `linear-gradient(150deg, ${C.bright}, ${C.deep})`,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#fff",
                 }}
               >
-                {i + 1} / {STEPS.length}
-              </span>
+                <div style={{ fontSize: 40, lineHeight: 1 }}>🌾</div>
+                <div style={{ marginTop: 8, fontWeight: 800, fontSize: isUr ? 18 : 16 }}>{isUr ? "زرعی منڈی" : "Zarai Mandi"}</div>
+              </div>
+            )}
+
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+              {steps.length > 1 && (
+                <span
+                  style={{
+                    fontSize: 11.5,
+                    fontWeight: 800,
+                    color: C.primary,
+                    background: C.mint,
+                    borderRadius: 999,
+                    padding: "3px 9px",
+                    fontFamily: "'Inter', sans-serif",
+                    direction: "ltr",
+                  }}
+                >
+                  {i + 1} / {steps.length}
+                </span>
+              )}
               <div style={{ flex: 1 }} />
               <div style={{ display: "flex", background: C.mint, borderRadius: 999, padding: 2, direction: "ltr" }}>
                 {(["en", "ur"] as const).map((l) => (
@@ -645,75 +596,35 @@ export function AppTour({ controls, onClose }: { controls: TourControls; onClose
             <h2 style={{ fontSize: isUr ? 20 : 18.5, lineHeight: isUr ? 1.7 : 1.25, fontWeight: 800, color: C.ink, margin: 0 }}>{L(step.title)}</h2>
             <p style={{ fontSize: isUr ? 15 : 14, lineHeight: isUr ? 1.9 : 1.5, color: C.muted, margin: "3px 0 0" }}>{L(step.body)}</p>
 
-            {/* Progress */}
-            <div style={{ height: 5, borderRadius: 999, background: "#E3ECE8", margin: "12px 0 10px", overflow: "hidden", direction: "ltr" }}>
-              <div style={{ height: "100%", width: `${((i + 1) / STEPS.length) * 100}%`, background: C.bright, borderRadius: 999, transition: "width .35s" }} />
-            </div>
+            {steps.length > 1 && (
+              <div style={{ display: "flex", gap: 4, margin: "12px 0 0", direction: "ltr" }}>
+                {steps.map((_, k) => (
+                  <span key={k} style={{ flex: 1, height: 5, borderRadius: 999, background: k <= i ? C.bright : "#E3ECE8", transition: "background .3s" }} />
+                ))}
+              </div>
+            )}
 
-            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", alignItems: "center" }}>
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", alignItems: "center", marginTop: 10 }}>
               {!isLast && (
                 <button
                   onClick={finish}
-                  style={{ marginInlineEnd: "auto", height: 42, padding: "0 6px", background: "transparent", color: C.muted, fontWeight: 700, fontSize: isUr ? 14.5 : 13.5, fontFamily: font }}
+                  style={{ marginInlineEnd: "auto", height: 40, padding: "0 6px", background: "transparent", color: C.muted, fontWeight: 700, fontSize: isUr ? 14.5 : 13.5, fontFamily: font }}
                 >
                   {isUr ? "چھوڑیں" : "Skip"}
                 </button>
               )}
-              {!isFirst && !isLast && (
+              {i > 0 && (
                 <button onClick={() => go(-1)} style={btn(false)}>
                   {isUr ? "پیچھے" : "Back"}
                 </button>
               )}
-              <button onClick={() => go(1)} style={{ ...btn(true), flex: isLast ? 1 : undefined }}>
-                {isFirst ? (isUr ? "تعارف شروع کریں" : "Start the tour") : isLast ? (isUr ? "ایپ استعمال کریں" : "Start using the app") : isUr ? "اگلا" : "Next"}
+              <button onClick={() => go(1)} style={{ ...btn(true), flex: isLast && i === 0 ? 1 : undefined }}>
+                {isLast ? (isUr ? "سمجھ گیا" : "Got it") : isUr ? "اگلا" : "Next"}
               </button>
             </div>
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-function Art({ kind, isUr }: { kind: "welcome" | "done"; isUr: boolean }) {
-  const tx = (en: string, ur: string) => (isUr ? ur : en);
-  return (
-    <div
-      style={{
-        position: "relative",
-        height: 116,
-        borderRadius: 16,
-        marginBottom: 12,
-        overflow: "hidden",
-        background: `linear-gradient(150deg, ${C.bright}, ${C.deep})`,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      {kind === "done" &&
-        Array.from({ length: 14 }).map((_, k) => (
-          <span
-            key={k}
-            className="zm-tour-confetti"
-            style={{
-              left: `${6 + ((k * 37) % 88)}%`,
-              background: [C.gold, "#fff", "#9BE7C0", "#FFD6A5"][k % 4],
-              animationDelay: `${(k % 7) * 0.12}s`,
-            }}
-          />
-        ))}
-      <div className="zm-tour-pop" style={{ textAlign: "center", color: "#fff" }}>
-        <div style={{ fontSize: 44, lineHeight: 1 }}>{kind === "done" ? "🎉" : "🌾"}</div>
-        <div style={{ marginTop: 8, fontWeight: 800, fontSize: isUr ? 18 : 16, fontFamily: isUr ? URDU_FONT : "inherit" }}>
-          {kind === "done" ? tx("Tour complete", "تعارف مکمل") : tx("Zarai Mandi", "زرعی منڈی")}
-        </div>
-        {kind === "welcome" && (
-          <div style={{ marginTop: 2, fontSize: isUr ? 13 : 12, opacity: 0.85, fontFamily: isUr ? URDU_FONT : "inherit" }}>
-            {tx("A walk through every screen", "ہر اسکرین کا جائزہ")}
-          </div>
-        )}
-      </div>
     </div>
   );
 }
@@ -741,18 +652,7 @@ const TOUR_CSS = `
 .zm-tour-card[style*="translateY(-50%)"] { animation-name: zmTourInCenter; }
 @keyframes zmTourInCenter { from { opacity: 0; transform: translateY(calc(-50% + 10px)) scale(.97); } }
 .zm-tour-pop { animation: zmTourPop .45s cubic-bezier(.2,.9,.3,1.3) both; }
-@keyframes zmTourPop { from { opacity: 0; transform: scale(.8) translateY(6px); } }
-.zm-tour-spinner {
-  width: 34px; height: 34px; border-radius: 50%;
-  border: 3px solid rgba(255,255,255,.35); border-top-color: #fff;
-  animation: zmTourSpin .8s linear infinite;
-}
-@keyframes zmTourSpin { to { transform: rotate(360deg); } }
-.zm-tour-confetti {
-  position: absolute; top: -10px; width: 7px; height: 11px; border-radius: 2px;
-  animation: zmTourFall 1.6s ease-in infinite;
-}
-@keyframes zmTourFall { to { transform: translateY(140px) rotate(320deg); opacity: .2; } }
+@keyframes zmTourPop { from { opacity: 0; transform: scale(.9) translateY(6px); } }
 @media (prefers-reduced-motion: reduce) {
   .zm-tour *, .zm-tour-spot::after { animation: none !important; transition: none !important; }
 }

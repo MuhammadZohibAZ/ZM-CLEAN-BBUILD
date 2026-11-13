@@ -32,7 +32,7 @@ import { setFullBleed } from "./lib/device-bridge";
 import { CompleteProfileModal } from "./customer-face/sheets/complete-profile/CompleteProfileModal";
 import { FeedModal } from "./customer-face/sheets/FeedModal";
 import { LocationScopeSheet } from "./customer-face/sheets/LocationScopeSheet";
-import { AppTour, tourSeen, type TourControls } from "./customer-face/components/AppTour";
+import { ScreenTips, resetScreenTips } from "./customer-face/components/AppTour";
 
 // Compare (with its live-data adapter) is split out of the main bundle.
 
@@ -194,41 +194,9 @@ function AppInner({
 
   const current = stack[stack.length - 1];
 
-  // App tour: shown on a customer's first visit (once per device; ?tour=1 forces
-  // it, ?tour=0 skips it), and again from Settings → App Tour.
-  const [tourOpen, setTourOpen] = useState(false);
-  // Re-keying Home closes whatever it has open (account pages, View All).
-  const [homeKey, setHomeKey] = useState(0);
-  const tourHome = () => {
-    setFeedOpen(false);
-    setLocSheet(false);
-    setCompleteProfileOpen(false);
-    setFloatingVideo(null);
-    setVoicePhase("idle");
-    setActiveNav("home");
-    setStack([{ id: "home" }]);
-    setHomeKey((k) => k + 1);
-  };
-  const tourControls: TourControls = {
-    home: tourHome,
-    openProfile: () => setCompleteProfileOpen(true),
-    openNews: () => {
-      setActiveNav("news");
-      setStack([{ id: "news" }]);
-    },
-    openAccount: () => setAccountRequest((n) => n + 1),
-  };
-  const startTour = () => {
-    tourHome();
-    setTourOpen(true);
-  };
-  useEffect(() => {
-    if (activeRole !== "customer") return;
-    const q = new URLSearchParams(window.location.search).get("tour");
-    if (q === "0" || (q !== "1" && tourSeen())) return;
-    const id = window.setTimeout(() => setTourOpen(true), 700);
-    return () => window.clearTimeout(id);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Screen tips: each screen's own short tour, the first time it is opened
+  // (see components/AppTour.tsx). Settings → App Tour shows them all again.
+  const startTour = () => resetScreenTips();
 
   // Home's photo hero and Reels' video run under the status bar in the
   // desktop phone mockup.
@@ -353,7 +321,6 @@ function AppInner({
             />
           ) : (
             <HomeScreen
-              key={homeKey}
               push={push}
               openAccountRequest={accountRequest}
               onStartTour={startTour}
@@ -503,7 +470,7 @@ function AppInner({
           onClose={() => setLocSheet(false)}
         />
       )}
-      {tourOpen && <AppTour controls={tourControls} onClose={() => setTourOpen(false)} />}
+      <ScreenTips enabled={activeRole === "customer"} />
       {completeProfileOpen && (
         <CompleteProfileModal
           data={profileSetupData}
