@@ -42,6 +42,7 @@ export function HomeProductsSection({
   const { lang, t, tc } = useLang();
   return (
     <section
+      data-tour="products"
       style={{
         paddingTop: "clamp(30px, 4.2vh, 48px)",
         paddingBottom: 0,
@@ -69,6 +70,7 @@ export function HomeProductsSection({
         {/* View All Button -- opens the full category grid (all ~20
             products, active + locked), not a jump into Wheat */}
         <button
+          data-tour="viewall"
           onClick={() =>
             handleOrientationTap(
               "all-products",

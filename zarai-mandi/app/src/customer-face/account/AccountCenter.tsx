@@ -78,6 +78,12 @@ const ICON_PATHS: Record<string, React.ReactNode> = {
       <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
     </>
   ),
+  compass: (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+    </>
+  ),
   briefcase: (
     <>
       <rect x="2" y="7" width="20" height="14" rx="2" />
@@ -636,6 +642,7 @@ export function AccountCenter({
   onRestartOnboarding,
   onOpenCompleteProfile,
   onOpenBilling,
+  onStartTour,
 }: {
   view: AccountView | null;
   onViewChange: (v: AccountView | null) => void;
@@ -654,6 +661,7 @@ export function AccountCenter({
   onRestartOnboarding?: (mode?: "register" | "signin") => void;
   onOpenCompleteProfile: () => void;
   onOpenBilling: (product: string, vertical: string) => void;
+  onStartTour?: () => void;
 }) {
   const { lang, setLang, tc, tm, tn, voiceEnabled, setVoiceEnabled } = useLang();
   const isUr = lang === "ur";
@@ -905,6 +913,16 @@ export function AccountCenter({
                 "منڈی اپڈیٹس، تجارتی ڈائریکٹری، بین الاقوامی ریٹس، تاریخی ڈیٹا",
               )}
               onClick={() => onViewChange("help")}
+            />
+            <Row
+              isUr={isUr}
+              icon="compass"
+              label={L("App Tour", "ایپ کا تعارف")}
+              sub={L("A quick guide to every part of the app", "ایپ کے ہر حصے کی مختصر رہنمائی")}
+              onClick={() => {
+                close();
+                onStartTour?.();
+              }}
               last
             />
           </Card>

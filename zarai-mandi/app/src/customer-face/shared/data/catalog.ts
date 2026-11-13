@@ -334,7 +334,7 @@ export const PRODUCT_PRICE_PER_MONTH = 2000;
 
 /** How products are grouped in "View All" and the Complete Profile list. */
 export const PRODUCT_GROUPS: { id: ProductGroupId; en: string; ur: string }[] = [
-  { id: "crops", en: "Crops", ur: "فصلیں" },
+  { id: "crops", en: "Grains", ur: "اناج" },
   { id: "edible-oils", en: "Edible Oils", ur: "خوردنی تیل" },
   { id: "fruits", en: "Fruits", ur: "پھل" },
   { id: "vegetables", en: "Vegetables", ur: "سبزیاں" },

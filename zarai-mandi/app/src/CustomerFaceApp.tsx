@@ -32,6 +32,7 @@ import { setFullBleed } from "./lib/device-bridge";
 import { CompleteProfileModal } from "./customer-face/sheets/complete-profile/CompleteProfileModal";
 import { FeedModal } from "./customer-face/sheets/FeedModal";
 import { LocationScopeSheet } from "./customer-face/sheets/LocationScopeSheet";
+import { AppTour, tourSeen } from "./customer-face/components/AppTour";
 
 // Compare (with its live-data adapter) is split out of the main bundle.
 
@@ -193,6 +194,25 @@ function AppInner({
 
   const current = stack[stack.length - 1];
 
+  // App tour: shown on a customer's first visit (once per device; ?tour=1 forces
+  // it, ?tour=0 skips it), and again from Settings → App Tour.
+  const [tourOpen, setTourOpen] = useState(false);
+  const startTour = () => {
+    setFeedOpen(false);
+    setLocSheet(false);
+    setCompleteProfileOpen(false);
+    setActiveNav("home");
+    setStack([{ id: "home" }]);
+    setTourOpen(true);
+  };
+  useEffect(() => {
+    if (activeRole !== "customer") return;
+    const q = new URLSearchParams(window.location.search).get("tour");
+    if (q === "0" || (q !== "1" && tourSeen())) return;
+    const id = window.setTimeout(() => setTourOpen(true), 700);
+    return () => window.clearTimeout(id);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Home's photo hero and Reels' video run under the status bar in the
   // desktop phone mockup.
   const fullBleed = current.id === "home" || current.id === "news";
@@ -318,6 +338,7 @@ function AppInner({
             <HomeScreen
               push={push}
               openAccountRequest={accountRequest}
+              onStartTour={startTour}
               onAccountRequestHandled={() => setAccountRequest(0)}
               setFeedOpen={(v) => {
                 if (v) openFeed({});
@@ -464,6 +485,7 @@ function AppInner({
           onClose={() => setLocSheet(false)}
         />
       )}
+      {tourOpen && current.id === "home" && <AppTour onClose={() => setTourOpen(false)} />}
       {completeProfileOpen && (
         <CompleteProfileModal
           data={profileSetupData}

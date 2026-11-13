@@ -142,6 +142,7 @@ export function BottomNav({
                   onNav(tab.id);
                 }}
                 aria-current={isTabActive ? "page" : undefined}
+                data-tour={`nav-${tab.id}`}
                 className="relative flex-1 min-w-0 flex items-center justify-center h-full px-1 rounded-[24px] outline-none select-none group transition-transform active:scale-95"
               >
                 {/* Brand-Colored Sliding Capsule */}

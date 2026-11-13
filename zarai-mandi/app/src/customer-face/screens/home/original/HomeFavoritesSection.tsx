@@ -21,6 +21,7 @@ export function HomeFavoritesSection({
   const { lang, t } = useLang();
   return (
     <section
+      data-tour="favorites"
       className="px-4"
       style={{
         position: "relative",

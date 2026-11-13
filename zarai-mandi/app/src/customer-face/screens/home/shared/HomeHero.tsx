@@ -230,6 +230,7 @@ export function HomeHero({
               boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
             }}
             title={lang === "ur" ? "نوٹیفکیشنز" : "Notifications"}
+            data-tour="bell"
           >
             <svg
               width="17"
@@ -260,6 +261,7 @@ export function HomeHero({
 
           {/* Profile Avatar Button with Double-Tap Switching */}
           <button
+            data-tour="account"
             onClick={() => {
               if (homeVoiceEnabled) {
                 speakText(lang === "ur" ? "پروفائل" : "Profile");

@@ -63,6 +63,7 @@ export function HomeScreen({
   userSubscribedList: parentUserSubscribedList,
   setUserSubscribedList: parentSetUserSubscribedList,
   openAccountRequest = 0,
+  onStartTour,
   onAccountRequestHandled,
 }: {
   push: (s: Screen) => void;
@@ -74,6 +75,8 @@ export function HomeScreen({
   voiceGuideActive?: boolean;
   /** Set when the Settings tab is tapped: open the account pages, then call onAccountRequestHandled. */
   openAccountRequest?: number;
+  /** Replays the app tour (Settings → App Tour). */
+  onStartTour?: () => void;
   onAccountRequestHandled?: () => void;
   onVoiceGuideClose?: () => void;
   initialUserData?: AppProps["initialUserData"];
@@ -499,6 +502,7 @@ export function HomeScreen({
         onStartRepOnboarding={onStartRepOnboarding}
         onRestartOnboarding={onRestartOnboarding}
         onOpenCompleteProfile={() => setCompleteProfileOpen(true)}
+        onStartTour={onStartTour}
         onOpenBilling={(product, vertical) =>
           push({ id: "billing", product, vertical })
         }

@@ -195,6 +195,7 @@ export function SearchProfilePanel({
       >
         {/* Search field */}
         <label
+          data-tour="search"
           className="flex-1 min-w-0 flex items-center gap-2 rounded-full cursor-text"
           style={{ padding: "0 8px 0 5px", background: "#F2F7F4" }}
         >
@@ -307,6 +308,7 @@ export function SearchProfilePanel({
             <motion.button
               key="profile"
               type="button"
+              data-tour="profile"
               onClick={onOpenProfile}
               className="tap-target relative flex-shrink-0 flex items-center gap-2 rounded-full text-start"
               initial={{ width: 0, opacity: 0 }}
