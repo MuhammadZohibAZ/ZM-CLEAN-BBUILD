@@ -3,7 +3,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { ProductIcon } from "../components/ProductIcon";
 import { PRODUCT_DIVISIONS, PRODUCT_PRICE_PER_MONTH, SUBSCRIBED_PRODUCTS } from "../shared/data/catalog";
 import { MANDI_DATA } from "../shared/data/mandiLocation";
-import { URDU_FONT, useLang } from "../shared/i18n/LangProvider";
+import { toUrduDigits, URDU_FONT, useLang } from "../shared/i18n/LangProvider";
+import { TRIAL_DAYS, TRIAL_HISTORY_DAYS, trialStatus, type Trials } from "../shared/productTrials";
 import { speakText } from "../shared/voice";
 import { LEGAL, type LegalDoc } from "./legalContent";
 
@@ -643,8 +644,13 @@ export function AccountCenter({
   onOpenCompleteProfile,
   onOpenBilling,
   onStartTour,
+  trials = {},
+  onOpenViewAll,
 }: {
   view: AccountView | null;
+  /** Free trials of single products, asked for in View All (one per product). */
+  trials?: Trials;
+  onOpenViewAll?: () => void;
   onViewChange: (v: AccountView | null) => void;
   profile: AccountProfile;
   onProfileSave: (next: AccountProfile) => void;
@@ -1280,6 +1286,87 @@ export function AccountCenter({
             ))}
           </Card>
         </div>
+
+        {profileCompleted && (() => {
+          const now = Date.now();
+          const D = (n: number) => (isUr ? toUrduDigits(n) : String(n));
+          const tried = Object.entries(trials).sort((a, b) => b[1].start - a[1].start);
+          const left = PRODUCT_DIVISIONS.filter((d) => !userSubscribedList.includes(d.name) && !trials[d.name]).length;
+          const when = (ms: number) =>
+            new Date(ms).toLocaleString(isUr ? "ur-PK" : "en-GB", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+          const timeLeft = (end: number) => {
+            const h = Math.max(1, Math.ceil((end - now) / 3600000));
+            return h > 24 ? L(`${Math.ceil(h / 24)} days left`, `${D(Math.ceil(h / 24))} دن باقی`) : L(`${h} h left`, `${D(h)} گھنٹے باقی`);
+          };
+          return (
+            <div data-tour="acc-trials">
+              <SectionLabel>{L("Free trials", "مفت ٹرائلز")}</SectionLabel>
+              <Card>
+                <div className="px-4 py-3" style={{ borderBottom: `1px solid ${C.divider}` }}>
+                  <div className="flex items-baseline justify-between gap-2">
+                    <p className="text-sm font-semibold" style={{ color: C.ink }}>
+                      {L("Trials left", "باقی ٹرائلز")}
+                    </p>
+                    <p className="text-lg font-bold" style={{ color: C.primary }}>
+                      {D(left)}
+                    </p>
+                  </div>
+                  <p className="text-[11.5px] mt-0.5" style={{ color: C.muted, lineHeight: isUr ? 1.9 : 1.45 }}>
+                    {L(
+                      `One free trial per product: ${TRIAL_DAYS} days of its rates from the last ${TRIAL_HISTORY_DAYS} days. ${left} product${left === 1 ? "" : "s"} you haven't tried yet.`,
+                      `ہر پروڈکٹ کا ایک مفت ٹرائل: ${D(TRIAL_DAYS)} دن تک پچھلے ${D(TRIAL_HISTORY_DAYS)} دن کے ریٹ۔ ${D(left)} مصنوعات ابھی آزمائی نہیں گئیں۔`,
+                    )}
+                  </p>
+                </div>
+                {tried.length === 0 ? (
+                  <p className="px-4 py-3 text-[12.5px]" style={{ color: C.muted }}>
+                    {L("You haven't tried any product yet.", "آپ نے ابھی کوئی پروڈکٹ نہیں آزمائی۔")}
+                  </p>
+                ) : (
+                  tried.map(([name, t], i) => {
+                    const active = trialStatus(trials, name, now) === "active";
+                    return (
+                      <div
+                        key={name}
+                        className="flex items-center gap-3 px-4 py-3"
+                        style={{ borderBottom: i === tried.length - 1 ? "none" : `1px solid ${C.divider}` }}
+                      >
+                        <ProductIcon name={name} vertical={getVerticalForProduct(name)} size={28} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold break-words min-w-0" style={{ color: C.ink }}>
+                            {tc(name)}
+                          </p>
+                          <p className="text-[11px] mt-0.5" style={{ color: C.muted }}>
+                            {active ? L(`Ends ${when(t.end)}`, `ختم: ${when(t.end)}`) : L(`Ended ${when(t.end)}`, `ختم ہوا: ${when(t.end)}`)}
+                          </p>
+                        </div>
+                        <span
+                          className="text-[10.5px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap"
+                          style={active ? { background: "#FDF1D6", color: "#8A5A00" } : { background: "#EEF1F0", color: C.muted }}
+                        >
+                          {active ? timeLeft(t.end) : L("Used", "استعمال ہو چکا")}
+                        </span>
+                      </div>
+                    );
+                  })
+                )}
+                {left > 0 && onOpenViewAll && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      close();
+                      onOpenViewAll();
+                    }}
+                    className="tap-target w-full px-4 py-3 text-[13px] font-semibold"
+                    style={{ color: C.primary, borderTop: `1px solid ${C.divider}`, textAlign: isUr ? "right" : "left" }}
+                  >
+                    {L("Try a product free → All Products", "کوئی پروڈکٹ مفت آزمائیں ← تمام مصنوعات")}
+                  </button>
+                )}
+              </Card>
+            </div>
+          );
+        })()}
 
         {profileCompleted && others.length > 0 && (
           <div>

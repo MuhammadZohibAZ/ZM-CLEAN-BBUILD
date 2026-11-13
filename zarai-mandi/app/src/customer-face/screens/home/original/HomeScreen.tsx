@@ -514,6 +514,8 @@ export function HomeScreen({
         onRestartOnboarding={onRestartOnboarding}
         onOpenCompleteProfile={() => setCompleteProfileOpen(true)}
         onStartTour={onStartTour}
+        trials={trials}
+        onOpenViewAll={() => setShowAllProducts(true)}
         onOpenBilling={(product, vertical) =>
           push({ id: "billing", product, vertical })
         }
