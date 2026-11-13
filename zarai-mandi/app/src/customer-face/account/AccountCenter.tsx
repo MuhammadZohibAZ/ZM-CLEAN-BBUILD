@@ -927,7 +927,7 @@ export function AccountCenter({
               isUr={isUr}
               icon="compass"
               label={L("App Tour", "ایپ کا تعارف")}
-              sub={L("Step-by-step guide to every screen and button", "ہر اسکرین اور بٹن کی قدم بہ قدم رہنمائی")}
+              sub={L("A one-minute tour of the main screens", "اہم اسکرینوں کا ایک منٹ کا تعارف")}
               onClick={() => {
                 close();
                 onStartTour?.();

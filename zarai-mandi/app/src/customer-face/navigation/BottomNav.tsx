@@ -129,7 +129,7 @@ export function BottomNav({
     >
       <div className={`flex items-center gap-2.5 w-full ${VOICE_IN_NAV ? "max-w-[400px]" : "max-w-[320px]"}`}>
       {/* Navigation Cockpit: fills the row, tabs share it equally */}
-      <div className="relative flex-1 min-w-0 flex items-center h-[60px] p-1.5 bg-white/90 backdrop-blur-xl rounded-[30px] border border-[#087F63]/15 shadow-[0_10px_28px_-8px_rgba(6,60,48,0.28),0_2px_6px_rgba(6,60,48,0.06)]">
+      <div data-tour="navbar" className="relative flex-1 min-w-0 flex items-center h-[60px] p-1.5 bg-white/90 backdrop-blur-xl rounded-[30px] border border-[#087F63]/15 shadow-[0_10px_28px_-8px_rgba(6,60,48,0.28),0_2px_6px_rgba(6,60,48,0.06)]">
         <div className="flex items-center gap-1 h-full w-full">
           {tabs.map((tab, idx) => {
             const isTabActive = currentActiveIndex === idx;
