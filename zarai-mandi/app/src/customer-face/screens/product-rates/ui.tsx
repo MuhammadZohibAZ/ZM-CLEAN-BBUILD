@@ -383,6 +383,7 @@ export function Tabs<T extends string>({
             key={o.id}
             type="button"
             role="tab"
+            data-tab={o.id}
             aria-selected={on}
             tabIndex={on ? 0 : -1}
             onClick={() => go(i)}
