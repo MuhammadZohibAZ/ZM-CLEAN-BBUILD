@@ -104,6 +104,7 @@ export function AppBar({
             </div>
           )}
         </div>
+        <span data-tour="rates-star" style={{ display: "inline-flex", borderRadius: 999 }}>
         <IconButton
           label={picked ? f.tx("Remove from favourites", "پسندیدہ سے ہٹائیں") : f.tx("Add to favourites", "پسندیدہ میں شامل کریں")}
           onClick={onToggleFav}
@@ -113,7 +114,9 @@ export function AppBar({
         >
           <Icon name="star" size={20} width={2} color={picked ? C.fav : C.ink2} fill={picked ? C.fav : "none"} />
         </IconButton>
+        </span>
       </div>
+      <div data-tour="rates-tabs">
       <Tabs<Tab>
         value={tab}
         onChange={onTab}
@@ -123,6 +126,7 @@ export function AppBar({
           { id: "trends", label: f.tx("Trends", "رجحانات") },
         ]}
       />
+      </div>
     </header>
   );
 }

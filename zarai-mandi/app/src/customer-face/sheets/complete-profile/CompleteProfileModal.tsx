@@ -32,6 +32,7 @@ export function CompleteProfileModal(props: CompleteProfileProps) {
       onClick={onClose}
     >
       <div
+        data-tour="profile-sheet"
         style={{
           width: "100%",
           maxWidth: 440,

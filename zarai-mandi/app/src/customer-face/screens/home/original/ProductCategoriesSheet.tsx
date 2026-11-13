@@ -165,6 +165,7 @@ export function ProductCategoriesSheet({
           return (
             <section
               key={g.id}
+              data-tour={g.id === "crops" ? "viewall-group" : undefined}
               className="rounded-[18px] bg-white px-3 pt-3 pb-2"
               style={{ border: "1.5px solid #D1E5DC", boxShadow: "0 3px 12px rgba(6,77,64,0.06)" }}
             >

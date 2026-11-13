@@ -122,7 +122,9 @@ export function ByProductCombinedScreen({
             </div>
           </div>
 
-          <ByproductDatePill selectedDate={selectedDate} onSelectDate={setSelectedDate} />
+          <div data-tour="bp-date" style={{ flexShrink: 0 }}>
+            <ByproductDatePill selectedDate={selectedDate} onSelectDate={setSelectedDate} />
+          </div>
         </div>
 
         {/* Vertical Level Entry Filter Bar: ONLY rendered if entry is multi-product! */}

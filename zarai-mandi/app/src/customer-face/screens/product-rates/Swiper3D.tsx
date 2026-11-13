@@ -329,6 +329,7 @@ export function Swiper3D({
               <button
                 type="button"
                 onClick={() => goTo(index + 1)}
+                data-tour="rates-next"
                 aria-label={f.tx(`Next: ${pages[index + 1]?.label}`, `اگلا: ${pages[index + 1]?.label}`)}
                 style={{
                   display: "flex",

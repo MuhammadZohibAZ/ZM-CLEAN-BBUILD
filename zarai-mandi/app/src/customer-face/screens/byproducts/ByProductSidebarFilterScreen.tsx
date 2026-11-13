@@ -253,6 +253,7 @@ export function ByProductSidebarFilterScreen(props: ByproductBodyProps) {
       <button
         type="button"
         aria-expanded={open}
+        data-tour="bp-filters"
         aria-label={activeCount ? f.tx(`Filters, ${activeCount} applied`, `فلٹر، ${f.digits(activeCount)} لاگو`) : f.tx("Filters", "فلٹر")}
         onClick={() => setOpen(true)}
         style={{
@@ -328,7 +329,7 @@ export function ByProductSidebarFilterScreen(props: ByproductBodyProps) {
             {f.tx("No cards for these filters", "ان فلٹرز کے لیے کوئی کارڈ نہیں")}
           </p>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: open ? "1fr" : "1fr 1fr", gap: 8, opacity: loading ? 0.6 : 1 }}>
+          <div data-tour="bp-cards" style={{ display: "grid", gridTemplateColumns: open ? "1fr" : "1fr 1fr", gap: 8, opacity: loading ? 0.6 : 1 }}>
             {cards.map((c) => {
               const openCard = () => push(productRatesScreenFor(c, curDateStr));
               return (

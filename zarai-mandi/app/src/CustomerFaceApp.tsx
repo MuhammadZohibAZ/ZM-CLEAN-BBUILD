@@ -32,7 +32,7 @@ import { setFullBleed } from "./lib/device-bridge";
 import { CompleteProfileModal } from "./customer-face/sheets/complete-profile/CompleteProfileModal";
 import { FeedModal } from "./customer-face/sheets/FeedModal";
 import { LocationScopeSheet } from "./customer-face/sheets/LocationScopeSheet";
-import { AppTour, tourSeen } from "./customer-face/components/AppTour";
+import { AppTour, tourSeen, type TourControls } from "./customer-face/components/AppTour";
 
 // Compare (with its live-data adapter) is split out of the main bundle.
 
@@ -197,12 +197,29 @@ function AppInner({
   // App tour: shown on a customer's first visit (once per device; ?tour=1 forces
   // it, ?tour=0 skips it), and again from Settings → App Tour.
   const [tourOpen, setTourOpen] = useState(false);
-  const startTour = () => {
+  // Re-keying Home closes whatever it has open (account pages, View All).
+  const [homeKey, setHomeKey] = useState(0);
+  const tourHome = () => {
     setFeedOpen(false);
     setLocSheet(false);
     setCompleteProfileOpen(false);
+    setFloatingVideo(null);
+    setVoicePhase("idle");
     setActiveNav("home");
     setStack([{ id: "home" }]);
+    setHomeKey((k) => k + 1);
+  };
+  const tourControls: TourControls = {
+    home: tourHome,
+    openProfile: () => setCompleteProfileOpen(true),
+    openNews: () => {
+      setActiveNav("news");
+      setStack([{ id: "news" }]);
+    },
+    openAccount: () => setAccountRequest((n) => n + 1),
+  };
+  const startTour = () => {
+    tourHome();
     setTourOpen(true);
   };
   useEffect(() => {
@@ -336,6 +353,7 @@ function AppInner({
             />
           ) : (
             <HomeScreen
+              key={homeKey}
               push={push}
               openAccountRequest={accountRequest}
               onStartTour={startTour}
@@ -485,7 +503,7 @@ function AppInner({
           onClose={() => setLocSheet(false)}
         />
       )}
-      {tourOpen && current.id === "home" && <AppTour onClose={() => setTourOpen(false)} />}
+      {tourOpen && <AppTour controls={tourControls} onClose={() => setTourOpen(false)} />}
       {completeProfileOpen && (
         <CompleteProfileModal
           data={profileSetupData}

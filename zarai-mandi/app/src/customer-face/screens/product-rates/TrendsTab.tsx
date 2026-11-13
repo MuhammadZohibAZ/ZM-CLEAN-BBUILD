@@ -833,7 +833,7 @@ export function TrendsTab({
   );
 
   return (
-    <div style={{ paddingBottom: 32 }}>
+    <div data-tour="rates-trends" style={{ paddingBottom: 32 }}>
       {expanded && (
         <FullscreenLayer
           f={f}

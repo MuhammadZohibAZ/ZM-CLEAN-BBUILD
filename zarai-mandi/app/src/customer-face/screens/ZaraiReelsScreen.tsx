@@ -351,7 +351,7 @@ export function ZaraiReelsScreen({
             </svg>
           </button>
 
-          <div className="flex items-center gap-4 pointer-events-auto" role="tablist">
+          <div className="flex items-center gap-4 pointer-events-auto" role="tablist" data-tour="reels-tabs">
             {VIDEO_MAIN_CATEGORIES.map((cat) => {
               const on = mainCategory === cat.id;
               return (

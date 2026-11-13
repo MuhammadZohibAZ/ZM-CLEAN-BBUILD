@@ -364,7 +364,7 @@ export function MandiSection({
     : f.tx("All Rates", "تمام ریٹس");
 
   return (
-    <section aria-label={sectionHeading} style={{ paddingTop: 4 }}>
+    <section aria-label={sectionHeading} data-tour="rates-mandis" style={{ paddingTop: 4 }}>
       <div style={{ padding: "0 16px 6px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
         <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
           <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700, letterSpacing: "-0.01em", lineHeight: f.ur ? 1.6 : 1.2 }}>{sectionHeading}</h2>

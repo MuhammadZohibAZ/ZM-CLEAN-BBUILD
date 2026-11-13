@@ -486,6 +486,7 @@ export function ProductRatesScreen({
 
         {tab === "overview" ? (
           <div key="overview" className="zm-tab-in" style={{ display: "flex", flexDirection: "column" }}>
+            <div data-tour="rates-hero">
             <Swiper3D
               f={f}
               label={f.tx("Overview cards", "جائزہ کارڈز")}
@@ -560,6 +561,7 @@ export function ProductRatesScreen({
                 },
               ]}
             />
+            </div>
 
             <MandiSection
               f={f}

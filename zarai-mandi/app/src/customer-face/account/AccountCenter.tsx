@@ -764,6 +764,7 @@ export function AccountCenter({
         {/* Profile summary — tap to edit */}
         <button
           type="button"
+          data-tour="acc-profile"
           onClick={() => onViewChange("edit")}
           className="tap-target w-full flex items-center gap-3.5 p-4 rounded-2xl transition active:scale-[0.99]"
           style={{
@@ -850,7 +851,7 @@ export function AccountCenter({
           </Card>
         )}
 
-        <div>
+        <div data-tour="acc-account">
           <SectionLabel>{L("Account", "اکاؤنٹ")}</SectionLabel>
           <Card>
             <Row
@@ -886,7 +887,7 @@ export function AccountCenter({
           </Card>
         </div>
 
-        <div>
+        <div data-tour="acc-prefs">
           <SectionLabel>{L("Preferences", "ترجیحات")}</SectionLabel>
           <Card>
             <Row
@@ -901,7 +902,7 @@ export function AccountCenter({
           </Card>
         </div>
 
-        <div>
+        <div data-tour="acc-support">
           <SectionLabel>{L("Support", "مدد")}</SectionLabel>
           <Card>
             <Row

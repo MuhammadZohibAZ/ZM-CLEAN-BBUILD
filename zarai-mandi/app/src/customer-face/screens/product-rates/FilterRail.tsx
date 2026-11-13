@@ -107,6 +107,7 @@ export function FilterRail({
   return (
     <div
       dir={f.dir}
+      data-tour={variant === "map" ? undefined : "rates-filters"}
       style={{
         display: "flex",
         alignItems: "stretch",
