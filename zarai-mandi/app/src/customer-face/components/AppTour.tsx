@@ -5,11 +5,13 @@ import { speakText, stopSpeaking } from "../shared/voice";
 
 // ─── APP TUTORIAL ─────────────────────────────────────────────────────────────
 // The first time Home opens, the app asks whether the user wants a tutorial.
-// Yes: every screen, the first time it opens, walks through each of its
-// buttons and filters one at a time (Next / Back). On "Try it" steps the user
-// taps the real button (a filter, a rate type, a period) and the next step
-// shows what changed. No: nothing is shown. Account → App Tour turns the
-// tutorial on again from the start.
+// Yes: every screen, the first time it opens, shows an overview — all its parts
+// lit and numbered at once, with a list of what each is. From there the user
+// taps any number to learn about that part (and can keep using the screen), or
+// picks "Guide me step by step": each button and filter one at a time, with
+// "Try it" steps where the user taps the real button (a filter, a rate type, a
+// period) and the next step shows what changed. No: nothing is shown.
+// Account → App Tour turns the tutorial on again from the start.
 // The test link takes ?tour=0 (no tutorial) or ?tour=1 (ask again, fresh).
 
 const STORE_KEY = "zm_tutorial_v2";
@@ -63,6 +65,8 @@ type Step = {
   backIfGone?: boolean;
   /** this step leaves the screen: the walkthrough ends here */
   leaves?: boolean;
+  /** how the part reads in the screen overview; false = not a part (a "this changed" step) */
+  overview?: false | { title?: Txt; body?: Txt };
 };
 
 const t = (en: string, ur: string): Txt => ({ en, ur });
@@ -120,19 +124,20 @@ const STEPS: Record<TourScreen, Step[]> = {
     { target: "edit-name", title: t("Your name and city", "آپ کا نام اور شہر"), body: t("Tap Edit to change your name and location.", "نام اور مقام بدلنے کے لیے ترمیم دبائیں۔") },
     { target: "search", title: t("Search", "تلاش"), body: t("Type any product, like cotton seed or flour, to jump straight to its rates.", "کوئی بھی چیز لکھیں، جیسے بنولہ یا آٹا، اور سیدھا اس کے ریٹس پر جائیں۔") },
     { target: "profile", title: t("Complete your profile", "پروفائل مکمل کریں"), body: t("3 short steps: pick products, choose months, pay. This unlocks every rate.", "3 آسان مراحل: مصنوعات چنیں، مہینے چنیں، ادائیگی کریں۔ اس سے تمام ریٹس کھل جاتے ہیں۔") },
-    { target: "products", title: t("Your products", "آپ کی مصنوعات"), body: t("Swipe sideways for more. 'Active' means today's rates are in.", "مزید کے لیے دائیں بائیں سوائپ کریں۔ 'فعال' کا مطلب آج کے ریٹ آ گئے ہیں۔") },
+    { target: "products-row", title: t("Your products", "آپ کی مصنوعات"), body: t("Swipe sideways for more. 'Active' means today's rates are in.", "مزید کے لیے دائیں بائیں سوائپ کریں۔ 'فعال' کا مطلب آج کے ریٹ آ گئے ہیں۔") },
     { target: "viewall", title: t("View All", "سب دیکھیں"), body: t("Every product in groups: Grains, Oils, Fruits, Vegetables and more.", "تمام مصنوعات گروپس میں: اناج، تیل، پھل، سبزیاں اور مزید۔") },
     { target: "favorites", title: t("Favourites", "پسندیدہ"), body: t("Rates you save with the ☆ star show up here, so you can see them first.", "جن ریٹس پر آپ ☆ ستارہ لگائیں وہ یہاں سب سے پہلے نظر آتے ہیں۔") },
     { target: "nav-home", title: t("Home", "ہوم"), body: t("Brings you back to this screen from anywhere.", "کہیں سے بھی اس اسکرین پر واپس لاتا ہے۔") },
     { target: "nav-news", title: t("Entertainment", "تفریح"), body: t("Short videos: mandi news, farming tips and harvest updates.", "مختصر ویڈیوز: منڈی کی خبریں، کاشتکاری کے مشورے اور فصل کی خبریں۔") },
     { target: "nav-settings", title: t("Settings", "ترتیبات"), body: t("Your account, language, help, and the App Tour.", "آپ کا اکاؤنٹ، زبان، مدد، اور ایپ کا تعارف۔") },
     {
-      target: '[data-tour="products"] [data-home-product]',
+      target: '[data-tour="products-row"] [data-home-product]',
       title: t("Let's open a product", "آئیں ایک پروڈکٹ کھولیں"),
       body: t("We'll keep going on the next screen.", "اگلی اسکرین پر رہنمائی جاری رہے گی۔"),
       act: t("Tap this product", "اس پروڈکٹ پر ٹیپ کریں"),
       until: () => !!visibleEl(FIRST_CARD) || !!visibleEl("bp-filters"),
       leaves: true,
+      overview: { title: t("A product", "ایک پروڈکٹ"), body: t("Tap any product to see all its rates.", "کسی بھی پروڈکٹ کے تمام ریٹس دیکھنے کے لیے اس پر دبائیں۔") },
     },
   ],
 
@@ -150,6 +155,7 @@ const STEPS: Record<TourScreen, Step[]> = {
       body: t("Let's try them. Filters change what every card shows.", "آئیں آزما کر دیکھیں۔ فلٹر سے ہر کارڈ کی معلومات بدلتی ہے۔"),
       act: t("Tap Filters", "فلٹر پر ٹیپ کریں"),
       until: () => !!visibleEl("bp-rate-types"),
+      overview: { body: t("Rate type, attribute and company. They change what every card shows; the number says how many are on.", "ریٹ کی قسم، خصوصیت اور کمپنی۔ ان سے ہر کارڈ کی معلومات بدلتی ہے؛ نمبر بتاتا ہے کتنے فلٹر لگے ہیں۔") },
     },
     {
       target: "bp-rate-types",
@@ -159,7 +165,7 @@ const STEPS: Record<TourScreen, Step[]> = {
       watch: () => text('[data-tour="bp-rate-types"] [aria-checked="true"]'),
       backIfGone: true,
     },
-    { target: FIRST_CARD, title: t("The cards changed", "کارڈ بدل گئے"), body: t("Every card now shows that rate type only. Cards without it are hidden.", "اب ہر کارڈ صرف وہی ریٹ دکھا رہا ہے۔ جن کے پاس یہ ریٹ نہیں وہ چھپ گئے۔") },
+    { target: FIRST_CARD, title: t("The cards changed", "کارڈ بدل گئے"), body: t("Every card now shows that rate type only. Cards without it are hidden.", "اب ہر کارڈ صرف وہی ریٹ دکھا رہا ہے۔ جن کے پاس یہ ریٹ نہیں وہ چھپ گئے۔"), overview: false },
     { target: "bp-attrs", title: t("Special attribute", "خصوصی وصف"), body: t("Narrow down further: quality, crop year, moisture and more. Tap again to remove.", "مزید چھانٹیں: معیار، فصل کا سال، نمی وغیرہ۔ ہٹانے کے لیے دوبارہ دبائیں۔") },
     { target: "bp-company", title: t("Company", "کمپنی"), body: t("Show only the brands you want.", "صرف اپنی پسند کی کمپنیاں دکھائیں۔") },
     { target: "bp-reset", title: t("Reset", "ری سیٹ"), body: t("Clears every filter at once.", "تمام فلٹر ایک ساتھ صاف کرتا ہے۔") },
@@ -178,6 +184,7 @@ const STEPS: Record<TourScreen, Step[]> = {
       act: t("Tap the card", "کارڈ پر ٹیپ کریں"),
       until: () => !!visibleEl("rates-hero"),
       leaves: true,
+      overview: { title: t("A by-product card", "ضمنی مصنوع کا کارڈ"), body: t("Tap a card for its rate in every mandi, with charts.", "ہر منڈی کا ریٹ اور چارٹ دیکھنے کے لیے کارڈ پر دبائیں۔") },
     },
   ],
 
@@ -194,6 +201,7 @@ const STEPS: Record<TourScreen, Step[]> = {
       body: t("Let's change it and see the price change.", "آئیں اسے بدل کر قیمت میں فرق دیکھیں۔"),
       act: t("Tap Rate", "ریٹ پر ٹیپ کریں"),
       until: () => !!visibleEl("sheet"),
+      overview: { body: t("Stock, Mandi, Wholesale… pick which price you see. A green filter is one you set; its ✕ clears it.", "اسٹاک، منڈی، ہول سیل… چنیں کون سی قیمت دیکھنی ہے۔ سبز فلٹر آپ کا لگایا ہوا ہے؛ اس کا ✕ اسے ہٹاتا ہے۔") },
     },
     {
       target: "sheet",
@@ -203,7 +211,7 @@ const STEPS: Record<TourScreen, Step[]> = {
       watch: () => text("rail-rate"),
       backIfGone: true,
     },
-    { target: "rates-hero", title: t("The price changed", "قیمت بدل گئی"), body: t("The big rate, the chart and the mandi list below now use the rate type you picked.", "بڑا ریٹ، چارٹ اور نیچے منڈیوں کی فہرست اب آپ کی چنی ہوئی قسم کے ہیں۔") },
+    { target: "rates-hero", title: t("The price changed", "قیمت بدل گئی"), body: t("The big rate, the chart and the mandi list below now use the rate type you picked.", "بڑا ریٹ، چارٹ اور نیچے منڈیوں کی فہرست اب آپ کی چنی ہوئی قسم کے ہیں۔"), overview: false },
     { target: "rail-rate", title: t("Clear a filter", "فلٹر ہٹائیں"), body: t("A green filter is one you set. Its ✕ clears it and brings back all rates.", "سبز فلٹر آپ کا لگایا ہوا ہے۔ اس کا ✕ اسے ہٹا کر تمام ریٹس واپس لاتا ہے۔") },
     { target: "rail-quality", title: t("Attribute", "خصوصیات"), body: t("Quality, crop year, moisture and the like. Pick one or more.", "معیار، فصل کا سال، نمی وغیرہ۔ ایک یا زیادہ چنیں۔") },
     { target: "hero-listen", title: t("Listen", "سنیں"), body: t("Hear this rate read out loud.", "یہ ریٹ بول کر سنیں۔") },
@@ -221,6 +229,7 @@ const STEPS: Record<TourScreen, Step[]> = {
       act: t("Tap Trends", "رجحانات پر ٹیپ کریں"),
       until: () => !!visibleEl("rates-trends"),
       leaves: true,
+      overview: { body: t("Charts of how this rate moved over days and months.", "دنوں اور مہینوں میں اس ریٹ کے اتار چڑھاؤ کے چارٹ۔") },
     },
   ],
 
@@ -232,8 +241,9 @@ const STEPS: Record<TourScreen, Step[]> = {
       body: t("1 day up to 1 year. Pick another one and watch the chart.", "1 دن سے 1 سال تک۔ کوئی اور مدت چنیں اور چارٹ دیکھیں۔"),
       act: t("Tap another period, e.g. 1M", "کوئی اور مدت دبائیں"),
       watch: () => text('[data-tour="tr-period"] [aria-pressed="true"]'),
+      overview: { body: t("1 day up to 1 year. Picking another one redraws the chart.", "1 دن سے 1 سال تک۔ دوسری مدت چننے سے چارٹ بدل جاتا ہے۔") },
     },
-    { target: "tr-chart", title: t("The chart changed", "چارٹ بدل گیا"), body: t("Drag for earlier days, hold to read a day's value.", "پچھلے دنوں کے لیے کھسکائیں، کسی دن کی قیمت کے لیے دبائے رکھیں۔") },
+    { target: "tr-chart", title: t("The chart changed", "چارٹ بدل گیا"), body: t("Drag for earlier days, hold to read a day's value.", "پچھلے دنوں کے لیے کھسکائیں، کسی دن کی قیمت کے لیے دبائے رکھیں۔"), overview: { title: t("Chart", "چارٹ") } },
     { target: "tr-custom", title: t("Your own dates", "اپنی تاریخیں"), body: t("Pick any start and end date.", "کوئی بھی شروع اور آخری تاریخ چنیں۔") },
     { target: "tr-type", title: t("Line or candles", "لائن یا کینڈل"), body: t("A simple line, or candles that show each day's low and high.", "سادہ لکیر، یا کینڈل جو ہر دن کا کم اور زیادہ دکھائیں۔") },
     { target: '[data-tour="tr-chart"] [data-tour="expand"]', title: t("Full screen", "پوری اسکرین"), body: t("Open the chart on the whole screen.", "چارٹ پوری اسکرین پر کھولیں۔") },
@@ -290,6 +300,7 @@ const C = {
 
 export function ScreenTips({ enabled }: { enabled: boolean }) {
   const [screen, setScreen] = useState<TourScreen | null>(null);
+  const [guided, setGuided] = useState(false);
   const [asking, setAsking] = useState(false);
   const busy = useRef(false);
   busy.current = !!screen || asking;
@@ -325,21 +336,27 @@ export function ScreenTips({ enabled }: { enabled: boolean }) {
         onAnswer={(yes) => {
           saveStore({ mode: yes ? "on" : "off" });
           setAsking(false);
-          if (yes) setScreen("home");
+          if (yes) {
+            setGuided(false);
+            setScreen("home");
+          }
         }}
       />
     );
   if (!screen) return null;
+  const close = (stopAll: boolean) => {
+    markSeen(screen);
+    if (stopAll) saveStore({ mode: "off" });
+    setGuided(false);
+    setScreen(null);
+  };
+  if (!guided) return <Overview key={`o-${screen}`} screen={screen} onGuide={() => setGuided(true)} onDone={close} />;
   return (
     <Walkthrough
       key={screen}
       screen={screen}
       steps={STEPS[screen]}
-      onDone={(stopAll) => {
-        markSeen(screen);
-        if (stopAll) saveStore({ mode: "off" });
-        setScreen(null);
-      }}
+      onDone={close}
     />
   );
 }
@@ -415,8 +432,8 @@ function AskTutorial({ onAnswer }: { onAnswer: (yes: boolean) => void }) {
   const { isUr, L, font } = useTourLang();
   const title = t("Welcome to Zarai Mandi", "زرعی منڈی میں خوش آمدید");
   const body = t(
-    "Would you like a step-by-step tutorial? We'll show you every button and filter on each screen, and you can try them yourself.",
-    "کیا آپ قدم بہ قدم رہنمائی چاہتے ہیں؟ ہم ہر اسکرین کا ہر بٹن اور فلٹر دکھائیں گے، اور آپ خود آزما کر دیکھ سکیں گے۔",
+    "Would you like a tutorial? On each screen we'll first show you what's there. Then tap any part to learn about it, or let us guide you step by step.",
+    "کیا آپ رہنمائی چاہتے ہیں؟ ہر اسکرین پر پہلے ہم دکھائیں گے کہ اس میں کیا ہے۔ پھر کسی بھی حصے کو دبا کر اس کے بارے میں جانیں، یا ہم آپ کو قدم بہ قدم لے چلیں۔",
   );
   useEffect(() => () => stopSpeaking(), []);
   return (
@@ -458,6 +475,339 @@ function AskTutorial({ onAnswer }: { onAnswer: (yes: boolean) => void }) {
           <p style={{ margin: "6px 0 0", textAlign: "center", fontSize: isUr ? 12.5 : 11.5, lineHeight: isUr ? 1.8 : 1.4, color: C.muted }}>
             {isUr ? "بعد میں: اکاؤنٹ ← ایپ کا تعارف" : "Any time later: Account → App Tour"}
           </p>
+        </div>
+      </div>
+    </Layer>
+  );
+}
+
+// ─── SCREEN OVERVIEW: every part numbered at once; tap one, or be guided ─────
+
+const SCREEN_INFO: Record<TourScreen, { name: Txt; about: Txt }> = {
+  home: { name: t("Home", "ہوم"), about: t("Your products, search, favourites and alerts.", "آپ کی مصنوعات، تلاش، پسندیدہ اور الرٹس۔") },
+  product: { name: t("Product rates", "پروڈکٹ کے ریٹ"), about: t("One card per by-product with today's average rate. Filters change what the cards show.", "ہر ضمنی مصنوع کا ایک کارڈ، آج کے اوسط ریٹ کے ساتھ۔ فلٹر سے کارڈز کی معلومات بدلتی ہے۔") },
+  rates: { name: t("Rate details", "ریٹ کی تفصیل"), about: t("Today's rate, filters for place, day and rate type, and every mandi's rate.", "آج کا ریٹ، مقام، دن اور ریٹ کی قسم کے فلٹر، اور ہر منڈی کا ریٹ۔") },
+  trends: { name: t("Trends", "رجحانات"), about: t("How this rate moved over days, months and the year.", "دنوں، مہینوں اور سال میں اس ریٹ کا اتار چڑھاؤ۔") },
+  viewall: { name: t("All products", "تمام مصنوعات"), about: t("Every product, in groups.", "تمام مصنوعات، گروپس میں۔") },
+  profile: { name: t("Complete profile", "پروفائل مکمل کریں"), about: t("Subscribe in 3 steps to unlock every rate.", "3 مراحل میں سبسکرائب کریں اور تمام ریٹس کھولیں۔") },
+  news: { name: t("Videos", "ویڈیوز"), about: t("Short videos on mandi news and farming. Swipe up for the next one.", "منڈی کی خبروں اور کاشتکاری پر مختصر ویڈیوز۔ اگلی کے لیے اوپر سوائپ کریں۔") },
+  account: { name: t("Account", "اکاؤنٹ"), about: t("Your profile, plans, language and help.", "آپ کی پروفائل، پلان، زبان اور مدد۔") },
+};
+
+type Part = { target: string; title: Txt; body: Txt };
+function screenParts(screen: TourScreen): Part[] {
+  const done = new Set<string>();
+  const out: Part[] = [];
+  for (const st of STEPS[screen]) {
+    if (!st.target || st.overview === false || done.has(st.target)) continue;
+    done.add(st.target);
+    if (!visibleEl(st.target)) continue;
+    out.push({ target: st.target, title: st.overview?.title ?? st.title, body: st.overview?.body ?? st.body });
+  }
+  return out;
+}
+
+const BADGE = 24;
+
+function Overview({ screen, onGuide, onDone }: { screen: TourScreen; onGuide: () => void; onDone: (stopAll: boolean) => void }) {
+  const { isUr, L, font } = useTourLang();
+  const info = SCREEN_INFO[screen];
+  const [parts, setParts] = useState<Part[]>(() => screenParts(screen));
+  const [boxes, setBoxes] = useState<(Box | null)[]>([]);
+  const [size, setSize] = useState({ w: window.innerWidth, h: window.innerHeight });
+  const [pick, setPick] = useState<number | null>(null);
+  const [folded, setFolded] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const partsRef = useRef(parts);
+  partsRef.current = parts;
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [panel, setPanel] = useState<Box | null>(null);
+
+  const finish = useCallback(
+    (stopAll = false) => {
+      stopSpeaking();
+      onDone(stopAll);
+    },
+    [onDone],
+  );
+
+  // Follow every part (scrolling, loading); leave if the user opened another screen.
+  useEffect(() => {
+    let away = 0;
+    let raf = 0;
+    const measure = () => {
+      raf = 0;
+      const root = rootRef.current;
+      if (!root) return;
+      const rr = root.getBoundingClientRect();
+      const scale = root.offsetWidth ? rr.width / root.offsetWidth : 1;
+      const W = root.offsetWidth;
+      const H = root.offsetHeight;
+      setSize((z) => (z.w === W && z.h === H ? z : { w: W, h: H }));
+      const pr = panelRef.current?.getBoundingClientRect();
+      const pb = pr ? { x: (pr.left - rr.left) / scale, y: (pr.top - rr.top) / scale, w: pr.width / scale, h: pr.height / scale } : null;
+      setPanel((o) => (o && pb && Math.abs(o.x - pb.x) + Math.abs(o.y - pb.y) + Math.abs(o.w - pb.w) + Math.abs(o.h - pb.h) < 1 ? o : pb));
+      setBoxes(
+        partsRef.current.map((p) => {
+          const el = visibleEl(p.target);
+          if (!el) return null;
+          const r = el.getBoundingClientRect();
+          if (r.bottom < 4 || r.top > window.innerHeight - 4) return null;
+          const x1 = Math.max(EDGE + PAD, (r.left - rr.left) / scale);
+          const y1 = Math.max(EDGE + PAD, (r.top - rr.top) / scale);
+          const x2 = Math.min(W - EDGE - PAD, (r.right - rr.left) / scale);
+          const y2 = Math.min(H - EDGE - PAD, (r.bottom - rr.top) / scale);
+          return { x: x1, y: y1, w: Math.max(8, x2 - x1), h: Math.max(8, y2 - y1) };
+        }),
+      );
+    };
+    const soon = () => {
+      if (!raf) raf = requestAnimationFrame(measure);
+    };
+    const id = window.setInterval(() => {
+      const top = topScreen();
+      if (top && top !== screen) {
+        away ||= Date.now();
+        if (Date.now() - away > 1200) finish();
+        return;
+      }
+      away = 0;
+      // Parts that appear late (data still loading) join the list.
+      if (partsRef.current.length < STEPS[screen].length) {
+        const now = screenParts(screen);
+        if (now.length > partsRef.current.length) setParts(now);
+      }
+      measure();
+    }, 200);
+    measure();
+    window.addEventListener("scroll", soon, true);
+    window.addEventListener("resize", soon);
+    return () => {
+      window.clearInterval(id);
+      if (raf) cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", soon, true);
+      window.removeEventListener("resize", soon);
+    };
+  }, [screen, finish]);
+
+  useEffect(() => () => stopSpeaking(), []);
+
+  const choose = (i: number | null) => {
+    stopSpeaking();
+    setPick(i);
+    if (i == null) return;
+    const p = parts[i];
+    const el = visibleEl(p.target);
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const inNav = !!el.closest("nav") || p.target.startsWith("nav-");
+    if (!inNav && (r.top < 0 || r.bottom > window.innerHeight - NAV_H || covered(el, r)) && r.height < window.innerHeight * 0.6) {
+      el.scrollIntoView({ block: "center", behavior: "smooth" });
+    }
+  };
+
+  const { w: W, h: H } = size;
+  const sb = pick != null ? boxes[pick] : null;
+  // The panel sits at the bottom, or at the top when the chosen part is down there.
+  const atTop = !!sb && sb.y + sb.h / 2 > H * 0.5;
+
+  // Number badges at each part's starting corner, nudged apart so none overlap.
+  // Corners in order: top-start, top-end, bottom-start, bottom-end; then step along the top.
+  const placed: { x: number; y: number }[] = [];
+  const hits = (x: number, y: number) =>
+    placed.some((q) => Math.abs(q.x - x) < BADGE + 2 && Math.abs(q.y - y) < BADGE + 2) ||
+    (!!panel && x + BADGE > panel.x && x < panel.x + panel.w && y + BADGE > panel.y && y < panel.y + panel.h);
+  const clampX = (x: number) => Math.min(Math.max(2, x), W - BADGE - 2);
+  const clampY = (y: number) => Math.min(Math.max(2, y), H - BADGE - 2);
+  const badges = boxes.map((b, i) => {
+    if (!b || (pick != null && pick !== i)) return null;
+    const L0 = b.x - PAD - 6;
+    const R0 = b.x + b.w + PAD - BADGE + 6;
+    const T0 = b.y - PAD - 6;
+    const B0 = b.y + b.h + PAD - BADGE + 6;
+    const [s0, e0] = isUr ? [R0, L0] : [L0, R0];
+    const tries: [number, number][] = [[s0, T0], [e0, T0], [s0, B0], [e0, B0]];
+    for (let k = 1; k <= 6; k++) tries.push([s0 + (isUr ? -1 : 1) * k * (BADGE + 4), T0]);
+    for (const [tx, ty] of tries) {
+      const x = clampX(tx);
+      const y = clampY(ty);
+      if (!hits(x, y)) {
+        placed.push({ x, y });
+        return { x, y };
+      }
+    }
+    return null; // under the panel, or no room: the list below still has it
+  });
+
+  const holes = (pick != null ? [sb] : boxes).filter((b): b is Box => !!b);
+  const cur = pick != null ? parts[pick] : null;
+  const spoken = cur ? `${L(cur.title)}. ${L(cur.body)}` : `${L(info.name)}. ${L(info.about)} ${parts.map((p, i) => `${i + 1}, ${L(p.title)}`).join(". ")}`;
+  const small = { fontSize: isUr ? 12.5 : 11.5, lineHeight: isUr ? 1.8 : 1.4 };
+
+  return (
+    <Layer label={L(info.name)}>
+      <div ref={rootRef} style={{ position: "absolute", inset: 0, fontFamily: font, pointerEvents: "none" }}>
+        <svg width="100%" height="100%" style={{ position: "absolute", inset: 0 }} aria-hidden="true">
+          <defs>
+            <mask id="zm-tour-holes">
+              <rect width="100%" height="100%" fill="#fff" />
+              {holes.map((b, i) => (
+                <rect key={i} x={b.x - PAD} y={b.y - PAD} width={b.w + PAD * 2} height={b.h + PAD * 2} rx={Math.min(14, (b.h + PAD * 2) / 2)} fill="#000" />
+              ))}
+            </mask>
+          </defs>
+          <rect width="100%" height="100%" fill={pick != null ? "rgba(3, 30, 24, 0.72)" : "rgba(3, 30, 24, 0.5)"} mask="url(#zm-tour-holes)" style={{ transition: "fill .2s" }} />
+        </svg>
+
+        {boxes.map((b, i) =>
+          b && (pick == null || pick === i) ? (
+            <div
+              key={`r${i}`}
+              className={pick === i ? "zm-tour-ring" : "zm-tour-ring-soft"}
+              style={{ position: "absolute", left: b.x - PAD, top: b.y - PAD, width: b.w + PAD * 2, height: b.h + PAD * 2, borderRadius: Math.min(14, (b.h + PAD * 2) / 2) }}
+            />
+          ) : null,
+        )}
+
+        {badges.map((p, i) =>
+          p && (pick == null || pick === i) ? (
+            <button
+              key={`b${i}`}
+              className="zm-tour-badge"
+              onClick={() => choose(pick === i ? null : i)}
+              aria-label={`${i + 1}. ${L(parts[i].title)}`}
+              aria-pressed={pick === i}
+              style={{
+                left: p.x,
+                top: p.y,
+                background: pick === i ? "#FFD66B" : C.bright,
+                color: pick === i ? C.deep : "#fff",
+              }}
+            >
+              {i + 1}
+            </button>
+          ) : null,
+        )}
+
+        <div
+          ref={panelRef}
+          className="zm-tour-card zm-tour-panel"
+          dir={isUr ? "rtl" : "ltr"}
+          style={{
+            position: "absolute",
+            left: 8,
+            right: 8,
+            maxWidth: 440,
+            margin: "0 auto",
+            [atTop ? "top" : "bottom"]: 8,
+            background: "#fff",
+            borderRadius: 22,
+            padding: "12px 14px",
+            boxShadow: "0 18px 50px rgba(0,0,0,0.38)",
+            maxHeight: H * 0.62,
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            {cur ? (
+              <button onClick={() => choose(null)} style={{ display: "flex", alignItems: "center", gap: 4, height: 30, padding: "0 10px 0 6px", borderRadius: 999, background: C.mint, color: C.primary, fontWeight: 700, fontFamily: font, ...small }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" style={{ transform: isUr ? "scaleX(-1)" : undefined }}>
+                  <path d="m15 18-6-6 6-6" />
+                </svg>
+                {isUr ? "تمام حصے" : "All parts"}
+              </button>
+            ) : (
+              <h2 style={{ margin: 0, fontSize: isUr ? 17 : 16, lineHeight: isUr ? 1.6 : 1.3, fontWeight: 800, color: C.ink }}>{L(info.name)}</h2>
+            )}
+            <div style={{ flex: 1 }} />
+            <LangSwitch small />
+            <SpeakerButton say={spoken} label={isUr ? "سنیں" : "Listen"} />
+            {!cur && (
+              <button
+                onClick={() => setFolded((f) => !f)}
+                aria-label={folded ? (isUr ? "فہرست دکھائیں" : "Show list") : isUr ? "فہرست چھپائیں" : "Hide list"}
+                aria-expanded={!folded}
+                style={{ width: 30, height: 30, borderRadius: 999, background: "#F1F4F3", display: "grid", placeItems: "center", flexShrink: 0 }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" style={{ transform: folded ? "rotate(180deg)" : undefined }}>
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </button>
+            )}
+            <button
+              onClick={() => finish(true)}
+              aria-label={isUr ? "رہنمائی بند کریں" : "End tutorial"}
+              title={isUr ? "رہنمائی بند کریں" : "End tutorial"}
+              style={{ width: 30, height: 30, borderRadius: 999, background: "#F1F4F3", display: "grid", placeItems: "center", flexShrink: 0 }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth="2.8" strokeLinecap="round">
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {cur ? (
+            <div key={`p${pick}`} className="zm-tour-fade" style={{ marginTop: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ width: BADGE, height: BADGE, borderRadius: 999, background: "#FFD66B", color: C.deep, display: "grid", placeItems: "center", fontWeight: 800, fontSize: 12, flexShrink: 0, fontFamily: "'Inter', sans-serif" }}>{pick! + 1}</span>
+                <h3 style={{ margin: 0, fontSize: isUr ? 17.5 : 16, lineHeight: isUr ? 1.7 : 1.3, fontWeight: 800, color: C.ink }}>{L(cur.title)}</h3>
+              </div>
+              <p style={{ margin: "4px 0 0", fontSize: isUr ? 14.5 : 13.5, lineHeight: isUr ? 1.9 : 1.5, color: C.muted }}>{L(cur.body)}</p>
+              {!sb && <p style={{ margin: "4px 0 0", color: C.primary, fontWeight: 600, ...small }}>{isUr ? "یہ حصہ ابھی اسکرین پر نظر نہیں آ رہا۔" : "This part is off the screen right now."}</p>}
+              <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                <button disabled={pick === 0} onClick={() => choose(pick! - 1)} style={{ flex: 1, height: 40, borderRadius: 999, fontWeight: 700, fontFamily: font, background: "#F1F4F3", color: C.ink, opacity: pick === 0 ? 0.4 : 1, fontSize: isUr ? 14.5 : 13.5 }}>
+                  {isUr ? "پچھلا" : "Previous"}
+                </button>
+                <button
+                  onClick={() => choose(pick! + 1 < parts.length ? pick! + 1 : null)}
+                  style={{ flex: 1, height: 40, borderRadius: 999, fontWeight: 800, fontFamily: font, background: `linear-gradient(135deg, ${C.bright}, ${C.primary})`, color: "#fff", fontSize: isUr ? 15 : 14 }}
+                >
+                  {pick! + 1 < parts.length ? (isUr ? "اگلا حصہ" : "Next part") : isUr ? "تمام حصے" : "All parts"}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <p style={{ margin: "4px 0 0", fontSize: isUr ? 14 : 13, lineHeight: isUr ? 1.85 : 1.45, color: C.muted }}>{L(info.about)}</p>
+              {!folded && parts.length > 0 && (
+                <>
+                  <p style={{ margin: "8px 0 6px", color: C.primary, fontWeight: 700, ...small }}>
+                    {isUr ? `اس اسکرین کے ${parts.length} حصے۔ جاننے کے لیے کوئی بھی نمبر دبائیں:` : `${parts.length} parts on this screen. Tap any number to learn about it:`}
+                  </p>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, overflowY: "auto", minHeight: 0, flexShrink: 1, paddingBottom: 2 }}>
+                    {parts.map((p, i) => (
+                      <button
+                        key={p.target}
+                        onClick={() => choose(i)}
+                        style={{ display: "flex", alignItems: "center", gap: 6, height: 32, padding: isUr ? "0 4px 0 10px" : "0 10px 0 4px", borderRadius: 999, background: C.mint, color: C.ink, fontWeight: 600, fontFamily: font, fontSize: isUr ? 13 : 12.5, whiteSpace: "nowrap" }}
+                      >
+                        <span style={{ width: 24, height: 24, borderRadius: 999, background: C.bright, color: "#fff", display: "grid", placeItems: "center", fontWeight: 800, fontSize: 11.5, fontFamily: "'Inter', sans-serif" }}>{i + 1}</span>
+                        {L(p.title)}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+              <div style={{ display: "flex", gap: 8, marginTop: 12, flexShrink: 0 }}>
+                <button
+                  onClick={() => finish()}
+                  style={{ flex: "0 0 auto", height: 44, padding: "0 18px", borderRadius: 999, fontWeight: 700, fontFamily: font, background: "#F1F4F3", color: C.ink, fontSize: isUr ? 14.5 : 13.5 }}
+                >
+                  {isUr ? "سمجھ گیا" : "Got it"}
+                </button>
+                <button
+                  onClick={() => {
+                    stopSpeaking();
+                    onGuide();
+                  }}
+                  style={{ flex: 1, height: 44, borderRadius: 999, fontWeight: 800, fontFamily: font, background: `linear-gradient(135deg, ${C.bright}, ${C.primary})`, color: "#fff", boxShadow: "0 6px 16px rgba(8,127,99,0.3)", fontSize: isUr ? 15 : 14 }}
+                >
+                  {isUr ? "قدم بہ قدم دکھائیں" : "Guide me step by step"}
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </Layer>
@@ -771,7 +1121,17 @@ function Walkthrough({ screen, steps, onDone }: { screen: TourScreen; steps: Ste
 
 const TOUR_CSS = `
 .zm-tour button { cursor: pointer; border: none; }
-.zm-tour-block, .zm-tour-card, .zm-tour-ask { pointer-events: auto; }
+.zm-tour-block, .zm-tour-card, .zm-tour-ask, .zm-tour-badge { pointer-events: auto; }
+.zm-tour-ring-soft { border: 2px solid ${C.glow}; pointer-events: none; box-shadow: 0 0 0 1px rgba(255,255,255,.25); }
+.zm-tour-badge {
+  position: absolute;
+  width: ${BADGE}px; height: ${BADGE}px; border-radius: 999px;
+  display: grid; place-items: center;
+  font: 800 12px 'Inter', sans-serif;
+  box-shadow: 0 0 0 2px #fff, 0 4px 10px rgba(0,0,0,.35);
+  animation: zmTourRingIn .3s ease-out both;
+}
+.zm-tour-fade { animation: zmTourIn .25s ease-out both; }
 .zm-tour-ring {
   position: absolute;
   border: 2.5px solid ${C.glow};

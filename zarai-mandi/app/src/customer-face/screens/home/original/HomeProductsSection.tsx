@@ -99,6 +99,7 @@ export function HomeProductsSection({
       </div>
 
       <div
+        data-tour="products-row"
         className="flex items-start overflow-x-auto px-4 pb-1.5"
         style={{
           scrollbarWidth: "none",
