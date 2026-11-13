@@ -10,7 +10,8 @@ export type RateItem = {
   location?: LocationScope;
 };
 export type Screen =
-  | { id: "home" }
+  /** viewAll: View All was open when a product was opened from it, so Back returns there. */
+  | { id: "home"; viewAll?: boolean }
   | {
     id: "byproduct-combined";
     products: { vertical: string; product: string }[];

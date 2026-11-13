@@ -250,7 +250,8 @@ export function apiSpecialAttrToUi(attr: CardSpecialAttr | null): SpecialAttrInf
   } else if (attr.type === "spec") {
     valueUr = SPECIAL_ATTR_SPEC_URDU[attr.value] || attr.value;
   } else if (attr.type === "moisture") {
-    valueUr = toUrduDigits(attr.value);
+    const band = /^(Under|Above) (\d+)/.exec(attr.value);
+    valueUr = band ? `${toUrduDigits(band[2])}% ${band[1] === "Under" ? "سے کم" : "سے زیادہ"}` : toUrduDigits(attr.value);
   }
   return {
     type: attr.type,

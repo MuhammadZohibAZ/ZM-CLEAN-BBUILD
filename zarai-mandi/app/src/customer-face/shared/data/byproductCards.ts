@@ -5,7 +5,7 @@ import {
   emptyByproductStats,
   getCardUpdatedMinutes,
 } from "../../components/ByProductNationalCard";
-import { getDeclaredMoistureBand } from "./byproductStats";
+import { getDeclaredMoistureBand, moistureBandRank, usesMoistureBands } from "./byproductStats";
 import { OPENED_DIVISIONS, PRODUCT_DIVISIONS, VERTICALS } from "./catalog";
 import { FLAT_ALL_MANDI_ROWS } from "./mandis";
 import {
@@ -263,7 +263,12 @@ export function productRatesScreenFor(card: ByproductCardData, dateStr: string):
   // Several values chosen in the attribute filter ("New / Old"): open unfiltered on attribute.
   if (sa && !sa.valueEn.includes(' / ')) {
     // A maize grade's moisture band describes the grade; it isn't a row value to filter on.
-    if (sa.type === 'moisture') initMoisture = getDeclaredMoistureBand(bp) ? undefined : sa.valueEn.replace('%', '').trim();
+    if (sa.type === 'moisture') {
+      const v = sa.valueEn.replace('%', '').trim();
+      // Paddy filters by band: open on the card's band, or unfiltered for a plain average ("17.5%").
+      if (usesMoistureBands(sel.product)) initMoisture = moistureBandRank(v) < 99 ? v : undefined;
+      else initMoisture = getDeclaredMoistureBand(bp) ? undefined : v;
+    }
     else if (sa.type === 'color') initColor = sa.valueEn;
     else if (sa.type === 'variety') initVariety = sa.valueEn;
     else if (sa.type === 'newOld') initNewOld = sa.valueEn;

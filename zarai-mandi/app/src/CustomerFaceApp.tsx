@@ -322,6 +322,9 @@ function AppInner({
           ) : (
             <HomeScreen
               push={push}
+              reopenViewAll={(current as { viewAll?: boolean }).viewAll}
+              onOpenFromViewAll={(s) => setStack((p) => [...p.slice(0, -1), { id: "home", viewAll: true }, s])}
+              onViewAllClosed={() => replace({ id: "home" })}
               openAccountRequest={accountRequest}
               onStartTour={startTour}
               onAccountRequestHandled={() => setAccountRequest(0)}

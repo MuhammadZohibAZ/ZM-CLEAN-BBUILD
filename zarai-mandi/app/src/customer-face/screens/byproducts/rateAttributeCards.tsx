@@ -2,6 +2,7 @@
 // for every card (each card's own most reported by default) and special-attribute
 // values (several give each by-product one card per value).
 
+import { moistureBandRank } from "../../shared/data/byproductStats";
 import { useEffect, useMemo, useState } from "react";
 
 import {
@@ -145,7 +146,7 @@ export function useRateAttributeCards(props: ByproductBodyProps, opts: { perCard
       groups.set(v.type, g);
     }
     return [...groups]
-      .map(([type, values]) => ({ type, values: [...values].sort((a, b) => b[1] - a[1]) }))
+      .map(([type, values]) => ({ type, values: [...values].sort((a, b) => (type === "moisture" ? moistureBandRank(a[0]) - moistureBandRank(b[0]) : 0) || b[1] - a[1]) }))
       .sort((a, b) => b.values.length - a.values.length);
   }, [attrValues, wanted]);
 

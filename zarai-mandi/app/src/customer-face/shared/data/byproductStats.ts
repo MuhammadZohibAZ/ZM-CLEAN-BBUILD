@@ -24,6 +24,23 @@ const MAIZE_MOISTURE_BANDS: Record<string, string> = {
   maizegraded: "18-20",
 };
 
+// Paddy moisture is filtered in four bands (business rule, same as the API's
+// PADDY_MOISTURE_BAND_SQL). A reading like "12-20" goes by its middle (16 → 15-22).
+export const PADDY_MOISTURE_BANDS = ["Under 10", "10-15", "15-22", "Above 22"] as const;
+export const usesMoistureBands = (product?: string | null) => (product || "").trim().toLowerCase() === "paddy";
+/** The band a moisture reading ("15-20", "10", "15-20%") falls in, or undefined if it has no number. */
+export function moistureBand(raw?: string | null): string | undefined {
+  const nums = (raw || "").match(/\d+(?:\.\d+)?/g)?.map(Number) ?? [];
+  if (!nums.length) return undefined;
+  const mid = nums.length > 1 ? (nums[0] + nums[1]) / 2 : nums[0];
+  return mid < 10 ? "Under 10" : mid < 15 ? "10-15" : mid <= 22 ? "15-22" : "Above 22";
+}
+/** Sort moisture values in band order (other values keep their place after them). */
+export const moistureBandRank = (v: string) => {
+  const i = (PADDY_MOISTURE_BANDS as readonly string[]).indexOf(v.replace("%", "").trim());
+  return i < 0 ? 99 : i;
+};
+
 /** Declared moisture band of a maize grade ("11-14"), or null. Also matches "Feed / Maize Grade A". */
 export function getDeclaredMoistureBand(byproduct?: string | null): string | null {
   const key = (byproduct || "").toLowerCase().replace(/^feed\s*\/\s*/, "").replace(/[^a-z0-9]/g, "");

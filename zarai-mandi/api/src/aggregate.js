@@ -895,13 +895,24 @@ async function computeCardStats(row, targetDate, locationKind, locationLabel, sp
  * frontend can render its existing "No Data Available" overlay exactly
  * as it does today.
  */
+// Paddy moisture is filtered in four bands (business rule; the app's
+// PADDY_MOISTURE_BANDS): a reading goes by the middle of its range ("12-20" → 16 → 15-22).
+const PADDY_MOISTURE_BAND_SQL = `(case
+  when moisture_min is null then null
+  when (moisture_min + coalesce(moisture_max, moisture_min)) / 2.0 < 10 then 'Under 10'
+  when (moisture_min + coalesce(moisture_max, moisture_min)) / 2.0 < 15 then '10-15'
+  when (moisture_min + coalesce(moisture_max, moisture_min)) / 2.0 <= 22 then '15-22'
+  else 'Above 22' end)`;
+/** What a by-product's moisture is filtered on: Paddy's band, or the reading as written. */
+const moistureColumn = (row) => (String(row.division || "").trim().toLowerCase() === "paddy" ? PADDY_MOISTURE_BAND_SQL : "moisture_raw");
+
 /** The column a by-product's special attribute is stored in (null = nothing to filter on). */
 function attributeColumn(row) {
   const attrType = getProductSpecialAttrType(row.by_product, row.matched_by_product);
   if (!attrType) return null;
   // Maize grades have one declared moisture band; nothing to filter on.
   if (attrType === "moisture" && row.moisture_rule_band) return null;
-  const col = attrType === "moisture" ? "moisture_raw" : ATTR_TYPE_TO_COL[attrType];
+  const col = attrType === "moisture" ? moistureColumn(row) : ATTR_TYPE_TO_COL[attrType];
   return col ? { attrType, col } : null;
 }
 
@@ -1032,7 +1043,7 @@ export async function getVerticalSplitCardStats(division, options = {}) {
       const attrType = getProductSpecialAttrType(row.by_product, row.matched_by_product);
       // Maize grades have one declared moisture band; nothing to split on.
       if (attrType === "moisture" && row.moisture_rule_band) return single();
-      const col = attrType === "moisture" ? "moisture_raw" : ATTR_TYPE_TO_COL[attrType];
+      const col = attrType === "moisture" ? moistureColumn(row) : ATTR_TYPE_TO_COL[attrType];
       if (!col) return single();
       const params = [row.product, row.matched_by_product];
       const loc = buildLocationFilter(locationKind, locationLabel, params);

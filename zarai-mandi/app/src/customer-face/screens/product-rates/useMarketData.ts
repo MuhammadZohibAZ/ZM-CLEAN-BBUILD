@@ -1,3 +1,4 @@
+import { moistureBand, usesMoistureBands } from "../../shared/data/byproductStats";
 import { useEffect, useMemo, useState } from "react";
 
 import { type TimelineResult } from "../../../data/realCommodityData";
@@ -84,7 +85,7 @@ export function useMarketData(division: string, byproduct: string, scope: Locati
         setCatalogEntry(entry);
         if (entry && entry.has_data) {
           const res = await fetchAllRecords(entry.id);
-          if (!cancelled) setRows(res.rows.map(toRow));
+          if (!cancelled) setRows(res.rows.map((r) => toRow(r, division)));
         } else if (!cancelled) {
           setRows([]);
         }
@@ -151,7 +152,7 @@ function toRow(r: {
   quality: string | null;
   moisture_raw: string | null;
   reported_at?: string | null;
-}): MarketRow {
+}, division?: string): MarketRow {
   const unit = Number(r.arrivals_unit);
   return {
     id: r.id,
@@ -171,7 +172,8 @@ function toRow(r: {
     spec: r.specification || undefined,
     newOld: r.new_old || undefined,
     quality: r.quality || undefined,
-    moisture: r.moisture_raw || undefined,
+    // Paddy: the moisture band (Under 10, 10-15, 15-22, Above 22), so the filter has four choices.
+    moisture: usesMoistureBands(division) ? moistureBand(r.moisture_raw) : r.moisture_raw || undefined,
     reportedAt: reportTime(r.reported_at, r.record_date),
   };
 }

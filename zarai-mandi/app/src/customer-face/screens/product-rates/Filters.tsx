@@ -15,6 +15,10 @@ export function attrLabel(f: Fmt, k: AttrKey) {
 }
 
 export function attrValue(f: Fmt, t: (s: string) => string, k: AttrKey, v: string) {
-  if (k === "moisture") return f.digits(v.includes("%") ? v : `${v}%`);
+  if (k === "moisture") {
+    const band = /^(Under|Above) (\d+)/.exec(v);
+    if (band) return band[1] === "Under" ? f.tx(`Under ${band[2]}%`, `${f.digits(band[2])}% سے کم`) : f.tx(`Above ${band[2]}%`, `${f.digits(band[2])}% سے زیادہ`);
+    return f.digits(v.includes("%") ? v : `${v}%`);
+  }
   return t(v);
 }

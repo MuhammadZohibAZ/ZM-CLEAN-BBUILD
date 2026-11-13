@@ -34,6 +34,7 @@ import { HomeHero } from "../shared/HomeHero";
 import { HomeFavoritesSection } from "./HomeFavoritesSection";
 import { HomeProductsSection } from "./HomeProductsSection";
 import { ProductCategoriesSheet } from "./ProductCategoriesSheet";
+import { readTrials, startTrial, trialStatus, type Trials } from "../../../shared/productTrials";
 import { FavoriteCardsRow } from "../../../components/FavoriteCardsRow";
 
 // ─── HOME SCREEN ──────────────────────────────────────────────────────────────
@@ -65,8 +66,16 @@ export function HomeScreen({
   openAccountRequest = 0,
   onStartTour,
   onAccountRequestHandled,
+  reopenViewAll = false,
+  onOpenFromViewAll,
+  onViewAllClosed,
 }: {
   push: (s: Screen) => void;
+  /** Coming Back from a product opened in View All: open View All again. */
+  reopenViewAll?: boolean;
+  /** Opens a product from View All, keeping View All to come Back to. */
+  onOpenFromViewAll?: (s: Screen) => void;
+  onViewAllClosed?: () => void;
   setFeedOpen: (v: boolean) => void;
   pickedByproducts: RateItem[];
   togglePickBP: (item: RateItem) => void;
@@ -228,7 +237,9 @@ export function HomeScreen({
   });
   // "View All" overlay: every product category (active + locked), grid form,
   // same tap-to-open / tap-to-unlock behavior as the homepage row below.
-  const [showAllProducts, setShowAllProducts] = useState(false);
+  const [showAllProducts, setShowAllProducts] = useState(reopenViewAll);
+  // One product's free trial, asked for from View All once the account's trial is over.
+  const [trials, setTrials] = useState<Trials>(readTrials);
 
   const userSubscribedList = parentUserSubscribedList ?? localUserSubscribedList;
   const setUserSubscribedList = parentSetUserSubscribedList || setLocalUserSubscribedList;
@@ -243,7 +254,7 @@ export function HomeScreen({
 
   const isAccessible = (name: string) => {
     if (profileCompleted) {
-      return userSubscribedList.includes(name);
+      return userSubscribedList.includes(name) || trialStatus(trials, name) === "active";
     }
     return true; // All accessible during Free Trial
   };
@@ -527,8 +538,14 @@ export function HomeScreen({
           isAccessible={isAccessible}
           getVerticalForProduct={getVerticalForProduct}
           handleLockedProductClick={handleLockedProductClick}
-          onClose={() => setShowAllProducts(false)}
-          push={push}
+          onClose={() => {
+            setShowAllProducts(false);
+            onViewAllClosed?.();
+          }}
+          push={onOpenFromViewAll ?? push}
+          trialOf={(name) => (profileCompleted && !userSubscribedList.includes(name) ? trialStatus(trials, name) : null)}
+          trialEnd={(name) => trials[name]?.end}
+          onStartTrial={(name) => setTrials((t) => startTrial(t, name))}
         />
       )}
     </div>

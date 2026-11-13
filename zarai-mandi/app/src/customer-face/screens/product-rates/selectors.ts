@@ -2,6 +2,7 @@
 // every number on screen can be traced to one small function.
 
 import type { LocationScope } from "../../shared/types";
+import { moistureBandRank } from "../../shared/data/byproductStats";
 import { normLoc, stripMandi } from "./format";
 import type { AttrFilters, AttrKey, ChangeInterval, MarketRow, SortKey } from "./types";
 
@@ -205,7 +206,7 @@ export function filterOptions(rows: MarketRow[]): { key: AttrKey; options: { val
     }
     const options = [...byVal.entries()]
       .map(([value, set]) => ({ value, count: set.size }))
-      .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value));
+      .sort((a, b) => (key === "moisture" ? moistureBandRank(a.value) - moistureBandRank(b.value) : 0) || b.count - a.count || a.value.localeCompare(b.value));
     return { key, options };
   }).filter((g) => g.options.length > 0);
 }
