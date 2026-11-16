@@ -20,8 +20,10 @@ import {
 // and where tapping a card navigates.
 
 export function productByproducts(vertical: string, product: string): string[] {
-  // 1. Direct match in PRODUCT_DIVISIONS
-  const div = PRODUCT_DIVISIONS.find((d) => d.name === vertical || d.name === product);
+  // 1. Direct match in PRODUCT_DIVISIONS: the product itself first (Kidney Beans
+  // sits in the data's "Pulses" division, which is also a product's name).
+  const div =
+    PRODUCT_DIVISIONS.find((d) => d.name === product) ?? PRODUCT_DIVISIONS.find((d) => d.name === vertical);
   if (div) {
     if (div.type === "product" && div.byproducts && div.byproducts.length > 0) return div.byproducts;
     if (div.products?.[product] && div.products[product].length > 0) return div.products[product];

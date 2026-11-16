@@ -63,6 +63,8 @@ export const DATA_NAMES_URDU: Record<string, string> = {
   "Bhalwal": "بھلوال",
   "Bitter Gourd": "کریلا",
   "Bitter_Gourd": "کریلا",
+  "Gourd": "کدو",
+  "Cabbage & Cauliflower": "گوبھی",
   "Black": "کالا",
   "Black Aseel Chuara": "کالا اصیل چھوارا",
   "Black Chickpea Large": "کالا چنا - بڑا",

@@ -2,6 +2,7 @@ import React, { useState, createContext, useContext } from "react";
 
 import { TRANS } from "./translations";
 import { AUTO_URDU_DICT } from "./urduDictionary";
+import productSheet from "../data/productSheet.json";
 import { ZM_THEME_CSS } from "../theme";
 
 export const URDU_FONT = "'Noto Sans Arabic', 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', sans-serif";
@@ -33,7 +34,7 @@ export const LangContext = createContext<LangCtx>({
   lang: "en",
   setLang: () => { },
   t: (k) => TRANS[k]?.en ?? (AUTO_URDU_DICT[k] || k),
-  tc: (n) => n,
+  tc: (n) => englishName(n),
   tm: (m) => m,
   tr: (r) => r,
   tn: (n) => personName(n, "en"),
@@ -55,11 +56,20 @@ function personName(name: string, lang: Lang): string {
   return URDU_TO_EN.get(n) || n;
 }
 
+/** Product / by-product display names from the product sheet (keyed by the data's name). */
+const SHEET_NAMES = (productSheet as unknown as { names: Record<string, { en: string; ur: string }> }).names;
+
+/** A product / by-product name in English as the product sheet writes it ("Phutti Grade A" -> "Seed Cotton Grade A"). */
+export function englishName(name: string): string {
+  if (!name) return "";
+  return SHEET_NAMES[name]?.en || SHEET_NAMES[name.trim()]?.en || name;
+}
+
 /** A product / by-product name in Urdu whatever the current language (search
  * matches English and Urdu names together). Unknown names come back as given. */
 export function urduName(name: string): string {
   if (!name) return "";
-  return TRANS[`c.${name}`]?.ur || AUTO_URDU_DICT[name] || AUTO_URDU_DICT[name.trim()] || name;
+  return SHEET_NAMES[name]?.ur || TRANS[`c.${name}`]?.ur || AUTO_URDU_DICT[name] || AUTO_URDU_DICT[name.trim()] || name;
 }
 
 export function useLang() {
@@ -101,8 +111,10 @@ export function LangProvider({ children, injectTheme = true }: { children: React
 
   const tc = (name: string): string => {
     if (!name) return "";
-    if (lang === "en") return name;
+    if (lang === "en") return englishName(name);
     return (
+      SHEET_NAMES[name]?.ur ||
+      SHEET_NAMES[name.trim()]?.ur ||
       TRANS[`c.${name}`]?.ur ||
       AUTO_URDU_DICT[name] ||
       AUTO_URDU_DICT[name.trim()] ||

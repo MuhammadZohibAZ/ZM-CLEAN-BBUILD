@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 import { LockIconSVG } from "../../../components/icons";
-import { toUrduDigits, URDU_FONT, urduName, useLang } from "../../../shared/i18n/LangProvider";
+import { englishName, toUrduDigits, URDU_FONT, urduName, useLang } from "../../../shared/i18n/LangProvider";
 
 // One line on the bottom edge of the Home hero: an inline search field and,
 // until the profile is complete, a "Complete profile" chip beside it.
@@ -55,7 +55,7 @@ function rank(entries: SearchEntry[], query: string): SearchEntry[] {
   const scored: { e: SearchEntry; score: number }[] = [];
   for (const e of entries) {
     // English and Urdu names both match, in either language.
-    const names = [...new Set([e.byproduct, e.label, urduName(e.byproduct), urduName(e.label)].map(norm))];
+    const names = [...new Set([e.byproduct, e.label, englishName(e.byproduct), englishName(e.label), urduName(e.byproduct), urduName(e.label)].map(norm))];
     let score = -1;
     for (const n of names) {
       if (n === q) score = Math.max(score, 5);

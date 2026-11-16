@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { type CardStats, type CardSpecialAttr } from "../../lib/api";
 
 import { getProductSpecialAttrType } from "../shared/data/byproductStats";
-import { fertilizerCompany, isFertilizer, priceUnitFor } from "../shared/data/fertilizer";
+import { productForByproduct } from "../shared/data/catalog";
+import { fertilizerBrandLabel, fertilizerCardTitle, isFertilizer, priceUnitFor } from "../shared/data/fertilizer";
 import { latestDatasetDay } from "../shared/data/datasetDates";
 import { toUrduDigits, URDU_FONT, useLang } from "../shared/i18n/LangProvider";
 import { type ByproductNationalStats, type SpecialAttrInfo } from "../shared/types";
@@ -301,10 +302,13 @@ export function ByProductNationalCard({
     : '—';
   const specialAttrColor = hasAttrValue ? SPECIAL_ATTR_VALUE_COLOR : undefined;
 
-  // Fertilizer: the card is the company's (its title), the attribute cell names
-  // the brand product ("Engro Zabardast Urea"), and prices are per 50 kg bag.
+  // Agri-Inputs: the card's title is the product sold with the company that
+  // makes it ("Urea (Fauji Fertilizer)"), the attribute cell is its brand
+  // ("Sona"), and prices are per 50 kg bag.
   const division = stats.product || vertical || product;
-  const company = isFertilizer(division) ? fertilizerCompany(stats.byproduct) : null;
+  const fertType = isFertilizer(division) ? productForByproduct("Fertilizer", stats.byproduct)?.name : undefined;
+  const company = fertType ? fertilizerCardTitle(lang === 'ur' ? tc(fertType) : fertType, stats.byproduct) : null;
+  const brandLabel = fertType ? fertilizerBrandLabel(fertType, stats.byproduct) : '';
   const unit = priceUnitFor(division);
   const perUnit = lang === 'ur' ? unit.ur : unit.en;
 
@@ -441,7 +445,7 @@ export function ByProductNationalCard({
             <CardStatCell
               divider
               label={company ? (lang === 'ur' ? 'برانڈ' : 'Brand') : specialAttrLabel}
-              value={company ? tc(stats.byproduct) : specialAttrValue}
+              value={company ? brandLabel : specialAttrValue}
               valueColor={company ? SPECIAL_ATTR_VALUE_COLOR : specialAttrColor}
             />
           </div>

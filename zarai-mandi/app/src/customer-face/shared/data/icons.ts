@@ -1132,7 +1132,7 @@ export function getproductIconSrc(
     return (
       ICON_PATHS["Green-Chilli"] || `${PRODUCTS_PATH}/chillies200.png`
     );
-  if (lower.includes("bottle gourd") || lower.includes("kaddu"))
+  if (lower === "gourd" || lower.includes("bottle gourd") || lower.includes("kaddu"))
     return ICON_PATHS["Bottle-Gourd"];
   if (lower.includes("ridge gourd") || lower.includes("tori"))
     return ICON_PATHS["Ridge-Gourd"];

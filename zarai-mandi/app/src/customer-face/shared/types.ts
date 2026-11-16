@@ -86,7 +86,8 @@ export type FeedMsg = {
 
 //  PRODUCT DIVISIONS
 
-export type ProductGroupId = "crops" | "edible-oils" | "fruits" | "vegetables" | "fertilizer" | "dry-fruits" | "herbs" | "kiryana";
+export type ProductGroupId =
+  | "crops" | "vegetables" | "fruits" | "dry-fruits" | "herbs" | "pulses" | "spices" | "edible-oils" | "kiryana" | "agri-inputs";
 
 /** A product the app sells (catalog.ts PRODUCT_DIVISIONS). */
 export type ProdDiv = {

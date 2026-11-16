@@ -24,6 +24,39 @@ export function fertilizerCompany(byproduct?: string | null, short = true): stri
     .trim();
 }
 
+/** The brand of a fertilizer by-product ("Sona Urea" → "Sona"), from Fast uni. */
+export function fertilizerBrand(byproduct?: string | null): string | null {
+  return BY_KEY.get((byproduct || "").toLowerCase().trim())?.brand ?? null;
+}
+
+/**
+ * A fertilizer card's title: the product sold (the type, "Urea") with the
+ * company that makes this brand product: "Urea (Fauji Fertilizer)".
+ */
+export function fertilizerCardTitle(type: string, byproduct?: string | null): string | null {
+  const company = fertilizerCompany(byproduct);
+  if (!company) return null;
+  return `${type} (${company.replace(/\s*\([^)]*\)\s*/g, " ").trim()})`;
+}
+
+/**
+ * What a fertilizer card shows under "Brand": the brand product without its
+ * type ("Engro Zabardast Urea" → "Engro Zabardast", "Sona Urea" → "Sona"), so
+ * two products of one brand stay apart.
+ */
+export function fertilizerBrandLabel(type: string, byproduct: string): string {
+  const typeWords = new Set(type.toLowerCase().split(/\s+/));
+  const rest = byproduct
+    .split(/\s+/)
+    .filter((w) => !typeWords.has(w.toLowerCase().replace(/[^a-z0-9-]/g, "")))
+    .join(" ")
+    .replace(/\s*-\s*$/, "")
+    .replace(/^\s*-\s*/, "")
+    .replace(/\s+-\s+/g, " ")
+    .trim();
+  return rest || fertilizerBrand(byproduct) || byproduct;
+}
+
 /** Price unit for a division: crops are per 40 kg, fertilizer per 50 kg bag. */
 export function priceUnitFor(division?: string | null): PriceUnit {
   return isFertilizer(division) ? FERTILIZER_UNIT : CROP_PRICE_UNIT;
