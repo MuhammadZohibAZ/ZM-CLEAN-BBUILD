@@ -49,14 +49,17 @@ export function ProductIcon({
   size = 44,
   className,
   style,
+  src: srcOverride,
 }: {
   name: string;
   vertical?: string;
   size?: number;
   className?: string;
   style?: React.CSSProperties;
+  /** An image to show instead of the usual icon (e.g. the product's PNG). */
+  src?: string;
 }) {
-  const src = getproductIconSrc(name, vertical);
+  const src = srcOverride || getproductIconSrc(name, vertical);
   return (
     <div
       className={className}

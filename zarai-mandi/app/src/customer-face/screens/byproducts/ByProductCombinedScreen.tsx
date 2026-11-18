@@ -4,6 +4,7 @@ import { fetchByProducts } from "../../../lib/api";
 
 import { ByproductDatePill } from "../../components/ByproductDatePill";
 import { ProductIcon } from "../../components/ProductIcon";
+import { getProductPngIcon } from "../../shared/data/productPngIcons";
 import { Icon, IconButton } from "../product-rates/ui";
 import { ByProductSidebarFilterScreen } from "./ByProductSidebarFilterScreen";
 import { byproductsForSelection, toDateStr } from "../../shared/data/byproductCards";
@@ -103,6 +104,7 @@ export function ByProductCombinedScreen({
               <ProductIcon
                 name={activeProduct?.product || 'Wheat'}
                 vertical={activeProduct?.vertical}
+                src={getProductPngIcon(activeProduct?.product || 'Wheat')}
                 size={28}
                 style={{ flexShrink: 0 }}
               />
