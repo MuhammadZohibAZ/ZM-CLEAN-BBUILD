@@ -15,7 +15,6 @@ const BY_FILE_NAME = new Map(
 
 /** Products whose icon file has another name. */
 const FILE_FOR_PRODUCT: Record<string, string> = {
-  Gourd: "bitter gourd",
   "Indian Sherbet Berry": "falsa",
 };
 

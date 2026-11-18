@@ -349,6 +349,18 @@ export const ICON_PATHS: Record<string, string> = {
   "Ammonium-Sulphate": `${BYPRODUCTS_PATH}/fertilizers/Ammonium-Sulphate.png`,
   "Pak-Arab-Guara": `${BYPRODUCTS_PATH}/fertilizers/Pak-Arab-Guara.png`,
   Enrich: `${BYPRODUCTS_PATH}/fertilizers/Enrich.png`,
+  Boron: `${BYPRODUCTS_PATH}/fertilizers/Boron.png`,
+  MAP: `${BYPRODUCTS_PATH}/fertilizers/MAP.png`,
+  "Organic-Biostimulants": `${BYPRODUCTS_PATH}/fertilizers/Organic-Biostimulants.png`,
+  Phosphate: `${BYPRODUCTS_PATH}/fertilizers/Phosphate.png`,
+  Potash: `${BYPRODUCTS_PATH}/fertilizers/Potash.png`,
+  "Potassium-Nitrate": `${BYPRODUCTS_PATH}/fertilizers/Potassium-Nitrate.png`,
+  Zarkhez: `${BYPRODUCTS_PATH}/fertilizers/Zarkhez.png`,
+  Zinc: `${BYPRODUCTS_PATH}/fertilizers/Zinc.png`,
+  "Mesotrione-Atrazine": `${BYPRODUCTS_PATH}/fertilizers/Mesotrione-Atrazine.png`,
+  "S-Metolachlor": `${BYPRODUCTS_PATH}/fertilizers/S-Metolachlor.png`,
+  Clothianidin: `${BYPRODUCTS_PATH}/fertilizers/Clothianidin.png`,
+  Chlorphenapyr: `${BYPRODUCTS_PATH}/fertilizers/Chlorphenapyr.png`,
 
   //  Weedicides/Pesticides (no weedicides/ subfolder — fall back to fertilizers product icon)
   "Chlorfenapyr-36SC": `${PRODUCTS_PATH}/fertilizers.png`,
@@ -781,13 +793,39 @@ const FERTILIZER_ICON_RULES: [RegExp, string][] = [
   [/\btsp\b/, "TSP"],
   [/\bsop\b/, "SOP-G"],
   [/ammonium sulphate|amonium sulphate/, "Ammonium-Sulphate"],
+  [/potassium nitrate|nitro ?potash/, "Potassium-Nitrate"],
   [/nitrate/, "Ammonium-Nitrate"],
   [/\bcan\b/, "CAN"],
   [/guara/, "Pak-Arab-Guara"],
   [/enrich/, "Enrich"],
 ];
+// Agri-input products with their own bag, matched only on agri-input names
+// (so "Map" or "Organic" elsewhere never picks up a fertilizer bag).
+const AGRI_INPUT_ICON_RULES: [RegExp, string][] = [
+  [/\bboron\b/, "Boron"],
+  [/\bmap\b/, "MAP"],
+  [/organic|biostimulant/, "Organic-Biostimulants"],
+  [/\bpotash\b/, "Potash"],
+  [/phosphate/, "Phosphate"],
+  [/zarkhez/, "Zarkhez"],
+  [/\bzinc\b/, "Zinc"],
+  [/mesotrione|atrazine/, "Mesotrione-Atrazine"],
+  [/metolachlor/, "S-Metolachlor"],
+  [/clothianidin/, "Clothianidin"],
+  [/chlorphenapyr/, "Chlorphenapyr"],
+];
+/** Agri-input brand products by name ("engro zorawar") -> their product ("MAP"). */
+let agriInputProductOf: Map<string, string> | null = null;
+function agriInputProduct(lower: string): string | null {
+  if (!agriInputProductOf) {
+    agriInputProductOf = new Map();
+    for (const [product, byproducts] of Object.entries(VERTICALS["Agri-Inputs"]?.products || {}))
+      for (const bp of byproducts) agriInputProductOf.set(bp.toLowerCase().trim(), product);
+  }
+  return agriInputProductOf.get(lower.trim()) ?? null;
+}
 // Agri inputs without their own artwork use the Fertilizer product icon.
-const AGRI_INPUT_NAMES = /fertili|pesticide|weedicide|herbicide|agri.?inputs?|chlorphenapyr|clothianidin|mesotrione|atrazine|metolachlor|glyphosate|zarkhez|\bzinc\b|phosphate/;
+const AGRI_INPUT_NAMES = /fertili|pesticide|weedicide|herbicide|agri.?inputs?|chlorphenapyr|clothianidin|mesotrione|atrazine|metolachlor|glyphosate|zarkhez|\bzinc\b|phosphate|\bboron\b|potash|potassium nitrate|biostimulant/;
 const AGRI_INPUT_VERTICALS = /^(agri.?inputs?|fertili[sz]ers?|pesticides?|weedicides?)$/;
 
 function fertilizerIconSrc(lower: string, vertical?: string | null): string | null {
@@ -795,7 +833,14 @@ function fertilizerIconSrc(lower: string, vertical?: string | null): string | nu
   const rule = FERTILIZER_ICON_RULES.find(([pattern]) => pattern.test(lower));
   // A bare code ("CAN", "NP") is only a fertilizer when nothing else claims the name.
   if (rule && (isAgriInput || lower.split(/\s+/).length <= 4)) return ICON_PATHS[rule[1]];
-  return isAgriInput ? ICON_PATHS.fertilizer : null;
+  if (!isAgriInput) return null;
+  const agriRule = (name: string) => AGRI_INPUT_ICON_RULES.find(([pattern]) => pattern.test(name));
+  // The product's own bag; a brand product ("Engro Zorawar") takes its product's (MAP).
+  const own = agriRule(lower);
+  if (own) return ICON_PATHS[own[1]];
+  const product = agriInputProduct(lower);
+  const byProduct = product ? agriRule(product.toLowerCase()) : null;
+  return byProduct ? ICON_PATHS[byProduct[1]] : ICON_PATHS.fertilizer;
 }
 
 export function getproductIconSrc(

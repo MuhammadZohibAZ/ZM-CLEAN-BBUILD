@@ -125,7 +125,9 @@ export function HomeProductsSection({
               }
               className="flex-shrink-0 flex flex-col items-center tap-target"
               style={{
-                width: "clamp(102px, 26vw, 122px)",
+                // At least the usual width; a long name ("Indian Sherbet Berry")
+                // widens its own item so it stays one line at full size.
+                minWidth: "clamp(102px, 26vw, 122px)",
                 zIndex: voiceGuideActive ? 45 : undefined,
               }}
             >
@@ -161,7 +163,7 @@ export function HomeProductsSection({
 
               </div>
 
-              {/* Name */}
+              {/* Name: one line at full size, so every ACTIVE badge sits at one height */}
               <span
                 style={{
                   marginTop: 6,
@@ -173,6 +175,7 @@ export function HomeProductsSection({
                       ? URDU_FONT
                       : "inherit",
                   lineHeight: 1.15,
+                  whiteSpace: "nowrap",
                 }}
               >
                 {tc(div.name)}

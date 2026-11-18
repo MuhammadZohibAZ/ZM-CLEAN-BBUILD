@@ -49,19 +49,23 @@
  ],
  "products": [
   {
-   "name": "Cotton",
-   "en": "Cotton",
-   "ur": "کپاس",
-   "division": "Cotton",
+   "name": "Wheat",
+   "en": "Wheat",
+   "ur": "گندم",
+   "division": "Wheat",
    "price": 2000,
    "byproducts": [
-    "Phutti Grade A",
-    "Phutti Grade B",
-    "Phutti Grade C",
-    "Banola",
-    "Banola Khal",
-    "Banola Oil",
-    "Lint Cotton"
+    "Wheat",
+    "Wheat Bran",
+    "Barley",
+    "Wheat Porridge",
+    "Flour",
+    "Special Flour",
+    "Maida",
+    "Semolina",
+    "Straw",
+    "Sorghum",
+    "Oats"
    ],
    "group": "crops"
   },
@@ -93,37 +97,6 @@
     "Millet - Grade A",
     "Millet - Grade B",
     "Millet Grade C"
-   ],
-   "group": "crops"
-  },
-  {
-   "name": "Paddy",
-   "en": "Paddy",
-   "ur": "دھان",
-   "division": "Paddy",
-   "price": 2000,
-   "byproducts": [
-    "Paddy 1509",
-    "Paddy Kainat-1121",
-    "Paddy Irri",
-    "Paddy 1847",
-    "Paddy PP-7",
-    "Paddy Diamond",
-    "Paddy Lp-18",
-    "Paddy Supri",
-    "Paddy Hybrid Supri 109",
-    "Paddy Hybrid 106",
-    "Paddy 1718",
-    "Paddy 86",
-    "Paddy Irri-Fine",
-    "Paddy 1692",
-    "Paddy Irri 6",
-    "Paddy 386",
-    "Paddy Super 515",
-    "Paddy Super",
-    "Paddy Irri 9",
-    "Paddy C-9",
-    "Paddy D-98"
    ],
    "group": "crops"
   },
@@ -238,6 +211,37 @@
    "group": "crops"
   },
   {
+   "name": "Paddy",
+   "en": "Paddy",
+   "ur": "دھان",
+   "division": "Paddy",
+   "price": 2000,
+   "byproducts": [
+    "Paddy 1509",
+    "Paddy Kainat-1121",
+    "Paddy Irri",
+    "Paddy 1847",
+    "Paddy PP-7",
+    "Paddy Diamond",
+    "Paddy Lp-18",
+    "Paddy Supri",
+    "Paddy Hybrid Supri 109",
+    "Paddy Hybrid 106",
+    "Paddy 1718",
+    "Paddy 86",
+    "Paddy Irri-Fine",
+    "Paddy 1692",
+    "Paddy Irri 6",
+    "Paddy 386",
+    "Paddy Super 515",
+    "Paddy Super",
+    "Paddy Irri 9",
+    "Paddy C-9",
+    "Paddy D-98"
+   ],
+   "group": "crops"
+  },
+  {
    "name": "Sesame",
    "en": "Sesame",
    "ur": "تل",
@@ -248,6 +252,23 @@
     "Sesame - Grade B",
     "Sesame - Grade C",
     "Sesame Oil"
+   ],
+   "group": "crops"
+  },
+  {
+   "name": "Cotton",
+   "en": "Cotton",
+   "ur": "کپاس",
+   "division": "Cotton",
+   "price": 2000,
+   "byproducts": [
+    "Phutti Grade A",
+    "Phutti Grade B",
+    "Phutti Grade C",
+    "Banola",
+    "Banola Khal",
+    "Banola Oil",
+    "Lint Cotton"
    ],
    "group": "crops"
   },
@@ -263,27 +284,6 @@
     "Shakar",
     "Cheeni",
     "sugar(mill)"
-   ],
-   "group": "crops"
-  },
-  {
-   "name": "Wheat",
-   "en": "Wheat",
-   "ur": "گندم",
-   "division": "Wheat",
-   "price": 2000,
-   "byproducts": [
-    "Wheat",
-    "Wheat Bran",
-    "Barley",
-    "Wheat Porridge",
-    "Flour",
-    "Special Flour",
-    "Maida",
-    "Semolina",
-    "Straw",
-    "Sorghum",
-    "Oats"
    ],
    "group": "crops"
   },
