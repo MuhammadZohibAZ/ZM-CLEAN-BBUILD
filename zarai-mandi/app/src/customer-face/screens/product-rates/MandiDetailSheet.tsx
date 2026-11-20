@@ -13,7 +13,7 @@ import { makeZoomThrottle, stepPreset } from "./zoomPresets";
 import { RangeSheet } from "./RangeSheet";
 import { TrendChart } from "./TrendChart";
 import type { AttrKey, MarketRow } from "./types";
-import { BottomSheet, Chip, ChangePill, HScroll, Icon, IconButton, Segmented } from "./ui";
+import { BottomSheet, Chip, ChangePill, HScroll, Icon, IconButton, Segmented, useLandscapePhone } from "./ui";
 import { TIMELINE } from "./useMarketData";
 
 // History table cells.
@@ -77,6 +77,12 @@ export function MandiDetailSheet({
   const [rate, setRate] = useState(rates.includes(initialRate) ? initialRate : rates[0] || initialRate);
   const [view, setView] = useState<"price" | "arrival">("price");
   const [range, setRange] = useState<SheetRange>("1M");
+  // Landscape phone: the price summary and the trend / history sit side by
+  // side (as a price-and-chart app does when rotated) instead of one long column.
+  const landscape = useLandscapePhone();
+  const column: CSSProperties = landscape
+    ? { display: "flex", flexDirection: "column", gap: 10, minWidth: 0 }
+    : { display: "contents" };
   const [custom, setCustom] = useState<{ start: string; end: string } | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
@@ -456,14 +462,14 @@ export function MandiDetailSheet({
             type="button"
             aria-label={f.tx("Hear this rate", "یہ ریٹ سنیں")}
             onClick={() => onListen(spoken)}
-            style={{ width: 52, height: 52, borderRadius: 16, border: `1px solid ${C.line}`, background: C.surfaceAlt, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
+            style={{ width: landscape ? 40 : 52, height: landscape ? 40 : 52, borderRadius: landscape ? 12 : 16, border: `1px solid ${C.line}`, background: C.surfaceAlt, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
           >
             <Icon name="speaker" size={22} color={C.brand} />
           </button>
           <button
             type="button"
             onClick={onSetLocation}
-            style={{ flex: 1, height: 52, borderRadius: 16, border: "none", background: C.brand, color: "#fff", fontSize: 15, fontWeight: 600, fontFamily: f.font }}
+            style={{ flex: 1, height: landscape ? 40 : 52, borderRadius: landscape ? 12 : 16, border: "none", background: C.brand, color: "#fff", fontSize: landscape ? 14 : 15, fontWeight: 600, fontFamily: f.font }}
           >
             {f.tx("Show this mandi at the top", "اس منڈی کو اوپر دکھائیں")}
           </button>
@@ -563,8 +569,17 @@ export function MandiDetailSheet({
             </div>
           </div>
         )}
-        <div style={{ borderRadius: 22, background: C.surface, border: `1px solid ${C.line}`, padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
+        <div
+          style={{
+            borderRadius: 22, background: C.surface, border: `1px solid ${C.line}`, padding: 16, gap: 10,
+            ...(landscape
+              ? { display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1.25fr)", columnGap: 20, alignItems: "start" }
+              : { display: "flex", flexDirection: "column" }),
+          }}
+        >
+          {/* Summary: today's price, change and rank (left column in landscape). */}
+          <div style={column}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, flexWrap: landscape ? "wrap" : undefined }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: C.ink2 }}>
                 <span style={{ color: C.ink, fontWeight: 700 }}>{shortRate(tr(rate))}</span> · {f.per}
@@ -611,6 +626,9 @@ export function MandiDetailSheet({
                 : f.tx("Only mandi", "صرف یہی منڈی"),
             )}
           </div>
+          </div>
+          {/* Trend / History (right column in landscape). */}
+          <div style={column}>
           {/* Swipe between the trend charts and a day-by-day table. */}
           <div role="tablist" aria-label={f.tx("Trend or table", "رجحان یا ٹیبل")} style={{ display: "flex", gap: 16, borderBottom: `1px solid ${C.lineSoft}` }}>
             {[f.tx("Trend", "رجحان"), f.tx("History", "تاریخ وار")].map((label, i) => (
@@ -699,6 +717,7 @@ export function MandiDetailSheet({
             {[0, 1].map((i) => (
               <span key={i} style={{ width: page === i ? 18 : 6, height: 6, borderRadius: 3, background: page === i ? C.brand : C.line, transition: "width 200ms" }} />
             ))}
+          </div>
           </div>
         </div>
 

@@ -1439,6 +1439,15 @@ body {
   }
 }
 
+/* Landscape phone: bottom sheets (the mandi detail and other rate sheets) widen
+   to a readable width and take nearly the full height (see BottomSheet). */
+@media (orientation: landscape) and (max-height: 540px) {
+  .zm-sheet-high.zm-sheet-landscape {
+    max-width: min(760px, calc(100vw - 24px));
+    border-radius: 20px 20px 0 0;
+  }
+}
+
 /* Animated pulsing highlight for selected price/rate chips */
 @keyframes zm-chip-pulse-glow {
 

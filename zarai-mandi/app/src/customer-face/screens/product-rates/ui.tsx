@@ -218,6 +218,24 @@ export function HScroll({ children, pad = "0 16px 10px 16px" }: { children: Reac
 }
 
 // ─── Bottom sheet ────────────────────────────────────────────
+/** A phone turned sideways (the same rule as index.css's landscape block). */
+const LANDSCAPE_PHONE = "(orientation: landscape) and (max-height: 540px)";
+
+/** Whether the screen is a phone in landscape, updated when it rotates. */
+export function useLandscapePhone(): boolean {
+  const query = () => typeof window !== "undefined" && !!window.matchMedia?.(LANDSCAPE_PHONE).matches;
+  const [on, setOn] = useState(query);
+  useEffect(() => {
+    const mq = window.matchMedia?.(LANDSCAPE_PHONE);
+    if (!mq) return;
+    const update = () => setOn(mq.matches);
+    update();
+    mq.addEventListener?.("change", update);
+    return () => mq.removeEventListener?.("change", update);
+  }, []);
+  return on;
+}
+
 export function BottomSheet({
   onClose,
   title,
@@ -243,8 +261,13 @@ export function BottomSheet({
   font: string;
   display: string;
 }) {
+  // Landscape phone: the sheet takes (nearly) the whole height and a wider,
+  // readable width instead of sharing ~390 px with the screen behind it, as
+  // Google Maps' place sheet does when rotated (Material 3 bottom-sheet guidance).
+  // The screen's header isn't kept clear then: there's no room for both.
+  const landscape = useLandscapePhone();
   if (typeof document === "undefined") return null;
-  const revealBottom = revealHeader
+  const revealBottom = revealHeader && !landscape
     ? Math.round(document.querySelector("[data-zm-sheet-reveal]")?.getBoundingClientRect().bottom ?? 0)
     : 0;
   // Portalled to <body> so the sheet always rises from the bottom of the
@@ -267,14 +290,14 @@ export function BottomSheet({
         aria-label={title}
         dir={dir}
         data-tour="sheet"
-        className="zm-sheet-high"
-        style={{ position: "relative", background: C.ground, maxHeight: revealBottom > 0 ? `min(92vh, calc(100dvh - ${revealBottom + 8}px))` : "92vh", fontFamily: font, color: C.ink }}
+        className={`zm-sheet-high${landscape ? " zm-sheet-landscape" : ""}`}
+        style={{ position: "relative", background: C.ground, maxHeight: landscape ? "calc(100dvh - 8px)" : revealBottom > 0 ? `min(92vh, calc(100dvh - ${revealBottom + 8}px))` : "92vh", fontFamily: font, color: C.ink }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div style={{ width: 44, height: 5, borderRadius: 3, background: "#C3CFC9", margin: "10px auto 0", flexShrink: 0 }} />
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "12px 16px 10px" }}>
+        <div style={{ width: 44, height: 5, borderRadius: 3, background: "#C3CFC9", margin: landscape ? "6px auto 0" : "10px auto 0", flexShrink: 0 }} />
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: landscape ? "6px 20px 6px" : "12px 16px 10px" }}>
           <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
-            <span style={{ overflowWrap: "break-word", fontFamily: display, fontSize: 20, fontWeight: 700, lineHeight: 1.25, whiteSpace: "normal", }}>{title}</span>
+            <span style={{ overflowWrap: "break-word", fontFamily: display, fontSize: landscape ? 18 : 20, fontWeight: 700, lineHeight: 1.25, whiteSpace: "normal", }}>{title}</span>
             {subtitle && (
               <span
                 style={{
@@ -295,11 +318,11 @@ export function BottomSheet({
             <Icon name="close" size={18} width={2.4} />
           </IconButton>
         </div>
-        <div className="zm-hide-scrollbar" style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "0 16px 16px" }}>
+        <div className="zm-hide-scrollbar" style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: landscape ? "0 20px 12px" : "0 16px 16px" }}>
           {children}
         </div>
         {footer && (
-          <div style={{ display: "flex", gap: 8, padding: "12px 16px 20px", borderTop: `1px solid ${C.line}`, background: C.surface, flexShrink: 0 }}>
+          <div style={{ display: "flex", gap: 8, padding: landscape ? "8px 20px 10px" : "12px 16px 20px", borderTop: `1px solid ${C.line}`, background: C.surface, flexShrink: 0 }}>
             {footer}
           </div>
         )}

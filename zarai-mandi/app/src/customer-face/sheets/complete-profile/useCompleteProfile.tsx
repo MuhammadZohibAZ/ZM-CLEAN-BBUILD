@@ -41,8 +41,6 @@ export function useCompleteProfile(props: CompleteProfileProps) {
   const [mpinSuccess, setMpinSuccess] = useState(false);
 
   // Demonstration month index (0=Jan ... 8=Sep ... 11=Dec) - default to September (8)
-  const [demoMonthIdx, setDemoMonthIdx] = useState(8);
-  const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
 
   const monthlyTotal = data.selectedProds.reduce(
     (sum, p) => sum + getSeasonPackageBasePrice(p),
@@ -286,10 +284,6 @@ export function useCompleteProfile(props: CompleteProfileProps) {
     setIsProcessingMpin,
     mpinSuccess,
     setMpinSuccess,
-    demoMonthIdx,
-    setDemoMonthIdx,
-    isMonthPickerOpen,
-    setIsMonthPickerOpen,
     monthlyTotal,
     months,
     discount,

@@ -1,29 +1,35 @@
-// Complete Profile step 1: pick the products you are interested in (in season
-// for the month), grouped as in View All, each at the same monthly price.
+// Complete Profile step 1: pick the products you are interested in, grouped as
+// in View All, each at the same monthly price.
 
 /** Products a group shows before "See more" (three rows of two). */
 const PREVIEW = 6;
 
 import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 
-import { getPackagesForMonth, MONTH_KEYS, MONTH_NAMES_EN } from "../../../data/seasonProductData";
+import { SEASON_PACKAGES } from "../../../data/seasonProductData";
 import { PRODUCT_GROUPS, PRODUCT_PRICE_PER_MONTH } from "../../shared/data/catalog";
 import { getProductPngIcon } from "../../shared/data/productPngIcons";
 import { toUrduDigits, URDU_FONT, useLang } from "../../shared/i18n/LangProvider";
 import { type CompleteProfileState } from "./useCompleteProfile";
 
-/** A product name kept on one line: the font steps down from `max` only as far
- * as needed to fit the space it has (re-checked when that space changes). */
-function OneLineName({
+/**
+ * A product name on up to two lines, in a box that is always two lines tall so
+ * every product card is the same size. Long names ("Organic & Biostimulants")
+ * wrap at word breaks; the font steps down from `max` only when a name still
+ * doesn't fit in two lines (one very long word), re-checked when the space changes.
+ */
+function TwoLineName({
   text,
   className,
   style,
+  lineHeight,
   max = 13,
-  min = 8,
+  min = 9,
 }: {
   text: string;
   className?: string;
   style?: CSSProperties;
+  lineHeight: number;
   max?: number;
   min?: number;
 }) {
@@ -34,7 +40,11 @@ function OneLineName({
     const fit = () => {
       let size = max;
       el.style.fontSize = `${size}px`;
-      while (size > min && el.scrollWidth > el.clientWidth + 0.5) {
+      // More than two lines (Urdu letters reach above and below their line, so
+      // half a line of slack), or one word wider than the box.
+      const overflows = () =>
+        el.scrollHeight > lineHeight * size * 2.5 || el.scrollWidth > el.clientWidth + 0.5;
+      while (size > min && overflows()) {
         size -= 0.5;
         el.style.fontSize = `${size}px`;
       }
@@ -47,31 +57,45 @@ function OneLineName({
     const ro = new ResizeObserver(fit);
     ro.observe(parent);
     return () => ro.disconnect();
-  }, [text, max, min]);
+  }, [text, max, min, lineHeight]);
   return (
-    <span
-      ref={ref}
-      className={`block flex-1 min-w-0 whitespace-nowrap ${className ?? ""}`}
-      style={{ fontSize: max, ...style }}
-    >
-      {text}
-    </span>
+    <div className="flex-1 min-w-0 flex items-center" style={{ height: 2 * lineHeight * max }}>
+      <span
+        ref={ref}
+        className={`min-w-0 w-full ${className ?? ""}`}
+        style={{
+          fontSize: max,
+          lineHeight,
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
+          overflowWrap: "normal",
+          wordBreak: "normal",
+          ...style,
+        }}
+      >
+        {keepAbbreviationTogether(text)}
+      </span>
+    </div>
   );
+}
+
+/** A spelled-out abbreviation ("ایس ایس پی" = SSP: every word 3 letters or less)
+ * stays on one line instead of breaking between its letters. */
+function keepAbbreviationTogether(text: string): string {
+  const words = text.trim().split(/\s+/);
+  return words.length > 1 && words.every((w) => w.length <= 3) ? words.join("\u00A0") : text;
 }
 
 export function ProductsStep({ s }: { s: CompleteProfileState }) {
   const {
     data,
     lang,
-    demoMonthIdx,
-    setDemoMonthIdx,
-    isMonthPickerOpen,
-    setIsMonthPickerOpen,
     toggleProd,
   } = s;
   const { tc } = useLang();
-  const availablePackages = getPackagesForMonth(MONTH_KEYS[demoMonthIdx]);
-  const currentMonthNameEn = MONTH_NAMES_EN[demoMonthIdx];
+  const availablePackages = SEASON_PACKAGES;
   const isPicked = (p: { name: string; id: string }) =>
     data.selectedProds.includes(p.name) || data.selectedProds.includes(p.id);
 
@@ -87,89 +111,24 @@ export function ProductsStep({ s }: { s: CompleteProfileState }) {
 
   return (
     <div className="flex flex-col gap-3 pb-2">
-      {/* Title & Subtitle + Subtle Demo Month Switcher on Top Right */}
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <h2
-            className="font-black text-[20px] sm:text-[22px] text-[#143B33] leading-tight"
-            style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-          >
-            {lang === "ur" ? "اپنی مصنوعات منتخب کریں" : "Select Your Products"}
-          </h2>
-          <p
-            className="text-[12px] font-medium text-[#52635F] mt-0.5"
-            style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-          >
-            {lang === "ur"
-              ? "اپنی سبسکرپشن مصنوعات منتخب کریں۔"
-              : "Choose your subscription products."}
-          </p>
-        </div>
-
-        {/* Subtle Demo Month Switcher */}
-        <div className="relative flex-shrink-0">
-          <button
-            type="button"
-            onClick={() => setIsMonthPickerOpen(!isMonthPickerOpen)}
-            className="tap-target flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white border border-[#D5E2DD] text-[#52635F] hover:border-[#087F63] hover:text-[#087F63] transition-all shadow-2xs"
-            title="Change demonstration month"
-          >
-            <span className="text-[11px] font-bold">
-              Demo:{" "}
-              <span className="text-[#087F63] font-black">
-                {currentMonthNameEn}
-              </span>
-            </span>
-            <span className="text-[10px] text-[#9CA3AF]">▾</span>
-          </button>
-
-          {/* Floating Dropdown Month Menu */}
-          {isMonthPickerOpen && (
-            <>
-              <div
-                className="fixed inset-0 z-40 bg-transparent"
-                onClick={() => setIsMonthPickerOpen(false)}
-              />
-              <div
-                className="absolute right-0 top-8 z-50 bg-white rounded-2xl p-2 shadow-2xl border border-[#E2E8F0] grid grid-cols-3 gap-1 w-[240px] animate-fadeIn"
-                style={{ boxShadow: "0 12px 32px rgba(0,0,0,0.18)" }}
-              >
-                {MONTH_NAMES_EN.map((mName, mIdx) => {
-                  const isCur = demoMonthIdx === mIdx;
-                  return (
-                    <button
-                      key={mName}
-                      type="button"
-                      onClick={() => {
-                        setDemoMonthIdx(mIdx);
-                        setIsMonthPickerOpen(false);
-                      }}
-                      className={`px-2 py-1.5 rounded-lg text-[11px] font-bold transition text-center ${
-                        isCur
-                          ? "bg-[#087F63] text-white"
-                          : "text-[#374151] hover:bg-[#F3F4F6]"
-                      }`}
-                    >
-                      {mName.slice(0, 3)}
-                    </button>
-                  );
-                })}
-              </div>
-            </>
-          )}
-        </div>
+      {/* Title and the one price every product has */}
+      <div>
+        <h2
+          className="font-black text-[20px] sm:text-[22px] text-[#143B33] leading-tight"
+          style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+        >
+          {lang === "ur" ? "اپنی مصنوعات منتخب کریں" : "Select Your Products"}
+        </h2>
+        <p
+          className="text-[12px] font-bold text-[#087F63] mt-0.5"
+          style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
+        >
+          {lang === "ur"
+            ? `${toUrduDigits(PRODUCT_PRICE_PER_MONTH.toLocaleString())} روپے فی پروڈکٹ / ماہ`
+            : `Rs ${PRODUCT_PRICE_PER_MONTH.toLocaleString()} per product / month`}
+        </p>
       </div>
 
-      {/* Price line, then one section per group (Crops, Fertilizer, Fruits, ...):
-          picked products first, two rows, then "See more". */}
-      <p
-        className="text-[12px] font-bold text-[#087F63] -mt-1"
-        style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
-      >
-        {lang === "ur"
-          ? `ہر پروڈکٹ ${toUrduDigits(PRODUCT_PRICE_PER_MONTH.toLocaleString())} روپے ماہانہ`
-          : `Every product PKR ${PRODUCT_PRICE_PER_MONTH.toLocaleString()} / month`}
-      </p>
       {PRODUCT_GROUPS.map((g) => {
         const items = availablePackages
           .filter((p) => p.group === g.id)
@@ -202,27 +161,29 @@ export function ProductsStep({ s }: { s: CompleteProfileState }) {
                     tabIndex={0}
                     onClick={() => toggleProd(pkg.name)}
                     onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && toggleProd(pkg.name)}
-                    className={`rounded-2xl p-2 flex items-center justify-between gap-1 transition-all cursor-pointer ${
+                    // Selected: the outline is thickened with an inset shadow, so the card keeps its size.
+                    className={`rounded-2xl p-2 flex items-center justify-between gap-1 transition-all cursor-pointer border ${
                       isSelected
-                        ? "border-2 border-[#087F63] bg-[#E8F8F3] shadow-xs"
-                        : "border border-[#D5E2DD] bg-white hover:border-[#B5CEC5]"
+                        ? "border-[#087F63] bg-[#E8F8F3] shadow-[inset_0_0_0_1px_#087F63]"
+                        : "border-[#D5E2DD] bg-white hover:border-[#B5CEC5]"
                     }`}
                   >
-                    {/* Icon + Title (title always on one line) */}
+                    {/* Icon + Title (up to two lines; every card the same height) */}
                     <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                      <img src={getProductPngIcon(pkg.name) ?? pkg.icon} alt="" className="w-7 h-7 object-contain flex-shrink-0" />
-                      <OneLineName
+                      <img src={getProductPngIcon(pkg.name) ?? pkg.icon} alt="" className="w-6 h-6 object-contain flex-shrink-0" />
+                      <TwoLineName
                         text={tc(pkg.name)}
+                        lineHeight={lang === "ur" ? 1.6 : 1.2}
                         className={`font-bold ${isSelected ? "text-[#087F63]" : "text-[#183B34]"}`}
                         style={{ fontFamily: lang === "ur" ? URDU_FONT : "inherit" }}
                       />
                     </div>
                     <div
-                      className={`w-5 h-5 flex-shrink-0 rounded-full border-2 flex items-center justify-center transition-all ${
+                      className={`w-4 h-4 flex-shrink-0 rounded-full border-2 flex items-center justify-center transition-all ${
                         isSelected ? "border-[#087F63] bg-[#087F63] text-white" : "border-[#9CA3AF] bg-white"
                       }`}
                     >
-                      {isSelected && <span className="text-[10px] font-black">✓</span>}
+                      {isSelected && <span className="text-[9px] font-black">✓</span>}
                     </div>
                   </div>
                 );
