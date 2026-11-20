@@ -16,6 +16,8 @@ const BY_FILE_NAME = new Map(
 /** Products whose icon file has another name. */
 const FILE_FOR_PRODUCT: Record<string, string> = {
   "Indian Sherbet Berry": "falsa",
+  "Dried Apricot": "dried apricot-photoroom",
+  Coconut: "coconut-photoroom",
 };
 
 /** The icon file name a product's PNG should have (without ".png"). */

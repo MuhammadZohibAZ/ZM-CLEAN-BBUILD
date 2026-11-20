@@ -2,6 +2,7 @@
 
 import { findProduct, getVerticalForProduct, PRODUCT_PRICE_PER_MONTH } from "../../shared/data/catalog";
 import { getproductIconSrc } from "../../shared/data/icons";
+import { getProductPngIcon } from "../../shared/data/productPngIcons";
 
 /** Every product costs the same per month. */
 export function getSeasonPackageBasePrice(_product: string): number {
@@ -10,5 +11,5 @@ export function getSeasonPackageBasePrice(_product: string): number {
 
 export function getSeasonPackageIconSrc(product: string): string {
   const name = findProduct(product)?.name || product;
-  return getproductIconSrc(name, getVerticalForProduct(name));
+  return getProductPngIcon(name) ?? getproductIconSrc(name, getVerticalForProduct(name));
 }
